@@ -1,0 +1,257 @@
+extends "res://tests/framework/story_test.gd"
+## Tests for the menus, dialogue styles, and text input, driven by simulated
+## clicks and key presses.
+
+const StoryScript := preload("res://addons/storyteller/core/story.gd")
+const SAVE_FOLDER := "user://test_menu_saves"
+const SETTINGS_PATH := "user://test_menu_settings.cfg"
+
+var story: Node
+var director: TaleDirector
+var menus: StoryMenus
+var dialogue: StoryDialogue
+var shown: Array[String] = []
+
+
+func before_each() -> void:
+	_clean()
+	var config := StoryConfig.new()
+	config.crew = [TaleDirector, StoryAudio, StorySaves, StorySettings, StoryRewind, StoryHistory, StoryDialogue, StoryMenus]
+	config.save_folder = SAVE_FOLDER
+	config.settings_path = SETTINGS_PATH
+	config.start_tale = "menu_tale"
+	config.text_speed = 0.0
+	config.game_title = "Test Game"
+	config.autosave_on_choice = false
+	story = track(StoryScript.new())
+	story.start(config)
+	tree.root.add_child(story)
+	director = story.get_crew(&"TaleDirector")
+	menus = story.get_crew(&"Menus")
+	dialogue = story.get_crew(&"Dialogue")
+	shown.clear()
+	director.line_started.connect(func(line: Dictionary) -> void: shown.append(line["text"]))
+	await tree.process_frame
+
+
+func after_each() -> void:
+	_clean()
+
+
+func _clean() -> void:
+	if DirAccess.dir_exists_absolute(SAVE_FOLDER):
+		for file_name in DirAccess.get_files_at(SAVE_FOLDER):
+			DirAccess.remove_absolute(SAVE_FOLDER.path_join(file_name))
+	if FileAccess.file_exists(SETTINGS_PATH):
+		DirAccess.remove_absolute(SETTINGS_PATH)
+
+
+func _add(source: String, tale_name := "menu_tale") -> void:
+	var result := TaleCompiler.build(source, tale_name, director.make_check_context(tale_name))
+	for diagnostic in result["diagnostics"]:
+		if diagnostic.is_error():
+			fail(str(diagnostic))
+	director.add_tale(result["tale"])
+
+
+func _press(button_text: String) -> void:
+	for button in story.find_children("*", "Button", true, false):
+		if button.text == button_text and button.is_visible_in_tree() and not button.disabled:
+			button.pressed.emit()
+			await tree.process_frame
+			return
+	fail("no visible, enabled button '%s'" % button_text)
+
+
+func _continue() -> void:
+	dialogue.dialogue_box.continue_pressed.emit()
+	await tree.process_frame
+
+
+func _key(action: String) -> void:
+	var event := InputEventAction.new()
+	event.action = action
+	event.pressed = true
+	Input.parse_input_event(event)
+	await tree.process_frame
+	await tree.process_frame
+
+
+func test_title_screen_starts_a_new_game() -> void:
+	_add("beat start:\n\t\"Hello.\"\n")
+	menus.show_title()
+	await tree.process_frame
+	assert_true(menus.is_open())
+	assert_eq(story.find_child("TitleScreen", true, false).find_child("*", true, false) != null, true)
+	var continue_button: Button = _find_button("Continue")
+	assert_true(continue_button.disabled, "no saves yet")
+	await _press("New Game")
+	assert_false(menus.is_open())
+	assert_true(director.is_playing())
+	assert_eq(shown, ["Hello."])
+
+
+func test_story_end_returns_to_title() -> void:
+	_add("beat start:\n\t\"Only line.\"\n")
+	await _press_new_game()
+	await _continue()
+	await tree.process_frame
+	await tree.process_frame
+	assert_false(director.is_playing())
+	assert_true(menus.is_open(), "title screen is back")
+
+
+func test_pause_menu_blocks_dialogue_input() -> void:
+	_add("beat start:\n\t\"One.\"\n\t\"Two.\"\n")
+	await _press_new_game()
+	await _key("story_menu")
+	assert_true(menus.is_open())
+	await _key("story_continue")
+	assert_eq(shown, ["One."], "continue is ignored while the menu is open")
+	await _press("Resume")
+	assert_false(menus.is_open())
+	await _key("story_continue")
+	assert_eq(shown, ["One.", "Two."])
+
+
+func test_save_and_load_through_screens() -> void:
+	_add("var n := 0\nbeat start:\n\tn += 1\n\t\"Line {n}.\"\n\tn += 1\n\t\"Line {n}.\"\n\t\"End.\"\n")
+	await _press_new_game()
+	menus.open("save")
+	await tree.process_frame
+	await _press_slot("Slot 1")
+	assert_true(menus.saves().has_slot("1"))
+	menus.close_all()
+	await _continue()
+	assert_eq(shown, ["Line 1.", "Line 2."])
+	menus.open("load")
+	await tree.process_frame
+	await _press_slot("Slot 1")
+	await _press("Yes")
+	await tree.process_frame
+	assert_false(menus.is_open())
+	assert_eq(shown, ["Line 1.", "Line 2.", "Line 1."], "the saved line is shown again")
+
+
+func test_overwrite_asks_first() -> void:
+	_add("beat start:\n\t\"Line.\"\n")
+	await _press_new_game()
+	menus.saves().save_slot("1")
+	var first_time: float = menus.saves().read_slot("1")["saved_at"]
+	menus.open("save")
+	await tree.process_frame
+	await _press_slot("Slot 1")
+	await _press("No")
+	assert_eq(menus.saves().read_slot("1")["saved_at"], first_time, "kept after answering No")
+
+
+func test_settings_screen_changes_settings() -> void:
+	menus.open("settings")
+	await tree.process_frame
+	var screen := story.find_child("SettingsScreen", true, false)
+	var sliders := screen.find_children("*", "HSlider", true, false)
+	sliders[0].value = 77.0
+	assert_eq(menus.settings().get_value("text_speed"), 77.0)
+	assert_eq(dialogue.dialogue_box.characters_per_second, 77.0)
+	var toggles := screen.find_children("*", "CheckButton", true, false)
+	toggles[1].button_pressed = true
+	assert_true(menus.settings().get_value("skip_unread"))
+
+
+func test_history_screen_lists_lines() -> void:
+	_add("const ADA := \"Ada\"\nbeat start:\n\tADA: \"First.\"\n\t\"Second.\"\n\t\"Third.\"\n")
+	await _press_new_game()
+	await _continue()
+	await _key("story_history")
+	var screen := story.find_child("HistoryScreen", true, false)
+	var texts := screen.find_children("*", "RichTextLabel", true, false).map(func(label: RichTextLabel) -> String: return label.text)
+	assert_eq(texts, ["First.", "Second."])
+
+
+func test_ask_text_action() -> void:
+	_add("var player := \"\"\nbeat start:\n\tplayer = await ask_text(\"Your name?\", \"Sam\")\n\t\"Hi {player}.\"\n")
+	await _press_new_game()
+	await tree.process_frame
+	assert_true(menus.is_open())
+	var edit: LineEdit = story.find_children("*", "LineEdit", true, false)[0]
+	assert_eq(edit.text, "Sam")
+	edit.text = "Robin"
+	await _press("OK")
+	await tree.process_frame
+	assert_eq(shown, ["Hi Robin."])
+
+
+func test_page_style_collects_lines() -> void:
+	_add("beat start:\n\tdialogue_style(\"page\")\n\t\"First paragraph.\"\n\t\"Second paragraph.\"\n\tclear_page()\n\t\"New page.\"\n\tdialogue_style(\"classic\")\n\t\"Back in the box.\"\n")
+	await _press_new_game()
+	var page: PageDialogueBox = dialogue._styles["page"]
+	var text: RichTextLabel = page.find_child("Text", true, false)
+	assert_true(page.visible)
+	await _continue()
+	assert_eq(text.get_parsed_text(), "First paragraph.\nSecond paragraph.")
+	await _continue()
+	assert_eq(text.get_parsed_text(), "New page.")
+	await _continue()
+	assert_false(page.visible)
+	assert_eq(dialogue.style, "classic")
+	assert_eq(shown.back(), "Back in the box.")
+
+
+func test_unknown_dialogue_style_is_reported() -> void:
+	var errors := []
+	director.runtime_error.connect(func(message: String, _tale: String, _line: int) -> void: errors.append(message))
+	_add("beat start:\n\tdialogue_style(\"comic\")\n\t\"x\"\n")
+	await _press_new_game()
+	assert_eq(errors, ["Unknown dialogue style 'comic'. Styles: classic, page."])
+
+
+func test_quick_menu_shows_while_playing() -> void:
+	_add("beat start:\n\t\"Line.\"\n")
+	assert_false(menus.quick_menu.visible)
+	await _press_new_game()
+	await tree.process_frame
+	assert_true(menus.quick_menu.visible)
+	await _press("Auto")
+	assert_true(dialogue.dialogue_box.auto_advance)
+	await _press("Menu")
+	assert_true(menus.is_open())
+	await tree.process_frame
+	assert_false(menus.quick_menu.visible)
+
+
+func test_quick_menu_follows_the_dialogue_style() -> void:
+	_add("beat start:\n\t\"Classic.\"\n\tdialogue_style(\"page\")\n\t\"Page.\"\n")
+	await _press_new_game()
+	await tree.process_frame
+	var corner := menus.quick_menu.get_rect().end
+	assert_eq(corner, dialogue.dialogue_box.get_quick_menu_corner())
+	var classic_corner := corner
+	await _continue()
+	await tree.process_frame
+	assert_eq(dialogue.style, "page")
+	assert_eq(menus.quick_menu.get_rect().end, dialogue.dialogue_box.get_quick_menu_corner())
+	assert_ne(menus.quick_menu.get_rect().end, classic_corner)
+
+
+func _press_new_game() -> void:
+	menus.show_title()
+	await tree.process_frame
+	await _press("New Game")
+	await tree.process_frame
+
+
+func _press_slot(label_start: String) -> void:
+	for label in story.find_children("*", "Label", true, false):
+		if label.text.begins_with(label_start) and label.is_visible_in_tree():
+			var button := label.get_parent().get_parent() as Button
+			button.pressed.emit()
+			await tree.process_frame
+			return
+	fail("no slot '%s'" % label_start)
+
+
+func _find_button(text: String) -> Button:
+	for button in story.find_children("*", "Button", true, false):
+		if button.text == text and button.is_visible_in_tree():
+			return button
+	return null

@@ -14,6 +14,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Centered in the space above the classic dialogue box.
+	center.anchor_bottom = 0.7
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	_column = VBoxContainer.new()
@@ -21,6 +23,12 @@ func _ready() -> void:
 	_column.add_theme_constant_override("separation", 10)
 	center.add_child(_column)
 	hide()
+
+
+## Closes the menu as if the timeout expired.
+func cancel() -> void:
+	if visible:
+		_picked.emit(-1)
 
 
 func choose(options: Array[Dictionary], settings: Dictionary) -> int:

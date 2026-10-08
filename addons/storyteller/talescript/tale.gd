@@ -25,7 +25,8 @@ extends Resource
 ## choose       args, options, timeout_target, end  Show a choice menu.
 ## end                                              End of a beat.
 ## [/codeblock]
-## Any instruction may carry [code]"no_rewind": true[/code].
+## Any instruction may carry [code]"no_rewind": true[/code]. Say instructions in
+## [code]@skip_safe[/code] beats carry [code]"skip_safe": true[/code].
 ##
 ## [b]Expressions[/b] are arrays whose first element names the kind:
 ## [codeblock]

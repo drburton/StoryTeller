@@ -1,6 +1,6 @@
 # TaleScript Language Specification
 
-Version: **draft 0.1** (milestone M1)
+Version: **draft 0.2** (milestone M3)
 
 TaleScript is the language StoryTeller stories are written in. It follows GDScript's syntax wherever GDScript has a way to express something, and adds a few statements for writing stories. This document is the reference for the parser, the checker, the editor tools, and writers who want precise rules.
 
@@ -14,6 +14,7 @@ Implementation status:
 | Interpolation (§7.2) and `[pause]` tags (§7.1) | Implemented |
 | `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
+| `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
 
 ---
 
@@ -363,7 +364,7 @@ Dialogue and narration strings use Godot BBCode (`[b]`, `[i]`, `[color=red]`, `[
 | `@id("...")` | Dialogue or narration | Pins the line id used for translation and voice. |
 | `@voice("...")` | Dialogue or narration | Assigns a voice clip. |
 | `@no_rewind` | Any statement | The player cannot rewind past this point. |
-| `@skip_safe` | Beat | Treat the beat as already read for skipping. |
+| `@skip_safe` | Beat | Treat the beat's lines as already read, so skip passes them even when the player only skips read lines. Useful for recaps. |
 
 ---
 
@@ -506,6 +507,11 @@ Actions are called like functions. Named arguments may be given in any order aft
 | `stop_ambience` | `fade = 1.0` | Fade out the ambience. |
 | `voice` | `clip` | Play a voice clip. Lines marked `@voice("clip")` do this automatically. |
 | `stop_audio` | `fade = 0.5` | Stop music, ambience, sounds, and voice. |
+| `ask_text` | `prompt`, `default = ""`, `max_length = 24` | Ask the player to type text. Use `await` to get it: `player_name = await ask_text("Your name?", "Sam")`. An empty answer gives `default`. |
+| `ask_number` | `prompt`, `default = 0`, `min = 0`, `max = 100` | Ask for a whole number, kept between `min` and `max`. Use with `await`. |
+| `dialogue_style` | `name` | Switch dialogue styles: `"classic"` (a box along the bottom) or `"page"` (lines collect on a full page). Games can add more in `StoryConfig.dialogue_styles`. |
+| `clear_page` | | Start a new page in the `"page"` style. |
+| `hide_dialogue` | | Hide the dialogue box until the next line, for example while the scene changes. |
 
 Transitions for `backdrop`: `none`, `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, `slide_down`. With `dissolve`, `mask` names a grayscale image in `res://story/transitions/` that sets the order in which pixels change (dark first).
 

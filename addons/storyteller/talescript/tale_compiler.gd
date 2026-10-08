@@ -12,6 +12,8 @@ const E := TaleExpr.Kind
 var _tale: Tale
 var _call_kinds: Dictionary
 var _beat := ""
+## True while compiling a beat marked @skip_safe.
+var _skip_safe := false
 var _loop_counter := 0
 ## Stack of open loops: {"continue": index, "breaks": Array[int]}.
 var _loops: Array[Dictionary] = []
@@ -75,6 +77,7 @@ func _compile(doc: TaleDocument, tale_name: String, call_kinds: Dictionary) -> T
 				pending.clear()
 			K.BEAT:
 				_beat = node.name
+				_skip_safe = _has_annotation(pending, node, "skip_safe")
 				_tale.beats[node.name] = _tale.instructions.size()
 				_block(node.body)
 				_emit({"op": "end"}, node.line_end)
@@ -333,6 +336,8 @@ func _line_id(annotations: Array[TaleExpr], text: String) -> String:
 
 func _emit(instruction: Dictionary, line: int) -> int:
 	instruction["line"] = line
+	if _skip_safe and instruction["op"] == "say":
+		instruction["skip_safe"] = true
 	_tale.instructions.append(instruction)
 	return _tale.instructions.size() - 1
 

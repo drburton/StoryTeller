@@ -44,8 +44,10 @@ func get_texture(mood: String) -> Texture2D:
 
 func get_moods() -> PackedStringArray:
 	var names := PackedStringArray(moods.keys())
-	if not folder.is_empty():
-		for file_name in DirAccess.get_files_at(folder):
+	if not folder.is_empty() and DirAccess.dir_exists_absolute(folder):
+		# list_directory sees imported files in exported games, where the
+		# folder only holds .import files.
+		for file_name in ResourceLoader.list_directory(folder):
 			var extension := file_name.get_extension().to_lower()
 			var mood := file_name.get_basename()
 			if extension in IMAGE_EXTENSIONS and mood not in names:

@@ -29,6 +29,9 @@ jobs:
       - name: Run tests
         run: tools/run_tests.sh
 
+      - name: Check exported game
+        run: tools/check_export.sh
+
   test-windows:
     name: Tests (Windows)
     runs-on: windows-latest

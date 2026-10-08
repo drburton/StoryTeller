@@ -129,6 +129,15 @@ func play(tale_name: String, beat := "start") -> void:
 	await director.play(tale_name, beat)
 
 
+## Shows the title screen (from the Menus crew member).
+func show_title() -> void:
+	var menus := get_crew(&"Menus") as StoryMenus
+	if menus == null:
+		push_error("StoryTeller: no Menus crew member. Check StoryConfig.crew.")
+		return
+	menus.show_title()
+
+
 ## Makes a game object available to tales under [param exposed_name],
 ## limited to the listed methods and properties.
 ## [codeblock]

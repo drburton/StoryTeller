@@ -4,6 +4,7 @@
 
 var curiosity := 0
 var topics_seen := []
+var visitor := "Reader"
 
 beat start:
 	backdrop("library", transition = "fade", time = 1.5)
@@ -11,6 +12,8 @@ beat start:
 	"A quiet library. Lamps hum above long wooden tables."
 	ada.enter("smile", at = CENTER)
 	ada: "Oh! A visitor.[pause] Welcome to StoryTeller."
+	visitor = await ask_text("What should Ada call you?", visitor)
+	ada (smile): "Nice to meet you, {visitor}."
 	ada (neutral): "Everything you see is written in a .tale file. Press Space or click to continue."
 	jump topics
 
@@ -47,6 +50,20 @@ beat topics:
 			curiosity += 1
 			ada: "Yes. Questions you have asked so far: {curiosity}."
 			jump topics
+		@once "What about saving and menus?":
+			topics_seen.append("menus")
+			curiosity += 1
+			ada: "Press Escape or right-click for the pause menu. Saving, loading, and settings live there."
+			ada (curious): "Roll the mouse wheel up or press Page Up to rewind. Press H to read the history."
+			ada (smile): "Some stories read better as pages. Let me show you."
+			dialogue_style("page")
+			"In the page style, lines stack on the screen like a book."
+			"Each new line goes under the last one."
+			clear_page()
+			"A call to clear_page() starts a fresh page."
+			dialogue_style("classic")
+			ada: "And now we're back to the classic box."
+			jump topics
 		"Show me a sample scene." if curiosity > 0:
 			ada (smile): "Here is one from the StoryTeller plan."
 			ada.exit()
@@ -60,8 +77,8 @@ beat topics:
 
 beat farewell:
 	match curiosity:
-		4:
-			ada (smile): "You asked about everything. I like that."
+		5:
+			ada (smile): "You asked about everything, {visitor}. I like that."
 		_:
 			ada: "You asked about {len(topics_seen)} topic{\"s\" if len(topics_seen) != 1 else \"\"}."
 	sound("chime")

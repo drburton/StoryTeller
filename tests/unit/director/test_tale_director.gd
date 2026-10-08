@@ -131,10 +131,10 @@ func test_type_constants() -> void:
 
 func test_global_variables() -> void:
 	await _play("@global var endings := 0\nbeat start:\n\tendings += 1\n")
-	assert_eq(JSON.to_native(director.capture_globals()), {"endings": 1})
+	assert_eq(JSON.to_native(director.capture_globals()["vars"]), {"endings": 1})
 	director.clear()
 	await director.play("main")
-	assert_eq(JSON.to_native(director.capture_globals()), {"endings": 2}, "globals survive a new game")
+	assert_eq(JSON.to_native(director.capture_globals()["vars"]), {"endings": 2}, "globals survive a new game")
 
 
 func test_capture_and_restore_mid_story() -> void:
@@ -155,7 +155,7 @@ func test_capture_and_restore_mid_story() -> void:
 	second.add_tale(director.get_tale("main"))
 	second.restore(saved)
 	await second.resume()
-	assert_eq(second_presenter.lines, ["line 2 L 3", "end"], "resumes after the saved line")
+	assert_eq(second_presenter.lines, ["line 1 L 2", "line 2 L 3", "end"], "shows the saved line again, then continues")
 
 
 func test_stop_ends_playback() -> void:

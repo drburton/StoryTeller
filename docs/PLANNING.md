@@ -2,7 +2,13 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.9** (M2 complete)
+Status: **Draft v0.10** (M3 features complete)
+
+Changes in v0.10:
+- M3 features complete: save slots with thumbnails, quick save, autosave before choices, global data, read tracking, settings, rewind with `@no_rewind`, history, `@skip_safe`, the menu set (title, pause, save and load, settings, history, confirmations, text input) with one shared theme, a quick menu, and the "page" dialogue style.
+- The demo opens on a title screen and its tour now covers the M3 features.
+- Exported games are checked in CI by `tools/check_export.sh`. The check found that cast moods and `.tres` profiles were missing from exported games, and that is fixed.
+- The M3 exit criterion is only partly met; see §11.
 
 Changes in v0.9:
 - M2 complete: stage, cast members and looks, backdrops with transitions, props, camera, audio, asset preloading, and a demo that plays the §4.2 sample with original generated art and music.
@@ -593,9 +599,12 @@ Selecting any card shows the stage as it would look at that line. The director r
 - **Exit criteria:** the §4.2 sample runs with real art, music, and transitions.
 
 ### M3: Saves and menus (4 weeks)
-- Saves, rewind, history, read tracking, settings.
-- Dialogue and choice styles, full menu set with one shared theme.
+- Saves, rewind, history, read tracking, settings. ✔
+- Dialogue and choice styles, full menu set with one shared theme. ✔
+- Export check in CI: the project is exported as a `.pck` and checked the way a shipped game sees it. ✔
 - **Exit criteria:** a 15-minute original demo story exports and plays on the platforms chosen for M3 (§14).
+  - Met so far: an exported Linux pack plays the demo from the title screen through saving, loading, and every menu.
+  - Still open: the demo runs about 5 minutes; Windows and web builds have not been run, since they need export templates and a browser. The platform choice (§14) is also still open.
 
 ### M4: Production features (4 weeks)
 - Effects, collection, localization, debug console, live reload, autocomplete, movies, embedding preset.
@@ -689,6 +698,12 @@ All platforms below are supported by Godot's export system. The question is whic
 
 **Current recommendation:** design the default UI for mouse, keyboard, gamepad, and touch from M1, test desktop and web from M3, and add mobile testing in M4. This keeps mobile-friendly layouts from becoming a costly retrofit.
 
+**Notes from M3:**
+- Asset discovery uses `ResourceLoader.list_directory`, because exported games keep only imported files. `tools/check_export.sh` guards this in CI.
+- Saves, settings, and global data live under `user://`, which maps to browser storage on the web.
+- Quit buttons are hidden on the web, where a page cannot close itself.
+- Still to try: a web build in a browser (download size, audio starting after the first click) and a Windows build.
+
 ---
 
 ## 15. Repository Layout (proposed)
@@ -778,5 +793,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 ## 20. Immediate Next Steps
 
 1. Run a quick trademark and name search for "StoryTeller".
-2. Start M3: saves with slots and thumbnails, rewind, history, settings, more dialogue styles, and the menu set.
-3. Optional: a VS Code syntax file for writers who use an external editor.
+2. Choose the M3 platforms (§14), then build and try Windows and web exports of the demo.
+3. Grow the demo toward the 15-minute M3 exit story, or move that target to M4 with the translated demo.
+4. Start M4: effects, collection, localization, debug console, live reload, and autocomplete.
+5. Optional: a VS Code syntax file for writers who use an external editor.

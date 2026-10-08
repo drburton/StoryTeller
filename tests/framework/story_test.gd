@@ -72,9 +72,14 @@ func assert_has(container: Variant, value: Variant, message := "") -> void:
 func _finish() -> PackedStringArray:
 	for object in _tracked:
 		if is_instance_valid(object) and not object is RefCounted:
-			if object is Node and object.is_inside_tree():
-				object.get_parent().remove_child(object)
-			object.free()
+			if object is Node:
+				# queue_free is safe even if the node is emitting a signal
+				# that resumed this test.
+				if object.is_inside_tree():
+					object.get_parent().remove_child(object)
+				object.queue_free()
+			else:
+				object.free()
 	_tracked.clear()
 	return _failures
 
