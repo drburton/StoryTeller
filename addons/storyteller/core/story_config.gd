@@ -12,7 +12,20 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 
 ## Crew member scripts to create when the story starts, in order.
 ## Each script must extend [StoryCrew].
-@export var crew: Array[Script] = []
+@export var crew: Array[Script] = [
+	preload("res://addons/storyteller/director/tale_director.gd"),
+	preload("res://addons/storyteller/ui/story_dialogue.gd"),
+]
 
 ## Folder that holds the project's tales.
 @export_dir var tales_folder := "res://story/tales"
+
+@export_group("Dialogue")
+## Scene for the dialogue box (its root must extend [DialogueBox]).
+## Empty uses the built-in classic box.
+@export var dialogue_box_scene: PackedScene
+## Scene for the choice menu (its root must extend [ChoiceMenu]).
+## Empty uses the built-in list menu.
+@export var choice_menu_scene: PackedScene
+## Typing speed in characters per second. 0 shows text instantly.
+@export_range(0, 200, 1) var text_speed := 40.0

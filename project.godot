@@ -12,6 +12,7 @@ config_version=5
 
 config/name="StoryTeller"
 config/description="Visual novel and interactive story framework for Godot."
+run/main_scene="res://demo/demo.tscn"
 config/features=PackedStringArray("4.7")
 
 [autoload]

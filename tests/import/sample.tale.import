@@ -1,0 +1,14 @@
+[remap]
+
+importer="storyteller.tale"
+type="Resource"
+uid="uid://ytmmq04joaa"
+path="res://.godot/imported/sample.tale-2557611ff814c853e1d3e80ab861d4fe.res"
+
+[deps]
+
+source_file="res://tests/import/sample.tale"
+dest_files=["res://.godot/imported/sample.tale-2557611ff814c853e1d3e80ab861d4fe.res"]
+
+[params]
+

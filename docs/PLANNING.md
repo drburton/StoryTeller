@@ -2,7 +2,10 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.6** (M1 in progress)
+Status: **Draft v0.7** (M1 nearly complete)
+
+Changes in v0.7:
+- M1 progress: checker, compiler, import plugin, director, classic dialogue box, list choice menu, and a playable demo scene are done.
 
 Changes in v0.6:
 - The TaleScript specification now lives in `docs/talescript-spec.md` and is the authoritative reference; §4 below is an overview.
@@ -570,11 +573,12 @@ Selecting any card shows the stage as it would look at that line. The director r
 ### M1: TaleScript and a minimal playable (5 weeks)
 - Formal grammar and specification (`docs/talescript-spec.md`). ✔
 - Lexer and **lossless** parser with round-trip and golden tests. ✔
-- Checker, compiler, import plugin.
-- Director with await, call stack, skip, auto.
-- Vars, global vars, safe expression evaluator, `Story.expose`.
-- Flow: beats, `jump`, beat calls, `if`/`elif`/`else`, `match`, `choose`.
-- Classic dialogue box and list choice menu. Syntax highlighting.
+- Checker, compiler, import plugin. ✔
+- Director with await, call stack, skip, auto. ✔
+- Vars, global vars, safe expression evaluator, `Story.expose`. ✔
+- Flow: beats, `jump`, beat calls, `if`/`elif`/`else`, `match`, `choose`. ✔
+- Classic dialogue box and list choice menu. ✔
+- Syntax highlighting.
 - **Exit criteria:** the §4.2 sample runs end to end with placeholder art; parsing and re-printing every fixture reproduces the original file byte for byte.
 
 ### M2: Stage, cast, audio (5 weeks)
@@ -767,6 +771,5 @@ StoryTellerPro/                  # private repository (Pro tier)
 ## 20. Immediate Next Steps
 
 1. Run a quick trademark and name search for "StoryTeller".
-2. Checker: names, beats, arguments, and the other checks in the spec (§9 of `docs/talescript-spec.md`).
-3. Compiler to an instruction list, and the import plugin for `.tale` files.
-4. Director, variables, and the expression evaluator, then the first dialogue box and choice menu.
+2. Syntax highlighting for `.tale` files (last M1 item).
+3. Start M2: cast members, backdrops, transitions, audio, and camera.

@@ -35,37 +35,37 @@ func fail(message: String) -> void:
 
 func assert_true(condition: bool, message := "") -> void:
 	if not condition:
-		fail(_describe("expected true", message))
+		fail(_format_failure("expected true", message))
 
 
 func assert_false(condition: bool, message := "") -> void:
 	if condition:
-		fail(_describe("expected false", message))
+		fail(_format_failure("expected false", message))
 
 
 func assert_eq(actual: Variant, expected: Variant, message := "") -> void:
-	if not _equal(actual, expected):
-		fail(_describe("expected %s, got %s" % [_show(expected), _show(actual)], message))
+	if not _values_equal(actual, expected):
+		fail(_format_failure("expected %s, got %s" % [_format_value(expected), _format_value(actual)], message))
 
 
 func assert_ne(actual: Variant, unexpected: Variant, message := "") -> void:
-	if _equal(actual, unexpected):
-		fail(_describe("expected a value other than %s" % _show(unexpected), message))
+	if _values_equal(actual, unexpected):
+		fail(_format_failure("expected a value other than %s" % _format_value(unexpected), message))
 
 
 func assert_null(value: Variant, message := "") -> void:
 	if value != null:
-		fail(_describe("expected null, got %s" % _show(value), message))
+		fail(_format_failure("expected null, got %s" % _format_value(value), message))
 
 
 func assert_not_null(value: Variant, message := "") -> void:
 	if value == null:
-		fail(_describe("expected a value, got null", message))
+		fail(_format_failure("expected a value, got null", message))
 
 
 func assert_has(container: Variant, value: Variant, message := "") -> void:
 	if not value in container:
-		fail(_describe("expected %s to contain %s" % [_show(container), _show(value)], message))
+		fail(_format_failure("expected %s to contain %s" % [_format_value(container), _format_value(value)], message))
 
 
 ## Called by the runner. Returns the failures recorded by the last test.
@@ -79,7 +79,7 @@ func _finish() -> PackedStringArray:
 	return _failures
 
 
-func _equal(a: Variant, b: Variant) -> bool:
+func _values_equal(a: Variant, b: Variant) -> bool:
 	var numeric := [TYPE_INT, TYPE_FLOAT]
 	if typeof(a) in numeric and typeof(b) in numeric:
 		return a == b
@@ -91,7 +91,7 @@ func _equal(a: Variant, b: Variant) -> bool:
 	return a == b
 
 
-func _show(value: Variant) -> String:
+func _format_value(value: Variant) -> String:
 	if value is String:
 		return '"%s"' % value
 	if value is StringName:
@@ -99,5 +99,5 @@ func _show(value: Variant) -> String:
 	return str(value)
 
 
-func _describe(problem: String, message: String) -> String:
+func _format_failure(problem: String, message: String) -> String:
 	return problem if message.is_empty() else "%s (%s)" % [message, problem]
