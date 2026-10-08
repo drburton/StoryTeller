@@ -63,6 +63,36 @@ static func parse(source: String, path := "") -> TaleDocument:
 	return TaleParser.new()._parse(source, path)
 
 
+## Parses a single expression, as used inside [code]{...}[/code] in text.
+## Returns [code]{"expr": TaleExpr, "error": String}[/code]; on failure
+## [code]expr[/code] is null and [code]error[/code] explains why.
+static func parse_expression(source: String) -> Dictionary:
+	var parser := TaleParser.new()
+	var lexer := TaleLexer.new()
+	var tokens: Array[TaleToken] = []
+	for token in lexer.tokenize(source):
+		match token.type:
+			TaleToken.Type.END, TaleToken.Type.COMMENT:
+				pass
+			TaleToken.Type.NEWLINE:
+				return {"expr": null, "error": "Expressions in text must fit on one line."}
+			TaleToken.Type.ERROR:
+				return {"expr": null, "error": token.value}
+			_:
+				tokens.append(token)
+	if tokens.is_empty():
+		return {"expr": null, "error": "Expected an expression between the braces."}
+	parser._tokens = tokens
+	parser._index = 0
+	parser._end_token = TaleToken.new(TaleToken.Type.NEWLINE, "end of line", null, 1, source.length() + 1)
+	var expr := parser._expression()
+	if not parser._failed and not parser._at_end():
+		parser._fail("Unexpected '%s'." % parser._peek().text)
+	if parser._failed:
+		return {"expr": null, "error": parser._fail_message}
+	return {"expr": expr, "error": ""}
+
+
 func _parse(source: String, path: String) -> TaleDocument:
 	_doc = TaleDocument.new()
 	_doc.path = path
