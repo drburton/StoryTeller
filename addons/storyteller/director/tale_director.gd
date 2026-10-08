@@ -38,6 +38,13 @@ const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_hide_prop.gd"),
 	preload("res://addons/storyteller/actions/action_clear_props.gd"),
 	preload("res://addons/storyteller/actions/action_shake.gd"),
+	preload("res://addons/storyteller/actions/action_music.gd"),
+	preload("res://addons/storyteller/actions/action_stop_music.gd"),
+	preload("res://addons/storyteller/actions/action_sound.gd"),
+	preload("res://addons/storyteller/actions/action_ambience.gd"),
+	preload("res://addons/storyteller/actions/action_stop_ambience.gd"),
+	preload("res://addons/storyteller/actions/action_voice.gd"),
+	preload("res://addons/storyteller/actions/action_stop_audio.gd"),
 ]
 ## Upper limit of instructions run without showing a line or choice, which
 ## stops endless loops from freezing the game.

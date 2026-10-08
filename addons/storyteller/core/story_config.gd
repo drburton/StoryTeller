@@ -15,6 +15,7 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export var crew: Array[Script] = [
 	preload("res://addons/storyteller/director/tale_director.gd"),
 	preload("res://addons/storyteller/stage/story_stage.gd"),
+	preload("res://addons/storyteller/audio/story_audio.gd"),
 	preload("res://addons/storyteller/ui/story_dialogue.gd"),
 ]
 
@@ -30,6 +31,10 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_dir var backdrop_folder := "res://story/backdrops"
 ## Folder with prop images and scenes, used by prop("name").
 @export_dir var prop_folder := "res://story/props"
+
+@export_group("Audio")
+## Folder with "music", "sounds", "ambience", and "voice" subfolders.
+@export_dir var audio_folder := "res://story/audio"
 
 @export_group("Dialogue")
 ## Scene for the dialogue box (its root must extend [DialogueBox]).
