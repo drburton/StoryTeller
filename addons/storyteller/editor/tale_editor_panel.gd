@@ -3,7 +3,8 @@ class_name TaleEditorPanel
 extends Control
 ## The "Story" main screen: a list of the project's tales, a TaleScript
 ## editor with syntax highlighting and autocomplete, the card editor (a
-## visual view of the same text), and a live list of problems.
+## visual view of the same text), the Story Map of the tale's folder, and a
+## live list of problems.
 ##
 ## Edits are kept per file until saved, so switching files loses nothing.
 ## Ctrl+S (Cmd+S on macOS) saves the open tale and reimports it.
@@ -33,7 +34,8 @@ var code_edit: CodeEdit
 var problem_list: ItemList
 var highlighter: TaleSyntaxHighlighter
 var card_editor: TaleCardEditor
-## "text" or "cards".
+var story_map: StoryMapView
+## "text", "cards", or "map".
 var view := "text"
 
 var _title: Label
@@ -77,7 +79,7 @@ func _build_ui() -> void:
 	export.pressed.connect(export_strings)
 	toolbar.add_child(export)
 	var views := ButtonGroup.new()
-	for view_name in ["Text", "Cards"]:
+	for view_name in ["Text", "Cards", "Map"]:
 		var button := Button.new()
 		button.text = view_name
 		button.toggle_mode = true
@@ -145,6 +147,18 @@ func _build_ui() -> void:
 		code_edit.redo()
 		_refresh_cards())
 	right.add_child(card_editor)
+	story_map = StoryMapView.new()
+	story_map.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	story_map.visible = false
+	story_map.beat_opened.connect(func(path: String, beat: String) -> void:
+		open_file(path)
+		show_view("cards")
+		card_editor.select_beat(beat))
+	story_map.edit_requested.connect(func(path: String, new_source: String) -> void:
+		open_file(path)
+		apply_edit(new_source)
+		refresh_map())
+	right.add_child(story_map)
 
 	problem_list = ItemList.new()
 	problem_list.custom_minimum_size = Vector2(0, 80)
@@ -166,8 +180,29 @@ func show_view(view_name: String) -> void:
 		_view_buttons[view].set_pressed_no_signal(true)
 	code_edit.visible = view == "text"
 	card_editor.visible = view == "cards"
+	story_map.visible = view == "map"
 	if view == "cards":
 		_refresh_cards()
+	elif view == "map":
+		refresh_map()
+
+
+## Redraws the Story Map from the tales in the open tale's folder, using
+## unsaved edits where there are any.
+func refresh_map() -> void:
+	if _current_path.is_empty():
+		return
+	var folder := _current_path.get_base_dir()
+	var tale_sources := {}
+	for file_name in DirAccess.get_files_at(folder):
+		if file_name.ends_with(".tale"):
+			var path := folder.path_join(file_name)
+			tale_sources[path] = _buffers[path]["text"] if _buffers.has(path) else FileAccess.get_file_as_string(path)
+	if _buffers.has(_current_path):
+		tale_sources[_current_path] = code_edit.text
+	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").load_config()
+	var start_tale := config.start_tale if config.tales_folder.trim_suffix("/") == folder else ""
+	story_map.show_story(tale_sources, start_tale, config.start_beat)
 
 
 ## Applies [param new_source] from the card editor to the text as one
