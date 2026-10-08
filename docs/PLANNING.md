@@ -2,7 +2,10 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.7** (M1 nearly complete)
+Status: **Draft v0.8** (M1 complete)
+
+Changes in v0.8:
+- M1 complete: the "Story" editor screen adds syntax highlighting, live error checking, and saving with reimport. It is the start of the visual editor's text view (§9).
 
 Changes in v0.7:
 - M1 progress: checker, compiler, import plugin, director, classic dialogue box, list choice menu, and a playable demo scene are done.
@@ -478,7 +481,7 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 
 | Tool | Description | Milestone |
 |---|---|---|
-| Syntax highlighting | `EditorSyntaxHighlighter` for `.tale` in Godot's script editor, using GDScript's color theme | M1 |
+| Story screen | Main-screen editor for `.tale` files: syntax highlighting in the editor's colors, live problem list, save and reimport | M1 ✔ |
 | Import diagnostics | Errors and warnings with clickable locations | M1 |
 | Setup wizard | Config, folders, starter scene, sample tale | M1 |
 | Cast inspector | Custom inspector with mood previews and a "test enter" button | M2 |
@@ -578,7 +581,7 @@ Selecting any card shows the stage as it would look at that line. The director r
 - Vars, global vars, safe expression evaluator, `Story.expose`. ✔
 - Flow: beats, `jump`, beat calls, `if`/`elif`/`else`, `match`, `choose`. ✔
 - Classic dialogue box and list choice menu. ✔
-- Syntax highlighting.
+- Syntax highlighting, in a "Story" editor screen with live checking. ✔
 - **Exit criteria:** the §4.2 sample runs end to end with placeholder art; parsing and re-printing every fixture reproduces the original file byte for byte.
 
 ### M2: Stage, cast, audio (5 weeks)
@@ -771,5 +774,5 @@ StoryTellerPro/                  # private repository (Pro tier)
 ## 20. Immediate Next Steps
 
 1. Run a quick trademark and name search for "StoryTeller".
-2. Syntax highlighting for `.tale` files (last M1 item).
-3. Start M2: cast members, backdrops, transitions, audio, and camera.
+2. Start M2: cast members, backdrops, transitions, audio, and camera.
+3. Optional: a VS Code syntax file for writers who use an external editor.

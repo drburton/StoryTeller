@@ -115,3 +115,10 @@ func test_keywords_cannot_be_names() -> void:
 func test_trailing_comment_is_kept() -> void:
 	var node := _first_in_beat("\tjump end  # go\n")
 	assert_eq(node.comment, " go")
+
+
+func test_orphaned_block_reports_one_error() -> void:
+	var doc := _parse("var x := 1\n\t\"one\"\n\t\"two\"\n\t\"three\"\nbeat b:\n\tpass\n")
+	assert_eq(_errors(doc), PackedStringArray(["2:1: error: Unexpected indentation."]))
+	assert_eq(doc.to_source(), "var x := 1\n\t\"one\"\n\t\"two\"\n\t\"three\"\nbeat b:\n\tpass\n")
+	assert_not_null(doc.find_beat("b"))
