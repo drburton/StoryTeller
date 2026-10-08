@@ -177,6 +177,15 @@ func get_cast_moods() -> Dictionary:
 	return result
 
 
+## Starts loading a backdrop or prop in the background.
+func preload_asset(kind: String, asset_name: String) -> void:
+	match kind:
+		"backdrop":
+			StoryAssets.preload_path(StoryAssets.find(backdrop_folder, asset_name, StoryAssets.IMAGE_EXTENSIONS))
+		"prop":
+			StoryAssets.preload_path(StoryAssets.find(prop_folder, asset_name, StoryAssets.IMAGE_EXTENSIONS + StoryAssets.SCENE_EXTENSIONS))
+
+
 ## Names this crew member adds to tales, for the checker.
 func get_tale_names() -> PackedStringArray:
 	return PackedStringArray(["camera"])

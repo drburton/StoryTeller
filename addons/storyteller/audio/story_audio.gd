@@ -173,6 +173,13 @@ func set_kind_volume(kind: String, volume: float) -> void:
 		_apply_volume(player)
 
 
+## Starts loading an audio file in the background.
+func preload_asset(kind: String, asset_name: String) -> void:
+	var folder := {"music": "music", "sound": "sounds", "ambience": "ambience", "voice": "voice"}.get(kind, "")
+	if not folder.is_empty():
+		StoryAssets.preload_path(StoryAssets.find(audio_folder.path_join(folder), asset_name, StoryAssets.AUDIO_EXTENSIONS))
+
+
 ## Finds "<name>.<ogg|mp3|wav>" in the folder for [param kind], or null.
 func find_stream(kind: String, stream_name: String) -> AudioStream:
 	return StoryAssets.load_asset(audio_folder.path_join(kind), stream_name, StoryAssets.AUDIO_EXTENSIONS) as AudioStream

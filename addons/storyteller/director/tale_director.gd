@@ -46,6 +46,11 @@ const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_voice.gd"),
 	preload("res://addons/storyteller/actions/action_stop_audio.gd"),
 ]
+## Actions whose first argument names an asset that can be loaded ahead.
+const PRELOAD_ACTIONS := ["backdrop", "prop", "music", "sound", "ambience", "voice"]
+## How many instructions of a beat are scanned for assets to preload.
+const PRELOAD_SCAN_LIMIT := 400
+
 ## Upper limit of instructions run without showing a line or choice, which
 ## stops endless loops from freezing the game.
 var max_steps_without_pause := 100_000
@@ -530,7 +535,37 @@ func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 func _enter_beat(tale: Tale, beat: String) -> TaleFrame:
 	_visited["%s.%s" % [tale.tale_name, beat]] = true
 	beat_entered.emit(tale.tale_name, beat)
+	_preload_beat(tale, tale.get_beat_start(beat))
 	return TaleFrame.new(tale, beat)
+
+
+## Asks crew members to start loading the assets a beat names, so they are
+## ready when the beat reaches them.
+func _preload_beat(tale: Tale, start: int) -> void:
+	var loaders := _crew_siblings().filter(func(crew: Node) -> bool: return crew.has_method("preload_asset"))
+	if loaders.is_empty() or start < 0:
+		return
+	for i in range(start, mini(start + PRELOAD_SCAN_LIMIT, tale.instructions.size())):
+		var instruction: Dictionary = tale.instructions[i]
+		var kind := ""
+		var asset := ""
+		match instruction["op"]:
+			"end":
+				break
+			"say":
+				if not instruction["voice"].is_empty():
+					kind = "voice"
+					asset = instruction["voice"]
+			"eval":
+				var expr: Array = instruction["expr"]
+				if expr[0] == "call" and expr[1][0] == "name" and expr[1][1] in PRELOAD_ACTIONS:
+					var args: Array = expr[2]
+					if not args.is_empty() and args[0][0] == "lit" and args[0][1] is String:
+						kind = expr[1][1]
+						asset = args[0][1]
+		if not asset.is_empty():
+			for loader in loaders:
+				loader.preload_asset(kind, asset)
 
 
 ## Initializes a tale's story and global variables the first time it runs.
