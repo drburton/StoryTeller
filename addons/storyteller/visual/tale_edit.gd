@@ -43,12 +43,24 @@ static func replace_block(source: String, node: TaleNode, text: String) -> Strin
 
 ## The text of [param node] and its body with the node's indentation removed.
 static func block_text(source: String, node: TaleNode) -> String:
+	return group_text(source, [node])
+
+
+## Lines covered by consecutive sibling statements [param nodes], such as
+## an if/elif/else chain.
+static func group_span(nodes: Array) -> Vector2i:
+	return Vector2i(nodes[0].line_start, span(nodes.back()).y)
+
+
+## The text of consecutive siblings [param nodes] without their indentation.
+static func group_text(source: String, nodes: Array) -> String:
 	var lines := source.split("\n")
-	var block := span(node)
+	var block := group_span(nodes)
+	var indent: String = nodes[0].indent
 	var out := PackedStringArray()
 	for i in range(block.x - 1, block.y):
 		var line := lines[i].trim_suffix("\r")
-		out.append(line.substr(node.indent.length()) if line.begins_with(node.indent) else line.strip_edges(true, false))
+		out.append(line.substr(indent.length()) if line.begins_with(indent) else line.strip_edges(true, false))
 	return "\n".join(out)
 
 
@@ -80,10 +92,16 @@ static func append_to(source: String, doc: TaleDocument, parent: TaleNode, text:
 ## Removes [param node] and its body. A block left without statements gets
 ## [code]pass[/code] so the tale stays valid.
 static func delete(source: String, doc: TaleDocument, node: TaleNode) -> String:
-	var block := span(node)
-	var parent := find_parent(doc, node)
-	if parent != null and content_children(parent).size() == 1 and parent.kind != TaleNode.Kind.CHOOSE:
-		return replace_lines(source, block.x, block.y, PackedStringArray([node.indent + "pass"]))
+	return delete_group(source, doc, [node])
+
+
+## Removes consecutive siblings [param nodes], adding [code]pass[/code] if
+## their block is left empty.
+static func delete_group(source: String, doc: TaleDocument, nodes: Array) -> String:
+	var block := group_span(nodes)
+	var parent := find_parent(doc, nodes[0])
+	if parent != null and content_children(parent).size() == nodes.size() and parent.kind != TaleNode.Kind.CHOOSE:
+		return replace_lines(source, block.x, block.y, PackedStringArray([nodes[0].indent + "pass"]))
 	return replace_lines(source, block.x, block.y, PackedStringArray())
 
 
@@ -91,14 +109,20 @@ static func delete(source: String, doc: TaleDocument, node: TaleNode) -> String:
 ## block [param parent] (counted without [param node] itself). Returns the
 ## new source.
 static func move(source: String, doc: TaleDocument, node: TaleNode, parent: TaleNode, index: int) -> String:
-	var text := block_text(source, node)
+	return move_group(source, doc, [node], parent, index)
+
+
+## Like [method move], for consecutive siblings such as an if/elif/else chain.
+static func move_group(source: String, doc: TaleDocument, nodes: Array, parent: TaleNode, index: int) -> String:
+	var text := group_text(source, nodes)
 	var siblings := content_children(parent)
-	siblings.erase(node)
+	for node in nodes:
+		siblings.erase(node)
 	var anchor: TaleNode = siblings[index] if index < siblings.size() else null
 	var anchor_line := anchor.line_start if anchor != null else -1
 	var parent_line := parent.line_start
-	var removed := span(node)
-	var after_delete := delete(source, doc, node)
+	var removed := group_span(nodes)
+	var after_delete := delete_group(source, doc, nodes)
 	# Lines after the removed block move up by this much.
 	var shift := source.split("\n").size() - after_delete.split("\n").size()
 	var new_doc := TaleParser.parse(after_delete)

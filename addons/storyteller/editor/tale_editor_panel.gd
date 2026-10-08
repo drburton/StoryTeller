@@ -2,8 +2,8 @@
 class_name TaleEditorPanel
 extends Control
 ## The "Story" main screen: a list of the project's tales, a TaleScript
-## editor with syntax highlighting and autocomplete, and a live list of
-## problems.
+## editor with syntax highlighting and autocomplete, the card editor (a
+## visual view of the same text), and a live list of problems.
 ##
 ## Edits are kept per file until saved, so switching files loses nothing.
 ## Ctrl+S (Cmd+S on macOS) saves the open tale and reimports it.
@@ -32,8 +32,12 @@ var file_list: ItemList
 var code_edit: CodeEdit
 var problem_list: ItemList
 var highlighter: TaleSyntaxHighlighter
+var card_editor: TaleCardEditor
+## "text" or "cards".
+var view := "text"
 
 var _title: Label
+var _view_buttons: Dictionary = {}
 var _save_button: Button
 var _check_timer: Timer
 var _current_path := ""
@@ -72,6 +76,17 @@ func _build_ui() -> void:
 	export.tooltip_text = "Write every line, choice, name, and menu text to the translation CSV set in StoryConfig."
 	export.pressed.connect(export_strings)
 	toolbar.add_child(export)
+	var views := ButtonGroup.new()
+	for view_name in ["Text", "Cards"]:
+		var button := Button.new()
+		button.text = view_name
+		button.toggle_mode = true
+		button.button_group = views
+		button.button_pressed = view_name == "Text"
+		button.name = view_name + "View"
+		button.pressed.connect(show_view.bind(view_name.to_lower()))
+		toolbar.add_child(button)
+		_view_buttons[view_name.to_lower()] = button
 	_save_button = Button.new()
 	_save_button.text = "Save"
 	_save_button.disabled = true
@@ -119,6 +134,17 @@ func _build_ui() -> void:
 		if editor_font:
 			code_edit.add_theme_font_override("font", editor_font)
 	right.add_child(code_edit)
+	card_editor = TaleCardEditor.new()
+	card_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	card_editor.visible = false
+	card_editor.source_changed.connect(apply_edit)
+	card_editor.undo_requested.connect(func() -> void:
+		code_edit.undo()
+		_refresh_cards())
+	card_editor.redo_requested.connect(func() -> void:
+		code_edit.redo()
+		_refresh_cards())
+	right.add_child(card_editor)
 
 	problem_list = ItemList.new()
 	problem_list.custom_minimum_size = Vector2(0, 80)
@@ -131,6 +157,61 @@ func _build_ui() -> void:
 	_check_timer.wait_time = CHECK_DELAY
 	_check_timer.timeout.connect(check_now)
 	add_child(_check_timer)
+
+
+## Switches between the "text" and "cards" views of the open tale.
+func show_view(view_name: String) -> void:
+	view = view_name
+	if _view_buttons.has(view):
+		_view_buttons[view].set_pressed_no_signal(true)
+	code_edit.visible = view == "text"
+	card_editor.visible = view == "cards"
+	if view == "cards":
+		_refresh_cards()
+
+
+## Applies [param new_source] from the card editor to the text as one
+## undoable change that replaces only the lines that differ.
+func apply_edit(new_source: String) -> void:
+	var old := code_edit.text
+	if new_source == old:
+		return
+	var a := old.split("\n")
+	var b := new_source.split("\n")
+	var start := 0
+	while start < a.size() and start < b.size() and a[start] == b[start]:
+		start += 1
+	var end_a := a.size() - 1
+	var end_b := b.size() - 1
+	while end_a >= start and end_b >= start and a[end_a] == b[end_b]:
+		end_a -= 1
+		end_b -= 1
+	code_edit.begin_complex_operation()
+	if start >= a.size():
+		code_edit.insert_text("\n" + "\n".join(b.slice(start, end_b + 1)), a.size() - 1, a[a.size() - 1].length())
+	elif end_a >= start and end_b >= start:
+		code_edit.remove_text(start, 0, end_a, a[end_a].length())
+		code_edit.insert_text("\n".join(b.slice(start, end_b + 1)), start, 0)
+	elif end_b >= start:
+		code_edit.insert_text("\n".join(b.slice(start, end_b + 1)) + "\n", start, 0)
+	elif start > 0:
+		code_edit.remove_text(start - 1, a[start - 1].length(), end_a, a[end_a].length())
+	else:
+		code_edit.remove_text(0, 0, end_a + 1, 0)
+	code_edit.end_complex_operation()
+	if code_edit.text != new_source:
+		code_edit.text = new_source
+	# text_changed arrives a frame later; keep the buffer current now.
+	_on_text_changed()
+	_refresh_cards()
+
+
+func _refresh_cards() -> void:
+	if view != "cards" or _current_path.is_empty():
+		return
+	if _context == null:
+		_context = _make_context()
+	card_editor.set_source(code_edit.text, _context, _diagnostics)
 
 
 ## Lists every .tale file in the project, skipping folders with .gdignore.
@@ -154,6 +235,7 @@ func open_file(path: String) -> void:
 		_buffers[path] = {"text": text, "saved": text}
 	_current_path = path
 	_context = null
+	card_editor.current_beat = ""
 	_loading = true
 	code_edit.text = _buffers[path]["text"]
 	code_edit.clear_undo_history()
@@ -164,6 +246,7 @@ func open_file(path: String) -> void:
 		if file_list.get_item_metadata(i) == path:
 			file_list.select(i)
 	check_now()
+	_refresh_cards()
 
 
 ## Writes the translation CSV (see [StoryStrings]) and reports the result.
@@ -221,6 +304,9 @@ func check_now() -> void:
 		_context = _make_context()
 		_diagnostics.append_array(TaleChecker.check(doc, _context))
 	_show_problems()
+	if view == "cards" and card_editor.source == code_edit.text:
+		card_editor.diagnostics = _diagnostics
+		card_editor.rebuild()
 
 
 func get_diagnostics() -> Array[TaleDiagnostic]:
@@ -251,11 +337,12 @@ func _on_text_changed() -> void:
 		return
 	_buffers[_current_path]["text"] = code_edit.text
 	_update_title()
-	_check_timer.start()
+	if _check_timer.is_inside_tree():
+		_check_timer.start()
 	# Offer completions while a word is being typed.
 	var column := code_edit.get_caret_column()
 	var line := code_edit.get_line(code_edit.get_caret_line())
-	if column > 0 and column <= line.length() and (line[column - 1] == "_" or line[column - 1].is_valid_identifier()):
+	if code_edit.has_focus() and column > 0 and column <= line.length() and (line[column - 1] == "_" or line[column - 1].is_valid_identifier()):
 		code_edit.request_code_completion()
 
 
