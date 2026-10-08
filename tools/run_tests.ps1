@@ -3,12 +3,14 @@
 # Usage:
 #   .\tools\run_tests.ps1 -Godot D:\Godot
 #   .\tools\run_tests.ps1 -Godot D:\Godot -Filter crew
+#   .\tools\run_tests.ps1 -Godot D:\Godot -UpdateGolden   # rewrite expected parse trees
 #
 # -Godot accepts the console executable or the folder that contains it.
 # When omitted, the GODOT_BIN environment variable is used.
 param(
     [string]$Godot = $env:GODOT_BIN,
-    [string]$Filter = ""
+    [string]$Filter = "",
+    [switch]$UpdateGolden
 )
 
 $ErrorActionPreference = "Continue"
@@ -40,8 +42,15 @@ if ($scriptErrors) {
 }
 
 $testArgs = @("--headless", "--path", $root, "-s", "res://tests/run_tests.gd")
+$userArgs = @()
 if ($Filter) {
-    $testArgs += @("--", "--filter=$Filter")
+    $userArgs += "--filter=$Filter"
+}
+if ($UpdateGolden) {
+    $userArgs += "--update-golden"
+}
+if ($userArgs.Count -gt 0) {
+    $testArgs += @("--") + $userArgs
 }
 & $Godot @testArgs 2>&1 | ForEach-Object { "$_" }
 exit $LASTEXITCODE

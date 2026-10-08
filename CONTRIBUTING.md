@@ -54,6 +54,7 @@ Some tests check error handling on purpose, so `ERROR:` and `WARNING:` lines fro
 - Assertions: `assert_true`, `assert_false`, `assert_eq`, `assert_ne`, `assert_null`, `assert_not_null`, `assert_has`, `fail`.
 - Wrap nodes you create with `track(node)` so they are freed after the test.
 - Put helper scripts and sample data in `tests/fixtures/`.
+- **Golden tests:** each `tests/fixtures/talescript/*.tale` has a `*.expected.txt` with its parse tree. After an intended parser change, regenerate them with `.\tools\run_tests.ps1 -Godot D:\Godot -UpdateGolden` (Windows) or `tools/run_tests.sh --update-golden` (Linux and macOS), then review the diff before committing.
 
 ## 4. Code style
 

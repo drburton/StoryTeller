@@ -1,0 +1,22 @@
+beat exprs:
+	x = 1 + 2 * 3
+	x = (1 + 2) * 3
+	x = -2 ** 2
+	x = 2 ** 3 ** 2
+	x = not a and b or c
+	x = a if cond else b if other else c
+	x = a not in list and b in list
+	x = a < b == c
+	x = 1 | 2 ^ 3 & 4 << 1
+	x = ~mask
+	x = !done && ready || forced
+	x = obj.items[2].name.length()
+	x = [1, 2.5, "three", true, null, [], {},]
+	x = {"a": 1, b = 2, 3: [x]}
+	x = 0xFF + 0b1010 + 1_000 + 1e3 + .5
+	x = await signal_ready
+	x = Vector2(0.5, -1)
+	x = "esc\t\"q\" \u00e9"
+	x %= 4
+	x **= 2
+	x <<= 1

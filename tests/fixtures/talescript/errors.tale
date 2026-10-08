@@ -1,0 +1,23 @@
+say("top level statement")
+var := 3
+
+beat broken:
+	if x y:
+		"Inside a broken header."
+	mira: hello
+	"Option" if x:
+		pass
+	x = (1 + 
+	2
+	3 = y
+	f(a = 1, 2)
+	foo;
+	jump
+	"unterminated
+	beat nested:
+		pass
+	  "bad indent"
+	choose:
+		jump nowhere
+	match x: "inline"
+	while true:

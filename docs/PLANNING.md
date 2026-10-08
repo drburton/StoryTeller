@@ -2,7 +2,11 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.5** (M0 complete; M1 next)
+Status: **Draft v0.6** (M1 in progress)
+
+Changes in v0.6:
+- The TaleScript specification now lives in `docs/talescript-spec.md` and is the authoritative reference; §4 below is an overview.
+- M1 progress: lexer and lossless parser done (decision 0010).
 
 Changes in v0.5:
 - License chosen: MIT (decision 0008, §13).
@@ -122,6 +126,8 @@ StoryTeller uses a **theater** metaphor. Every term below is used consistently i
 ---
 
 ## 4. TaleScript Language
+
+> The full, authoritative definition is in [`docs/talescript-spec.md`](talescript-spec.md). This section is an overview.
 
 ### 4.1 Design principles
 
@@ -562,7 +568,9 @@ Selecting any card shows the stage as it would look at that line. The director r
 - Private repository for the Pro add-on: deferred with the Pro tier (decision 0009).
 
 ### M1: TaleScript and a minimal playable (5 weeks)
-- Formal grammar, lexer, **lossless** parser, checker, compiler, import plugin.
+- Formal grammar and specification (`docs/talescript-spec.md`). ✔
+- Lexer and **lossless** parser with round-trip and golden tests. ✔
+- Checker, compiler, import plugin.
 - Director with await, call stack, skip, auto.
 - Vars, global vars, safe expression evaluator, `Story.expose`.
 - Flow: beats, `jump`, beat calls, `if`/`elif`/`else`, `match`, `choose`.
@@ -759,5 +767,6 @@ StoryTellerPro/                  # private repository (Pro tier)
 ## 20. Immediate Next Steps
 
 1. Run a quick trademark and name search for "StoryTeller".
-2. Write the formal TaleScript grammar in `docs/talescript-spec.md`, including every difference from GDScript and the lossless syntax tree design (start of M1).
-3. Implement the lexer and parser with round-trip and golden tests.
+2. Checker: names, beats, arguments, and the other checks in the spec (§9 of `docs/talescript-spec.md`).
+3. Compiler to an instruction list, and the import plugin for `.tale` files.
+4. Director, variables, and the expression evaluator, then the first dialogue box and choice menu.
