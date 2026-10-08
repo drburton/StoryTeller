@@ -1,9 +1,11 @@
 class_name TitleScreen
 extends MenuScreen
-## The title screen: New Game, Continue, Load, Settings, and Quit.
+## The title screen: New Game, Continue, Load, Extras (when the game has a
+## collection), Settings, and Quit.
 
 var _continue: Button
 var _load: Button
+var _extras: Button
 var _title: Label
 
 
@@ -30,6 +32,8 @@ func _ready() -> void:
 	column.add_child(_continue)
 	_load = MenuScreen.make_button("Load", func() -> void: menus.open("load"))
 	column.add_child(_load)
+	_extras = MenuScreen.make_button("Extras", func() -> void: menus.open("extras"))
+	column.add_child(_extras)
 	column.add_child(MenuScreen.make_button("Settings", func() -> void: menus.open("settings")))
 	if menus.can_quit():
 		column.add_child(MenuScreen.make_button("Quit", func() -> void: menus.quit_game()))
@@ -40,6 +44,7 @@ func open() -> void:
 	var has_saves := menus.saves() != null and not menus.saves().latest_slot().is_empty()
 	_continue.disabled = not has_saves
 	_load.disabled = not has_saves
+	_extras.visible = menus.collection() != null and not menus.collection().is_empty()
 	focus_first()
 
 

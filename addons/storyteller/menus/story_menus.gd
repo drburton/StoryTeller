@@ -24,7 +24,10 @@ const SCREENS := {
 	"history": preload("res://addons/storyteller/menus/history_screen.gd"),
 	"confirm": preload("res://addons/storyteller/menus/confirm_dialog.gd"),
 	"text_input": preload("res://addons/storyteller/menus/text_input_dialog.gd"),
+	"extras": preload("res://addons/storyteller/menus/extras_screen.gd"),
 }
+## Seconds a notice from show_notice() stays on screen.
+const NOTICE_TIME := 2.5
 
 ## Every piece of menu text, for "Export Strings". Menus are translated by
 ## Godot with these texts as keys. A test keeps this list complete.
@@ -38,7 +41,8 @@ const UI_TEXT: Array[String] = [
 	"Quit the game? Unsaved progress will be lost.",
 	"Text speed", "Auto mode delay", "Master volume", "Music volume",
 	"Sound volume", "Ambience volume", "Voice volume", "Full screen",
-	"Skip unread lines",
+	"Skip unread lines", "Extras", "Gallery", "Music", "Codex", "Locked",
+	"Unlocked: %s",
 ]
 
 var layer: CanvasLayer
@@ -52,6 +56,7 @@ var game_title := ""
 var return_to_title := true
 var show_quick_menu := true
 
+var _notices: VBoxContainer
 var _screens: Dictionary = {}
 var _stack: Array[MenuScreen] = []
 var _title_active := false
@@ -78,6 +83,21 @@ func setup(config: StoryConfig) -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.theme = config.theme if config.theme != null else StoryTheme.build_default()
 	layer.add_child(root)
+	# Notices get their own layer so they show above every menu screen.
+	var notice_layer := CanvasLayer.new()
+	notice_layer.name = "NoticeLayer"
+	notice_layer.layer = layer.layer + 1
+	add_child(notice_layer)
+	_notices = VBoxContainer.new()
+	_notices.name = "Notices"
+	_notices.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	_notices.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	_notices.offset_left = -24
+	_notices.offset_right = -24
+	_notices.offset_top = 24
+	_notices.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_notices.theme = root.theme
+	notice_layer.add_child(_notices)
 	quick_menu = QuickMenu.new()
 	quick_menu.menus = self
 	quick_menu.visible = false
@@ -225,6 +245,33 @@ func settings() -> StorySettings:
 
 func history() -> StoryHistory:
 	return _crew(&"History") as StoryHistory
+
+
+func collection() -> StoryCollection:
+	return _crew(&"Collection") as StoryCollection
+
+
+## Shows a short message in the top-right corner, such as an unlock.
+func show_notice(text: String) -> void:
+	var panel := PanelContainer.new()
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	panel.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	var label := Label.new()
+	label.text = text
+	panel.add_child(label)
+	_notices.add_child(panel)
+	var tween := panel.create_tween()
+	tween.tween_interval(NOTICE_TIME)
+	tween.tween_property(panel, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(panel.queue_free)
+
+
+func get_notices() -> PackedStringArray:
+	var result := PackedStringArray()
+	for panel in _notices.get_children():
+		if not panel.is_queued_for_deletion():
+			result.append(panel.get_child(0).text)
+	return result
 
 
 func audio() -> StoryAudio:

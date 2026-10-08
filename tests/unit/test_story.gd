@@ -18,7 +18,7 @@ func _make_story(crew: Array[Script] = []) -> Node:
 func test_default_config_has_director_and_dialogue() -> void:
 	var story: Node = track(StoryScript.new())
 	story.start(StoryConfig.new())
-	assert_eq(story.get_crew_names(), [&"TaleDirector", &"Stage", &"Audio", &"Effects", &"Saves", &"Settings", &"Rewind", &"History", &"Dialogue", &"Menus"])
+	assert_eq(story.get_crew_names(), [&"TaleDirector", &"Stage", &"Audio", &"Effects", &"Collection", &"Saves", &"Settings", &"Rewind", &"History", &"Dialogue", &"Menus", &"Console"])
 
 
 func test_start_with_empty_config() -> void:
@@ -130,7 +130,7 @@ func test_load_config_falls_back_to_defaults() -> void:
 	ProjectSettings.set_setting(setting, "res://does/not/exist.tres")
 	var config: StoryConfig = StoryScript.load_config()
 	assert_not_null(config)
-	assert_eq(config.crew.size(), 10, "default crew members")
+	assert_eq(config.crew.size(), 12, "default crew members")
 	if had_setting:
 		ProjectSettings.set_setting(setting, previous)
 	else:

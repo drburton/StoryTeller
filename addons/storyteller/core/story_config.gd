@@ -17,12 +17,14 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 	preload("res://addons/storyteller/stage/story_stage.gd"),
 	preload("res://addons/storyteller/audio/story_audio.gd"),
 	preload("res://addons/storyteller/effects/story_effects.gd"),
+	preload("res://addons/storyteller/collection/story_collection.gd"),
 	preload("res://addons/storyteller/saves/story_saves.gd"),
 	preload("res://addons/storyteller/saves/story_settings.gd"),
 	preload("res://addons/storyteller/rewind/story_rewind.gd"),
 	preload("res://addons/storyteller/rewind/story_history.gd"),
 	preload("res://addons/storyteller/ui/story_dialogue.gd"),
 	preload("res://addons/storyteller/menus/story_menus.gd"),
+	preload("res://addons/storyteller/debug/story_console.gd"),
 ]
 
 ## Folder that holds the project's tales.
@@ -53,6 +55,11 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_group("Audio")
 ## Folder with "music", "sounds", "ambience", and "voice" subfolders.
 @export_dir var audio_folder := "res://story/audio"
+
+@export_group("Extras")
+## Folder with [CollectionItem] files: gallery pictures, music room tracks,
+## and codex entries unlocked with collect().
+@export_dir var collection_folder := "res://story/collection"
 
 @export_group("Localization")
 ## Language the tales are written in, such as "en".

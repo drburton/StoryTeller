@@ -9,6 +9,8 @@ var visitor := ""
 beat start:
 	backdrop("library", transition = "fade", time = 1.5)
 	music("library_theme", volume = 0.6, fade = 2.0)
+	collect("library")
+	collect("library_theme")
 	"A quiet library. Lamps hum above long wooden tables."
 	ada.enter("smile", at = CENTER)
 	ada: "Oh! A visitor.[pause] Welcome to StoryTeller."
@@ -23,6 +25,7 @@ beat topics:
 			topics_seen.append("dialogue")
 			curiosity += 1
 			ada (smile): "Put a speaker, a colon, and a quoted line. Narration is just the quoted line."
+			collect("talescript")
 			jump topics
 		@once "What about choices?":
 			topics_seen.append("choices")
@@ -36,6 +39,8 @@ beat topics:
 			ada (thinking): "Watch the window."
 			backdrop("library_night", transition = "dissolve", time = 2.0)
 			ambience("rain", volume = 0.5)
+			weather("rain", strength = 0.6)
+			collect("library_night")
 			ada (smile): "Backdrops, music, and rain each take one line."
 			await ada.move_to(Vector2(0.32, 0.0), time = 0.6)
 			prop("book", at = Vector2(0.66, 0.4))
@@ -55,6 +60,7 @@ beat topics:
 			curiosity += 1
 			ada: "Press Escape or right-click for the pause menu. Saving, loading, and settings live there."
 			ada (curious): "Roll the mouse wheel up or press Page Up to rewind. Press H to read the history."
+			ada: "Pictures, music, and notes you unlock show up under Extras on the title screen."
 			ada (smile): "Some stories read better as pages. Let me show you."
 			dialogue_style("page")
 			"In the page style, lines stack on the screen like a book."
@@ -68,6 +74,7 @@ beat topics:
 			ada (smile): "Here is one from the StoryTeller plan."
 			ada.exit()
 			clear_props()
+			weather("none")
 			stop_audio(fade = 1.0)
 			jump prologue.start
 		"I'm ready to start writing." if curiosity > 0:
@@ -84,7 +91,9 @@ beat farewell:
 	sound("chime")
 	"The lamps dim. Somewhere, a page turns."
 	ada (smile): "Open demo/tales/welcome.tale to see how this scene was made."
+	collect("ada")
 	ada.exit(time = 0.8)
 	clear_props()
+	weather("none")
 	stop_audio(fade = 1.5)
 	await backdrop(Color.BLACK, time = 1.5)
