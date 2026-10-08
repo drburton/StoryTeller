@@ -1,6 +1,6 @@
 # 0006. Free base tier and paid Pro tier
 
-- **Status:** Accepted (feature split, pricing, and license still open)
+- **Status:** Accepted; timing amended by 0009 (Pro deferred), license set by 0008
 - **Date:** 2026-10-08
 
 ## Context

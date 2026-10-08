@@ -23,3 +23,7 @@ Writers create stories in TaleScript, a small language that looks and feels like
 - [Project plan](docs/PLANNING.md)
 - [Decision records](docs/decisions/README.md)
 - [Contributing guide](CONTRIBUTING.md)
+
+## License
+
+StoryTeller is released under the [MIT license](LICENSE).
