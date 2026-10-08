@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StoryConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/storyteller/core/story_config.gd" id="1_config"]
+
+[resource]
+script = ExtResource("1_config")
+tales_folder = "res://demo/tales"
+cast_folder = "res://demo/story/cast"
+backdrop_folder = "res://demo/story/backdrops"
+prop_folder = "res://demo/story/props"
+audio_folder = "res://demo/story/audio"

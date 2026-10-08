@@ -33,7 +33,24 @@ const POSITIONS := {
 const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_wait.gd"),
 	preload("res://addons/storyteller/actions/action_emit.gd"),
+	preload("res://addons/storyteller/actions/action_backdrop.gd"),
+	preload("res://addons/storyteller/actions/action_prop.gd"),
+	preload("res://addons/storyteller/actions/action_hide_prop.gd"),
+	preload("res://addons/storyteller/actions/action_clear_props.gd"),
+	preload("res://addons/storyteller/actions/action_shake.gd"),
+	preload("res://addons/storyteller/actions/action_music.gd"),
+	preload("res://addons/storyteller/actions/action_stop_music.gd"),
+	preload("res://addons/storyteller/actions/action_sound.gd"),
+	preload("res://addons/storyteller/actions/action_ambience.gd"),
+	preload("res://addons/storyteller/actions/action_stop_ambience.gd"),
+	preload("res://addons/storyteller/actions/action_voice.gd"),
+	preload("res://addons/storyteller/actions/action_stop_audio.gd"),
 ]
+## Actions whose first argument names an asset that can be loaded ahead.
+const PRELOAD_ACTIONS := ["backdrop", "prop", "music", "sound", "ambience", "voice"]
+## How many instructions of a beat are scanned for assets to preload.
+const PRELOAD_SCAN_LIMIT := 400
+
 ## Upper limit of instructions run without showing a line or choice, which
 ## stops endless loops from freezing the game.
 var max_steps_without_pause := 100_000
@@ -60,6 +77,9 @@ var _pending: Array[TaleTask] = []
 var _evaluator: TaleEvaluator
 var _context: TaleContext
 var _playing := false
+## Tale and line of the instruction being run, for error reports.
+var _current_tale := ""
+var _current_line := 0
 ## Increases on every play or stop, so an old run loop knows to quit.
 var _generation := 0
 
@@ -174,6 +194,14 @@ func make_check_context(tale_name := "") -> TaleCheckContext:
 		context.add_action(action_name, action.get_parameters(), action.get_required_count())
 	for exposed_name in _exposed:
 		context.add_exposed(exposed_name)
+	for crew in _crew_siblings():
+		if crew.has_method("get_tale_names"):
+			for extra in crew.get_tale_names():
+				context.add_exposed(extra)
+		if crew.has_method("get_cast_moods"):
+			var cast: Dictionary = crew.get_cast_moods()
+			for id in cast:
+				context.add_cast(id, cast[id])
 	for other in _tales:
 		var tale: Tale = _tales[other]
 		var vars := PackedStringArray()
@@ -267,6 +295,10 @@ func resolve_name(name: String, frame: TaleFrame) -> Array:
 			return [true, NAN]
 	if _exposed.has(name) and _exposed[name] is TaleExposed:
 		return [true, _exposed[name]]
+	for crew in _name_providers():
+		var provided: Array = crew.resolve_tale_name(name)
+		if provided[0]:
+			return provided
 	if get_tale(name) != null:
 		return [true, TaleNamespace.new(name)]
 	return [false, null]
@@ -359,6 +391,8 @@ func _run(generation: int) -> void:
 		var op: String = instruction["op"]
 		if op == "say" or op == "choose":
 			steps = 0
+		_current_tale = frame.tale.tale_name
+		_current_line = instruction["line"]
 		_evaluator.reset()
 		await _execute(instruction, frame)
 		if _evaluator.failed():
@@ -423,9 +457,11 @@ func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	await _finish_pending()
 	var text: String = await _render(instruction["text"], frame)
 	var speaker: String = instruction["speaker"]
+	var speaker_info := _speaker_info(speaker, frame)
 	var line := {
 		"speaker_id": speaker,
-		"speaker_name": _speaker_name(speaker, frame),
+		"speaker_name": speaker_info[0],
+		"speaker_color": speaker_info[1],
 		"mood": instruction["mood"],
 		"text": text,
 		"id": instruction["id"],
@@ -499,7 +535,37 @@ func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 func _enter_beat(tale: Tale, beat: String) -> TaleFrame:
 	_visited["%s.%s" % [tale.tale_name, beat]] = true
 	beat_entered.emit(tale.tale_name, beat)
+	_preload_beat(tale, tale.get_beat_start(beat))
 	return TaleFrame.new(tale, beat)
+
+
+## Asks crew members to start loading the assets a beat names, so they are
+## ready when the beat reaches them.
+func _preload_beat(tale: Tale, start: int) -> void:
+	var loaders := _crew_siblings().filter(func(crew: Node) -> bool: return crew.has_method("preload_asset"))
+	if loaders.is_empty() or start < 0:
+		return
+	for i in range(start, mini(start + PRELOAD_SCAN_LIMIT, tale.instructions.size())):
+		var instruction: Dictionary = tale.instructions[i]
+		var kind := ""
+		var asset := ""
+		match instruction["op"]:
+			"end":
+				break
+			"say":
+				if not instruction["voice"].is_empty():
+					kind = "voice"
+					asset = instruction["voice"]
+			"eval":
+				var expr: Array = instruction["expr"]
+				if expr[0] == "call" and expr[1][0] == "name" and expr[1][1] in PRELOAD_ACTIONS:
+					var args: Array = expr[2]
+					if not args.is_empty() and args[0][0] == "lit" and args[0][1] is String:
+						kind = expr[1][1]
+						asset = args[0][1]
+		if not asset.is_empty():
+			for loader in loaders:
+				loader.preload_asset(kind, asset)
 
 
 ## Initializes a tale's story and global variables the first time it runs.
@@ -560,27 +626,12 @@ func _try_tale_beat_call(expr: Array, frame: TaleFrame) -> bool:
 
 
 func _call_action(action: TaleAction, args: Array, named: Dictionary) -> Variant:
-	var params := action.get_parameters()
-	var defaults := action.get_defaults()
-	var first_default := params.size() - defaults.size()
-	if args.size() > params.size():
-		_evaluator.fail("'%s' takes at most %d arguments." % [action.get_action_name(), params.size()])
+	var bound := TaleCalls.bind(action, "run", args, named, 1, action.get_action_name())
+	if bound["error"]:
+		_evaluator.fail(bound["error"])
 		return null
-	var values: Array = args.duplicate()
-	for i in range(args.size(), params.size()):
-		if named.has(params[i]):
-			values.append(named[params[i]])
-		elif i >= first_default:
-			values.append(defaults[i - first_default])
-		else:
-			_evaluator.fail("'%s' needs the argument '%s'." % [action.get_action_name(), params[i]])
-			return null
-	for key in named:
-		if not key in params:
-			_evaluator.fail("'%s' has no argument named '%s'." % [action.get_action_name(), key])
-			return null
 	var call_args: Array = [_context]
-	call_args.append_array(values)
+	call_args.append_array(bound["values"])
 	return start_task(Callable(action, "run"), call_args)
 
 
@@ -676,13 +727,34 @@ func _render(parts: Array, frame: TaleFrame) -> String:
 	return text
 
 
-func _speaker_name(speaker: String, frame: TaleFrame) -> String:
+## Returns [display name, name color] for a speaker id.
+func _speaker_info(speaker: String, frame: TaleFrame) -> Array:
 	if speaker.is_empty():
-		return ""
+		return ["", Color.WHITE]
 	var found := resolve_name(speaker, frame)
 	if found[0] and found[1] is String:
-		return found[1]
-	return speaker.capitalize()
+		return [found[1], Color.WHITE]
+	if found[0] and found[1] is Object and found[1].has_method("get_display_name"):
+		return [found[1].get_display_name(), found[1].get_name_color()]
+	return [speaker.capitalize(), Color.WHITE]
+
+
+## Other crew members of the Story this director belongs to.
+func _crew_siblings() -> Array:
+	var story := get_parent()
+	if story == null or not story.has_method("get_crew_names"):
+		return []
+	var result := []
+	for crew_name in story.get_crew_names():
+		var crew: Node = story.get_crew(crew_name)
+		if crew != self:
+			result.append(crew)
+	return result
+
+
+## Crew members that supply names to tales (cast members, the camera).
+func _name_providers() -> Array:
+	return _crew_siblings().filter(func(crew: Node) -> bool: return crew.has_method("resolve_tale_name"))
 
 
 func _to_items(value: Variant) -> Array:
@@ -717,6 +789,11 @@ func _get_presenter() -> Object:
 	if story != null and story.has_method("get_crew"):
 		return story.get_crew(&"Dialogue")
 	return null
+
+
+## Reports a runtime problem for the instruction being run.
+func report_error(message: String) -> void:
+	_report(message, _current_tale, _current_line)
 
 
 func _report(message: String, tale_name: String, line: int) -> void:

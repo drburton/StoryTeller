@@ -22,3 +22,7 @@ Story="*res://addons/storyteller/core/story.gd"
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/storyteller/plugin.cfg")
+
+[storyteller]
+
+config_path="res://demo/story_config.tres"

@@ -1,0 +1,14 @@
+[remap]
+
+importer="storyteller.tale"
+type="Resource"
+uid="uid://bgt2w5kn6pyim"
+path="res://.godot/imported/chapter_1.tale-9b7a68823fa9ab931214eb489c60f8ad.res"
+
+[deps]
+
+source_file="res://demo/tales/chapter_1.tale"
+dest_files=["res://.godot/imported/chapter_1.tale-9b7a68823fa9ab931214eb489c60f8ad.res"]
+
+[params]
+

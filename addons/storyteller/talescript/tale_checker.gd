@@ -377,9 +377,10 @@ func _check_expr(expr: TaleExpr, anchor: TaleExpr = null) -> void:
 			_check_call(expr, anchor)
 		E.ATTRIBUTE:
 			var base := expr.operands[0]
-			if base.kind == E.IDENTIFIER and _lookup(base.name) == "tale":
+			var base_kind := _lookup(base.name) if base.kind == E.IDENTIFIER else ""
+			if base_kind == "tale":
 				_check_tale_member(base.name, expr.name, false, expr, anchor)
-			else:
+			elif base_kind != "constructor":
 				_check_expr(base, anchor)
 		_:
 			for operand in expr.operands:

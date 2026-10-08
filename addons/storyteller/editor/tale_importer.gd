@@ -3,8 +3,8 @@ extends EditorImportPlugin
 ## Imports .tale files as compiled [Tale] resources.
 ##
 ## Parse errors stop the import and are shown in the Output panel with file
-## and line. Checker problems are shown as warnings for now, because cast
-## members and custom actions are not registered with the checker yet.
+## and line. Checker problems are shown as warnings for now, because custom
+## actions are not registered with the checker yet.
 
 
 func _get_importer_name() -> String:
@@ -79,6 +79,12 @@ static func _make_context(source_file: String, tale_name: String) -> TaleCheckCo
 	var director := TaleDirector.new()
 	var context := director.make_check_context(tale_name)
 	director.free()
+	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").load_config()
+	var profiles := StoryStage.scan_cast(config.cast_folder)
+	for id in profiles:
+		var profile: CastProfile = profiles[id]
+		context.add_cast(id, profile.look.get_moods() if profile.look else PackedStringArray())
+	context.add_exposed("camera")
 	var folder := source_file.get_base_dir()
 	for file_name in DirAccess.get_files_at(folder):
 		if not file_name.ends_with(".tale") or file_name.get_basename() == tale_name:

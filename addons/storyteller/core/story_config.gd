@@ -14,11 +14,27 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Each script must extend [StoryCrew].
 @export var crew: Array[Script] = [
 	preload("res://addons/storyteller/director/tale_director.gd"),
+	preload("res://addons/storyteller/stage/story_stage.gd"),
+	preload("res://addons/storyteller/audio/story_audio.gd"),
 	preload("res://addons/storyteller/ui/story_dialogue.gd"),
 ]
 
 ## Folder that holds the project's tales.
 @export_dir var tales_folder := "res://story/tales"
+
+@export_group("Stage")
+## Folder with cast members: "<id>.tres" profiles or "<id>/" image folders.
+@export_dir var cast_folder := "res://story/cast"
+## Dim cast members who are not speaking.
+@export var highlight_speaker := true
+## Folder with backdrop images, used by backdrop("name").
+@export_dir var backdrop_folder := "res://story/backdrops"
+## Folder with prop images and scenes, used by prop("name").
+@export_dir var prop_folder := "res://story/props"
+
+@export_group("Audio")
+## Folder with "music", "sounds", "ambience", and "voice" subfolders.
+@export_dir var audio_folder := "res://story/audio"
 
 @export_group("Dialogue")
 ## Scene for the dialogue box (its root must extend [DialogueBox]).

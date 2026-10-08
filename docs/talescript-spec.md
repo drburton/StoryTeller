@@ -13,7 +13,7 @@ Implementation status:
 | Runtime meaning of statements (§5) | Implemented (`TaleCompiler`, `TaleDirector`) |
 | Interpolation (§7.2) and `[pause]` tags (§7.1) | Implemented |
 | `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned |
-| Cast members, stage positions, moods (§5.2, §6.3) | Planned (M2); speakers can be `const` names until then |
+| Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 
 ---
 
@@ -323,8 +323,10 @@ backdrop("forest", transition = "fade", time = 1.5)
 ### 6.3 Names available in expressions
 
 - Story, global, and temporary variables, and constants.
-- Cast members by id (`mira`), with their properties and methods.
-- Stage positions: `LEFT`, `CENTER`, `RIGHT`, and `Vector2` for exact positions.
+- Cast members by id (`mira`), with the methods and properties listed in §13.
+- `camera`, with the methods and properties listed in §13.
+- Stage positions: `LEFT`, `CENTER`, `RIGHT` (`Vector2(0.25, 0)`, `Vector2(0.5, 0)`, `Vector2(0.75, 0)`), or any `Vector2`. The x value runs from 0 (left edge) to 1 (right edge); the y value lifts a character's feet above the bottom of the screen, as a fraction of the screen height.
+- Constants of value types, such as `Color.RED`, `Color.TRANSPARENT`, `Vector2.ZERO`, and `Vector2.LEFT`.
 - Built-in functions: `randi_range`, `randf`, `min`, `max`, `clamp`, `round`, `len`, `str`, `visited("tale.beat")`, `collected("id")`, `tr("key")`.
 - Objects and functions that game code exposes with `Story.expose()`. Nothing else in the engine is reachable.
 
@@ -479,3 +481,73 @@ The parser (`TaleParser.parse()`) returns a `TaleDocument` whose tree satisfies:
 5. **Inline bodies.** In `if done: jump end`, the `jump` node is marked `inline` and shares the header's line.
 
 These guarantees let the visual editor change one statement by replacing only that statement's lines.
+
+---
+
+## 13. Built-in actions and stage objects
+
+Actions are called like functions. Named arguments may be given in any order after the positional ones. Every action starts at once; put `await` in front to wait for it to finish. Lines and choices wait for running actions before they appear.
+
+### 13.1 Actions
+
+| Action | Arguments (defaults) | Effect |
+|---|---|---|
+| `wait` | `seconds` | Pause. |
+| `emit` | `signal_name`, `value = null` | Tell game code something happened (`TaleDirector.story_signal`). |
+| `backdrop` | `name`, `transition = "fade"`, `time = 1.0`, `mask = ""` | Show a backdrop image, or a `Color`. `Color.TRANSPARENT` removes it. |
+| `prop` | `name`, `at = Vector2(0.5, 0.5)`, `time = 0.3` | Show an image or scene, centered at a stage position. |
+| `hide_prop` | `name`, `time = 0.3` | Remove a prop. |
+| `clear_props` | `time = 0.3` | Remove all props. |
+| `shake` | `strength = 0.5`, `time = 0.4` | Shake the stage. |
+| `music` | `track`, `volume = 1.0`, `fade = 1.0`, `loop = true` | Play music, crossfading from the current track. |
+| `stop_music` | `fade = 1.0` | Fade out the music. |
+| `sound` | `name`, `volume = 1.0` | Play a sound effect. |
+| `ambience` | `name`, `volume = 1.0`, `fade = 1.0` | Play a looping background sound. |
+| `stop_ambience` | `fade = 1.0` | Fade out the ambience. |
+| `voice` | `clip` | Play a voice clip. Lines marked `@voice("clip")` do this automatically. |
+| `stop_audio` | `fade = 0.5` | Stop music, ambience, sounds, and voice. |
+
+Transitions for `backdrop`: `none`, `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, `slide_down`. With `dissolve`, `mask` names a grayscale image in `res://story/transitions/` that sets the order in which pixels change (dark first).
+
+### 13.2 Cast members
+
+| Member | Description |
+|---|---|
+| `enter(mood = "", at = Vector2(0.5, 0), time = 0.4, transition = "fade")` | Show the character. Transitions: `fade`, `slide_left` (enters from the left edge), `slide_right`, `none`. |
+| `exit(time = 0.4, transition = "fade")` | Hide the character. |
+| `move_to(at, time = 0.5)` | Move to a stage position. |
+| `scale_to(factor, time = 0.3)` | Resize relative to the profile's size. |
+| `mood` | Current mood; assign to change it. `speaker (mood): "..."` also changes it. |
+| `tint` | `Color` multiplied over the character. |
+| `flip` | `true` mirrors the character. |
+| `on_stage` | `true` between `enter()` and `exit()` (read it; don't assign). |
+
+Speakers who are not talking are dimmed while a cast member speaks. This can be turned off with `StoryConfig.highlight_speaker`.
+
+### 13.3 Camera
+
+| Member | Description |
+|---|---|
+| `zoom(amount = 1.0, time = 0.5)` | Zoom toward the screen center. |
+| `pan(to = Vector2.ZERO, time = 0.5)` | Move the view by a fraction of the screen. |
+| `rotate(degrees = 0.0, time = 0.5)` | Tilt the view. |
+| `shake(strength = 0.5, time = 0.4)` | Shake the view. |
+| `reset(time = 0.5)` | Return to normal. |
+| `zoom_level`, `offset`, `angle` | Current values; assign to change them at once. |
+
+The camera moves backdrops, cast, and props together. The dialogue box and menus stay in place.
+
+### 13.4 Asset folders
+
+Assets are found by name, without extension, in the folders set in `StoryConfig`:
+
+| Kind | Default folder | Formats |
+|---|---|---|
+| Tales | `res://story/tales/` | `.tale` |
+| Cast members | `res://story/cast/` | `<id>.tres` (a `CastProfile`) or a `<id>/` folder with one image per mood |
+| Backdrops | `res://story/backdrops/` | png, webp, jpg, svg |
+| Props | `res://story/props/` | images, or scenes with a `Node2D` root |
+| Transition masks | `res://story/transitions/` | grayscale images |
+| Music, sounds, ambience, voice | `res://story/audio/music/`, `sounds/`, `ambience/`, `voice/` | ogg, mp3, wav |
+
+When a beat starts, StoryTeller begins loading the assets it names in the background.

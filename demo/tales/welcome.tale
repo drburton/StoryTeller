@@ -2,14 +2,16 @@
 ## A short tour of TaleScript, used by the StoryTeller demo scene.
 @title("Welcome to StoryTeller")
 
-const GUIDE := "Ada"
 var curiosity := 0
 var topics_seen := []
 
 beat start:
+	backdrop("library", transition = "fade", time = 1.5)
+	music("library_theme", volume = 0.6, fade = 2.0)
 	"A quiet library. Lamps hum above long wooden tables."
-	GUIDE: "Oh! A visitor.[pause] Welcome to StoryTeller."
-	GUIDE: "Everything you see is written in a .tale file. Press Space or click to continue."
+	ada.enter("smile", at = CENTER)
+	ada: "Oh! A visitor.[pause] Welcome to StoryTeller."
+	ada (neutral): "Everything you see is written in a .tale file. Press Space or click to continue."
 	jump topics
 
 beat topics:
@@ -17,19 +19,40 @@ beat topics:
 		@once "How do I write dialogue?":
 			topics_seen.append("dialogue")
 			curiosity += 1
-			GUIDE: "Put a speaker, a colon, and a quoted line. Narration is just the quoted line."
+			ada (smile): "Put a speaker, a colon, and a quoted line. Narration is just the quoted line."
 			jump topics
 		@once "What about choices?":
 			topics_seen.append("choices")
 			curiosity += 1
-			GUIDE: "You're using one right now. Each option is a string with its own block."
-			GUIDE: "Options marked @once disappear after you pick them."
+			ada (curious): "You're using one right now. Each option is a string with its own block."
+			ada: "Options marked @once disappear after you pick them."
+			jump topics
+		@once "Can the stage change?":
+			topics_seen.append("stage")
+			curiosity += 1
+			ada (thinking): "Watch the window."
+			backdrop("library_night", transition = "dissolve", time = 2.0)
+			ambience("rain", volume = 0.5)
+			ada (smile): "Backdrops, music, and rain each take one line."
+			await ada.move_to(Vector2(0.32, 0.0), time = 0.6)
+			prop("book", at = Vector2(0.66, 0.4))
+			sound("page_turn")
+			ada: "Characters move, and props appear wherever you put them."
+			await camera.zoom(1.15, time = 0.8)
+			ada (curious): "Even the camera can zoom."
+			camera.reset(time = 0.8)
 			jump topics
 		@once "Can tales remember things?":
 			topics_seen.append("variables")
 			curiosity += 1
-			GUIDE: "Yes. Questions you have asked so far: {curiosity}."
+			ada: "Yes. Questions you have asked so far: {curiosity}."
 			jump topics
+		"Show me a sample scene." if curiosity > 0:
+			ada (smile): "Here is one from the StoryTeller plan."
+			ada.exit()
+			clear_props()
+			stop_audio(fade = 1.0)
+			jump prologue.start
 		"I'm ready to start writing." if curiosity > 0:
 			jump farewell
 		@show_disabled "Leave already" if curiosity == 0:
@@ -37,10 +60,14 @@ beat topics:
 
 beat farewell:
 	match curiosity:
-		3:
-			GUIDE: "You asked about everything. I like that."
+		4:
+			ada (smile): "You asked about everything. I like that."
 		_:
-			GUIDE: "You asked about {len(topics_seen)} topic{\"s\" if len(topics_seen) != 1 else \"\"}."
-	wait(0.3)
+			ada: "You asked about {len(topics_seen)} topic{\"s\" if len(topics_seen) != 1 else \"\"}."
+	sound("chime")
 	"The lamps dim. Somewhere, a page turns."
-	GUIDE: "Open demo/tales/welcome.tale to see how this scene was made."
+	ada (smile): "Open demo/tales/welcome.tale to see how this scene was made."
+	ada.exit(time = 0.8)
+	clear_props()
+	stop_audio(fade = 1.5)
+	await backdrop(Color.BLACK, time = 1.5)

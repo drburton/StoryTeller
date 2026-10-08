@@ -56,6 +56,9 @@ func evaluate(expr: Array, frame: TaleFrame) -> Variant:
 		"call":
 			return await _call(expr, frame)
 		"attr":
+			var base: Array = expr[1]
+			if base[0] == "name" and base[1] in TaleCheckContext.CONSTRUCTORS and not _director.resolve_name(base[1], frame)[0]:
+				return _type_constant(base[1], expr[2])
 			var object: Variant = await evaluate(expr[1], frame)
 			return get_member(object, expr[2])
 		"idx":
@@ -133,6 +136,11 @@ func get_member(object: Variant, member_name: String) -> Variant:
 			return object.target.get(member_name)
 		fail("'%s' is not available to tales." % member_name)
 		return null
+	if _is_scriptable(object):
+		if member_name in object.get_tale_api().get("properties", []):
+			return object.get(member_name)
+		fail("'%s' is not available to tales." % member_name)
+		return null
 	if object is Object:
 		return _object_error(object)
 	if object is Dictionary:
@@ -202,6 +210,15 @@ func _call(expr: Array, frame: TaleFrame) -> Variant:
 
 
 func _call_method(object: Variant, method: String, args: Array, named: Dictionary) -> Variant:
+	if _is_scriptable(object):
+		if method not in object.get_tale_api().get("methods", []):
+			fail("'%s' is not available to tales." % method)
+			return null
+		var bound := TaleCalls.bind(object, method, args, named)
+		if bound["error"]:
+			fail(bound["error"])
+			return null
+		return _director.start_task(Callable(object, method), bound["values"])
 	if not named.is_empty():
 		fail("Named arguments only work with actions.")
 		return null
@@ -246,6 +263,11 @@ func _store(place: Array, value: Variant, frame: TaleFrame) -> void:
 					base.target.set(member, value)
 				else:
 					fail("'%s' can't be changed by tales." % member)
+			elif _is_scriptable(base):
+				if member in base.get_tale_api().get("properties", []):
+					base.set(member, value)
+				else:
+					fail("'%s' can't be changed by tales." % member)
 			elif base is Object:
 				_object_error(base)
 			elif base is Dictionary:
@@ -271,6 +293,42 @@ func _store(place: Array, value: Variant, frame: TaleFrame) -> void:
 				fail("Can't change items of %s." % type_string(typeof(container)))
 		_:
 			fail("Can't assign to this expression.")
+
+
+## Constants of value types, e.g. Color.RED or Vector2.ZERO.
+func _type_constant(type_name: String, constant: String) -> Variant:
+	if type_name == "Color":
+		var missing := Color(-1, -1, -1, -1)
+		var color := Color.from_string(constant, missing)
+		if color != missing:
+			return color
+	else:
+		var directions := {
+			"ZERO": Vector3.ZERO, "ONE": Vector3.ONE, "LEFT": Vector3.LEFT, "RIGHT": Vector3.RIGHT,
+			"UP": Vector3(0, -1, 0), "DOWN": Vector3(0, 1, 0), "FORWARD": Vector3.FORWARD, "BACK": Vector3.BACK,
+		}
+		if type_name == "Vector3":
+			directions["UP"] = Vector3.UP
+			directions["DOWN"] = Vector3.DOWN
+		if directions.has(constant):
+			var value: Vector3 = directions[constant]
+			match type_name:
+				"Vector2":
+					if constant not in ["FORWARD", "BACK"]:
+						return Vector2(value.x, value.y)
+				"Vector2i":
+					if constant not in ["FORWARD", "BACK"]:
+						return Vector2i(int(value.x), int(value.y))
+				"Vector3":
+					return value
+	fail("%s has no constant '%s'." % [type_name, constant])
+	return null
+
+
+## True for StoryTeller objects that list what tales may use, such as cast
+## members and the camera.
+static func _is_scriptable(value: Variant) -> bool:
+	return value is Object and is_instance_valid(value) and value.has_method("get_tale_api")
 
 
 static func _is_component(value: Variant, member: String) -> bool:

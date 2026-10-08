@@ -22,6 +22,12 @@ func wait(seconds: float) -> void:
 	await director.get_tree().create_timer(seconds).timeout
 
 
+## Reports a problem with the current line through the director's
+## runtime_error signal. The tale continues.
+func fail(message: String) -> void:
+	director.report_error(message)
+
+
 ## Returns another crew member, e.g. [code]ctx.get_crew(&"Audio")[/code].
 func get_crew(crew_name: StringName) -> StoryCrew:
 	var story := director.get_parent()

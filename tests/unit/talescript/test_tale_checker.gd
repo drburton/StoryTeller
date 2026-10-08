@@ -118,6 +118,10 @@ func test_action_arguments() -> void:
 	assert_eq(_beat("\temit(1, 2, 3, x = 4)\n"), PackedStringArray(), "unchecked actions accept anything")
 
 
+func test_type_constants() -> void:
+	assert_eq(_beat("\tvar c := Color.RED\n\tvar v := Vector2.ZERO\n"), PackedStringArray())
+
+
 func test_misused_names() -> void:
 	assert_eq(_check("beat main:\n\tvar x = helper\nbeat helper:\n\tpass\n"),
 		PackedStringArray(["2: 'helper' is a beat. Call it with helper() or use 'jump helper'."]))
