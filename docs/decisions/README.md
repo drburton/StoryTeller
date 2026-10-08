@@ -15,3 +15,4 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0007](0007-built-in-test-runner.md) | Built-in test runner instead of GUT | Accepted |
 | [0008](0008-mit-license.md) | MIT license | Accepted |
 | [0009](0009-defer-pro-tier.md) | Defer the Pro tier until the free tier works | Accepted |
+| [0010](0010-lossless-line-based-syntax-tree.md) | Lossless, line-based syntax tree | Accepted |

@@ -1,0 +1,55 @@
+# Every statement kind, plus comment placement.
+const HERO := "Alex"
+const MAX_TRIES: int = 3
+var gold: int = 10
+var flags: Array[String] = []
+var unset
+
+beat main:
+	var local := 1  # temporary
+	"Narration with a trailing comment."  # note
+	jonas: """A long line
+that spans two lines."""
+	mira ("face=smile, outfit=coat"): 'Single quotes work too.'
+	@id("main_04") @voice("mira_004") mira: "Pinned id and voice."
+	@id("main_05")
+	"Annotation on its own line."
+	gold -= 2
+	flags.append("met_jonas")
+	inventory["key"] = true
+	await wait(0.5)
+	side_quest()
+	other_tale.intro()
+	if gold > 5: jump rich
+	elif gold == 0:
+		pass
+	else:
+		mira: "Hmm."
+	while gold < MAX_TRIES:
+		gold += 1
+		if gold == 2:
+			continue
+		break
+	for item: String in flags:
+		emit("item", item)
+	match gold:
+		0, 1:
+			"Broke."
+		2 when not flags.is_empty():
+			"Two and flagged."
+		_: "Something else."
+	choose(style = "hotspots", timeout = 5.0):
+		@once "Ask about the key":
+			mira: "I lost it."
+		"Leave" if has_item("map"): jump exit
+		timeout:
+			"Too slow."
+	return
+
+beat side_quest:
+	"Side quest."
+		# indented comment stays in this beat
+
+	return 5
+
+# trailing comment at the end of the file
