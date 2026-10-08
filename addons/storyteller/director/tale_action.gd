@@ -26,29 +26,9 @@ func get_action_name() -> String:
 
 ## Parameter names of [code]run[/code] after the context, in order.
 func get_parameters() -> PackedStringArray:
-	var names := PackedStringArray()
-	var method := _run_method()
-	var args: Array = method.get("args", [])
-	for i in range(1, args.size()):
-		names.append(args[i]["name"])
-	return names
-
-
-## Default values of the trailing optional parameters of [code]run[/code].
-func get_defaults() -> Array:
-	return _run_method().get("default_args", [])
+	return TaleCalls.signature(self, "run", 1)["params"]
 
 
 ## Number of parameters that must be given.
 func get_required_count() -> int:
-	return get_parameters().size() - get_defaults().size()
-
-
-func _run_method() -> Dictionary:
-	var script := get_script() as Script
-	while script != null:
-		for method in script.get_script_method_list():
-			if method["name"] == "run":
-				return method
-		script = script.get_base_script()
-	return {}
+	return TaleCalls.signature(self, "run", 1)["required"]

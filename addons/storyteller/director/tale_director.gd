@@ -174,6 +174,11 @@ func make_check_context(tale_name := "") -> TaleCheckContext:
 		context.add_action(action_name, action.get_parameters(), action.get_required_count())
 	for exposed_name in _exposed:
 		context.add_exposed(exposed_name)
+	for crew in _crew_siblings():
+		if crew.has_method("get_cast_moods"):
+			var cast: Dictionary = crew.get_cast_moods()
+			for id in cast:
+				context.add_cast(id, cast[id])
 	for other in _tales:
 		var tale: Tale = _tales[other]
 		var vars := PackedStringArray()
@@ -267,6 +272,10 @@ func resolve_name(name: String, frame: TaleFrame) -> Array:
 			return [true, NAN]
 	if _exposed.has(name) and _exposed[name] is TaleExposed:
 		return [true, _exposed[name]]
+	for crew in _name_providers():
+		var provided: Array = crew.resolve_tale_name(name)
+		if provided[0]:
+			return provided
 	if get_tale(name) != null:
 		return [true, TaleNamespace.new(name)]
 	return [false, null]
@@ -423,9 +432,11 @@ func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	await _finish_pending()
 	var text: String = await _render(instruction["text"], frame)
 	var speaker: String = instruction["speaker"]
+	var speaker_info := _speaker_info(speaker, frame)
 	var line := {
 		"speaker_id": speaker,
-		"speaker_name": _speaker_name(speaker, frame),
+		"speaker_name": speaker_info[0],
+		"speaker_color": speaker_info[1],
 		"mood": instruction["mood"],
 		"text": text,
 		"id": instruction["id"],
@@ -560,27 +571,12 @@ func _try_tale_beat_call(expr: Array, frame: TaleFrame) -> bool:
 
 
 func _call_action(action: TaleAction, args: Array, named: Dictionary) -> Variant:
-	var params := action.get_parameters()
-	var defaults := action.get_defaults()
-	var first_default := params.size() - defaults.size()
-	if args.size() > params.size():
-		_evaluator.fail("'%s' takes at most %d arguments." % [action.get_action_name(), params.size()])
+	var bound := TaleCalls.bind(action, "run", args, named, 1, action.get_action_name())
+	if bound["error"]:
+		_evaluator.fail(bound["error"])
 		return null
-	var values: Array = args.duplicate()
-	for i in range(args.size(), params.size()):
-		if named.has(params[i]):
-			values.append(named[params[i]])
-		elif i >= first_default:
-			values.append(defaults[i - first_default])
-		else:
-			_evaluator.fail("'%s' needs the argument '%s'." % [action.get_action_name(), params[i]])
-			return null
-	for key in named:
-		if not key in params:
-			_evaluator.fail("'%s' has no argument named '%s'." % [action.get_action_name(), key])
-			return null
 	var call_args: Array = [_context]
-	call_args.append_array(values)
+	call_args.append_array(bound["values"])
 	return start_task(Callable(action, "run"), call_args)
 
 
@@ -676,13 +672,34 @@ func _render(parts: Array, frame: TaleFrame) -> String:
 	return text
 
 
-func _speaker_name(speaker: String, frame: TaleFrame) -> String:
+## Returns [display name, name color] for a speaker id.
+func _speaker_info(speaker: String, frame: TaleFrame) -> Array:
 	if speaker.is_empty():
-		return ""
+		return ["", Color.WHITE]
 	var found := resolve_name(speaker, frame)
 	if found[0] and found[1] is String:
-		return found[1]
-	return speaker.capitalize()
+		return [found[1], Color.WHITE]
+	if found[0] and found[1] is Object and found[1].has_method("get_display_name"):
+		return [found[1].get_display_name(), found[1].get_name_color()]
+	return [speaker.capitalize(), Color.WHITE]
+
+
+## Other crew members of the Story this director belongs to.
+func _crew_siblings() -> Array:
+	var story := get_parent()
+	if story == null or not story.has_method("get_crew_names"):
+		return []
+	var result := []
+	for crew_name in story.get_crew_names():
+		var crew: Node = story.get_crew(crew_name)
+		if crew != self:
+			result.append(crew)
+	return result
+
+
+## Crew members that supply names to tales (cast members, the camera).
+func _name_providers() -> Array:
+	return _crew_siblings().filter(func(crew: Node) -> bool: return crew.has_method("resolve_tale_name"))
 
 
 func _to_items(value: Variant) -> Array:

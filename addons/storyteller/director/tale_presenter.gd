@@ -7,7 +7,8 @@ extends Node
 
 
 ## Shows one line and returns when the player continues. [param line] has:
-## speaker_id, speaker_name, mood, text, id, voice, tale, beat, source_line.
+## speaker_id, speaker_name, speaker_color, mood, text, id, voice, tale,
+## beat, source_line.
 func show_line(_line: Dictionary) -> void:
 	pass
 
