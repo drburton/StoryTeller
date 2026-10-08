@@ -2,7 +2,15 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.2** (planning stage, no code yet)
+Status: **Draft v0.3** (planning stage, no code yet)
+
+Changes in v0.3:
+- Recorded the decisions made so far (§1.2).
+- Godot target set to the latest stable release; C# removed from scope.
+- The visual editor and Story Map move ahead of 1.0 as a headline feature (§9).
+- Added the free and Pro product tiers (§12).
+- Added exploration notes for licensing (§13) and target platforms (§14).
+- The parser now keeps formatting and comments so text and visual editing stay in sync (§4.10).
 
 Changes in v0.2:
 - Replaced the Naninovel-style script syntax with TaleScript, a GDScript-flavored language.
@@ -15,20 +23,42 @@ Changes in v0.2:
 ## 1. Goals
 
 1. **Familiar to Godot users.** Anyone who has written GDScript can read and write TaleScript within minutes: same comments, indentation, `var`, `if`/`elif`/`else`, `match`, `await`, and annotations.
-2. **Friendly to writers.** Dialogue reads like a screenplay. A non-programmer can write a full scene after reading a one-page cheat sheet.
+2. **Friendly to writers.** Dialogue reads like a screenplay. A non-programmer can write a full scene after reading a one-page cheat sheet, or build it entirely in the visual editor without typing any syntax.
 3. **Batteries included.** A new project gets a working title screen, save/load, settings, history log, and dialogue box out of the box.
 4. **Godot-native.** Built on nodes, resources, signals, themes, tweens, shaders, `RichTextLabel` effects, and the `TranslationServer`.
 5. **Extensible.** Developers add custom actions, cast types, effects, and menus by writing small GDScript classes.
 6. **Embeddable.** Works as a standalone visual novel engine and as a dialogue or cutscene system inside 2D and 3D games.
 7. **Fast iteration.** Live reload of story files while the game runs, clear errors with file and line, and an in-game debug console.
 
-### Non-goals for 1.0
+### 1.1 Non-goals for 1.0
 
 - Compatibility with, or import from, any other engine's script format.
-- A full visual programming language replacing text scripts.
-- Spine or Live2D support in the core package (planned as optional add-ons).
+- A general-purpose visual programming language. The visual editor (§9) covers story content; game logic stays in GDScript.
+- C# support. GDScript classes remain callable from C# through Godot's normal interop, and a dedicated C# API can be revisited after 1.0.
+- Spine or Live2D support in the core package (possible later add-ons).
 - Multiplayer storytelling.
-- Godot 3.x support.
+- Godot 3.x support, or Godot 4 versions older than the current stable release.
+
+### 1.2 Decision log
+
+| # | Date | Decision |
+|---|---|---|
+| D1 | 2026-10-08 | Naninovel defines the feature scope only. StoryTeller uses its own language, vocabulary, and design (§2). |
+| D2 | 2026-10-08 | The story language follows GDScript conventions (TaleScript, §4). |
+| D3 | 2026-10-08 | Target the latest stable Godot release (§1.3). |
+| D4 | 2026-10-08 | No C# support for now. |
+| D5 | 2026-10-08 | Names accepted: TaleScript, `.tale` files, `beat` blocks. |
+| D6 | 2026-10-08 | The visual editor ships before 1.0 as a key differentiator (§9). |
+| D7 | 2026-10-08 | Business model: free base tier plus a paid Pro tier (§12). |
+| D8 | open | License for the free tier (exploring, §13). |
+| D9 | open | Target platforms and their order (exploring, §14). |
+
+### 1.3 Godot version policy
+
+- StoryTeller targets the **latest stable Godot 4 release**. At the time of writing that appears to be the 4.7 series; confirm the exact version during M0.
+- When a new stable minor version ships (for example 4.8), StoryTeller moves to it in its next minor release, after the first patch release of that Godot version (x.y.1) to avoid early regressions.
+- CI runs against the supported version and also tests the newest Godot beta as a non-blocking job, giving early warning of breaking changes.
+- New Godot features (typed dictionaries, newer editor APIs, improved web export) can be used freely, since older versions are out of scope.
 
 ---
 
@@ -45,7 +75,7 @@ The project follows these rules:
 5. **Own architecture.** Systems are organized around Godot's node and resource model, which naturally produces a different structure from a Unity framework.
 6. **Trademarks.** Public materials (store listing, website, README, marketing) do not use the Naninovel name or branding, and do not claim compatibility or affiliation. This internal planning document mentions it only to record where the scope came from.
 7. **Decision log.** Major design decisions are recorded in `docs/decisions/` with the reasoning behind them, which documents independent development.
-8. **Legal review.** Before a public 1.0 release (and before any paid distribution), the maintainers obtain a short review from a lawyer familiar with software IP. This plan is general guidance and does not constitute legal advice.
+8. **Legal review.** Before the public 1.0 release and before selling the Pro tier, the maintainers obtain a review from a lawyer familiar with software IP, covering this section, the license choice (§13), the Pro EULA (§12), and a trademark search for the product name. This plan is general guidance and does not constitute legal advice.
 
 ---
 
@@ -261,9 +291,12 @@ Compiling tales to real GDScript was considered. It was rejected because a runni
 ### 4.10 Compilation pipeline
 
 ```
-.tale ─▶ Lexer ─▶ Parser ─▶ AST ─▶ Checker ─▶ Compiler ─▶ Tale resource (instructions + metadata)
+.tale ─▶ Lexer ─▶ Parser ─▶ Syntax tree (lossless) ─▶ Checker ─▶ Compiler ─▶ Tale resource (instructions + metadata)
+                                   ▲        │
+                                   └────────┴──▶ Visual editor reads and edits the same tree, then writes text back
 ```
 
+- The parser produces a **lossless syntax tree**: comments, blank lines, indentation style, and spacing are kept. The visual editor (§9) edits this tree and writes it back, so a change made visually alters only the affected lines and produces clean diffs in version control. This requirement shapes the parser from M1 onward.
 - Runs in an `EditorImportPlugin`, so errors appear in the Output panel with clickable `file:line`.
 - The **checker** reports unknown actions, wrong argument types, unknown beats, undefined variables, unknown cast members or moods (warnings), unreachable code, and indentation problems.
 - Every dialogue line receives a stable **line id** (beat name plus a content hash, or a pinned `@id`). An editor command, "Pin line ids", writes ids into the file so later edits never break translations or voice mapping.
@@ -377,37 +410,44 @@ Reference docs for every action are generated from their signatures and `##` doc
 
 ## 7. Feature Scope
 
-Standard visual novel genre features, grouped by milestone (see §10).
+Standard visual novel genre features, with the milestone (§11) and the proposed tier (§12).
 
-| Feature | Description | Milestone |
-|---|---|---|
-| TaleScript | Language, compiler, checker, syntax highlighting | M1 |
-| Director | Execution, await, call stack, skip and auto modes | M1 |
-| Variables and expressions | Story vars, global vars, safe evaluator, exposure API | M1 |
-| Dialogue box: classic | Bottom box with name plate and typewriter text | M1 |
-| Choice menu: list | Vertical button list | M1 |
-| Cast and looks | Sprite set, layered, scene, video | M2 |
-| Backdrops and props | With transitions | M2 |
-| Transition library | Fade, dissolve with mask texture, slide, wipe, iris, pixelate, ripple | M2 |
-| Audio | Music crossfade, sounds, voice, ambience, buses | M2 |
-| Camera | Zoom, pan, shake, rotate | M2 |
-| Saves | Slots with thumbnails, quick save, auto save, global data, versioned format | M3 |
-| Rewind | Step back through lines and choices | M3 |
-| History | Log with voice replay and jump back | M3 |
-| More dialogue styles | Full page, caption, speech bubble, messenger | M3 |
-| More choice styles | Hotspots (point-and-click), messenger reply, timed | M3 |
-| Menus | Title, pause, save/load, settings, history, confirm, loading, text input | M3 |
-| Effects | Rain, snow, fog, light rays, blur, flash, glitch, vignette | M4 |
-| Collection | Gallery, music room, codex | M4 |
-| Localization | String tables, CSV and `.po` export, runtime language switch | M4 |
-| Debug console | Run TaleScript lines, inspect and edit vars, jump to beats | M4 |
-| Live reload | Edit a tale during play and continue from the same line | M4 |
-| Play from here | Launch the game from a chosen line in the editor | M4 |
-| Movies | Full-screen video playback | M4 |
-| Embedding preset | Dialogue-only mode for 2D and 3D games, trigger tales from game events | M4 |
-| Story Map | Visual map of beats, jumps, calls, and choices | M5 |
-| Writer view | Form-based editor for people who prefer not to type syntax | M5 |
-| Language server | Autocomplete, hover docs, go to beat, diagnostics in external editors | M5 |
+| Feature | Description | Milestone | Tier |
+|---|---|---|---|
+| TaleScript | Language, compiler, checker, syntax highlighting | M1 | Free |
+| Director | Execution, await, call stack, skip and auto modes | M1 | Free |
+| Variables and expressions | Story vars, global vars, safe evaluator, exposure API | M1 | Free |
+| Dialogue box: classic | Bottom box with name plate and typewriter text | M1 | Free |
+| Choice menu: list | Vertical button list | M1 | Free |
+| Cast looks: sprite set, layered, scene | Characters from textures, layer rigs, or any Godot scene | M2 | Free |
+| Cast look: video | Characters from video clips | M2 | Pro |
+| Backdrops and props | With transitions | M2 | Free |
+| Core transitions | Fade, dissolve with mask texture, slide, wipe | M2 | Free |
+| Transition pack | Iris, pixelate, ripple, shatter, page turn, custom shader templates | M4 | Pro |
+| Audio | Music crossfade, sounds, voice, ambience, buses | M2 | Free |
+| Camera | Zoom, pan, shake, rotate | M2 | Free |
+| Saves | Slots with thumbnails, quick save, auto save, global data, versioned format | M3 | Free |
+| Rewind and history | Step back through lines and choices; log with voice replay | M3 | Free |
+| Dialogue style: full page | Full-screen text for prose-heavy scenes | M3 | Free |
+| Dialogue styles: bubble, messenger, caption | Speech bubbles, phone-chat stories, cinematic captions | M3 | Pro |
+| Choice styles: hotspots, messenger reply, timed | Point-and-click areas, chat replies, countdown choices | M3 | Pro |
+| Menus and default theme | Title, pause, save/load, settings, history, confirm, loading, text input | M3 | Free |
+| Theme and template pack | Extra polished themes and genre starter projects (mystery, romance, messenger story) | M4 | Pro |
+| Basic effects | Flash, fade to color, blur, vignette | M4 | Free |
+| Effects pack | Rain, snow, fog, light rays, glitch, film grain, particles presets | M4 | Pro |
+| Collection | Gallery, music room, codex | M4 | Free |
+| Localization runtime | String tables, runtime language switch | M4 | Free |
+| Translation workflow | CSV and `.po` export and import, missing-line reports, translator preview mode | M4 | Pro |
+| Voice production tools | Per-actor voice scripts, automatic clip mapping by line id, lip-flap from audio | M4 | Pro |
+| Debug console | Run TaleScript lines, inspect and edit vars, jump to beats | M4 | Free |
+| Live reload | Edit a tale during play and continue from the same line | M4 | Free |
+| Movies | Full-screen video playback | M4 | Free |
+| Embedding preset | Dialogue-only mode for 2D and 3D games, trigger tales from game events | M4 | Free |
+| Visual editor | Card-based editing of tales, synced with text (§9) | M5 | Free |
+| Story Map | Graph of beats, jumps, calls, and choices (§9) | M5 | Free |
+| Stage preview and play from here | Live preview of the stage at any line; launch the game from that line | M5 | Pro |
+| Story analytics | Route coverage, word counts per character, choice statistics from playtests | M5 | Pro |
+| Language server | Autocomplete and diagnostics in VS Code and other editors | Post-1.0 | Free |
 
 ---
 
@@ -420,16 +460,72 @@ Standard visual novel genre features, grouped by milestone (see §10).
 | Setup wizard | Config, folders, starter scene, sample tale | M1 |
 | Cast inspector | Custom inspector with mood previews and a "test enter" button | M2 |
 | Autocomplete | In-editor completion for actions, cast ids, moods, beats, vars | M4 |
-| Play from here | Right-click a line to launch at that point | M4 |
 | Live reload | Re-import on save and resume | M4 |
 | Translation tool | Create and update string tables, report missing lines | M4 |
-| Story Map | Main-screen tab built on `GraphEdit` | M5 |
-| Writer view | Line-by-line form editor | M5 |
-| Language server | LSP for VS Code and other editors | M5 |
+| Visual editor and Story Map | See §9 | M5 |
+| Language server | LSP for VS Code and other editors | Post-1.0 |
 
 ---
 
-## 9. Player-Facing Systems
+## 9. Visual Editor and Story Map
+
+The visual editor lets writers build complete tales without typing syntax, while programmers keep working in text. It is a headline feature and a major point of difference from other visual novel tools.
+
+### 9.1 Principles
+
+1. **One source of truth.** The `.tale` file is always the saved format. The visual editor and the text editor are two views of the same file, and a change in either appears in the other immediately.
+2. **Clean round trips.** Visual edits change only the affected lines and keep comments and formatting (§4.10), so writers and programmers can work on the same files in version control.
+3. **Nothing is lost.** Any code the visual editor cannot represent as a card appears as an editable "script card" holding the raw text.
+4. **Godot-native.** Built as a main-screen editor plugin (a "Story" tab next to 2D, 3D, Script, and AssetLib), using Godot's own controls, theme, and `EditorUndoRedoManager` for undo.
+
+### 9.2 Layout
+
+```
+┌──────────────────────── Story tab ────────────────────────┐
+│ Tale list │        Beat editor (cards)        │  Inspector │
+│           │                                   │  for the   │
+│ prologue  │  [Backdrop: classroom_morning]    │  selected  │
+│  ▸ start  │  [Mira enters: smile, left]       │  card      │
+│  ▸ honest │  [Narration: "Sunlight spills…"]  │            │
+│  ▸ bluff  │  [Mira (curious): "Nervous…?"]    │  Stage     │
+│ chapter_1 │  [Choice ▾ 3 options]             │  preview   │
+│           │                                   │  (Pro)     │
+├───────────┴───────────────────────────────────┴────────────┤
+│ Story Map (toggle): beats as nodes, arrows for jump/call/choice │
+└────────────────────────────────────────────────────────────┘
+```
+
+### 9.3 Cards
+
+| Card | Editing controls |
+|---|---|
+| Narration | Text field with a markup toolbar (bold, pause, speed, sound) |
+| Dialogue | Speaker dropdown with portraits, mood picker with thumbnails, text field |
+| Choice | One lane per option, each with its own condition and nested cards |
+| Condition | `if` / `elif` / `else` lanes with an expression builder or a free-text expression |
+| Action | Form generated automatically from the action's signature: typed fields, color pickers, asset pickers with previews |
+| Jump / call | Beat picker with search |
+| Set variable | Variable picker, operator, value |
+| Script | Raw TaleScript for anything else |
+
+Interaction: drag to reorder, multi-select, copy and paste between tales, keyboard navigation for every action, collapse and expand nested lanes, and inline checker warnings on each card.
+
+### 9.4 Story Map
+
+- Each beat is a `GraphNode`; arrows show jumps, calls, and choice branches, colored by tale.
+- Automatic layout with manual adjustment saved to a sidecar file (`.tale.map`), so the tale file itself stays clean.
+- Highlights unreachable beats, dead ends, and missing targets.
+- Drag from a node's output to empty space to create and link a new beat.
+- Double-click a node to open it in the beat editor.
+- Pro overlay: route coverage from playtests and word counts per branch.
+
+### 9.5 Stage preview (Pro)
+
+Selecting any card shows the stage as it would look at that line. The director runs the tale up to that point in a fast "dry run" mode with all animations skipped, then renders the result in an editor viewport. A "Play from here" button launches the game at the same point with the computed state.
+
+---
+
+## 10. Player-Facing Systems
 
 - **Dialogue boxes:** each style is a scene implementing a small `DialogueBox` interface (`show_line`, `finish_typing`, `clear`). Restyle with a Godot `Theme` or replace the scene.
 - **Typewriter:** per character, per word, fade-in, or instant; speed from settings; typing sounds per cast member.
@@ -441,119 +537,214 @@ Standard visual novel genre features, grouped by milestone (see §10).
 
 ---
 
-## 10. Milestones
+## 11. Milestones
 
 ### M0: Scaffolding (1 week)
+- Confirm the current stable Godot version and pin it in CI.
 - Addon skeleton (`plugin.cfg`, `EditorPlugin`, autoload registration).
-- GUT test framework running headless in GitHub Actions.
-- Contribution guide including the clean-room rules from §2, decision log folder, issue templates.
+- GUT test framework running headless in GitHub Actions, plus a non-blocking job on the newest Godot beta.
+- Contribution guide with the clean-room rules from §2, decision log folder, issue templates.
+- Private repository created for the Pro add-on.
 
 ### M1: TaleScript and a minimal playable (5 weeks)
-- Formal grammar, lexer, parser, checker, compiler, import plugin.
+- Formal grammar, lexer, **lossless** parser, checker, compiler, import plugin.
 - Director with await, call stack, skip, auto.
 - Vars, global vars, safe expression evaluator, `Story.expose`.
 - Flow: beats, `jump`, beat calls, `if`/`elif`/`else`, `match`, `choose`.
 - Classic dialogue box and list choice menu. Syntax highlighting.
-- **Exit criteria:** the §4.2 sample runs end to end with placeholder art.
+- **Exit criteria:** the §4.2 sample runs end to end with placeholder art; parsing and re-printing every fixture reproduces the original file byte for byte.
 
 ### M2: Stage, cast, audio (5 weeks)
-- Cast with all four looks, backdrops, props, transitions, camera, audio, asset finder with preloading.
+- Cast looks, backdrops, props, core transitions, camera, audio, asset finder with preloading.
 - **Exit criteria:** the §4.2 sample runs with real art, music, and transitions.
 
 ### M3: Saves and menus (4 weeks)
 - Saves, rewind, history, read tracking, settings.
-- All dialogue and choice styles, full menu set with one shared theme.
-- **Exit criteria:** a 15-minute original demo story exports and plays on desktop and web.
+- Dialogue and choice styles, full menu set with one shared theme.
+- **Exit criteria:** a 15-minute original demo story exports and plays on the platforms chosen for M3 (§14).
 
-### M4: Production features (4 weeks)
-- Effects, collection, localization, debug console, live reload, play from here, autocomplete, movies, embedding preset.
-- **Exit criteria:** demo translated into a second language; Android export verified; demo embedded in a small 3D scene.
+### M4: Production features (5 weeks)
+- Effects, collection, localization, debug console, live reload, autocomplete, movies, embedding preset.
+- First Pro features built as a separate add-on: transition pack, effects pack, translation workflow, voice tools.
+- **Exit criteria:** demo translated into a second language; demo embedded in a small 3D scene; Pro add-on installs and uninstalls cleanly.
 
-### M5: Advanced tooling (ongoing)
-- Story Map, writer view, language server and VS Code extension.
-- Optional add-ons: C# API, Spine, Live2D, community action packs.
+### M5: Visual editor and Story Map (7 weeks)
+- Story tab, beat editor with all card types, inspector, undo and redo.
+- Story Map with auto layout and problem highlighting.
+- Pro: stage preview, play from here, story analytics.
+- Usability test with at least three writers who do not program.
+- **Exit criteria:** a writer builds a branching five-minute scene entirely in the visual editor; the resulting file reads naturally as text and diffs cleanly.
 
-### 1.0 Release
-- Stable API, full docs, original sample project, legal review (§2.8), Asset Library listing.
+### M6: Launch preparation (3 weeks)
+- Legal review (§2.8), final license (§13), Pro EULA and storefront (§12).
+- Full documentation, original sample project, trailer and screenshots.
+- Free tier on the Godot Asset Library or Asset Store and GitHub; Pro tier on the chosen storefront.
+
+### 1.0 Release (about 30 weeks after M0 starts)
+
+### After 1.0
+- Language server and VS Code extension.
+- Optional add-ons: Spine, Live2D, C# API (if demand appears), community action packs.
 
 ---
 
-## 11. Repository Layout (proposed)
+## 12. Product Tiers: Free and Pro
+
+### 12.1 Guiding rules
+
+1. **The free tier ships complete games.** A solo creator can make and sell a full visual novel using only the free tier, including the visual editor.
+2. **Pro saves time on larger productions.** Pro adds polish, presentation variety, and production tools for teams, voice work, and translation.
+3. **Pro is a pure add-on.** It lives in its own addon folder (`addons/storyteller_pro/`) and uses only the public extension points of the free tier (custom actions, looks, dialogue styles, crew members, editor hooks). This keeps the free tier honestly extensible, since anything Pro can do, community add-ons can do too.
+4. **No license checks in the free tier.** Pro relies on its EULA. GDScript ships as readable source, so technical copy protection would be weak and would hurt honest customers.
+5. **Games stay free of fees.** Games built with either tier owe no royalties, and players never need a license.
+
+### 12.2 Proposed split
+
+| Free (StoryTeller) | Pro (StoryTeller Pro) |
+|---|---|
+| TaleScript, checker, highlighting, autocomplete | Everything in Free |
+| Director, variables, expressions | Video cast look |
+| Cast (sprite set, layered, scene looks), backdrops, props | Bubble, messenger, and caption dialogue styles |
+| Core transitions and basic effects | Hotspot, messenger, and timed choice menus |
+| Audio, camera, movies | Transition pack and effects pack |
+| Saves, rewind, history, read tracking | Theme and genre template pack |
+| Classic and full-page dialogue, list choices | Translation workflow tools |
+| Full menu set and default theme | Voice production tools |
+| Collection, localization runtime | Stage preview and play from here |
+| Debug console, live reload, embedding preset | Story analytics |
+| **Visual editor and Story Map** | Priority support and early access builds |
+
+The visual editor sits in the free tier because it is the strongest reason to choose StoryTeller; putting it behind payment would limit adoption. This is a recommendation and is listed in §19 for confirmation.
+
+### 12.3 Pricing and sales (to explore)
+
+- **Pricing models:** one-time purchase with a year of updates, yearly subscription, or per-seat licenses for teams. A one-time price with paid major upgrades is common for game tools and simple to explain.
+- **Storefronts:** the official Godot Asset Store has announced plans for paid assets, but reports through mid-2026 describe paid listings as not yet open to all creators; check its current status during M6. Alternatives include itch.io, Gumroad, Lemon Squeezy, and a dedicated website.
+- **Contributor agreements:** if outside contributors send code to the free tier, a Contributor License Agreement (or at least a Developer Certificate of Origin) keeps future licensing options open. Discuss with the lawyer during the §2.8 review.
+
+---
+
+## 13. License Exploration (free tier)
+
+The license affects adoption, what competitors may do with the code, and how the Pro tier fits.
+
+| License | What it allows | Fit for StoryTeller |
+|---|---|---|
+| **MIT** | Anyone may use, modify, and resell, including closed forks. Requires keeping the copyright notice. | Same license as Godot; most familiar to the community; maximum adoption. A competitor could sell a modified copy. |
+| **Apache 2.0** | Same freedoms as MIT, plus an explicit patent grant, and it states that no trademark rights are granted. | Good balance; helps protect the StoryTeller name and gives users patent clarity. Slightly longer notice requirements. |
+| **MPL 2.0** | Changes to StoryTeller's own files must stay open source; games and separate add-ons (including Pro) can use any license. | Keeps improvements flowing back without affecting games. Less familiar to some Godot users. |
+| **GPL / LGPL** | Copyleft that can extend to the whole game. | Not recommended; it would discourage commercial games. |
+| **Source-available (custom)** | Free to use, with restrictions such as "no reselling as a competing tool". | Strongest protection, but not open source; may not be accepted by the Godot Asset Library and may reduce trust. |
+
+**Current recommendation:** Apache 2.0 or MIT for the free tier, with a proprietary EULA for Pro. Choose MPL 2.0 instead if keeping forks of the free tier open matters more than maximum simplicity. Confirm the Asset Library and Asset Store license requirements before deciding.
+
+---
+
+## 14. Platform Exploration
+
+All platforms below are supported by Godot's export system. The question is which ones StoryTeller tests and designs for at each milestone.
+
+| Platform | Considerations | Suggested timing |
+|---|---|---|
+| Windows, macOS, Linux (and Steam Deck) | Easiest targets; most commercial visual novels sell here. macOS builds need signing and notarization for distribution. | M3 |
+| Web (HTML5) | Popular for visual novels on itch.io and game jams. Watch download size, audio that must start after a click, and saves stored in browser storage. | M3 |
+| Android | Large visual novel audience. Needs touch controls, safe-area layouts, smaller textures, and app-store packaging. | M4 |
+| iOS | Same design needs as Android; exporting requires a Mac and an Apple developer account. | M4 |
+| Consoles | Godot console exports come from third-party porting partners under platform NDAs. | Out of scope; keep code portable (no OS-specific file access, all saves under `user://`). |
+
+**Current recommendation:** design the default UI for mouse, keyboard, gamepad, and touch from M1, test desktop and web from M3, and add mobile testing in M4. This keeps mobile-friendly layouts from becoming a costly retrofit.
+
+---
+
+## 15. Repository Layout (proposed)
 
 ```
-StoryTeller/
+StoryTeller/                     # public repository (free tier)
 ├── addons/storyteller/
 │   ├── plugin.cfg
 │   ├── plugin.gd
 │   ├── core/            # Story autoload, StoryCrew base, StoryConfig
-│   ├── talescript/      # lexer, parser, checker, compiler, importer, evaluator
+│   ├── talescript/      # lexer, lossless parser, checker, compiler, importer, evaluator
 │   ├── director/        # TaleDirector, TaleContext, cancellation
 │   ├── actions/         # built-in TaleAction classes
 │   ├── stage/           # cast, looks, backdrops, props, camera
 │   ├── crew/            # audio, saves, rewind, history, collection, locale...
 │   ├── ui/              # dialogue styles, choice styles, menus, theme
-│   ├── effects/         # effect scenes and shaders
-│   ├── transitions/     # transition shaders and masks
-│   └── editor/          # highlighter, inspectors, wizard, Story Map
+│   ├── effects/         # basic effects and shaders
+│   ├── transitions/     # core transition shaders and masks
+│   └── editor/          # highlighter, inspectors, wizard, visual editor, Story Map
 ├── demo/                # original sample story and assets
 ├── tests/               # GUT tests and .tale fixtures
-├── docs/                # guides, TaleScript spec, decisions, this plan
-└── tools/lsp/           # language server (M5)
+└── docs/                # guides, TaleScript spec, decisions, this plan
+
+StoryTellerPro/                  # private repository (Pro tier)
+├── addons/storyteller_pro/
+│   ├── looks/  ui/  effects/  transitions/
+│   ├── tools/           # translation, voice, analytics
+│   └── editor/          # stage preview, play from here
+└── tests/
 ```
 
 ---
 
-## 12. Testing Strategy
+## 16. Testing Strategy
 
 - **Unit tests (GUT):** lexer, parser, checker messages, expression evaluator, save round trips, rewind correctness.
-- **Golden tests:** every fixture `.tale` compiles to an instruction dump compared against a stored snapshot.
+- **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; scripted visual-editor operations produce the expected minimal text diffs.
+- **Golden tests:** every fixture compiles to an instruction dump compared against a stored snapshot.
 - **Playthrough tests:** headless runs that pick scripted choices and assert vars, visited beats, and stage state at checkpoints.
 - **Interruption tests:** save, load, skip, and rewind at every line of the fixtures to catch async cancellation bugs.
-- **CI:** headless Godot on Linux; export smoke tests for Windows, Linux, and Web.
+- **Pro compatibility tests:** the Pro test suite runs against each free-tier build to catch broken extension points.
+- **CI:** headless Godot on Linux for the supported version, a non-blocking job on the newest beta, and export smoke tests for each target platform.
 
 ---
 
-## 13. Documentation Plan
+## 17. Documentation Plan
 
 - **Getting Started:** install, wizard, first scene in ten minutes.
+- **Visual Editor Guide:** building a branching scene without typing syntax.
 - **TaleScript for Writers:** cheat sheet plus examples, no programming background assumed.
 - **TaleScript for GDScript Users:** a short page listing only the differences from GDScript.
 - **Action Reference:** generated from action signatures and doc comments.
 - **Developer Guide:** custom actions, looks, crew members, dialogue styles, menus, embedding.
 - **Recipes:** relationship meters, inventory checks, mini-game handoff, phone-messenger story, timed choices.
+- **Pro Guide:** separate documentation for Pro features.
 
 ---
 
-## 14. Risks and Mitigations
+## 18. Risks and Mitigations
 
 | Risk | Impact | Mitigation |
 |---|---|---|
 | IP or trademark concerns | Takedown or legal cost | Clean-room rules (§2), original vocabulary and language, decision log, legal review before 1.0. |
-| TaleScript drifts from GDScript and confuses users | Steeper learning curve | Keep the five deliberate additions only; "for GDScript users" doc page reviewed each release. |
-| Very large scope | Missed milestones | Strict exit criteria; M5 items can slip freely. |
+| Product name conflicts | Forced rename after launch | "Storyteller" is a common word and is also the title of an existing commercial game; run a trademark search early and pick a distinctive product name if needed. |
+| Visual editor round trips damage hand-written files | Lost trust from programmers | Lossless parser from M1, byte-for-byte round-trip tests, script cards for anything unsupported. |
+| Visual editor schedule overrun | 1.0 slips | Start with the card editor, then Story Map; stage preview can slip to 1.1 without blocking release. |
+| Free tier feels limited | Low adoption | Rule 12.1.1: free must ship complete games; review the split with early users. |
+| Pro copied without paying | Lost revenue | Clear EULA, fair pricing, updates and support as the main value; avoid DRM that burdens customers. |
+| Godot releases break the addon | Breakage | Track latest stable with a non-blocking beta CI job (§1.3). |
+| TaleScript drifts from GDScript | Steeper learning curve | Keep the five deliberate additions only; review the "for GDScript users" page each release. |
 | Async cancellation bugs (skip, load, rewind mid-effect) | Broken stage state | Single cancellation path through `ctx.cancel`; interruption tests. |
 | Rewind memory use | Slow on mobile | Delta snapshots, configurable depth, `@no_rewind`. |
-| Godot 4.x API changes | Breakage | Pin a minimum version, run CI on latest stable. |
-| Overlap with Dialogic, Dialogue Manager, Escoria | Low adoption | Differentiate with a GDScript-style language, a full visual novel stack, rewind, built-in menus, and the Story Map. |
+| Overlap with Dialogic, Dialogue Manager, Escoria | Low adoption | Differentiate with the visual editor, a GDScript-style language, a full visual novel stack, and rewind. |
 | Unsafe scripts from mods | Code execution | Own evaluator; only explicitly exposed members are reachable. |
 
 ---
 
-## 15. Open Questions
+## 19. Open Questions
 
-1. **Minimum Godot version:** 4.3 or 4.4+?
-2. **Names:** keep "TaleScript", `.tale`, and `beat`, or choose alternatives?
-3. **Dialogue strings:** require quotes (closest to GDScript, as planned) or also allow an unquoted shorthand for heavy prose?
-4. **C# support:** needed before 1.0?
-5. **License:** MIT, Apache 2.0, or other?
-6. **Target platforms:** desktop first, or mobile and web from M3?
-7. **Distribution:** free and open source, or a paid tier?
+1. **License (D8):** exploring; see §13.
+2. **Platforms (D9):** exploring; see §14.
+3. **Tier split:** confirm the free and Pro split in §12.2, especially keeping the visual editor free.
+4. **Pricing:** one-time purchase, subscription, or per seat?
+5. **Product name:** keep "StoryTeller" after a trademark search, or choose a more distinctive name?
+6. **Dialogue strings:** require quotes (closest to GDScript, as planned) or also allow an unquoted shorthand for heavy prose?
 
 ---
 
-## 16. Immediate Next Steps
+## 20. Immediate Next Steps
 
-1. Resolve the open questions.
+1. Run a quick trademark and name search for "StoryTeller".
 2. Complete M0 scaffolding and add the clean-room rules to `CONTRIBUTING.md`.
-3. Write the formal TaleScript grammar in `docs/talescript-spec.md`, including a precise list of every difference from GDScript.
-4. Implement the lexer and parser with golden tests.
+3. Write the formal TaleScript grammar in `docs/talescript-spec.md`, including every difference from GDScript and the lossless syntax tree design.
+4. Implement the lexer and parser with round-trip and golden tests.
