@@ -1,0 +1,27 @@
+name: Feature request
+description: Suggest a new feature or an improvement.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to do?
+      description: Describe the story or game you are making and what is hard to do today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: How could StoryTeller help? TaleScript examples are welcome.
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Workarounds or alternatives
+  - type: checkboxes
+    id: originality
+    attributes:
+      label: Originality
+      options:
+        - label: This request describes what the feature should do and does not include code, text, or assets copied from another product.
+          required: true

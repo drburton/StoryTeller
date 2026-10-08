@@ -1,0 +1,14 @@
+# Godot cache and generated data
+.godot/
+/android/
+
+# Export output and presets (presets can hold signing credentials)
+/build/
+export_presets.cfg
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.tmp
+.vscode/
+.idea/

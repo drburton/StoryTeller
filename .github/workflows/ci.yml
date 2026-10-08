@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  # Supported Godot version. Update together with project.godot (docs/decisions/0003).
+  GODOT_VERSION: 4.7.2-stable
+
+jobs:
+  test-linux:
+    name: Tests (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-linux-${{ env.GODOT_VERSION }}
+
+      - name: Install Godot
+        run: echo "GODOT_BIN=$(tools/ci_install_godot.sh "$GODOT_VERSION" ~/godot)" >> "$GITHUB_ENV"
+
+      - name: Run tests
+        run: tools/run_tests.sh
+
+  test-windows:
+    name: Tests (Windows)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~\godot
+          key: godot-windows-${{ env.GODOT_VERSION }}
+
+      - name: Install Godot
+        shell: pwsh
+        run: |
+          $dir = Join-Path $HOME "godot"
+          if (-not (Get-ChildItem $dir -Filter "*_console.exe" -ErrorAction SilentlyContinue)) {
+            New-Item -ItemType Directory -Force $dir | Out-Null
+            $url = "https://github.com/godotengine/godot-builds/releases/download/$env:GODOT_VERSION/Godot_v$($env:GODOT_VERSION)_win64.exe.zip"
+            Invoke-WebRequest $url -OutFile "$dir\godot.zip"
+            Expand-Archive "$dir\godot.zip" -DestinationPath $dir -Force
+            Remove-Item "$dir\godot.zip"
+          }
+          "GODOT_BIN=$dir" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+      - name: Run tests
+        shell: pwsh
+        run: .\tools\run_tests.ps1
+
+  test-beta:
+    # Early warning for the next Godot release. Set the repository variable
+    # GODOT_BETA (for example 4.8-beta1) to enable; failures do not block merges.
+    name: Tests (Godot beta)
+    if: ${{ vars.GODOT_BETA != '' }}
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Godot
+        run: echo "GODOT_BIN=$(tools/ci_install_godot.sh "${{ vars.GODOT_BETA }}" ~/godot)" >> "$GITHUB_ENV"
+
+      - name: Run tests
+        run: tools/run_tests.sh

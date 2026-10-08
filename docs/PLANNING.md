@@ -2,7 +2,12 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.3** (planning stage, no code yet)
+Status: **Draft v0.4** (M0 project setup in progress)
+
+Changes in v0.4:
+- Godot 4.7.2 confirmed as the supported version.
+- M0 setup work started; decisions are now kept as records in `docs/decisions/`.
+- A small built-in test runner replaces GUT (decision 0007).
 
 Changes in v0.3:
 - Recorded the decisions made so far (§1.2).
@@ -45,17 +50,20 @@ Changes in v0.2:
 |---|---|---|
 | D1 | 2026-10-08 | Naninovel defines the feature scope only. StoryTeller uses its own language, vocabulary, and design (§2). |
 | D2 | 2026-10-08 | The story language follows GDScript conventions (TaleScript, §4). |
-| D3 | 2026-10-08 | Target the latest stable Godot release (§1.3). |
+| D3 | 2026-10-08 | Target the latest stable Godot release, currently 4.7.2 (§1.3). |
 | D4 | 2026-10-08 | No C# support for now. |
 | D5 | 2026-10-08 | Names accepted: TaleScript, `.tale` files, `beat` blocks. |
 | D6 | 2026-10-08 | The visual editor ships before 1.0 as a key differentiator (§9). |
 | D7 | 2026-10-08 | Business model: free base tier plus a paid Pro tier (§12). |
 | D8 | open | License for the free tier (exploring, §13). |
 | D9 | open | Target platforms and their order (exploring, §14). |
+| D10 | 2026-10-08 | Built-in test runner instead of GUT. |
+
+From M0 onward, each decision has a full record in `docs/decisions/`.
 
 ### 1.3 Godot version policy
 
-- StoryTeller targets the **latest stable Godot 4 release**. At the time of writing that appears to be the 4.7 series; confirm the exact version during M0.
+- StoryTeller targets the **latest stable Godot 4 release**, currently **4.7.2**.
 - When a new stable minor version ships (for example 4.8), StoryTeller moves to it in its next minor release, after the first patch release of that Godot version (x.y.1) to avoid early regressions.
 - CI runs against the supported version and also tests the newest Godot beta as a non-blocking job, giving early warning of breaking changes.
 - New Godot features (typed dictionaries, newer editor APIs, improved web export) can be used freely, since older versions are out of scope.
@@ -540,11 +548,11 @@ Selecting any card shows the stage as it would look at that line. The director r
 ## 11. Milestones
 
 ### M0: Scaffolding (1 week)
-- Confirm the current stable Godot version and pin it in CI.
-- Addon skeleton (`plugin.cfg`, `EditorPlugin`, autoload registration).
-- GUT test framework running headless in GitHub Actions, plus a non-blocking job on the newest Godot beta.
-- Contribution guide with the clean-room rules from §2, decision log folder, issue templates.
-- Private repository created for the Pro add-on.
+- Pin Godot 4.7.2 in CI. ✔
+- Addon skeleton (`plugin.cfg`, `EditorPlugin`, autoload registration, `StoryCrew` base, `StoryConfig`). ✔
+- Built-in test runner running headless in GitHub Actions on Linux and Windows, plus an optional non-blocking job on the newest Godot beta. ✔
+- Contribution guide with the clean-room rules from §2, decision records, issue and pull request templates. ✔
+- Private repository created for the Pro add-on. (Pending owner approval.)
 
 ### M1: TaleScript and a minimal playable (5 weeks)
 - Formal grammar, lexer, **lossless** parser, checker, compiler, import plugin.
@@ -689,7 +697,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-- **Unit tests (GUT):** lexer, parser, checker messages, expression evaluator, save round trips, rewind correctness.
+- **Unit tests (built-in runner):** lexer, parser, checker messages, expression evaluator, save round trips, rewind correctness.
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; scripted visual-editor operations produce the expected minimal text diffs.
 - **Golden tests:** every fixture compiles to an instruction dump compared against a stored snapshot.
 - **Playthrough tests:** headless runs that pick scripted choices and assert vars, visited beats, and stage state at checkpoints.
@@ -745,6 +753,6 @@ StoryTellerPro/                  # private repository (Pro tier)
 ## 20. Immediate Next Steps
 
 1. Run a quick trademark and name search for "StoryTeller".
-2. Complete M0 scaffolding and add the clean-room rules to `CONTRIBUTING.md`.
-3. Write the formal TaleScript grammar in `docs/talescript-spec.md`, including every difference from GDScript and the lossless syntax tree design.
+2. Create the private Pro repository when ready.
+3. Write the formal TaleScript grammar in `docs/talescript-spec.md`, including every difference from GDScript and the lossless syntax tree design (start of M1).
 4. Implement the lexer and parser with round-trip and golden tests.
