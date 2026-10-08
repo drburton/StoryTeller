@@ -1,6 +1,6 @@
 # TaleScript Language Specification
 
-Version: **draft 0.2** (milestone M3)
+Version: **draft 0.3** (milestone M4)
 
 TaleScript is the language StoryTeller stories are written in. It follows GDScript's syntax wherever GDScript has a way to express something, and adds a few statements for writing stories. This document is the reference for the parser, the checker, the editor tools, and writers who want precise rules.
 
@@ -15,7 +15,7 @@ Implementation status:
 | `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 | `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
-| Translation (§7.3), effect actions (§13.1) | Implemented (M4) |
+| Translation (§7.3), effect, collection, and movie actions (§13.1) | Implemented (M4) |
 
 ---
 
@@ -330,7 +330,7 @@ backdrop("forest", transition = "fade", time = 1.5)
 - Stage positions: `LEFT`, `CENTER`, `RIGHT` (`Vector2(0.25, 0)`, `Vector2(0.5, 0)`, `Vector2(0.75, 0)`), or any `Vector2`. The x value runs from 0 (left edge) to 1 (right edge); the y value lifts a character's feet above the bottom of the screen, as a fraction of the screen height.
 - Constants of value types, such as `Color.RED`, `Color.TRANSPARENT`, `Vector2.ZERO`, and `Vector2.LEFT`.
 - Built-in functions: `randi_range`, `randf`, `min`, `max`, `clamp`, `round`, `len`, `str`, `visited("tale.beat")`, `collected("id")`, `tr("key")`.
-- Objects and functions that game code exposes with `Story.expose()`. Nothing else in the engine is reachable.
+- Objects and functions that game code exposes with `Story.expose()`. Nothing else in the engine is reachable. List their names in `StoryConfig.exposed_names` so tales that use them import without errors and the Story editor suggests them.
 
 ---
 
@@ -534,6 +534,8 @@ Actions are called like functions. Named arguments may be given in any order aft
 | `fade_in` | `time = 0.5` | Fade the screen back in. |
 | `exit_all` | `time = 0.4` | Every cast member on stage exits. |
 | `autosave` | | Save to the autosave slot. |
+| `collect` | `id`, `notify = true` | Unlock a gallery picture, music track, or codex entry (a `CollectionItem` in `res://story/collection/`). `collected("id")` reads it. Unlocks are kept across playthroughs. |
+| `play_movie` | `name`, `skippable = true` | Play an Ogg Theora (`.ogv`) movie from `res://story/movies/` over everything but the menus. A click or the continue key skips it. Use with `await`. |
 
 Transitions for `backdrop`: `none`, `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, `slide_down`. With `dissolve`, `mask` names a grayscale image in `res://story/transitions/` that sets the order in which pixels change (dark first).
 
@@ -577,5 +579,7 @@ Assets are found by name, without extension, in the folders set in `StoryConfig`
 | Props | `res://story/props/` | images, or scenes with a `Node2D` root |
 | Transition masks | `res://story/transitions/` | grayscale images |
 | Music, sounds, ambience, voice | `res://story/audio/music/`, `sounds/`, `ambience/`, `voice/` | ogg, mp3, wav |
+| Collection items | `res://story/collection/` | `CollectionItem` resources (`.tres`) |
+| Movies | `res://story/movies/` | ogv (Ogg Theora) |
 
 When a beat starts, StoryTeller begins loading the assets it names in the background.
