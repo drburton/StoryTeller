@@ -1,0 +1,46 @@
+## prologue.tale
+## The first morning at school. This is the sample scene from the
+## StoryTeller plan (docs/PLANNING.md, section 4.2).
+@title("Prologue")
+
+var trust := 0
+var player_name := "Sam"
+@global var prologue_done := false
+
+beat start:
+	backdrop("classroom_morning", transition = "fade", time = 1.0)
+	music("quiet_morning", volume = 0.8)
+	mira.enter("smile", at = LEFT)
+
+	"Sunlight spills across rows of empty desks."
+	mira: "You're here early.[pause] Couldn't sleep?"
+	mira (curious): "Nervous about the exam?"
+
+	choose:
+		"Admit you were nervous":
+			trust += 1
+			jump honest
+		"Act like everything is fine":
+			jump bluff
+		"Change the subject" if trust > 2:
+			mira: "Smooth. Really smooth."
+
+beat honest:
+	mira (soft): "Same here, honestly."
+	await mira.move_to(CENTER, time = 0.6)
+	mira: "Want to study together at lunch?"
+	jump walk
+
+beat bluff:
+	mira (smirk): "Look at you, all confident."
+	jump walk
+
+beat walk:
+	if trust > 0:
+		mira: "Let's head out, {player_name}."
+	else:
+		mira: "Well. See you in class."
+
+	mira.exit(transition = "slide_left")
+	prologue_done = true
+	jump chapter_1.start

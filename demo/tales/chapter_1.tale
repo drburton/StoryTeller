@@ -1,0 +1,9 @@
+## chapter_1.tale
+## Where the demo's sample scene ends.
+@title("Chapter 1")
+
+beat start:
+	stop_music(fade = 1.5)
+	await backdrop(Color.BLACK, time = 1.0)
+	"Chapter 1 would begin here."
+	"Thanks for trying the StoryTeller demo."

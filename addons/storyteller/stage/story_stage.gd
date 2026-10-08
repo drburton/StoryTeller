@@ -9,10 +9,13 @@ extends StoryCrew
 ## folders of mood images. Backdrops and props are images (or scenes, for
 ## props) named after the files in their folders.
 
-## Canvas layers, back to front. The dialogue box uses layer 10.
-const BACKDROP_LAYER := -10
-const CAST_LAYER := -5
-const PROP_LAYER := -4
+## Canvas layers, back to front. They draw above the game's own canvas
+## (layer 0) and below the dialogue box (layer 10). The backdrop is
+## transparent until a tale shows one, so games that only use dialogue are
+## not covered.
+const BACKDROP_LAYER := 1
+const CAST_LAYER := 2
+const PROP_LAYER := 3
 
 var backdrop_layer: CanvasLayer
 var cast_layer: CanvasLayer
@@ -66,7 +69,7 @@ func clear() -> void:
 		_props[prop_name]["node"].queue_free()
 	_props.clear()
 	if backdrop_view:
-		backdrop_view.show_backdrop(Color.BLACK, Color.BLACK, "none", 0.0)
+		backdrop_view.show_backdrop(Color.TRANSPARENT, Color.TRANSPARENT, "none", 0.0)
 	if camera:
 		camera.restore({})
 
@@ -224,7 +227,7 @@ func restore(data: Dictionary) -> void:
 		var member := get_cast(id)
 		if member != null:
 			member.restore(cast[id])
-	var backdrop: Variant = data.get("backdrop", [0.0, 0.0, 0.0, 1.0])
+	var backdrop: Variant = data.get("backdrop", [0.0, 0.0, 0.0, 0.0])
 	if backdrop is Array:
 		backdrop = Color(backdrop[0], backdrop[1], backdrop[2], backdrop[3])
 	show_backdrop(backdrop, "none", 0.0)

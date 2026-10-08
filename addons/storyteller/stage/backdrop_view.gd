@@ -23,8 +23,9 @@ const TRANSITIONS := {
 ## Emitted when a transition ends, whether it finished or was cut short.
 signal transition_finished
 
-## Name or color currently shown, for saves.
-var current: Variant = Color.BLACK
+## Name or color currently shown, for saves. Starts transparent so the game
+## shows through until a tale picks a backdrop.
+var current: Variant = Color.TRANSPARENT
 
 var _rect: ColorRect
 var _material: ShaderMaterial
@@ -42,7 +43,7 @@ func _ready() -> void:
 	_material.shader = TRANSITION_SHADER
 	_rect.material = _material
 	add_child(_rect)
-	_set_side("to", Color.BLACK)
+	_set_side("to", Color.TRANSPARENT)
 	_material.set_shader_parameter("progress", 1.0)
 	resized.connect(_update_screen_size)
 	_update_screen_size()
@@ -105,7 +106,7 @@ func _set_side(side: String, source: Variant) -> void:
 		_material.set_shader_parameter(side + "_size", Vector2(source.get_size()))
 	else:
 		_material.set_shader_parameter(side + "_has_tex", false)
-		_material.set_shader_parameter(side + "_color", source if source is Color else Color.BLACK)
+		_material.set_shader_parameter(side + "_color", source if source is Color else Color.TRANSPARENT)
 
 
 func _update_screen_size() -> void:

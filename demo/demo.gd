@@ -6,8 +6,6 @@ extends Control
 
 
 func _ready() -> void:
-	var director := Story.get_crew(&"TaleDirector") as TaleDirector
-	director.tales_folder = "res://demo/tales"
 	await Story.play("welcome")
 	var dialogue := Story.get_crew(&"Dialogue") as StoryDialogue
 	dialogue.dialogue_box.hide_box()

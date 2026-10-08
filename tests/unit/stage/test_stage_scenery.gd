@@ -43,6 +43,13 @@ func _play(source: String) -> void:
 		await director.play("main")
 
 
+func test_stage_draws_above_the_game_and_below_dialogue() -> void:
+	assert_eq(stage.backdrop_view.current, Color.TRANSPARENT, "nothing covers the game at first")
+	assert_true(stage.backdrop_layer.layer > 0)
+	assert_true(stage.backdrop_layer.layer < stage.cast_layer.layer)
+	assert_true(stage.prop_layer.layer < 10, "below the dialogue box layer")
+
+
 func test_backdrop_by_name_and_color() -> void:
 	await _play("beat start:\n\tbackdrop(\"day\", time = 0)\n\t\"one\"\n\tbackdrop(Color.BLACK, transition = \"none\")\n\t\"two\"\n")
 	assert_eq(errors, [])
@@ -118,7 +125,7 @@ func test_capture_and_restore_scenery() -> void:
 	await _play("beat start:\n\tbackdrop(\"night\", time = 0)\n\tprop(\"lamp\", time = 0)\n\tcamera.zoom(1.5, time = 0)\n\t\"x\"\n")
 	var saved: Dictionary = JSON.parse_string(JSON.stringify(stage.capture()))
 	stage.clear()
-	assert_eq(stage.backdrop_view.current, Color.BLACK)
+	assert_eq(stage.backdrop_view.current, Color.TRANSPARENT)
 	stage.restore(saved)
 	assert_eq(stage.backdrop_view.current, "night")
 	assert_eq(stage.get_prop_names(), PackedStringArray(["lamp"]))

@@ -1,6 +1,7 @@
 extends TaleAction
 ## backdrop(name, transition = "fade", time = 1.0, mask = ""): shows a backdrop
 ## image from the backdrop folder, or a Color such as Color.BLACK.
+## Color.TRANSPARENT removes the backdrop and shows the game behind it.
 ## Transitions: none, fade, dissolve, wipe_left/right/up/down,
 ## slide_left/right/up/down. [code]mask[/code] names a grayscale image in
 ## res://story/transitions for "dissolve".
