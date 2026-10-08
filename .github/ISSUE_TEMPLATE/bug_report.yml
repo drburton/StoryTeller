@@ -1,0 +1,46 @@
+name: Bug report
+description: Something in StoryTeller does not work as expected.
+labels: [bug]
+body:
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: A minimal tale or project that shows the problem helps most.
+      placeholder: |
+        1. Create a tale with ...
+        2. Run the scene ...
+        3. See error ...
+    validations:
+      required: true
+  - type: input
+    id: storyteller-version
+    attributes:
+      label: StoryTeller version
+      placeholder: 0.1.0-dev
+    validations:
+      required: true
+  - type: input
+    id: godot-version
+    attributes:
+      label: Godot version
+      placeholder: 4.7.2.stable
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Operating system and export platform
+      placeholder: Windows 11, running in the editor
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output or error messages
+      render: text

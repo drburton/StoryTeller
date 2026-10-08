@@ -1,0 +1,19 @@
+* text=auto eol=lf
+
+*.gd text eol=lf
+*.tale text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.cfg text eol=lf
+*.godot text eol=lf
+*.ps1 text eol=crlf
+
+*.png binary
+*.jpg binary
+*.webp binary
+*.ogg binary
+*.wav binary
+*.mp3 binary
+*.ogv binary
+*.ttf binary
+*.otf binary
