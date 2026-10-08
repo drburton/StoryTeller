@@ -140,6 +140,19 @@ func clear_props(time := 0.3) -> void:
 			hide_prop(names[i], time)
 
 
+## Every cast member on stage exits. Awaitable.
+func exit_all(time := 0.4) -> void:
+	var leaving: Array[CastMember] = []
+	for member in _cast.values():
+		if member.on_stage:
+			leaving.append(member)
+	for i in leaving.size():
+		if i == leaving.size() - 1:
+			await leaving[i].exit(time)
+		else:
+			leaving[i].exit(time)
+
+
 func get_prop_names() -> PackedStringArray:
 	return PackedStringArray(_props.keys())
 

@@ -159,12 +159,15 @@ func expose_function(function_name: String, callable: Callable) -> void:
 		director.expose_function(function_name, callable)
 
 
-## Removes and frees every crew member.
+## Removes every crew member and frees it at the end of the frame. Safe to
+## call from code that runs when a story finishes, for example right after
+## [code]await Story.play()[/code] returns, while the director is still
+## emitting.
 func shut_down() -> void:
 	for member in _crew.values():
 		member.teardown()
 		remove_child(member)
-		member.free()
+		member.queue_free()
 	_crew.clear()
 	is_ready = false
 

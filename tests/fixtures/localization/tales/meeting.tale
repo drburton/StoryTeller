@@ -1,0 +1,14 @@
+## A small tale for the string export tests.
+@title("The Meeting")
+
+var guest := "Sam"
+
+beat start:
+	"A quiet room."
+	robin: "Hello, {guest}."
+	guest = await ask_text(tr("Your name?"), guest)
+	choose:
+		"Wave":
+			robin (smile): "Hi!"
+		@id("stay_quiet") "Say nothing":
+			pass

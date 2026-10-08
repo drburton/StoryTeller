@@ -1,7 +1,7 @@
 class_name SettingsScreen
 extends MenuScreen
-## Player preferences: text speed, auto mode delay, volumes, full screen, and
-## skipping unread lines.
+## Player preferences: text speed, auto mode delay, volumes, full screen,
+## skipping unread lines, and the language when the game has translations.
 
 const SLIDERS := [
 	["Text speed", "text_speed", 0.0, 120.0, 1.0],
@@ -17,7 +17,18 @@ const TOGGLES := [
 	["Skip unread lines", "skip_unread"],
 ]
 
+## Language names in their own language, so players can find theirs.
+## Others fall back to Godot's English name.
+const NATIVE_NAMES := {
+	"ar": "العربية", "de": "Deutsch", "en": "English", "es": "Español",
+	"fr": "Français", "id": "Bahasa Indonesia", "it": "Italiano", "ja": "日本語",
+	"ko": "한국어", "nl": "Nederlands", "pl": "Polski", "pt": "Português",
+	"ru": "Русский", "tr": "Türkçe", "uk": "Українська", "vi": "Tiếng Việt",
+	"zh": "中文",
+}
+
 var _controls: Dictionary = {}
+var _locales := PackedStringArray()
 
 
 func _ready() -> void:
@@ -45,6 +56,16 @@ func _ready() -> void:
 		toggle.toggled.connect(func(on: bool) -> void: _apply_setting(row[1], on))
 		grid.add_child(toggle)
 		_controls[row[1]] = toggle
+	_locales = _available_locales()
+	if _locales.size() > 1:
+		grid.add_child(_label("Language"))
+		var languages := OptionButton.new()
+		languages.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+		for locale in _locales:
+			languages.add_item(NATIVE_NAMES.get(locale, TranslationServer.get_locale_name(locale)))
+		languages.item_selected.connect(func(index: int) -> void: _apply_setting("language", _locales[index]))
+		grid.add_child(languages)
+		_controls["language"] = languages
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 10)
 	buttons.add_child(MenuScreen.make_button("Reset to defaults", _reset))
@@ -62,12 +83,30 @@ func open() -> void:
 			control.set_value_no_signal(float(settings.get_value(key)))
 		elif control is CheckButton:
 			control.set_pressed_no_signal(bool(settings.get_value(key)))
+		elif control is OptionButton:
+			control.select(_closest_locale(TranslationServer.get_locale()))
 	focus_first()
 
 
 func _apply_setting(key: String, value: Variant) -> void:
 	if menus.settings() != null:
 		menus.settings().set_value(key, value)
+
+
+## Languages the game has translations for, one per language code.
+static func _available_locales() -> PackedStringArray:
+	var result := PackedStringArray()
+	for locale in TranslationServer.get_loaded_locales():
+		var code := locale.get_slice("_", 0)
+		if code not in result:
+			result.append(code)
+	result.sort()
+	return result
+
+
+func _closest_locale(locale: String) -> int:
+	var index := _locales.find(locale.get_slice("_", 0))
+	return maxi(index, 0)
 
 
 func _reset() -> void:

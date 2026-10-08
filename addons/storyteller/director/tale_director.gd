@@ -29,6 +29,10 @@ signal story_signal(signal_name: String, value: Variant)
 ## Emitted when a tale does something invalid at runtime. The director
 ## reports it and continues with the next instruction.
 signal runtime_error(message: String, tale_name: String, line: int)
+## Emitted after live reload swaps in a new version of a tale.
+signal tale_reloaded(tale_name: String)
+## Emitted when an edited tale has errors and the old version keeps running.
+signal reload_failed(tale_name: String, message: String)
 
 ## Stage positions available to tales, as fractions of the screen width.
 const POSITIONS := {
@@ -56,11 +60,23 @@ const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_dialogue_style.gd"),
 	preload("res://addons/storyteller/actions/action_clear_page.gd"),
 	preload("res://addons/storyteller/actions/action_hide_dialogue.gd"),
+	preload("res://addons/storyteller/actions/action_flash.gd"),
+	preload("res://addons/storyteller/actions/action_fade_out.gd"),
+	preload("res://addons/storyteller/actions/action_fade_in.gd"),
+	preload("res://addons/storyteller/actions/action_weather.gd"),
+	preload("res://addons/storyteller/actions/action_filter.gd"),
+	preload("res://addons/storyteller/actions/action_exit_all.gd"),
+	preload("res://addons/storyteller/actions/action_autosave.gd"),
+	preload("res://addons/storyteller/actions/action_collect.gd"),
+	preload("res://addons/storyteller/actions/action_play_movie.gd"),
 ]
 ## Actions whose first argument names an asset that can be loaded ahead.
 const PRELOAD_ACTIONS := ["backdrop", "prop", "music", "sound", "ambience", "voice"]
 ## How many instructions of a beat are scanned for assets to preload.
 const PRELOAD_SCAN_LIMIT := 400
+
+## Seconds between checks for edited tale files when live reload is on.
+const LIVE_RELOAD_INTERVAL := 1.0
 
 ## Upper limit of instructions run without showing a line or choice, which
 ## stops endless loops from freezing the game.
@@ -74,6 +90,13 @@ var skipping := false
 
 ## Folder where [method get_tale] looks for "<name>.tale".
 var tales_folder := "res://story/tales"
+## Reload tales whose source file changes while the game runs, and continue
+## at the same line. On in debug builds; it only finds source files when the
+## game runs from the project folder (for example from the editor).
+var live_reload := OS.is_debug_build()
+## Language the tales are written in. Lines are shown as written while the
+## game's locale is this language.
+var source_language := "en"
 
 var _tales: Dictionary = {}
 var _story_vars: Dictionary = {}
@@ -93,6 +116,13 @@ var _playing := false
 var _line_pc := -1
 ## Line ids the player has seen, kept across playthroughs.
 var _read_lines: Dictionary = {}
+## Translated text to its compiled parts.
+var _translated: Dictionary = {}
+## Names from [member StoryConfig.exposed_names].
+var _declared_names := PackedStringArray()
+## Source path to modified time, for live reload.
+var _source_times: Dictionary = {}
+var _reload_timer := 0.0
 ## Tale and line of the instruction being run, for error reports.
 var _current_tale := ""
 var _current_line := 0
@@ -109,6 +139,8 @@ func _init() -> void:
 
 func setup(config: StoryConfig) -> void:
 	tales_folder = config.tales_folder
+	source_language = config.source_language
+	_declared_names = config.exposed_names
 
 
 func clear() -> void:
@@ -150,6 +182,101 @@ func stop() -> void:
 	if _playing:
 		_playing = false
 		story_finished.emit()
+
+
+## Jumps straight to [param beat] of [param tale_name], keeping variables,
+## and plays from there. Meant for tools like the debug console. Awaitable.
+## Returns an error message or "".
+func jump_to(tale_name: String, beat := "start") -> String:
+	var tale := get_tale(tale_name)
+	if tale == null:
+		return "Tale '%s' was not found in %s." % [tale_name, tales_folder]
+	if tale.get_beat_start(beat) < 0:
+		return "Tale '%s' has no beat '%s'." % [tale_name, beat]
+	_halt()
+	_playing = false
+	await _prepare_tale(tale)
+	_stack.append(_enter_beat(tale, beat))
+	resume()
+	return ""
+
+
+## Evaluates a TaleScript expression where the story is now, for tools like
+## the debug console. Awaitable. Returns [code][true, value][/code] or
+## [code][false, error message][/code].
+func evaluate_source(source: String) -> Array:
+	var parsed := TaleParser.parse_expression(source)
+	if parsed["error"]:
+		return [false, parsed["error"]]
+	var compiled := TaleCompiler.compile_text("{%s}" % source)
+	if not compiled["errors"].is_empty() or compiled["parts"].size() != 1 or compiled["parts"][0] is String:
+		return [false, "Can't evaluate '%s'." % source]
+	var evaluator := TaleEvaluator.new(self)
+	var frame: TaleFrame = _stack.back() if not _stack.is_empty() else null
+	var value: Variant = await evaluator.evaluate(compiled["parts"][0], frame)
+	if evaluator.failed():
+		return [false, evaluator.error]
+	return [true, value]
+
+
+## Where the story is: [code]{"tale", "beat", "line"}[/code] (source line),
+## or an empty dictionary when nothing plays.
+func get_position() -> Dictionary:
+	if _stack.is_empty():
+		return {}
+	var frame: TaleFrame = _stack.back()
+	var pc := _line_pc if _line_pc >= 0 else frame.pc
+	var line := 0
+	if pc >= 0 and pc < frame.tale.instructions.size():
+		line = frame.tale.instructions[pc]["line"]
+	return {"tale": frame.tale.tale_name, "beat": frame.beat, "line": line}
+
+
+## Variables visible where the story is: the current tale's story variables
+## and every global variable.
+func get_variables() -> Dictionary:
+	var result := {}
+	var position := get_position()
+	if not position.is_empty():
+		result.merge(_story_vars.get(position["tale"], {}))
+	result.merge(_global_vars)
+	return result
+
+
+## Recompiles [param tale_name] from its source file and swaps it in. If
+## the story is inside that tale, it continues at the same line (matched by
+## line id, or else by source line). Awaitable. Returns an error message or
+## "" on success; on error the old version keeps running.
+func reload_tale(tale_name: String) -> String:
+	var old: Tale = _tales.get(tale_name)
+	if old == null or old.source_path.is_empty() or not FileAccess.file_exists(old.source_path):
+		return "Tale '%s' has no source file to reload." % tale_name
+	var result := TaleCompiler.build(FileAccess.get_file_as_string(old.source_path), tale_name, make_check_context(tale_name), old.source_path)
+	_source_times[old.source_path] = FileAccess.get_modified_time(old.source_path)
+	if result["tale"] == null:
+		for diagnostic in result["diagnostics"]:
+			if diagnostic.is_error():
+				return "%s:%d: %s" % [old.source_path, diagnostic.line, diagnostic.message]
+		return "%s could not be compiled." % old.source_path
+	var tale: Tale = result["tale"]
+	var state := capture()
+	var inside := false
+	for saved in state["stack"]:
+		if saved["tale"] != tale_name:
+			continue
+		inside = true
+		var pc := _map_pc(old, tale, saved["beat"], int(saved["pc"]))
+		if pc < 0:
+			return "Beat '%s' is gone from %s, so the story can't continue there." % [saved["beat"], old.source_path]
+		saved["pc"] = pc
+	_tales[tale_name] = tale
+	if _story_vars.has(tale_name):
+		await _add_new_variables(tale)
+	if inside and _playing:
+		restore(state)
+		resume()
+	tale_reloaded.emit(tale_name)
+	return ""
 
 
 ## Ends the current run loop without finishing the story, and releases the
@@ -222,6 +349,8 @@ func make_check_context(tale_name := "") -> TaleCheckContext:
 		context.add_action(action_name, action.get_parameters(), action.get_required_count())
 	for exposed_name in _exposed:
 		context.add_exposed(exposed_name)
+	for declared in _declared_names:
+		context.add_exposed(declared)
 	for crew in _crew_siblings():
 		if crew.has_method("get_tale_names"):
 			for extra in crew.get_tale_names():
@@ -502,7 +631,7 @@ func _execute(instruction: Dictionary, frame: TaleFrame) -> void:
 func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	var generation := _generation
 	await _finish_pending()
-	var text: String = await _render(instruction["text"], frame)
+	var text: String = await _render(_localize(instruction["text"], instruction["id"], frame.tale, instruction["line"]), frame)
 	var speaker: String = instruction["speaker"]
 	var speaker_info := _speaker_info(speaker, frame)
 	var line := {
@@ -566,7 +695,8 @@ func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 			enabled = bool(await _evaluator.evaluate(option["cond"], frame))
 		if not enabled and not option["show_disabled"]:
 			continue
-		shown.append({"text": await _render(option["text"], frame), "id": option["id"], "enabled": enabled})
+		var parts := _localize(option["text"], option["id"], frame.tale, option["line"])
+		shown.append({"text": await _render(parts, frame), "id": option["id"], "enabled": enabled})
 		sources.append(option)
 	var has_enabled := shown.any(func(option: Dictionary) -> bool: return option["enabled"])
 	if not has_enabled:
@@ -632,6 +762,93 @@ func _preload_beat(tale: Tale, start: int) -> void:
 
 
 ## Initializes a tale's story and global variables the first time it runs.
+## Instruction in [param new] that matches [param pc] in [param old], or -1
+## when the beat no longer exists. Lines are matched by id. A line whose
+## text was edited is found from the next unchanged line after it.
+static func _map_pc(old: Tale, new: Tale, beat: String, pc: int) -> int:
+	var start := new.get_beat_start(beat)
+	if start < 0:
+		return -1
+	if pc < 0 or pc >= old.instructions.size():
+		return start
+	var before: Dictionary = old.instructions[pc]
+	for i in new.instructions.size():
+		var instruction: Dictionary = new.instructions[i]
+		if before["op"] == "say" and instruction["op"] == "say" and instruction["id"] == before["id"]:
+			return i
+		if before["op"] == "choose" and instruction["op"] == "choose" and not before["options"].is_empty():
+			for option in instruction["options"]:
+				if option["id"] == before["options"][0]["id"]:
+					return i
+	if before["op"] == "say":
+		var anchor := _next_shared_line(old, new, pc)
+		if anchor >= 0:
+			# The line just before the anchor is the edited one, unless it is
+			# an old line too (then the current line was deleted).
+			for i in range(anchor - 1, start - 1, -1):
+				var instruction: Dictionary = new.instructions[i]
+				if instruction["op"] == "say":
+					return i if not old.texts.has(instruction["id"]) else anchor
+			return anchor
+	for i in range(start, new.instructions.size()):
+		if new.instructions[i]["line"] >= before["line"] or new.instructions[i]["op"] == "end":
+			return i
+	return start
+
+
+## Index in [param new] of the first line after [param pc] in [param old]
+## that both versions share, within the same beat, or -1.
+static func _next_shared_line(old: Tale, new: Tale, pc: int) -> int:
+	for j in range(pc + 1, old.instructions.size()):
+		var later: Dictionary = old.instructions[j]
+		if later["op"] == "end":
+			return -1
+		if later["op"] != "say":
+			continue
+		for i in new.instructions.size():
+			if new.instructions[i]["op"] == "say" and new.instructions[i]["id"] == later["id"]:
+				return i
+	return -1
+
+
+## Gives variables added to a tale since it started their initial values.
+func _add_new_variables(tale: Tale) -> void:
+	var vars: Dictionary = _story_vars[tale.tale_name]
+	var frame := TaleFrame.new(tale, "")
+	for variable in tale.variables:
+		if variable["global"] or variable["const"] or vars.has(variable["name"]):
+			continue
+		var evaluator := TaleEvaluator.new(self)
+		vars[variable["name"]] = await evaluator.evaluate(variable["value"], frame) if variable["value"] != null else null
+
+
+func _process(delta: float) -> void:
+	if not live_reload:
+		return
+	_reload_timer += delta
+	if _reload_timer < LIVE_RELOAD_INTERVAL:
+		return
+	_reload_timer = 0.0
+	check_for_edits()
+
+
+## Reloads every loaded tale whose source file changed. Called once a
+## second while [member live_reload] is on.
+func check_for_edits() -> void:
+	for tale_name in _tales.keys():
+		var path: String = _tales[tale_name].source_path
+		if path.is_empty() or not FileAccess.file_exists(path):
+			continue
+		var time := FileAccess.get_modified_time(path)
+		if not _source_times.has(path):
+			_source_times[path] = time
+		elif _source_times[path] != time:
+			var problem: String = await reload_tale(tale_name)
+			if not problem.is_empty():
+				push_warning("StoryTeller: live reload: " + problem)
+				reload_failed.emit(tale_name, problem)
+
+
 func _prepare_tale(tale: Tale) -> void:
 	if _story_vars.has(tale.tale_name):
 		return
@@ -757,7 +974,8 @@ func _builtin_function(name: String, args: Array) -> Variant:
 				return _visited.has(str(args[0]))
 		"collected":
 			if count == 1:
-				return false
+				var collection: Node = _sibling(&"Collection")
+				return collection != null and collection.is_collected(str(args[0]))
 		"Vector2", "Vector2i", "Vector3", "Color", "Rect2":
 			return _construct(name, args)
 		_:
@@ -790,16 +1008,54 @@ func _render(parts: Array, frame: TaleFrame) -> String:
 	return text
 
 
-## Returns [display name, name color] for a speaker id.
+## Returns the text parts of a line or option in the current language: the
+## translation keyed [code]<tale>:<id>[/code] when there is one, compiled on
+## first use, or [param parts] otherwise.
+func _localize(parts: Array, id: String, tale: Tale, line: int) -> Array:
+	if is_source_language():
+		return parts
+	var key := tale.translation_key(id)
+	var translated := String(TranslationServer.translate(key))
+	if translated == key or translated.is_empty():
+		return parts
+	if not _translated.has(translated):
+		var compiled := TaleCompiler.compile_text(translated)
+		if compiled["errors"].is_empty():
+			_translated[translated] = compiled["parts"]
+		else:
+			_report("The %s translation of this line has a problem: %s" % [TranslationServer.get_locale(), compiled["errors"][0]], tale.tale_name, line)
+			_translated[translated] = parts
+	return _translated[translated]
+
+
+## True while the game's locale is the language the tales are written in.
+func is_source_language() -> bool:
+	return TranslationServer.get_locale().get_slice("_", 0) == source_language.get_slice("_", 0)
+
+
+## Returns [display name, name color] for a speaker id. Names are
+## translated, keyed by their text.
 func _speaker_info(speaker: String, frame: TaleFrame) -> Array:
 	if speaker.is_empty():
 		return ["", Color.WHITE]
 	var found := resolve_name(speaker, frame)
 	if found[0] and found[1] is String:
-		return [found[1], Color.WHITE]
+		return [_translate(found[1]), Color.WHITE]
 	if found[0] and found[1] is Object and found[1].has_method("get_display_name"):
-		return [found[1].get_display_name(), found[1].get_name_color()]
-	return [speaker.capitalize(), Color.WHITE]
+		return [_translate(found[1].get_display_name()), found[1].get_name_color()]
+	return [_translate(speaker.capitalize()), Color.WHITE]
+
+
+static func _translate(text: String) -> String:
+	return String(TranslationServer.translate(text)) if not text.is_empty() else text
+
+
+## The crew member called [param crew_name] in the same Story, or null.
+func _sibling(crew_name: StringName) -> Node:
+	var story := get_parent()
+	if story != null and story.has_method("get_crew"):
+		return story.get_crew(crew_name)
+	return null
 
 
 ## Other crew members of the Story this director belongs to.

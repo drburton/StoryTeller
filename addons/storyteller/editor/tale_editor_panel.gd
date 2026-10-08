@@ -2,7 +2,8 @@
 class_name TaleEditorPanel
 extends Control
 ## The "Story" main screen: a list of the project's tales, a TaleScript
-## editor with syntax highlighting, and a live list of problems.
+## editor with syntax highlighting and autocomplete, and a live list of
+## problems.
 ##
 ## Edits are kept per file until saved, so switching files loses nothing.
 ## Ctrl+S (Cmd+S on macOS) saves the open tale and reimports it.
@@ -13,6 +14,19 @@ signal tale_saved(path: String)
 const CHECK_DELAY := 0.4
 const ERROR_LINE_COLOR := Color(1.0, 0.3, 0.3, 0.15)
 const WARNING_LINE_COLOR := Color(1.0, 0.8, 0.2, 0.12)
+const COMPLETION_KINDS := {
+	TaleCompletion.Kind.KEYWORD: CodeEdit.KIND_PLAIN_TEXT,
+	TaleCompletion.Kind.ACTION: CodeEdit.KIND_FUNCTION,
+	TaleCompletion.Kind.CAST: CodeEdit.KIND_CLASS,
+	TaleCompletion.Kind.MOOD: CodeEdit.KIND_ENUM,
+	TaleCompletion.Kind.BEAT: CodeEdit.KIND_SIGNAL,
+	TaleCompletion.Kind.TALE: CodeEdit.KIND_FILE_PATH,
+	TaleCompletion.Kind.VARIABLE: CodeEdit.KIND_VARIABLE,
+	TaleCompletion.Kind.FUNCTION: CodeEdit.KIND_FUNCTION,
+	TaleCompletion.Kind.CONSTANT: CodeEdit.KIND_CONSTANT,
+	TaleCompletion.Kind.MEMBER: CodeEdit.KIND_MEMBER,
+	TaleCompletion.Kind.ANNOTATION: CodeEdit.KIND_PLAIN_TEXT,
+}
 
 var file_list: ItemList
 var code_edit: CodeEdit
@@ -27,6 +41,8 @@ var _current_path := ""
 var _buffers: Dictionary = {}
 var _loading := false
 var _diagnostics: Array[TaleDiagnostic] = []
+## Check context from the last check, reused for autocomplete.
+var _context: TaleCheckContext
 
 
 func _ready() -> void:
@@ -51,6 +67,11 @@ func _build_ui() -> void:
 	refresh.text = "Refresh List"
 	refresh.pressed.connect(refresh_files)
 	toolbar.add_child(refresh)
+	var export := Button.new()
+	export.text = "Export Strings"
+	export.tooltip_text = "Write every line, choice, name, and menu text to the translation CSV set in StoryConfig."
+	export.pressed.connect(export_strings)
+	toolbar.add_child(export)
 	_save_button = Button.new()
 	_save_button.text = "Save"
 	_save_button.disabled = true
@@ -88,6 +109,9 @@ func _build_ui() -> void:
 	highlighter = TaleSyntaxHighlighter.new()
 	highlighter.use_editor_theme()
 	code_edit.syntax_highlighter = highlighter
+	code_edit.code_completion_enabled = true
+	code_edit.code_completion_prefixes = [".", "@", "(", "\""]
+	code_edit.code_completion_requested.connect(_on_completion_requested)
 	code_edit.text_changed.connect(_on_text_changed)
 	code_edit.gui_input.connect(_on_code_input)
 	if Engine.is_editor_hint():
@@ -129,6 +153,7 @@ func open_file(path: String) -> void:
 		var text := FileAccess.get_file_as_string(path)
 		_buffers[path] = {"text": text, "saved": text}
 	_current_path = path
+	_context = null
 	_loading = true
 	code_edit.text = _buffers[path]["text"]
 	code_edit.clear_undo_history()
@@ -139,6 +164,21 @@ func open_file(path: String) -> void:
 		if file_list.get_item_metadata(i) == path:
 			file_list.select(i)
 	check_now()
+
+
+## Writes the translation CSV (see [StoryStrings]) and reports the result.
+func export_strings() -> void:
+	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").load_config()
+	var result := StoryStrings.export_strings(config)
+	var message := "Exported %d strings to %s." % [result["count"], config.translation_file]
+	for problem in result["problems"]:
+		push_warning("StoryTeller: " + problem)
+	if not result["problems"].is_empty():
+		message += " %d problem(s); see the Output panel." % result["problems"].size()
+	print("StoryTeller: " + message)
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+		EditorInterface.get_editor_toaster().push_toast(message)
 
 
 ## Writes the open tale to disk and reimports it.
@@ -178,8 +218,8 @@ func check_now() -> void:
 	var doc := TaleParser.parse(code_edit.text, _current_path)
 	_diagnostics.append_array(doc.diagnostics)
 	if not doc.has_errors():
-		var context := preload("res://addons/storyteller/editor/tale_importer.gd")._make_context(_current_path, tale_name)
-		_diagnostics.append_array(TaleChecker.check(doc, context))
+		_context = _make_context()
+		_diagnostics.append_array(TaleChecker.check(doc, _context))
 	_show_problems()
 
 
@@ -212,6 +252,32 @@ func _on_text_changed() -> void:
 	_buffers[_current_path]["text"] = code_edit.text
 	_update_title()
 	_check_timer.start()
+	# Offer completions while a word is being typed.
+	var column := code_edit.get_caret_column()
+	var line := code_edit.get_line(code_edit.get_caret_line())
+	if column > 0 and column <= line.length() and (line[column - 1] == "_" or line[column - 1].is_valid_identifier()):
+		code_edit.request_code_completion()
+
+
+## Fills the autocomplete popup from [TaleCompletion].
+func show_completions() -> void:
+	if _current_path.is_empty():
+		return
+	if _context == null:
+		_context = _make_context()
+	var suggestions := TaleCompletion.suggest(code_edit.text, code_edit.get_caret_line(), code_edit.get_caret_column(), _context)
+	for item in suggestions:
+		code_edit.add_code_completion_option(COMPLETION_KINDS[item["kind"]], item["text"], item["insert"])
+	code_edit.update_code_completion_options(false)
+
+
+func _on_completion_requested() -> void:
+	show_completions()
+
+
+func _make_context() -> TaleCheckContext:
+	var tale_name := _current_path.get_file().get_basename()
+	return preload("res://addons/storyteller/editor/tale_importer.gd")._make_context(_current_path, tale_name)
 
 
 func _on_code_input(event: InputEvent) -> void:

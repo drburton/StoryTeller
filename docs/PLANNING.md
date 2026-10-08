@@ -2,7 +2,13 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.10** (M3 features complete)
+Status: **Draft v0.11** (M4 complete)
+
+Changes in v0.11:
+- M4 complete: weather, color filters, flashes, screen fades, movies, the collection and Extras screen, localization through Godot translations (decision 0011), the debug console, live reload, autocomplete in the Story tab, and the dialogue-only embedding preset.
+- Both M4 exit criteria are met: the demo is translated into Spanish, and `demo/embedded` runs a conversation inside a small 3D scene.
+- The demo gained a full chapter 1. One playthrough takes about 7 to 8 minutes, so the 15-minute demo target moves to M6 with the original sample project (§11).
+- Tests now play the whole demo in English and Spanish.
 
 Changes in v0.10:
 - M3 features complete: save slots with thumbnails, quick save, autosave before choices, global data, read tracking, settings, rewind with `@no_rewind`, history, `@skip_safe`, the menu set (title, pause, save and load, settings, history, confirmations, text input) with one shared theme, a quick menu, and the "page" dialogue style.
@@ -604,11 +610,11 @@ Selecting any card shows the stage as it would look at that line. The director r
 - Export check in CI: the project is exported as a `.pck` and checked the way a shipped game sees it. ✔
 - **Exit criteria:** a 15-minute original demo story exports and plays on the platforms chosen for M3 (§14).
   - Met so far: an exported Linux pack plays the demo from the title screen through saving, loading, and every menu.
-  - Still open: the demo runs about 5 minutes; Windows and web builds have not been run, since they need export templates and a browser. The platform choice (§14) is also still open.
+  - Still open: Windows and web builds have not been run, since they need export templates and a browser. The platform choice (§14) is also still open. The 15-minute story moved to M6 (it runs about 7 to 8 minutes after M4).
 
 ### M4: Production features (4 weeks)
-- Effects, collection, localization, debug console, live reload, autocomplete, movies, embedding preset.
-- **Exit criteria:** demo translated into a second language; demo embedded in a small 3D scene.
+- Effects, collection, localization, debug console, live reload, autocomplete, movies, embedding preset. ✔
+- **Exit criteria:** demo translated into a second language ✔ (Spanish); demo embedded in a small 3D scene ✔ (`demo/embedded`).
 
 ### M5: Visual editor and Story Map (6 weeks)
 - Story tab, beat editor with all card types, inspector, undo and redo.
@@ -618,7 +624,7 @@ Selecting any card shows the stage as it would look at that line. The director r
 
 ### M6: Launch preparation (3 weeks)
 - Legal review (§2.8).
-- Full documentation, original sample project, trailer and screenshots.
+- Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots.
 - Publish on the Godot Asset Library or Asset Store and GitHub.
 
 ### 1.0 Release (about 28 weeks after M0 starts)
@@ -793,7 +799,6 @@ StoryTellerPro/                  # private repository (Pro tier)
 ## 20. Immediate Next Steps
 
 1. Run a quick trademark and name search for "StoryTeller".
-2. Choose the M3 platforms (§14), then build and try Windows and web exports of the demo.
-3. Grow the demo toward the 15-minute M3 exit story, or move that target to M4 with the translated demo.
-4. Start M4: effects, collection, localization, debug console, live reload, and autocomplete.
-5. Optional: a VS Code syntax file for writers who use an external editor.
+2. Choose the platforms (§14), then build and try Windows and web exports of the demo.
+3. Start M5: the visual editor and Story Map (§9).
+4. Optional: a VS Code syntax file for writers who use an external editor.

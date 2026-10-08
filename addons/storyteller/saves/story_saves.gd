@@ -196,7 +196,10 @@ func save_globals() -> void:
 	var file := FileAccess.open(folder.path_join(GLOBAL_FILE), FileAccess.WRITE)
 	if file == null:
 		return
-	file.store_string(JSON.stringify({"format": FORMAT, "director": director.capture_globals()}))
+	var crew := {}
+	for member in _global_keepers():
+		crew[str(member.get_crew_name())] = member.capture_globals()
+	file.store_string(JSON.stringify({"format": FORMAT, "director": director.capture_globals(), "crew": crew}))
 	file.close()
 	_globals_dirty = false
 	_since_global_save = 0.0
@@ -210,6 +213,11 @@ func load_globals() -> void:
 	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if parsed is Dictionary:
 		director.restore_globals(parsed.get("director", {}))
+		var crew: Dictionary = parsed.get("crew", {})
+		for member in _global_keepers():
+			var crew_name := str(member.get_crew_name())
+			if crew.has(crew_name):
+				member.restore_globals(crew[crew_name])
 
 
 func _process(delta: float) -> void:
@@ -240,6 +248,28 @@ func _connect_director() -> void:
 		if autosave_on_choice:
 			save_slot(AUTO_SLOT))
 	director.story_finished.connect(save_globals)
+	for member in _global_keepers():
+		if member.has_signal("globals_changed"):
+			member.globals_changed.connect(func() -> void: _globals_dirty = true)
+
+
+## Crew members other than the director with data kept across
+## playthroughs: they have capture_globals() and restore_globals().
+func _global_keepers() -> Array[Node]:
+	var result: Array[Node] = []
+	var story := get_parent()
+	if story == null:
+		return result
+	# Children rather than get_crew(): this also runs while the Story is
+	# being freed, when some members are already gone.
+	for member in story.get_children():
+		if not is_instance_valid(member) or member.is_queued_for_deletion():
+			continue
+		if member is TaleDirector or member == self or not member is StoryCrew:
+			continue
+		if member.has_method("capture_globals") and member.has_method("restore_globals"):
+			result.append(member)
+	return result
 
 
 func _slot_path(slot: String) -> String:

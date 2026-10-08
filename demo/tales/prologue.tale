@@ -11,6 +11,9 @@ beat start:
 	backdrop("classroom_morning", transition = "fade", time = 1.0)
 	music("quiet_morning", volume = 0.8)
 	mira.enter("smile", at = LEFT)
+	collect("classroom")
+	collect("quiet_morning")
+	collect("mira")
 
 	"Sunlight spills across rows of empty desks."
 	mira: "You're here early.[pause] Couldn't sleep?"

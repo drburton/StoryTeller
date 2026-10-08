@@ -56,11 +56,13 @@ func _make_slot(slot: String) -> Button:
 	picture.texture = info.get("thumbnail")
 	box.add_child(picture)
 	var name_label := Label.new()
+	name_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	name_label.text = _slot_label(slot) + ("" if info.is_empty() else "  " + _date(info.get("saved_at", 0.0)))
 	name_label.add_theme_font_size_override("font_size", 14)
 	box.add_child(name_label)
 	var text_label := Label.new()
-	text_label.text = "Empty" if info.is_empty() else str(info.get("text", ""))
+	text_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	text_label.text = tr("Empty") if info.is_empty() else str(info.get("text", ""))
 	text_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	text_label.custom_minimum_size = Vector2(THUMBNAIL_SIZE.x, 0)
 	text_label.add_theme_font_size_override("font_size", 13)
@@ -73,7 +75,7 @@ func _make_slot(slot: String) -> Button:
 func _on_slot_pressed(slot: String, occupied: bool) -> void:
 	var saves := menus.saves()
 	if mode == "save":
-		if occupied and not await menus.confirm("Overwrite %s?" % _slot_label(slot).to_lower()):
+		if occupied and not await menus.confirm(tr("Overwrite %s?") % _slot_label(slot)):
 			return
 		saves.save_slot(slot)
 		open()
@@ -87,10 +89,10 @@ func _on_slot_pressed(slot: String, occupied: bool) -> void:
 static func _slot_label(slot: String) -> String:
 	match slot:
 		StorySaves.AUTO_SLOT:
-			return "Auto save"
+			return TranslationServer.translate("Auto save")
 		StorySaves.QUICK_SLOT:
-			return "Quick save"
-	return "Slot %s" % slot
+			return TranslationServer.translate("Quick save")
+	return TranslationServer.translate("Slot %s") % slot
 
 
 static func _date(unix_time: float) -> String:

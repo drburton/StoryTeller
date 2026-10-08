@@ -1,6 +1,6 @@
 # TaleScript Language Specification
 
-Version: **draft 0.2** (milestone M3)
+Version: **draft 0.3** (milestone M4)
 
 TaleScript is the language StoryTeller stories are written in. It follows GDScript's syntax wherever GDScript has a way to express something, and adds a few statements for writing stories. This document is the reference for the parser, the checker, the editor tools, and writers who want precise rules.
 
@@ -15,6 +15,7 @@ Implementation status:
 | `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 | `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
+| Translation (§7.3), effect, collection, and movie actions (§13.1) | Implemented (M4) |
 
 ---
 
@@ -329,7 +330,7 @@ backdrop("forest", transition = "fade", time = 1.5)
 - Stage positions: `LEFT`, `CENTER`, `RIGHT` (`Vector2(0.25, 0)`, `Vector2(0.5, 0)`, `Vector2(0.75, 0)`), or any `Vector2`. The x value runs from 0 (left edge) to 1 (right edge); the y value lifts a character's feet above the bottom of the screen, as a fraction of the screen height.
 - Constants of value types, such as `Color.RED`, `Color.TRANSPARENT`, `Vector2.ZERO`, and `Vector2.LEFT`.
 - Built-in functions: `randi_range`, `randf`, `min`, `max`, `clamp`, `round`, `len`, `str`, `visited("tale.beat")`, `collected("id")`, `tr("key")`.
-- Objects and functions that game code exposes with `Story.expose()`. Nothing else in the engine is reachable.
+- Objects and functions that game code exposes with `Story.expose()`. Nothing else in the engine is reachable. List their names in `StoryConfig.exposed_names` so tales that use them import without errors and the Story editor suggests them.
 
 ---
 
@@ -351,6 +352,20 @@ Dialogue and narration strings use Godot BBCode (`[b]`, `[i]`, `[color=red]`, `[
 
 `{expression}` inserts a value: `"You have {gold} gold."`. Write `{{` and `}}` for literal braces.
 
+### 7.3 Translation
+
+Lines, narration, and choice options are translated through Godot's translation system (decision 0011). Each one is keyed `<tale>:<id>`, where the id comes from `@id("...")` or, without it, from the beat name and a hash of the text. Changing the text of a line without `@id` therefore gives it a new key.
+
+A translation may use `{expression}` and the markup in §7.1, just like the original. While the game's language is `StoryConfig.source_language`, lines are shown as written in the tale.
+
+Speaker names, tale titles, and text passed through `tr("...")` are keyed by their text:
+
+```gdscript
+player_name = await ask_text(tr("What's your name?"), tr("Sam"))
+```
+
+**Export Strings** in the Story tab (or `addons/storyteller/editor/export_strings.gd` from the command line) writes every key to `StoryConfig.translation_file`, a CSV that translators fill in and Godot imports. Exporting again keeps existing translations and marks rows whose key is no longer used, or whose source text changed, in the `_status` column.
+
 ---
 
 ## 8. Annotations
@@ -361,7 +376,7 @@ Dialogue and narration strings use Godot BBCode (`[b]`, `[i]`, `[color=red]`, `[
 | `@global` | `var` at top level | Variable shared across playthroughs. |
 | `@once` | Choice option | Option disappears after it is chosen once in a playthrough. |
 | `@show_disabled` | Choice option | Show the option greyed out when its condition is false. |
-| `@id("...")` | Dialogue or narration | Pins the line id used for translation and voice. |
+| `@id("...")` | Dialogue, narration, or choice option | Pins the id used for translation (§7.3), read tracking, and `@once`. |
 | `@voice("...")` | Dialogue or narration | Assigns a voice clip. |
 | `@no_rewind` | Any statement | The player cannot rewind past this point. |
 | `@skip_safe` | Beat | Treat the beat's lines as already read, so skip passes them even when the player only skips read lines. Useful for recaps. |
@@ -512,6 +527,15 @@ Actions are called like functions. Named arguments may be given in any order aft
 | `dialogue_style` | `name` | Switch dialogue styles: `"classic"` (a box along the bottom) or `"page"` (lines collect on a full page). Games can add more in `StoryConfig.dialogue_styles`. |
 | `clear_page` | | Start a new page in the `"page"` style. |
 | `hide_dialogue` | | Hide the dialogue box until the next line, for example while the scene changes. |
+| `weather` | `kind`, `strength = 1.0`, `fade = 1.0` | Start `"rain"` or `"snow"` over the stage, or stop it with `"none"`. |
+| `filter` | `name`, `strength = 1.0`, `time = 0.5` | Recolor the stage: `"grayscale"`, `"sepia"`, `"night"`, `"warm"`, `"cold"`, or `"none"`. The dialogue box and menus keep their colors. |
+| `flash` | `color = Color.WHITE`, `time = 0.3` | Flash the whole screen. |
+| `fade_out` | `color = Color.BLACK`, `time = 0.5` | Fade the whole screen, dialogue box included, to a color. |
+| `fade_in` | `time = 0.5` | Fade the screen back in. |
+| `exit_all` | `time = 0.4` | Every cast member on stage exits. |
+| `autosave` | | Save to the autosave slot. |
+| `collect` | `id`, `notify = true` | Unlock a gallery picture, music track, or codex entry (a `CollectionItem` in `res://story/collection/`). `collected("id")` reads it. Unlocks are kept across playthroughs. |
+| `play_movie` | `name`, `skippable = true` | Play an Ogg Theora (`.ogv`) movie from `res://story/movies/` over everything but the menus. A click or the continue key skips it. Use with `await`. |
 
 Transitions for `backdrop`: `none`, `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, `slide_down`. With `dissolve`, `mask` names a grayscale image in `res://story/transitions/` that sets the order in which pixels change (dark first).
 
@@ -555,5 +579,7 @@ Assets are found by name, without extension, in the folders set in `StoryConfig`
 | Props | `res://story/props/` | images, or scenes with a `Node2D` root |
 | Transition masks | `res://story/transitions/` | grayscale images |
 | Music, sounds, ambience, voice | `res://story/audio/music/`, `sounds/`, `ambience/`, `voice/` | ogg, mp3, wav |
+| Collection items | `res://story/collection/` | `CollectionItem` resources (`.tres`) |
+| Movies | `res://story/movies/` | ogv (Ogg Theora) |
 
 When a beat starts, StoryTeller begins loading the assets it names in the background.

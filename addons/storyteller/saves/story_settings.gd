@@ -73,6 +73,9 @@ func save_settings() -> void:
 
 func apply_all() -> void:
 	for key in values:
+		# An unset language leaves the locale the game started with.
+		if key == "language" and str(values[key]).is_empty():
+			continue
 		apply(key)
 
 
@@ -96,8 +99,8 @@ func apply(key: String) -> void:
 				if DisplayServer.window_get_mode() != mode:
 					DisplayServer.window_set_mode(mode)
 		"language":
-			if not str(value).is_empty():
-				TranslationServer.set_locale(str(value))
+			# Empty means the player's system language.
+			TranslationServer.set_locale(str(value) if not str(value).is_empty() else OS.get_locale())
 
 
 func _crew(crew_name: StringName) -> Node:
