@@ -18,6 +18,8 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 	preload("res://addons/storyteller/audio/story_audio.gd"),
 	preload("res://addons/storyteller/saves/story_saves.gd"),
 	preload("res://addons/storyteller/saves/story_settings.gd"),
+	preload("res://addons/storyteller/rewind/story_rewind.gd"),
+	preload("res://addons/storyteller/rewind/story_history.gd"),
 	preload("res://addons/storyteller/ui/story_dialogue.gd"),
 ]
 
@@ -45,6 +47,10 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export var settings_path := "user://settings.cfg"
 ## Save to the "auto" slot before every choice.
 @export var autosave_on_choice := true
+## How many lines and choices the player can rewind.
+@export_range(0, 500) var rewind_depth := 50
+## How many lines the history screen keeps.
+@export_range(10, 2000) var history_size := 200
 
 @export_group("Dialogue")
 ## Scene for the dialogue box (its root must extend [DialogueBox]).

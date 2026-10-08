@@ -16,6 +16,8 @@ signal story_finished
 signal beat_entered(tale_name: String, beat: String)
 ## Emitted for every line, before the presenter shows it.
 signal line_started(line: Dictionary)
+## Emitted when the player continues past a line.
+signal line_finished(line: Dictionary)
 ## Emitted before the presenter shows choices.
 signal choice_started(options: Array[Dictionary])
 ## Emitted after the player picks an option.
@@ -521,6 +523,7 @@ func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	if generation == _generation:
 		_read_lines[instruction["id"]] = true
 		_line_pc = -1
+		line_finished.emit(line)
 
 
 func _match(instruction: Dictionary, frame: TaleFrame) -> void:

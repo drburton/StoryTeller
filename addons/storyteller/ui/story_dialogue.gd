@@ -11,6 +11,11 @@ const INPUT_ACTIONS := {
 	"story_continue": [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER],
 	"story_skip": [KEY_CTRL],
 	"story_auto": [KEY_A],
+	"story_rewind": [KEY_PAGEUP, MOUSE_BUTTON_WHEEL_UP],
+	"story_menu": [KEY_ESCAPE, MOUSE_BUTTON_RIGHT],
+	"story_history": [KEY_H],
+	"story_quick_save": [KEY_F5],
+	"story_quick_load": [KEY_F9],
 }
 
 var layer: CanvasLayer
@@ -105,7 +110,12 @@ static func _register_input_actions() -> void:
 		if InputMap.has_action(action):
 			continue
 		InputMap.add_action(action)
-		for keycode in INPUT_ACTIONS[action]:
-			var event := InputEventKey.new()
-			event.keycode = keycode
+		for code in INPUT_ACTIONS[action]:
+			var event: InputEvent
+			if code in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_RIGHT]:
+				event = InputEventMouseButton.new()
+				event.button_index = code
+			else:
+				event = InputEventKey.new()
+				event.keycode = code
 			InputMap.action_add_event(action, event)
