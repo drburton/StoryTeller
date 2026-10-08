@@ -488,6 +488,8 @@ TaleScript is GDScript plus the following. Anything not listed here behaves as i
 
 ## 12. Syntax tree guarantees (for tools)
 
+The visual editor in the Story tab relies on these guarantees to edit one statement at a time (decision 0012).
+
 The parser (`TaleParser.parse()`) returns a `TaleDocument` whose tree satisfies:
 
 1. **Complete coverage.** Every physical line of the source belongs to exactly one node. Blank lines are `BLANK` nodes and comment-only lines are `COMMENT` nodes.

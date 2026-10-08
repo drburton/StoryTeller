@@ -2,7 +2,12 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.11** (M4 complete)
+Status: **Draft v0.12** (M5 features complete; writer testing pending)
+
+Changes in v0.12:
+- M5 features complete: the Story tab has Text, Cards, and Map views of the same file. Edits are line-level and share one undo history (decision 0012).
+- A test builds a branching scene from an empty file using only cards and checks that the result matches hand-written TaleScript. The usability test with writers who do not program has not happened yet; it needs people, so it is listed in §20.
+- Not built yet from §9.3: a markup toolbar for narration (bold, pause, speed), multi-select, copy and paste between tales, and portrait and mood thumbnails in the pickers. Cards edit fields in place, so there is no separate inspector panel.
 
 Changes in v0.11:
 - M4 complete: weather, color filters, flashes, screen fades, movies, the collection and Extras screen, localization through Godot translations (decision 0011), the debug console, live reload, autocomplete in the Story tab, and the dialogue-only embedding preset.
@@ -617,10 +622,12 @@ Selecting any card shows the stage as it would look at that line. The director r
 - **Exit criteria:** demo translated into a second language ✔ (Spanish); demo embedded in a small 3D scene ✔ (`demo/embedded`).
 
 ### M5: Visual editor and Story Map (6 weeks)
-- Story tab, beat editor with all card types, inspector, undo and redo.
-- Story Map with auto layout and problem highlighting.
-- Usability test with at least three writers who do not program.
+- Story tab, beat editor with all card types, undo and redo. ✔ (cards are edited in place instead of through an inspector)
+- Story Map with auto layout and problem highlighting. ✔
+- Usability test with at least three writers who do not program. Not done yet.
 - **Exit criteria:** a writer builds a branching five-minute scene entirely in the visual editor; the resulting file reads naturally as text and diffs cleanly.
+  - Met in an automated test (`tests/unit/visual/test_visual_scene.gd`): a branching scene built only with cards matches hand-written TaleScript and checks cleanly.
+  - Still open: the same with real writers, which the usability test covers.
 
 ### M6: Launch preparation (3 weeks)
 - Legal review (§2.8).
@@ -798,7 +805,8 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 20. Immediate Next Steps
 
-1. Run a quick trademark and name search for "StoryTeller".
-2. Choose the platforms (§14), then build and try Windows and web exports of the demo.
-3. Start M5: the visual editor and Story Map (§9).
-4. Optional: a VS Code syntax file for writers who use an external editor.
+1. Run the M5 usability test: three writers who do not program each build a short branching scene with cards and the map, and note where they get stuck.
+2. Run a quick trademark and name search for "StoryTeller".
+3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
+4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
+5. Start M6: legal review, full documentation, the 15-minute sample project, and publishing.
