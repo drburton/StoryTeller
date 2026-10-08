@@ -225,7 +225,9 @@ func get_game_title() -> String:
 func _process(_delta: float) -> void:
 	var dialogue := _dialogue()
 	var dialogue_showing := dialogue != null and dialogue.is_showing()
-	quick_menu.visible = show_quick_menu and is_story_playing() and _stack.is_empty() and dialogue_showing
+	var effects := _crew(&"Effects") as StoryEffects
+	var faded := effects != null and effects.is_faded_out()
+	quick_menu.visible = show_quick_menu and is_story_playing() and _stack.is_empty() and dialogue_showing and not faded
 	if quick_menu.visible:
 		quick_menu.sync(dialogue.skip_toggled, dialogue.dialogue_box.auto_advance, dialogue.dialogue_box.get_quick_menu_corner())
 

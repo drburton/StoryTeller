@@ -16,6 +16,7 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 	preload("res://addons/storyteller/director/tale_director.gd"),
 	preload("res://addons/storyteller/stage/story_stage.gd"),
 	preload("res://addons/storyteller/audio/story_audio.gd"),
+	preload("res://addons/storyteller/effects/story_effects.gd"),
 	preload("res://addons/storyteller/saves/story_saves.gd"),
 	preload("res://addons/storyteller/saves/story_settings.gd"),
 	preload("res://addons/storyteller/rewind/story_rewind.gd"),
