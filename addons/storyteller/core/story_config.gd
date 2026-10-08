@@ -26,6 +26,10 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_dir var cast_folder := "res://story/cast"
 ## Dim cast members who are not speaking.
 @export var highlight_speaker := true
+## Folder with backdrop images, used by backdrop("name").
+@export_dir var backdrop_folder := "res://story/backdrops"
+## Folder with prop images and scenes, used by prop("name").
+@export_dir var prop_folder := "res://story/props"
 
 @export_group("Dialogue")
 ## Scene for the dialogue box (its root must extend [DialogueBox]).

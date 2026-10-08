@@ -123,6 +123,12 @@ func test_endless_loop_is_stopped() -> void:
 	assert_false(director.is_playing())
 
 
+func test_type_constants() -> void:
+	var lines := await _play("beat start:\n\t\"{Color.RED} {Vector2.LEFT} {Vector3.UP}\"\n\tvar x := Color.NOT_A_COLOR\n")
+	assert_eq(lines, ["(1.0, 0.0, 0.0, 1.0) (-1.0, 0.0) (0.0, 1.0, 0.0)"])
+	assert_eq(errors, ["main:3: Color has no constant 'NOT_A_COLOR'."])
+
+
 func test_global_variables() -> void:
 	await _play("@global var endings := 0\nbeat start:\n\tendings += 1\n")
 	assert_eq(JSON.to_native(director.capture_globals()), {"endings": 1})

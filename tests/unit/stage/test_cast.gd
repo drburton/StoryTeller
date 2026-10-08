@@ -135,6 +135,14 @@ func test_layered_look() -> void:
 	assert_has(look.get_moods(), "face=frown")
 
 
+func test_interrupted_animations_do_not_block() -> void:
+	await _play("beat start:\n\trobin.enter(time = 0)\n\trobin.move_to(LEFT, time = 0.3)\n\trobin.move_to(RIGHT, time = 0.05)\n\t\"done\"\n")
+	assert_eq(presenter.lines, ["done"])
+	stage.get_cast("robin").move_to(TaleDirector.POSITIONS["LEFT"], 5.0)
+	stage.get_cast("robin").finish_animations()
+	assert_eq(stage.get_cast("robin").stage_position, TaleDirector.POSITIONS["LEFT"])
+
+
 func test_unknown_mood_keeps_current_mood() -> void:
 	var robin := stage.get_cast("robin")
 	robin.mood = "smile"

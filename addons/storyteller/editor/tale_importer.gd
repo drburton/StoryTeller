@@ -84,6 +84,7 @@ static func _make_context(source_file: String, tale_name: String) -> TaleCheckCo
 	for id in profiles:
 		var profile: CastProfile = profiles[id]
 		context.add_cast(id, profile.look.get_moods() if profile.look else PackedStringArray())
+	context.add_exposed("camera")
 	var folder := source_file.get_base_dir()
 	for file_name in DirAccess.get_files_at(folder):
 		if not file_name.ends_with(".tale") or file_name.get_basename() == tale_name:

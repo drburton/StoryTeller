@@ -56,6 +56,9 @@ func evaluate(expr: Array, frame: TaleFrame) -> Variant:
 		"call":
 			return await _call(expr, frame)
 		"attr":
+			var base: Array = expr[1]
+			if base[0] == "name" and base[1] in TaleCheckContext.CONSTRUCTORS and not _director.resolve_name(base[1], frame)[0]:
+				return _type_constant(base[1], expr[2])
 			var object: Variant = await evaluate(expr[1], frame)
 			return get_member(object, expr[2])
 		"idx":
@@ -290,6 +293,36 @@ func _store(place: Array, value: Variant, frame: TaleFrame) -> void:
 				fail("Can't change items of %s." % type_string(typeof(container)))
 		_:
 			fail("Can't assign to this expression.")
+
+
+## Constants of value types, e.g. Color.RED or Vector2.ZERO.
+func _type_constant(type_name: String, constant: String) -> Variant:
+	if type_name == "Color":
+		var missing := Color(-1, -1, -1, -1)
+		var color := Color.from_string(constant, missing)
+		if color != missing:
+			return color
+	else:
+		var directions := {
+			"ZERO": Vector3.ZERO, "ONE": Vector3.ONE, "LEFT": Vector3.LEFT, "RIGHT": Vector3.RIGHT,
+			"UP": Vector3(0, -1, 0), "DOWN": Vector3(0, 1, 0), "FORWARD": Vector3.FORWARD, "BACK": Vector3.BACK,
+		}
+		if type_name == "Vector3":
+			directions["UP"] = Vector3.UP
+			directions["DOWN"] = Vector3.DOWN
+		if directions.has(constant):
+			var value: Vector3 = directions[constant]
+			match type_name:
+				"Vector2":
+					if constant not in ["FORWARD", "BACK"]:
+						return Vector2(value.x, value.y)
+				"Vector2i":
+					if constant not in ["FORWARD", "BACK"]:
+						return Vector2i(int(value.x), int(value.y))
+				"Vector3":
+					return value
+	fail("%s has no constant '%s'." % [type_name, constant])
+	return null
 
 
 ## True for StoryTeller objects that list what tales may use, such as cast

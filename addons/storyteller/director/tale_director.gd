@@ -33,6 +33,11 @@ const POSITIONS := {
 const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_wait.gd"),
 	preload("res://addons/storyteller/actions/action_emit.gd"),
+	preload("res://addons/storyteller/actions/action_backdrop.gd"),
+	preload("res://addons/storyteller/actions/action_prop.gd"),
+	preload("res://addons/storyteller/actions/action_hide_prop.gd"),
+	preload("res://addons/storyteller/actions/action_clear_props.gd"),
+	preload("res://addons/storyteller/actions/action_shake.gd"),
 ]
 ## Upper limit of instructions run without showing a line or choice, which
 ## stops endless loops from freezing the game.
@@ -60,6 +65,9 @@ var _pending: Array[TaleTask] = []
 var _evaluator: TaleEvaluator
 var _context: TaleContext
 var _playing := false
+## Tale and line of the instruction being run, for error reports.
+var _current_tale := ""
+var _current_line := 0
 ## Increases on every play or stop, so an old run loop knows to quit.
 var _generation := 0
 
@@ -175,6 +183,9 @@ func make_check_context(tale_name := "") -> TaleCheckContext:
 	for exposed_name in _exposed:
 		context.add_exposed(exposed_name)
 	for crew in _crew_siblings():
+		if crew.has_method("get_tale_names"):
+			for extra in crew.get_tale_names():
+				context.add_exposed(extra)
 		if crew.has_method("get_cast_moods"):
 			var cast: Dictionary = crew.get_cast_moods()
 			for id in cast:
@@ -368,6 +379,8 @@ func _run(generation: int) -> void:
 		var op: String = instruction["op"]
 		if op == "say" or op == "choose":
 			steps = 0
+		_current_tale = frame.tale.tale_name
+		_current_line = instruction["line"]
 		_evaluator.reset()
 		await _execute(instruction, frame)
 		if _evaluator.failed():
@@ -734,6 +747,11 @@ func _get_presenter() -> Object:
 	if story != null and story.has_method("get_crew"):
 		return story.get_crew(&"Dialogue")
 	return null
+
+
+## Reports a runtime problem for the instruction being run.
+func report_error(message: String) -> void:
+	_report(message, _current_tale, _current_line)
 
 
 func _report(message: String, tale_name: String, line: int) -> void:
