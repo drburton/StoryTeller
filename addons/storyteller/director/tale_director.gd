@@ -51,6 +51,11 @@ const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_stop_ambience.gd"),
 	preload("res://addons/storyteller/actions/action_voice.gd"),
 	preload("res://addons/storyteller/actions/action_stop_audio.gd"),
+	preload("res://addons/storyteller/actions/action_ask_text.gd"),
+	preload("res://addons/storyteller/actions/action_ask_number.gd"),
+	preload("res://addons/storyteller/actions/action_dialogue_style.gd"),
+	preload("res://addons/storyteller/actions/action_clear_page.gd"),
+	preload("res://addons/storyteller/actions/action_hide_dialogue.gd"),
 ]
 ## Actions whose first argument names an asset that can be loaded ahead.
 const PRELOAD_ACTIONS := ["backdrop", "prop", "music", "sound", "ambience", "voice"]
