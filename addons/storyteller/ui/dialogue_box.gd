@@ -43,6 +43,13 @@ func hide_box() -> void:
 	hide()
 
 
+## Where the quick menu's bottom-right corner goes, in canvas coordinates.
+## Override this in boxes with their own layout.
+func get_quick_menu_corner() -> Vector2:
+	var rect := get_global_rect()
+	return Vector2(rect.end.x - 28, rect.position.y + rect.size.y * 0.7 - 4)
+
+
 ## Starts a new page, for styles that keep several lines on screen.
 func clear_page() -> void:
 	pass

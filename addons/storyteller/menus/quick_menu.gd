@@ -1,22 +1,17 @@
 class_name QuickMenu
 extends HBoxContainer
-## A row of small buttons above the dialogue box: History, Skip, Auto, Save,
-## Load, Settings, and Menu.
+## A row of small buttons beside the dialogue box: History, Skip, Auto,
+## Save, Load, Settings, and Menu. [StoryMenus] places it at
+## [method DialogueBox.get_quick_menu_corner].
 
 var menus: StoryMenus
+## Drawn behind the buttons so they stay readable over busy backdrops.
+var backing := Color(0.0, 0.0, 0.0, 0.45)
 var _skip: Button
 var _auto: Button
 
 
 func _ready() -> void:
-	anchor_left = 1.0
-	anchor_right = 1.0
-	anchor_top = 0.7
-	anchor_bottom = 0.7
-	grow_horizontal = Control.GROW_DIRECTION_BEGIN
-	grow_vertical = Control.GROW_DIRECTION_BEGIN
-	offset_right = -28
-	offset_bottom = -4
 	add_theme_constant_override("separation", 4)
 	_add("History", func() -> void: menus.open("history"))
 	_skip = _add("Skip", func() -> void: menus.toggle_skip())
@@ -29,10 +24,17 @@ func _ready() -> void:
 	_add("Menu", func() -> void: menus.open("pause"))
 
 
-## Updates the Skip and Auto buttons to match the dialogue state.
-func sync(skip_on: bool, auto_on: bool) -> void:
+## Updates the Skip and Auto buttons to match the dialogue state, and moves
+## the row so its bottom-right corner sits at [param corner].
+func sync(skip_on: bool, auto_on: bool, corner: Vector2) -> void:
 	_skip.set_pressed_no_signal(skip_on)
 	_auto.set_pressed_no_signal(auto_on)
+	position = corner - size
+
+
+func _draw() -> void:
+	if backing.a > 0.0:
+		draw_rect(Rect2(Vector2.ZERO, size).grow_individual(6, 0, 6, 0), backing)
 
 
 func _add(text: String, action: Callable) -> Button:

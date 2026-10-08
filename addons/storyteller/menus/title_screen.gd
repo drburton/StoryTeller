@@ -31,7 +31,8 @@ func _ready() -> void:
 	_load = MenuScreen.make_button("Load", func() -> void: menus.open("load"))
 	column.add_child(_load)
 	column.add_child(MenuScreen.make_button("Settings", func() -> void: menus.open("settings")))
-	column.add_child(MenuScreen.make_button("Quit", func() -> void: menus.quit_game()))
+	if menus.can_quit():
+		column.add_child(MenuScreen.make_button("Quit", func() -> void: menus.quit_game()))
 
 
 func open() -> void:

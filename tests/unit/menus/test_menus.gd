@@ -219,6 +219,20 @@ func test_quick_menu_shows_while_playing() -> void:
 	assert_false(menus.quick_menu.visible)
 
 
+func test_quick_menu_follows_the_dialogue_style() -> void:
+	_add("beat start:\n\t\"Classic.\"\n\tdialogue_style(\"page\")\n\t\"Page.\"\n")
+	await _press_new_game()
+	await tree.process_frame
+	var corner := menus.quick_menu.get_rect().end
+	assert_eq(corner, dialogue.dialogue_box.get_quick_menu_corner())
+	var classic_corner := corner
+	await _continue()
+	await tree.process_frame
+	assert_eq(dialogue.style, "page")
+	assert_eq(menus.quick_menu.get_rect().end, dialogue.dialogue_box.get_quick_menu_corner())
+	assert_ne(menus.quick_menu.get_rect().end, classic_corner)
+
+
 func _press_new_game() -> void:
 	menus.show_title()
 	await tree.process_frame

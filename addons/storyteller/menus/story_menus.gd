@@ -149,6 +149,12 @@ func continue_game() -> void:
 	saves().load_slot(slot)
 
 
+## False where a game cannot close itself, such as in a web browser. The
+## title screen and pause menu leave out Quit there.
+func can_quit() -> bool:
+	return not OS.has_feature("web")
+
+
 func quit_game() -> void:
 	if saves() != null:
 		saves().save_globals()
@@ -221,7 +227,7 @@ func _process(_delta: float) -> void:
 	var dialogue_showing := dialogue != null and dialogue.is_showing()
 	quick_menu.visible = show_quick_menu and is_story_playing() and _stack.is_empty() and dialogue_showing
 	if quick_menu.visible:
-		quick_menu.sync(dialogue.skip_toggled, dialogue.dialogue_box.auto_advance)
+		quick_menu.sync(dialogue.skip_toggled, dialogue.dialogue_box.auto_advance, dialogue.dialogue_box.get_quick_menu_corner())
 
 
 func _unhandled_input(event: InputEvent) -> void:

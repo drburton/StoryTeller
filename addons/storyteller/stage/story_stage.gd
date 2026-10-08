@@ -246,14 +246,20 @@ static func scan_cast(folder: String) -> Dictionary:
 	var profiles := {}
 	if not DirAccess.dir_exists_absolute(folder):
 		return profiles
-	for file_name in DirAccess.get_files_at(folder):
+	# list_directory (not DirAccess) so exported games, whose folders hold
+	# .remap and .import files, find the same entries.
+	var entries := ResourceLoader.list_directory(folder)
+	for file_name in entries:
 		if file_name.get_extension() in ["tres", "res"]:
 			var profile := load(folder.path_join(file_name)) as CastProfile
 			if profile != null:
 				if profile.id.is_empty():
 					profile.id = file_name.get_basename()
 				profiles[profile.id] = profile
-	for sub in DirAccess.get_directories_at(folder):
+	for entry in entries:
+		if not entry.ends_with("/"):
+			continue
+		var sub := entry.trim_suffix("/")
 		if profiles.has(sub) or sub.begins_with("."):
 			continue
 		var profile := CastProfile.new()

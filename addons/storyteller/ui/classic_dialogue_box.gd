@@ -56,6 +56,11 @@ func _ready() -> void:
 	hide()
 
 
+func get_quick_menu_corner() -> Vector2:
+	var rect := _panel.get_global_rect()
+	return Vector2(rect.end.x - 4, rect.position.y - 4)
+
+
 func show_line(line: Dictionary) -> void:
 	show()
 	_name_label.text = line["speaker_name"]

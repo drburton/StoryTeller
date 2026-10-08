@@ -14,6 +14,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	# Centered in the space above the classic dialogue box.
+	center.anchor_bottom = 0.7
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(center)
 	_column = VBoxContainer.new()

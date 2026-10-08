@@ -41,6 +41,7 @@ func _ready() -> void:
 	for row in TOGGLES:
 		grid.add_child(_label(row[0]))
 		var toggle := CheckButton.new()
+		toggle.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 		toggle.toggled.connect(func(on: bool) -> void: _apply_setting(row[1], on))
 		grid.add_child(toggle)
 		_controls[row[1]] = toggle

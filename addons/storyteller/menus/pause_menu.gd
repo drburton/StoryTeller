@@ -13,7 +13,8 @@ func _ready() -> void:
 	column.add_child(MenuScreen.make_button("History", func() -> void: menus.open("history")))
 	column.add_child(MenuScreen.make_button("Settings", func() -> void: menus.open("settings")))
 	column.add_child(MenuScreen.make_button("Title Screen", _to_title))
-	column.add_child(MenuScreen.make_button("Quit", _quit))
+	if menus.can_quit():
+		column.add_child(MenuScreen.make_button("Quit", _quit))
 
 
 func open() -> void:

@@ -60,6 +60,12 @@ func show_line(line: Dictionary) -> void:
 	await reveal(_text_label, paragraph, _indicator)
 
 
+## Below the page, in the margin under the panel.
+func get_quick_menu_corner() -> Vector2:
+	var rect := _panel.get_global_rect()
+	return Vector2(rect.end.x, rect.end.y + 36)
+
+
 func clear_page() -> void:
 	_text_label.text = ""
 	_line_count = 0
