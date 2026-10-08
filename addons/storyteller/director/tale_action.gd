@@ -1,0 +1,54 @@
+class_name TaleAction
+extends RefCounted
+## Base class for actions that tales can call, such as [code]wait(1.0)[/code].
+##
+## Subclasses override [method get_action_name] and define a [code]run[/code]
+## method. The first parameter of [code]run[/code] is always the
+## [TaleContext]; the rest become the action's arguments, with their names and
+## defaults read from the method signature:
+## [codeblock]
+## extends TaleAction
+##
+## func get_action_name() -> String:
+##     return "flash"
+##
+## func run(ctx: TaleContext, color: Color = Color.WHITE, time: float = 0.2) -> void:
+##     await ctx.wait(time)
+## [/codeblock]
+## Tales then call [code]flash()[/code], [code]flash(Color.RED)[/code], or
+## [code]flash(time = 0.5)[/code].
+
+
+## Name used in tales. Must be overridden.
+func get_action_name() -> String:
+	return ""
+
+
+## Parameter names of [code]run[/code] after the context, in order.
+func get_parameters() -> PackedStringArray:
+	var names := PackedStringArray()
+	var method := _run_method()
+	var args: Array = method.get("args", [])
+	for i in range(1, args.size()):
+		names.append(args[i]["name"])
+	return names
+
+
+## Default values of the trailing optional parameters of [code]run[/code].
+func get_defaults() -> Array:
+	return _run_method().get("default_args", [])
+
+
+## Number of parameters that must be given.
+func get_required_count() -> int:
+	return get_parameters().size() - get_defaults().size()
+
+
+func _run_method() -> Dictionary:
+	var script := get_script() as Script
+	while script != null:
+		for method in script.get_script_method_list():
+			if method["name"] == "run":
+				return method
+		script = script.get_base_script()
+	return {}
