@@ -37,6 +37,8 @@ func open() -> void:
 
 func _make_entry(entry: Dictionary) -> Control:
 	var row := HBoxContainer.new()
+	# History entries were translated when they were shown.
+	row.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
 	row.add_theme_constant_override("separation", 10)
 	var voice: String = entry.get("voice", "")
 	if not voice.is_empty():

@@ -23,6 +23,10 @@ Story="*res://addons/storyteller/core/story.gd"
 
 enabled=PackedStringArray("res://addons/storyteller/plugin.cfg")
 
+[internationalization]
+
+locale/translations=PackedStringArray("res://demo/translations/demo.en.translation", "res://demo/translations/demo.es.translation")
+
 [storyteller]
 
 config_path="res://demo/story_config.tres"

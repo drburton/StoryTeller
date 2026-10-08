@@ -28,6 +28,18 @@ static func compile(doc: TaleDocument, tale_name: String, call_kinds: Dictionary
 	return TaleCompiler.new()._compile(doc, tale_name, call_kinds)
 
 
+## Compiles a line of text with [code]{expr}[/code] interpolation, such as a
+## translated line, into text parts. Returns
+## [code]{"parts": Array, "errors": PackedStringArray}[/code].
+static func compile_text(text: String) -> Dictionary:
+	var split := TaleText.split_interpolation(text)
+	var compiler := TaleCompiler.new()
+	var parts: Array = []
+	for part in split["parts"]:
+		parts.append(compiler._expr(part) if part is TaleExpr else part)
+	return {"parts": parts, "errors": split.get("errors", PackedStringArray())}
+
+
 ## Parses, checks, and compiles [param source] in one step. Returns
 ## [code]{"tale": Tale or null, "diagnostics": Array[TaleDiagnostic]}[/code].
 ## The tale is null when there are errors.
@@ -321,6 +333,7 @@ func _text(text: String) -> Array:
 func _line_id(annotations: Array[TaleExpr], text: String) -> String:
 	var pinned := _annotation_text(annotations, "id")
 	if not pinned.is_empty():
+		_tale.texts[pinned] = text
 		return pinned
 	var base := "%s_%s" % [_beat, text.md5_text().substr(0, 6)]
 	var id := base
@@ -329,6 +342,7 @@ func _line_id(annotations: Array[TaleExpr], text: String) -> String:
 		id = "%s_%d" % [base, n]
 		n += 1
 	_used_ids[id] = true
+	_tale.texts[id] = text
 	return id
 
 

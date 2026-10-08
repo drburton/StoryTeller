@@ -4,7 +4,7 @@
 
 var curiosity := 0
 var topics_seen := []
-var visitor := "Reader"
+var visitor := ""
 
 beat start:
 	backdrop("library", transition = "fade", time = 1.5)
@@ -12,7 +12,7 @@ beat start:
 	"A quiet library. Lamps hum above long wooden tables."
 	ada.enter("smile", at = CENTER)
 	ada: "Oh! A visitor.[pause] Welcome to StoryTeller."
-	visitor = await ask_text("What should Ada call you?", visitor)
+	visitor = await ask_text(tr("What should Ada call you?"), tr("Reader"))
 	ada (smile): "Nice to meet you, {visitor}."
 	ada (neutral): "Everything you see is written in a .tale file. Press Space or click to continue."
 	jump topics

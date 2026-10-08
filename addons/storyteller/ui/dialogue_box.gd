@@ -16,6 +16,12 @@ signal continue_pressed
 ## Emitted when a line has been fully revealed.
 signal line_revealed
 
+func _init() -> void:
+	# Lines arrive translated already (see TaleDirector), so a line that
+	# matches a UI key must not be translated again.
+	auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+
+
 ## Characters revealed per second. 0 shows text instantly.
 var characters_per_second := 40.0
 ## When true, lines continue on their own after [member auto_delay] plus

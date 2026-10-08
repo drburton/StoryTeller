@@ -40,7 +40,7 @@ extends Resource
 ## literal text and expression arrays for interpolated values.
 
 ## Version of the compiled format. Changes when the layout above changes.
-const FORMAT := 1
+const FORMAT := 2
 
 @export var format := FORMAT
 ## The tale's name: its file name without extension.
@@ -55,6 +55,14 @@ const FORMAT := 1
 ## Beat name to index of its first instruction.
 @export var beats: Dictionary = {}
 @export var instructions: Array[Dictionary] = []
+## Source text of every line and choice option, by id. Used to export
+## strings for translation.
+@export var texts: Dictionary = {}
+
+
+## Translation key of the line or option with [param id].
+func translation_key(id: String) -> String:
+	return "%s:%s" % [tale_name, id]
 
 
 ## Index of the first instruction of [param beat_name], or -1.

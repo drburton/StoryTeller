@@ -81,6 +81,9 @@ var skipping := false
 
 ## Folder where [method get_tale] looks for "<name>.tale".
 var tales_folder := "res://story/tales"
+## Language the tales are written in. Lines are shown as written while the
+## game's locale is this language.
+var source_language := "en"
 
 var _tales: Dictionary = {}
 var _story_vars: Dictionary = {}
@@ -100,6 +103,8 @@ var _playing := false
 var _line_pc := -1
 ## Line ids the player has seen, kept across playthroughs.
 var _read_lines: Dictionary = {}
+## Translated text to its compiled parts.
+var _translated: Dictionary = {}
 ## Tale and line of the instruction being run, for error reports.
 var _current_tale := ""
 var _current_line := 0
@@ -116,6 +121,7 @@ func _init() -> void:
 
 func setup(config: StoryConfig) -> void:
 	tales_folder = config.tales_folder
+	source_language = config.source_language
 
 
 func clear() -> void:
@@ -509,7 +515,7 @@ func _execute(instruction: Dictionary, frame: TaleFrame) -> void:
 func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	var generation := _generation
 	await _finish_pending()
-	var text: String = await _render(instruction["text"], frame)
+	var text: String = await _render(_localize(instruction["text"], instruction["id"], frame.tale, instruction["line"]), frame)
 	var speaker: String = instruction["speaker"]
 	var speaker_info := _speaker_info(speaker, frame)
 	var line := {
@@ -573,7 +579,8 @@ func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 			enabled = bool(await _evaluator.evaluate(option["cond"], frame))
 		if not enabled and not option["show_disabled"]:
 			continue
-		shown.append({"text": await _render(option["text"], frame), "id": option["id"], "enabled": enabled})
+		var parts := _localize(option["text"], option["id"], frame.tale, option["line"])
+		shown.append({"text": await _render(parts, frame), "id": option["id"], "enabled": enabled})
 		sources.append(option)
 	var has_enabled := shown.any(func(option: Dictionary) -> bool: return option["enabled"])
 	if not has_enabled:
@@ -797,16 +804,46 @@ func _render(parts: Array, frame: TaleFrame) -> String:
 	return text
 
 
-## Returns [display name, name color] for a speaker id.
+## Returns the text parts of a line or option in the current language: the
+## translation keyed [code]<tale>:<id>[/code] when there is one, compiled on
+## first use, or [param parts] otherwise.
+func _localize(parts: Array, id: String, tale: Tale, line: int) -> Array:
+	if is_source_language():
+		return parts
+	var key := tale.translation_key(id)
+	var translated := String(TranslationServer.translate(key))
+	if translated == key or translated.is_empty():
+		return parts
+	if not _translated.has(translated):
+		var compiled := TaleCompiler.compile_text(translated)
+		if compiled["errors"].is_empty():
+			_translated[translated] = compiled["parts"]
+		else:
+			_report("The %s translation of this line has a problem: %s" % [TranslationServer.get_locale(), compiled["errors"][0]], tale.tale_name, line)
+			_translated[translated] = parts
+	return _translated[translated]
+
+
+## True while the game's locale is the language the tales are written in.
+func is_source_language() -> bool:
+	return TranslationServer.get_locale().get_slice("_", 0) == source_language.get_slice("_", 0)
+
+
+## Returns [display name, name color] for a speaker id. Names are
+## translated, keyed by their text.
 func _speaker_info(speaker: String, frame: TaleFrame) -> Array:
 	if speaker.is_empty():
 		return ["", Color.WHITE]
 	var found := resolve_name(speaker, frame)
 	if found[0] and found[1] is String:
-		return [found[1], Color.WHITE]
+		return [_translate(found[1]), Color.WHITE]
 	if found[0] and found[1] is Object and found[1].has_method("get_display_name"):
-		return [found[1].get_display_name(), found[1].get_name_color()]
-	return [speaker.capitalize(), Color.WHITE]
+		return [_translate(found[1].get_display_name()), found[1].get_name_color()]
+	return [_translate(speaker.capitalize()), Color.WHITE]
+
+
+static func _translate(text: String) -> String:
+	return String(TranslationServer.translate(text)) if not text.is_empty() else text
 
 
 ## Other crew members of the Story this director belongs to.

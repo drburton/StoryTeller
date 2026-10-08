@@ -15,6 +15,7 @@ Implementation status:
 | `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 | `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
+| Translation (§7.3), effect actions (§13.1) | Implemented (M4) |
 
 ---
 
@@ -351,6 +352,20 @@ Dialogue and narration strings use Godot BBCode (`[b]`, `[i]`, `[color=red]`, `[
 
 `{expression}` inserts a value: `"You have {gold} gold."`. Write `{{` and `}}` for literal braces.
 
+### 7.3 Translation
+
+Lines, narration, and choice options are translated through Godot's translation system (decision 0011). Each one is keyed `<tale>:<id>`, where the id comes from `@id("...")` or, without it, from the beat name and a hash of the text. Changing the text of a line without `@id` therefore gives it a new key.
+
+A translation may use `{expression}` and the markup in §7.1, just like the original. While the game's language is `StoryConfig.source_language`, lines are shown as written in the tale.
+
+Speaker names, tale titles, and text passed through `tr("...")` are keyed by their text:
+
+```gdscript
+player_name = await ask_text(tr("What's your name?"), tr("Sam"))
+```
+
+**Export Strings** in the Story tab (or `addons/storyteller/editor/export_strings.gd` from the command line) writes every key to `StoryConfig.translation_file`, a CSV that translators fill in and Godot imports. Exporting again keeps existing translations and marks rows whose key is no longer used, or whose source text changed, in the `_status` column.
+
 ---
 
 ## 8. Annotations
@@ -361,7 +376,7 @@ Dialogue and narration strings use Godot BBCode (`[b]`, `[i]`, `[color=red]`, `[
 | `@global` | `var` at top level | Variable shared across playthroughs. |
 | `@once` | Choice option | Option disappears after it is chosen once in a playthrough. |
 | `@show_disabled` | Choice option | Show the option greyed out when its condition is false. |
-| `@id("...")` | Dialogue or narration | Pins the line id used for translation and voice. |
+| `@id("...")` | Dialogue, narration, or choice option | Pins the id used for translation (§7.3), read tracking, and `@once`. |
 | `@voice("...")` | Dialogue or narration | Assigns a voice clip. |
 | `@no_rewind` | Any statement | The player cannot rewind past this point. |
 | `@skip_safe` | Beat | Treat the beat's lines as already read, so skip passes them even when the player only skips read lines. Useful for recaps. |
@@ -512,6 +527,13 @@ Actions are called like functions. Named arguments may be given in any order aft
 | `dialogue_style` | `name` | Switch dialogue styles: `"classic"` (a box along the bottom) or `"page"` (lines collect on a full page). Games can add more in `StoryConfig.dialogue_styles`. |
 | `clear_page` | | Start a new page in the `"page"` style. |
 | `hide_dialogue` | | Hide the dialogue box until the next line, for example while the scene changes. |
+| `weather` | `kind`, `strength = 1.0`, `fade = 1.0` | Start `"rain"` or `"snow"` over the stage, or stop it with `"none"`. |
+| `filter` | `name`, `strength = 1.0`, `time = 0.5` | Recolor the stage: `"grayscale"`, `"sepia"`, `"night"`, `"warm"`, `"cold"`, or `"none"`. The dialogue box and menus keep their colors. |
+| `flash` | `color = Color.WHITE`, `time = 0.3` | Flash the whole screen. |
+| `fade_out` | `color = Color.BLACK`, `time = 0.5` | Fade the whole screen, dialogue box included, to a color. |
+| `fade_in` | `time = 0.5` | Fade the screen back in. |
+| `exit_all` | `time = 0.4` | Every cast member on stage exits. |
+| `autosave` | | Save to the autosave slot. |
 
 Transitions for `backdrop`: `none`, `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, `slide_down`. With `dissolve`, `mask` names a grayscale image in `res://story/transitions/` that sets the order in which pixels change (dark first).
 

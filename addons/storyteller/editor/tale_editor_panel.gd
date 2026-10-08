@@ -51,6 +51,11 @@ func _build_ui() -> void:
 	refresh.text = "Refresh List"
 	refresh.pressed.connect(refresh_files)
 	toolbar.add_child(refresh)
+	var export := Button.new()
+	export.text = "Export Strings"
+	export.tooltip_text = "Write every line, choice, name, and menu text to the translation CSV set in StoryConfig."
+	export.pressed.connect(export_strings)
+	toolbar.add_child(export)
 	_save_button = Button.new()
 	_save_button.text = "Save"
 	_save_button.disabled = true
@@ -139,6 +144,21 @@ func open_file(path: String) -> void:
 		if file_list.get_item_metadata(i) == path:
 			file_list.select(i)
 	check_now()
+
+
+## Writes the translation CSV (see [StoryStrings]) and reports the result.
+func export_strings() -> void:
+	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").load_config()
+	var result := StoryStrings.export_strings(config)
+	var message := "Exported %d strings to %s." % [result["count"], config.translation_file]
+	for problem in result["problems"]:
+		push_warning("StoryTeller: " + problem)
+	if not result["problems"].is_empty():
+		message += " %d problem(s); see the Output panel." % result["problems"].size()
+	print("StoryTeller: " + message)
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+		EditorInterface.get_editor_toaster().push_toast(message)
 
 
 ## Writes the open tale to disk and reimports it.

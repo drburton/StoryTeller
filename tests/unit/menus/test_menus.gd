@@ -233,6 +233,29 @@ func test_quick_menu_follows_the_dialogue_style() -> void:
 	assert_ne(menus.quick_menu.get_rect().end, classic_corner)
 
 
+func test_language_picker_lists_translations() -> void:
+	var locale := TranslationServer.get_locale()
+	var added: Array[Translation] = []
+	for code in ["en", "es"]:
+		var translation := Translation.new()
+		translation.locale = code
+		translation.add_message("Settings", "Ajustes" if code == "es" else "Settings")
+		TranslationServer.add_translation(translation)
+		added.append(translation)
+	menus.open("settings")
+	await tree.process_frame
+	var picker: OptionButton = story.find_child("SettingsScreen", true, false).find_children("*", "OptionButton", true, false)[0]
+	assert_eq(picker.item_count, 2)
+	assert_eq(picker.get_item_text(1), "Español")
+	picker.select(1)
+	picker.item_selected.emit(1)
+	assert_eq(TranslationServer.get_locale(), "es")
+	assert_eq(menus.settings().get_value("language"), "es")
+	for translation in added:
+		TranslationServer.remove_translation(translation)
+	TranslationServer.set_locale(locale)
+
+
 func _press_new_game() -> void:
 	menus.show_title()
 	await tree.process_frame

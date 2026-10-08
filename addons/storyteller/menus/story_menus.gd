@@ -26,6 +26,21 @@ const SCREENS := {
 	"text_input": preload("res://addons/storyteller/menus/text_input_dialog.gd"),
 }
 
+## Every piece of menu text, for "Export Strings". Menus are translated by
+## Godot with these texts as keys. A test keeps this list complete.
+const UI_TEXT: Array[String] = [
+	"New Game", "Continue", "Load", "Save", "Settings", "Quit", "Paused",
+	"Resume", "History", "Title Screen", "Back", "Yes", "No", "OK",
+	"Reset to defaults", "Nothing yet.", "Replay voice", "Skip", "Auto", "Menu",
+	"Empty", "Auto save", "Quick save", "Slot %s", "Overwrite %s?", "Language",
+	"Load this save? Unsaved progress will be lost.",
+	"Return to the title screen? Unsaved progress will be lost.",
+	"Quit the game? Unsaved progress will be lost.",
+	"Text speed", "Auto mode delay", "Master volume", "Music volume",
+	"Sound volume", "Ambience volume", "Voice volume", "Full screen",
+	"Skip unread lines",
+]
+
 var layer: CanvasLayer
 var root: Control
 var quick_menu: QuickMenu

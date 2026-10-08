@@ -1,6 +1,7 @@
 extends SceneTree
 ## Run by tools/check_export.sh inside an exported .pck. Checks that the
-## game finds its cast, moods, and tales without the source files.
+## game finds its cast, moods, tales, and translations without the source
+## files.
 
 
 func _initialize() -> void:
@@ -30,6 +31,11 @@ func _check() -> void:
 	print("Tales: %s" % ", ".join(tales))
 	if tales.is_empty():
 		failures.append("No tales found in %s." % director.tales_folder)
+	var loaded := TranslationServer.get_loaded_locales()
+	print("Languages: %s" % ", ".join(loaded))
+	for language in story.config.languages:
+		if language not in loaded:
+			failures.append("No translation loaded for '%s'." % language)
 	_finish(failures)
 
 

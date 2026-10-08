@@ -54,6 +54,15 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Folder with "music", "sounds", "ambience", and "voice" subfolders.
 @export_dir var audio_folder := "res://story/audio"
 
+@export_group("Localization")
+## Language the tales are written in, such as "en".
+@export var source_language := "en"
+## CSV file that "Export Strings" writes for translators. Godot imports it
+## as one translation per language.
+@export_file("*.csv") var translation_file := "res://story/translations/story.csv"
+## Languages to add as columns when exporting strings, such as ["es", "fr"].
+@export var languages: PackedStringArray = []
+
 @export_group("Saves")
 ## Folder for save slots and the global data file.
 @export var save_folder := "user://saves"

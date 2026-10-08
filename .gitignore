@@ -12,3 +12,6 @@ Thumbs.db
 *.tmp
 .vscode/
 .idea/
+
+# Translations Godot generates from CSV files on import
+*.translation

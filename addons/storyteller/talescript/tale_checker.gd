@@ -324,15 +324,19 @@ func _check_annotations(annotations: Array[TaleExpr], node: TaleNode, top_level:
 				if node.kind != K.OPTION:
 					_error_expr(annotation, "@%s only applies to choice options." % annotation.name)
 				_expect_no_arguments(annotation)
-			"id", "voice":
-				if node.kind != K.DIALOGUE and node.kind != K.NARRATION:
-					_error_expr(annotation, "@%s only applies to dialogue and narration lines." % annotation.name)
-				if _expect_one_string(annotation) and annotation.name == "id":
+			"id":
+				if node.kind != K.DIALOGUE and node.kind != K.NARRATION and node.kind != K.OPTION:
+					_error_expr(annotation, "@id only applies to dialogue, narration, and choice options.")
+				if _expect_one_string(annotation):
 					var id: String = annotation.args[0].value
 					if _line_ids.has(id):
 						_error_expr(annotation, "Line id '%s' is already used on line %d." % [id, _line_ids[id]])
 					else:
 						_line_ids[id] = annotation.line
+			"voice":
+				if node.kind != K.DIALOGUE and node.kind != K.NARRATION:
+					_error_expr(annotation, "@voice only applies to dialogue and narration lines.")
+				_expect_one_string(annotation)
 			"no_rewind":
 				if top_level:
 					_error_expr(annotation, "@no_rewind only applies to lines inside a beat.")

@@ -76,6 +76,15 @@ dialogue_style("page")    # lines collect on a full page, like a book
 
 The full language reference is in [docs/talescript-spec.md](docs/talescript-spec.md).
 
+## Translating
+
+1. List the languages you want in your `StoryConfig` (**Localization > Languages**, for example `es`).
+2. Click **Export Strings** in the Story tab. It writes a CSV (by default `res://story/translations/story.csv`) with every line, choice, name, and menu text, and registers it in **Project Settings > Localization**.
+3. Fill in the language columns. The `_context` column says where each line comes from.
+4. Export again whenever the tales change. Existing translations are kept, and the `_status` column flags lines whose text changed.
+
+Players pick a language in **Settings**. The demo ships with a Spanish translation in `demo/translations/demo.csv`. See [Translation](docs/talescript-spec.md#73-translation) in the spec for details.
+
 ## Exporting
 
 Export with Godot's usual **Project > Export**. To check that a project still finds its cast, moods, and tales once exported (no export templates needed):
