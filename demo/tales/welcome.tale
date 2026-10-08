@@ -1,0 +1,46 @@
+## welcome.tale
+## A short tour of TaleScript, used by the StoryTeller demo scene.
+@title("Welcome to StoryTeller")
+
+const GUIDE := "Ada"
+var curiosity := 0
+var topics_seen := []
+
+beat start:
+	"A quiet library. Lamps hum above long wooden tables."
+	GUIDE: "Oh! A visitor.[pause] Welcome to StoryTeller."
+	GUIDE: "Everything you see is written in a .tale file. Press Space or click to continue."
+	jump topics
+
+beat topics:
+	choose:
+		@once "How do I write dialogue?":
+			topics_seen.append("dialogue")
+			curiosity += 1
+			GUIDE: "Put a speaker, a colon, and a quoted line. Narration is just the quoted line."
+			jump topics
+		@once "What about choices?":
+			topics_seen.append("choices")
+			curiosity += 1
+			GUIDE: "You're using one right now. Each option is a string with its own block."
+			GUIDE: "Options marked @once disappear after you pick them."
+			jump topics
+		@once "Can tales remember things?":
+			topics_seen.append("variables")
+			curiosity += 1
+			GUIDE: "Yes. Questions you have asked so far: {curiosity}."
+			jump topics
+		"I'm ready to start writing." if curiosity > 0:
+			jump farewell
+		@show_disabled "Leave already" if curiosity == 0:
+			pass
+
+beat farewell:
+	match curiosity:
+		3:
+			GUIDE: "You asked about everything. I like that."
+		_:
+			GUIDE: "You asked about {len(topics_seen)} topic{\"s\" if len(topics_seen) != 1 else \"\"}."
+	wait(0.3)
+	"The lamps dim. Somewhere, a page turns."
+	GUIDE: "Open demo/tales/welcome.tale to see how this scene was made."

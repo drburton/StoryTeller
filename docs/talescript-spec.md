@@ -8,10 +8,12 @@ Implementation status:
 
 | Part | Status |
 |---|---|
-| Lexical rules, statements, expressions (§2 to §6) | Implemented in `addons/storyteller/talescript/` |
-| Checks listed in §9 | Planned (checker, M1) |
-| Runtime meaning of statements (§5) | Planned (director, M1) |
-| Text markup and interpolation (§7) | Planned (M1) |
+| Lexical rules, statements, expressions (§2 to §6) | Implemented (`TaleLexer`, `TaleParser`) |
+| Checks listed in §9 | Implemented (`TaleChecker`) |
+| Runtime meaning of statements (§5) | Implemented (`TaleCompiler`, `TaleDirector`) |
+| Interpolation (§7.2) and `[pause]` tags (§7.1) | Implemented |
+| `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned |
+| Cast members, stage positions, moods (§5.2, §6.3) | Planned (M2); speakers can be `const` names until then |
 
 ---
 
@@ -153,7 +155,11 @@ beat name:
 	statements
 ```
 
-A beat is a named section of a tale. Beats cannot be nested and take no parameters. A beat ends when its last statement runs, at `return`, or at `jump`. When a beat that was **jumped** to ends, the tale ends. When a beat that was **called** ends, the story continues after the call.
+A beat is a named section of a tale. Beats cannot be nested and take no parameters. A beat ends when its last statement runs or at `return`.
+
+- `jump` replaces the current beat with another one.
+- A beat call (`name()`) runs another beat and then continues after the call.
+- When a beat ends, the story continues after the most recent beat call. If there is none, the story ends.
 
 ### 5.2 Narration and dialogue
 
@@ -359,7 +365,7 @@ Dialogue and narration strings use Godot BBCode (`[b]`, `[i]`, `[color=red]`, `[
 
 ---
 
-## 9. Checks (planned)
+## 9. Checks
 
 The checker runs after parsing and reports, with file and line:
 
@@ -370,7 +376,13 @@ The checker runs after parsing and reports, with file and line:
 - assignment to a constant;
 - annotations used in the wrong place;
 - unreachable statements after `jump` or `return`;
-- expression statements that have no effect (warning).
+- expression statements that have no effect (warning);
+- duplicate `@id` values, unknown annotations, and annotations on the wrong kind of line;
+- `choose` blocks without options, extra `timeout:` branches, and unreachable `match` branches.
+
+### 9.1 Runtime errors
+
+Mistakes that can only be found while playing (adding text to a number, an index outside a list, calling a method that game code did not expose) do not crash the game. The director reports them through its `runtime_error` signal and the Output panel, with tale and line, and continues with the next line. A loop that runs 100,000 steps without showing a line or choice is stopped the same way.
 
 ---
 

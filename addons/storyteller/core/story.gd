@@ -117,6 +117,39 @@ func restore(state: Dictionary) -> void:
 		member.restore(crew_state[key])
 
 
+## Plays a tale with the director. Awaitable: returns when the story ends.
+## [codeblock]
+## await Story.play("prologue")
+## [/codeblock]
+func play(tale_name: String, beat := "start") -> void:
+	var director := get_crew(&"TaleDirector") as TaleDirector
+	if director == null:
+		push_error("StoryTeller: no TaleDirector crew member. Check StoryConfig.crew.")
+		return
+	await director.play(tale_name, beat)
+
+
+## Makes a game object available to tales under [param exposed_name],
+## limited to the listed methods and properties.
+## [codeblock]
+## Story.expose("inventory", $Inventory, ["has", "add"], ["gold"])
+## [/codeblock]
+func expose(exposed_name: String, object: Object, methods: PackedStringArray = [], properties: PackedStringArray = []) -> void:
+	var director := get_crew(&"TaleDirector") as TaleDirector
+	if director != null:
+		director.expose(exposed_name, object, methods, properties)
+
+
+## Makes a function available to tales.
+## [codeblock]
+## Story.expose_function("day_of_week", func(): return calendar.weekday)
+## [/codeblock]
+func expose_function(function_name: String, callable: Callable) -> void:
+	var director := get_crew(&"TaleDirector") as TaleDirector
+	if director != null:
+		director.expose_function(function_name, callable)
+
+
 ## Removes and frees every crew member.
 func shut_down() -> void:
 	for member in _crew.values():
