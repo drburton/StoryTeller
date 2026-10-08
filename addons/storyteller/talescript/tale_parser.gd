@@ -125,6 +125,9 @@ func _parse(source: String, path: String) -> TaleDocument:
 		if not opened:
 			if line.indent.length() > deepest.indent.length():
 				_error("Unexpected indentation.", line.start, 1)
+				# Read the rest of this indented run as ordinary statements, so
+				# one misplaced block reports one error instead of one per line.
+				stack.append(_Frame.new(line.indent, deepest.body, Context.BLOCK))
 			elif line.indent != deepest.indent:
 				var last_popped: _Frame = null
 				while stack.size() > 1 and (stack.back() as _Frame).indent.length() > line.indent.length():
