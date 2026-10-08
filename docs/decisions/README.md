@@ -11,5 +11,7 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0003](0003-godot-version-policy.md) | Target the latest stable Godot release (4.7.2) | Accepted |
 | [0004](0004-gdscript-only.md) | GDScript only, no C# for now | Accepted |
 | [0005](0005-visual-editor-before-1-0.md) | Visual editor ships before 1.0 | Accepted |
-| [0006](0006-free-and-pro-tiers.md) | Free base tier and paid Pro tier | Accepted |
+| [0006](0006-free-and-pro-tiers.md) | Free base tier and paid Pro tier | Accepted (timing amended by 0009) |
 | [0007](0007-built-in-test-runner.md) | Built-in test runner instead of GUT | Accepted |
+| [0008](0008-mit-license.md) | MIT license | Accepted |
+| [0009](0009-defer-pro-tier.md) | Defer the Pro tier until the free tier works | Accepted |

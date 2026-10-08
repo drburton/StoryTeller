@@ -2,7 +2,12 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.4** (M0 project setup in progress)
+Status: **Draft v0.5** (M0 complete; M1 next)
+
+Changes in v0.5:
+- License chosen: MIT (decision 0008, §13).
+- Pro tier deferred until the free tier is a working system (decision 0009, §12). Pro features stay listed but are removed from the 1.0 schedule.
+- Schedule to 1.0 shortened to about 28 weeks.
 
 Changes in v0.4:
 - Godot 4.7.2 confirmed as the supported version.
@@ -55,9 +60,10 @@ Changes in v0.2:
 | D5 | 2026-10-08 | Names accepted: TaleScript, `.tale` files, `beat` blocks. |
 | D6 | 2026-10-08 | The visual editor ships before 1.0 as a key differentiator (§9). |
 | D7 | 2026-10-08 | Business model: free base tier plus a paid Pro tier (§12). |
-| D8 | open | License for the free tier (exploring, §13). |
+| D8 | 2026-10-08 | MIT license for StoryTeller (§13). |
 | D9 | open | Target platforms and their order (exploring, §14). |
 | D10 | 2026-10-08 | Built-in test runner instead of GUT. |
+| D11 | 2026-10-08 | Pro tier deferred until the free tier is a working system (§12). |
 
 From M0 onward, each decision has a full record in `docs/decisions/`.
 
@@ -83,7 +89,7 @@ The project follows these rules:
 5. **Own architecture.** Systems are organized around Godot's node and resource model, which naturally produces a different structure from a Unity framework.
 6. **Trademarks.** Public materials (store listing, website, README, marketing) do not use the Naninovel name or branding, and do not claim compatibility or affiliation. This internal planning document mentions it only to record where the scope came from.
 7. **Decision log.** Major design decisions are recorded in `docs/decisions/` with the reasoning behind them, which documents independent development.
-8. **Legal review.** Before the public 1.0 release and before selling the Pro tier, the maintainers obtain a review from a lawyer familiar with software IP, covering this section, the license choice (§13), the Pro EULA (§12), and a trademark search for the product name. This plan is general guidance and does not constitute legal advice.
+8. **Legal review.** Before the public 1.0 release and again before selling a Pro tier, the maintainers obtain a review from a lawyer familiar with software IP, covering this section, the license (§13), any Pro EULA (§12), and a trademark search for the product name. This plan is general guidance and does not constitute legal advice.
 
 ---
 
@@ -418,7 +424,7 @@ Reference docs for every action are generated from their signatures and `##` doc
 
 ## 7. Feature Scope
 
-Standard visual novel genre features, with the milestone (§11) and the proposed tier (§12).
+Standard visual novel genre features, with the milestone (§11) and the proposed tier (§12). Features marked **Pro** are deferred until the free tier works (decision 0009); their milestone column reads "Pro phase".
 
 | Feature | Description | Milestone | Tier |
 |---|---|---|---|
@@ -428,33 +434,33 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Dialogue box: classic | Bottom box with name plate and typewriter text | M1 | Free |
 | Choice menu: list | Vertical button list | M1 | Free |
 | Cast looks: sprite set, layered, scene | Characters from textures, layer rigs, or any Godot scene | M2 | Free |
-| Cast look: video | Characters from video clips | M2 | Pro |
+| Cast look: video | Characters from video clips | Pro phase | Pro |
 | Backdrops and props | With transitions | M2 | Free |
 | Core transitions | Fade, dissolve with mask texture, slide, wipe | M2 | Free |
-| Transition pack | Iris, pixelate, ripple, shatter, page turn, custom shader templates | M4 | Pro |
+| Transition pack | Iris, pixelate, ripple, shatter, page turn, custom shader templates | Pro phase | Pro |
 | Audio | Music crossfade, sounds, voice, ambience, buses | M2 | Free |
 | Camera | Zoom, pan, shake, rotate | M2 | Free |
 | Saves | Slots with thumbnails, quick save, auto save, global data, versioned format | M3 | Free |
 | Rewind and history | Step back through lines and choices; log with voice replay | M3 | Free |
 | Dialogue style: full page | Full-screen text for prose-heavy scenes | M3 | Free |
-| Dialogue styles: bubble, messenger, caption | Speech bubbles, phone-chat stories, cinematic captions | M3 | Pro |
-| Choice styles: hotspots, messenger reply, timed | Point-and-click areas, chat replies, countdown choices | M3 | Pro |
+| Dialogue styles: bubble, messenger, caption | Speech bubbles, phone-chat stories, cinematic captions | Pro phase | Pro |
+| Choice styles: hotspots, messenger reply, timed | Point-and-click areas, chat replies, countdown choices | Pro phase | Pro |
 | Menus and default theme | Title, pause, save/load, settings, history, confirm, loading, text input | M3 | Free |
-| Theme and template pack | Extra polished themes and genre starter projects (mystery, romance, messenger story) | M4 | Pro |
+| Theme and template pack | Extra polished themes and genre starter projects (mystery, romance, messenger story) | Pro phase | Pro |
 | Basic effects | Flash, fade to color, blur, vignette | M4 | Free |
-| Effects pack | Rain, snow, fog, light rays, glitch, film grain, particles presets | M4 | Pro |
+| Effects pack | Rain, snow, fog, light rays, glitch, film grain, particles presets | Pro phase | Pro |
 | Collection | Gallery, music room, codex | M4 | Free |
 | Localization runtime | String tables, runtime language switch | M4 | Free |
-| Translation workflow | CSV and `.po` export and import, missing-line reports, translator preview mode | M4 | Pro |
-| Voice production tools | Per-actor voice scripts, automatic clip mapping by line id, lip-flap from audio | M4 | Pro |
+| Translation workflow | CSV and `.po` export and import, missing-line reports, translator preview mode | Pro phase | Pro |
+| Voice production tools | Per-actor voice scripts, automatic clip mapping by line id, lip-flap from audio | Pro phase | Pro |
 | Debug console | Run TaleScript lines, inspect and edit vars, jump to beats | M4 | Free |
 | Live reload | Edit a tale during play and continue from the same line | M4 | Free |
 | Movies | Full-screen video playback | M4 | Free |
 | Embedding preset | Dialogue-only mode for 2D and 3D games, trigger tales from game events | M4 | Free |
 | Visual editor | Card-based editing of tales, synced with text (§9) | M5 | Free |
 | Story Map | Graph of beats, jumps, calls, and choices (§9) | M5 | Free |
-| Stage preview and play from here | Live preview of the stage at any line; launch the game from that line | M5 | Pro |
-| Story analytics | Route coverage, word counts per character, choice statistics from playtests | M5 | Pro |
+| Stage preview and play from here | Live preview of the stage at any line; launch the game from that line | Pro phase | Pro |
+| Story analytics | Route coverage, word counts per character, choice statistics from playtests | Pro phase | Pro |
 | Language server | Autocomplete and diagnostics in VS Code and other editors | Post-1.0 | Free |
 
 ---
@@ -552,7 +558,8 @@ Selecting any card shows the stage as it would look at that line. The director r
 - Addon skeleton (`plugin.cfg`, `EditorPlugin`, autoload registration, `StoryCrew` base, `StoryConfig`). ✔
 - Built-in test runner running headless in GitHub Actions on Linux and Windows, plus an optional non-blocking job on the newest Godot beta. ✔
 - Contribution guide with the clean-room rules from §2, decision records, issue and pull request templates. ✔
-- Private repository created for the Pro add-on. (Pending owner approval.)
+- License file added (MIT). ✔
+- Private repository for the Pro add-on: deferred with the Pro tier (decision 0009).
 
 ### M1: TaleScript and a minimal playable (5 weeks)
 - Formal grammar, lexer, **lossless** parser, checker, compiler, import plugin.
@@ -571,32 +578,33 @@ Selecting any card shows the stage as it would look at that line. The director r
 - Dialogue and choice styles, full menu set with one shared theme.
 - **Exit criteria:** a 15-minute original demo story exports and plays on the platforms chosen for M3 (§14).
 
-### M4: Production features (5 weeks)
+### M4: Production features (4 weeks)
 - Effects, collection, localization, debug console, live reload, autocomplete, movies, embedding preset.
-- First Pro features built as a separate add-on: transition pack, effects pack, translation workflow, voice tools.
-- **Exit criteria:** demo translated into a second language; demo embedded in a small 3D scene; Pro add-on installs and uninstalls cleanly.
+- **Exit criteria:** demo translated into a second language; demo embedded in a small 3D scene.
 
-### M5: Visual editor and Story Map (7 weeks)
+### M5: Visual editor and Story Map (6 weeks)
 - Story tab, beat editor with all card types, inspector, undo and redo.
 - Story Map with auto layout and problem highlighting.
-- Pro: stage preview, play from here, story analytics.
 - Usability test with at least three writers who do not program.
 - **Exit criteria:** a writer builds a branching five-minute scene entirely in the visual editor; the resulting file reads naturally as text and diffs cleanly.
 
 ### M6: Launch preparation (3 weeks)
-- Legal review (§2.8), final license (§13), Pro EULA and storefront (§12).
+- Legal review (§2.8).
 - Full documentation, original sample project, trailer and screenshots.
-- Free tier on the Godot Asset Library or Asset Store and GitHub; Pro tier on the chosen storefront.
+- Publish on the Godot Asset Library or Asset Store and GitHub.
 
-### 1.0 Release (about 30 weeks after M0 starts)
+### 1.0 Release (about 28 weeks after M0 starts)
 
 ### After 1.0
+- **Pro phase:** build the Pro add-on once the free tier is a working system (§12), starting with the features marked Pro in §7.
 - Language server and VS Code extension.
 - Optional add-ons: Spine, Live2D, C# API (if demand appears), community action packs.
 
 ---
 
 ## 12. Product Tiers: Free and Pro
+
+> **Deferred (decision 0009).** Work on the Pro tier starts once the free tier is a working system. Until then, everything in this section is a planning sketch, and the free tier is built with clean extension points so Pro can be added later without changes to the core.
 
 ### 12.1 Guiding rules
 
@@ -644,7 +652,7 @@ The license affects adoption, what competitors may do with the code, and how the
 | **GPL / LGPL** | Copyleft that can extend to the whole game. | Not recommended; it would discourage commercial games. |
 | **Source-available (custom)** | Free to use, with restrictions such as "no reselling as a competing tool". | Strongest protection, but not open source; may not be accepted by the Godot Asset Library and may reduce trust. |
 
-**Current recommendation:** Apache 2.0 or MIT for the free tier, with a proprietary EULA for Pro. Choose MPL 2.0 instead if keeping forks of the free tier open matters more than maximum simplicity. Confirm the Asset Library and Asset Store license requirements before deciding.
+**Decision (0008):** StoryTeller is released under the **MIT license**, the same license as Godot. Anyone may use, modify, and redistribute it, including in commercial games, as long as the copyright notice is kept. A future Pro add-on can still use its own proprietary EULA, because it will be a separate work. MIT also allows others to fork or resell the free tier; the project accepts this in exchange for maximum adoption.
 
 ---
 
@@ -741,18 +749,15 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 19. Open Questions
 
-1. **License (D8):** exploring; see §13.
-2. **Platforms (D9):** exploring; see §14.
-3. **Tier split:** confirm the free and Pro split in §12.2, especially keeping the visual editor free.
-4. **Pricing:** one-time purchase, subscription, or per seat?
-5. **Product name:** keep "StoryTeller" after a trademark search, or choose a more distinctive name?
-6. **Dialogue strings:** require quotes (closest to GDScript, as planned) or also allow an unquoted shorthand for heavy prose?
+1. **Platforms (D9):** exploring; see §14.
+2. **Product name:** keep "StoryTeller" after a trademark search, or choose a more distinctive name?
+3. **Dialogue strings:** require quotes (closest to GDScript, as planned) or also allow an unquoted shorthand for heavy prose?
+4. **Pro tier details** (deferred): feature split (§12.2), pricing, and storefront.
 
 ---
 
 ## 20. Immediate Next Steps
 
 1. Run a quick trademark and name search for "StoryTeller".
-2. Create the private Pro repository when ready.
-3. Write the formal TaleScript grammar in `docs/talescript-spec.md`, including every difference from GDScript and the lossless syntax tree design (start of M1).
-4. Implement the lexer and parser with round-trip and golden tests.
+2. Write the formal TaleScript grammar in `docs/talescript-spec.md`, including every difference from GDScript and the lossless syntax tree design (start of M1).
+3. Implement the lexer and parser with round-trip and golden tests.

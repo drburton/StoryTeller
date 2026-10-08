@@ -41,3 +41,12 @@ func test_running_godot_meets_project_version() -> void:
 	var running := Vector2i(info["major"], info["minor"])
 	var minimum := Vector2i(required.get_slice(".", 0).to_int(), required.get_slice(".", 1).to_int())
 	assert_true(running >= minimum, "Godot %d.%d is older than the project's %s" % [running.x, running.y, required])
+
+
+func test_addon_ships_project_license() -> void:
+	# The addon folder is distributed on its own (Asset Library), so it carries
+	# a copy of the license that must match the repository's.
+	var root_license := FileAccess.get_file_as_string("res://LICENSE")
+	var addon_license := FileAccess.get_file_as_string("res://addons/storyteller/LICENSE")
+	assert_true(root_license.begins_with("MIT License"), "root LICENSE is MIT")
+	assert_eq(addon_license, root_license, "addon LICENSE matches root LICENSE")

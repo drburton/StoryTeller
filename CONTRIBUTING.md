@@ -2,7 +2,9 @@
 
 Thank you for your interest in StoryTeller. This guide covers project setup, coding conventions, and the originality rules every contribution must follow.
 
-> **Outside contributions are paused** until the project license and a contributor agreement are chosen (see `docs/PLANNING.md` §13 and §12.3). Bug reports and feature ideas are welcome now through GitHub issues.
+> **Outside code contributions are not open yet** while the core is being built. Bug reports and feature ideas are welcome now through GitHub issues.
+
+StoryTeller is released under the [MIT license](LICENSE). By submitting a contribution, you agree that it is licensed under the same terms.
 
 ## 1. Originality rules (required reading)
 
