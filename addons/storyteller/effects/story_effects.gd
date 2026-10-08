@@ -1,7 +1,7 @@
 class_name StoryEffects
 extends StoryCrew
 ## Crew member for whole-screen effects: weather, color filters, flashes,
-## and fading the screen to a color.
+## fading the screen to a color, and movies.
 ##
 ## Weather and filters sit just above the stage, so the dialogue box and
 ## menus are not affected. Flashes and screen fades cover the dialogue box
@@ -20,6 +20,8 @@ const SCREEN_LAYER := 15
 const WEATHER_KINDS := ["none", "rain", "snow"]
 const FILTERS := ["none", "grayscale", "sepia", "night", "warm", "cold"]
 
+## Folder with movies (Ogg Theora .ogv files), used by play_movie().
+var movie_folder := "res://story/movies"
 var weather_layer: CanvasLayer
 var filter_layer: CanvasLayer
 var screen_layer: CanvasLayer
@@ -32,13 +34,17 @@ var _filter_state := {"name": "none", "strength": 1.0}
 var _curtain: ColorRect
 var _flash: ColorRect
 var _tweens: Dictionary = {}
+var _movie: Control
+var _movie_skippable := false
+var _movie_skip_requested := false
 
 
 func get_crew_name() -> StringName:
 	return &"Effects"
 
 
-func setup(_config: StoryConfig) -> void:
+func setup(config: StoryConfig) -> void:
+	movie_folder = config.movie_folder
 	weather_layer = _make_layer("Weather", WEATHER_LAYER)
 	filter_layer = _make_layer("Filter", FILTER_LAYER)
 	screen_layer = _make_layer("ScreenEffects", SCREEN_LAYER)
@@ -55,6 +61,7 @@ func setup(_config: StoryConfig) -> void:
 
 
 func clear() -> void:
+	stop_movie()
 	set_weather("none", 1.0, 0.0)
 	set_filter("none", 1.0, 0.0)
 	_stop_tween("curtain")
@@ -121,6 +128,74 @@ func flash(color := Color.WHITE, time := 0.3) -> void:
 	await _tween_property("flash", _flash, "color:a", 0.0, time)
 
 
+## Plays a movie from [member movie_folder] over everything but the menus.
+## A click or the continue key skips it when [param skippable]. Awaitable.
+## Returns an error message or "".
+func play_movie(movie_name: String, skippable := true) -> String:
+	var path := StoryAssets.find(movie_folder, movie_name, ["ogv"])
+	if path.is_empty():
+		return "Movie '%s' was not found in %s." % [movie_name, movie_folder]
+	if _is_skipping() or not is_inside_tree():
+		return ""
+	stop_movie()
+	var root := Control.new()
+	root.name = "Movie"
+	root.mouse_filter = Control.MOUSE_FILTER_STOP
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var black := ColorRect.new()
+	black.color = Color.BLACK
+	black.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	black.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(black)
+	var player := VideoStreamPlayer.new()
+	player.stream = load(path) as VideoStream
+	player.expand = true
+	player.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	player.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(player)
+	root.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed:
+			_movie_skip_requested = true)
+	screen_layer.add_child(root)
+	_movie = root
+	_movie_skippable = skippable
+	_movie_skip_requested = false
+	var state := {"done": false}
+	player.finished.connect(func() -> void: state["done"] = true)
+	player.play()
+	while not state["done"] and _movie == root:
+		await get_tree().process_frame
+		if (_movie_skippable and _movie_skip_requested) or _is_skipping():
+			break
+	if _movie == root:
+		stop_movie()
+	return ""
+
+
+## Stops a movie started with [method play_movie].
+func stop_movie() -> void:
+	if _movie != null:
+		_movie.queue_free()
+		_movie = null
+
+
+## True while a movie plays.
+func is_playing_movie() -> bool:
+	return _movie != null
+
+
+## Skips the movie that is playing, if it can be skipped.
+func skip_movie() -> void:
+	if _movie != null and _movie_skippable:
+		_movie_skip_requested = true
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if _movie != null and event.is_action_pressed("story_continue"):
+		skip_movie()
+		get_viewport().set_input_as_handled()
+
+
 func get_weather() -> String:
 	return _weather_state["kind"]
 
@@ -144,6 +219,7 @@ func capture() -> Dictionary:
 
 
 func restore(data: Dictionary) -> void:
+	stop_movie()
 	_stop_tween("flash")
 	_flash.color.a = 0.0
 	var weather: Dictionary = data.get("weather", {})

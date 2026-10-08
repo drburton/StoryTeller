@@ -1,9 +1,117 @@
 ## chapter_1.tale
-## Where the demo's sample scene ends.
+## Lunch in the library, a study session, and the walk home in the rain.
+## Picks up the choices made in the prologue.
 @title("Chapter 1")
+
+var score := 0
+var questions_left := ["capital", "formula", "date"]
+var stayed_late := false
 
 beat start:
 	stop_music(fade = 1.5)
-	await backdrop(Color.BLACK, time = 1.0)
-	"Chapter 1 would begin here."
-	"Thanks for trying the StoryTeller demo."
+	await fade_out(Color.BLACK, time = 1.0)
+	backdrop("library", transition = "none")
+	autosave()
+	music("library_theme", volume = 0.5, fade = 2.0)
+	await fade_in(time = 1.0)
+	"Noon. The library smells of old paper and someone's forgotten coffee."
+	if prologue.trust > 0:
+		mira.enter("smile", at = LEFT)
+		mira: "You came. I saved us the table by the window."
+	else:
+		mira.enter("smirk", at = LEFT)
+		mira: "Oh. You're studying after all, Captain Confident."
+		mira (soft): "Kidding. Sit down."
+	ada.enter("neutral", at = RIGHT, time = 0.6)
+	ada: "Library voices, please."
+	mira (curious): "Sorry, Ada."
+	ada (smile): "Exam week. I'll allow whispering."
+	ada.exit(time = 0.6)
+	jump quiz
+
+beat quiz:
+	if questions_left.is_empty():
+		jump results
+	mira (curious): "Quiz time. Ready?"
+	choose:
+		@once "The capital question.":
+			questions_left.erase("capital")
+			mira: "Which river runs through the old capital in our textbook?"
+			choose:
+				"The Amber.":
+					score += 1
+					mira (smile): "Correct. You actually read chapter three."
+				"The Silver.":
+					mira (smirk): "That's the one in the poem. Close, though."
+		@once "The formula question.":
+			questions_left.erase("formula")
+			mira: "What do you get when you double the base and halve the height?"
+			choose:
+				"The same area.":
+					score += 1
+					mira (smile): "Exactly. The teacher loves that trick."
+				"Twice the area.":
+					mira: "Draw it out. The two changes cancel."
+		@once "The date question.":
+			questions_left.erase("date")
+			mira: "When was the library built?"
+			choose:
+				"Before the school.":
+					score += 1
+					mira (soft): "Right. The school grew up around it."
+					collect("history_note")
+				"Last year.":
+					mira (smirk): "Look at the shelves. Do they look new to you?"
+		"Let's take a break." if len(questions_left) < 3:
+			jump results
+	jump quiz
+
+beat results:
+	match score:
+		3:
+			mira (smile): "Three out of three. I should be asking you for help."
+		0:
+			mira (soft): "Zero. Okay. We start from the beginning, together."
+		_:
+			mira: "{score} right. Not bad for a lunch break."
+	sound("page_turn")
+	"The afternoon slips by between pages."
+	backdrop("library_night", transition = "dissolve", time = 2.0)
+	ambience("rain", volume = 0.4, fade = 2.0)
+	weather("rain", strength = 0.5)
+	filter("cold", strength = 0.4, time = 2.0)
+	"When you look up, the windows have gone dark."
+	mira (curious): "Is that rain? I didn't bring an umbrella."
+	choose:
+		"Share mine.":
+			stayed_late = true
+			mira (smile): "My hero. A slightly damp hero."
+		"Wait it out here.":
+			stayed_late = true
+			mira (soft): "Fine by me. Ada won't kick us out yet."
+			ada.enter("thinking", at = RIGHT, time = 0.6)
+			ada: "I'm closing in ten minutes, whatever the weather."
+			ada.exit(time = 0.6)
+		"Run for it.":
+			mira (smirk): "You first. I'll watch you slip."
+	jump goodbye
+
+beat goodbye:
+	if stayed_late:
+		mira: "Thanks for today, {prologue.player_name}. Really."
+	else:
+		mira: "See you tomorrow. Try not to catch a cold."
+	mira.exit(time = 0.8)
+	filter("none", time = 1.0)
+	stop_audio(fade = 1.5)
+	await fade_out(Color.BLACK, time = 1.5)
+	weather("none", fade = 0)
+	backdrop(Color.BLACK, transition = "none")
+	dialogue_style("page")
+	"That night, a page in a notebook:"
+	"Studied with Mira. Answered {score} of her questions."
+	"It rained. I didn't mind."
+	clear_page()
+	"End of the StoryTeller demo. Thank you for playing."
+	dialogue_style("classic")
+	await fade_in(time = 0.5)

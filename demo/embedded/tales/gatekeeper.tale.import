@@ -1,0 +1,14 @@
+[remap]
+
+importer="storyteller.tale"
+type="Resource"
+uid="uid://bhipkpg6bo5cf"
+path="res://.godot/imported/gatekeeper.tale-c2bfa7baeb026e3acd3f40242811b80c.res"
+
+[deps]
+
+source_file="res://demo/embedded/tales/gatekeeper.tale"
+dest_files=["res://.godot/imported/gatekeeper.tale-c2bfa7baeb026e3acd3f40242811b80c.res"]
+
+[params]
+

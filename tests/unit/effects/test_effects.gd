@@ -17,6 +17,7 @@ func before_each() -> void:
 	var config := StoryConfig.new()
 	config.crew = [TaleDirector, StoryStage, StoryEffects, StorySaves]
 	config.cast_folder = "res://tests/fixtures/cast"
+	config.movie_folder = "res://tests/fixtures/movies"
 	config.save_folder = SAVE_FOLDER
 	config.autosave_on_choice = false
 	story = track(StoryScript.new())
@@ -133,3 +134,44 @@ func test_exit_all_and_autosave() -> void:
 	assert_false(stage.get_cast("robin").on_stage)
 	var saves: StorySaves = story.get_crew(&"Saves")
 	assert_true(saves.has_slot(StorySaves.AUTO_SLOT))
+
+
+func test_movie_plays_to_the_end() -> void:
+	var started := Time.get_ticks_msec()
+	_play("beat start:\n\tawait play_movie(\"short\")\n\t\"After.\"\n")
+	await tree.process_frame
+	assert_true(effects.is_playing_movie())
+	assert_eq(presenter.lines, [], "the line waits for the movie")
+	for i in 300:
+		if not presenter.lines.is_empty():
+			break
+		await tree.process_frame
+	assert_eq(presenter.lines, ["After."])
+	assert_false(effects.is_playing_movie())
+	assert_true(Time.get_ticks_msec() - started >= 400, "it ran about half a second")
+
+
+func test_movie_can_be_skipped() -> void:
+	_play("beat start:\n\tawait play_movie(\"short\")\n\t\"After.\"\n")
+	await tree.process_frame
+	effects.skip_movie()
+	await tree.process_frame
+	await tree.process_frame
+	assert_false(effects.is_playing_movie())
+	assert_eq(presenter.lines, ["After."])
+
+
+func test_unskippable_movie_ignores_skip_requests() -> void:
+	_play("beat start:\n\tawait play_movie(\"short\", skippable = false)\n\t\"After.\"\n")
+	await tree.process_frame
+	effects.skip_movie()
+	await tree.process_frame
+	assert_true(effects.is_playing_movie())
+
+
+func test_missing_movie_is_reported_and_skip_mode_skips_movies() -> void:
+	await _play("beat start:\n\tplay_movie(\"nope\")\n\t\"x\"\n")
+	assert_eq(errors, ["2: Movie 'nope' was not found in res://tests/fixtures/movies."])
+	director.skipping = true
+	await _play("beat start:\n\tawait play_movie(\"short\")\n\t\"y\"\n")
+	assert_false(effects.is_playing_movie())

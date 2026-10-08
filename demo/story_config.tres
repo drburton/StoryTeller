@@ -5,6 +5,7 @@
 [resource]
 script = ExtResource("1_config")
 tales_folder = "res://demo/tales"
+exposed_names = PackedStringArray("gate")
 game_title = "StoryTeller Demo"
 start_tale = "welcome"
 cast_folder = "res://demo/story/cast"

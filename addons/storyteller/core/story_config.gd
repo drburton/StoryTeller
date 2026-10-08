@@ -7,6 +7,29 @@ extends Resource
 ## [code]storyteller/config_path[/code] project setting. When no file exists,
 ## StoryTeller runs with the defaults defined here.
 
+## A config with only what conversations need: the director, audio, saves,
+## settings, history, and the dialogue box. For games that add dialogue to
+## their own 2D or 3D scenes without StoryTeller's stage and menus.
+## [codeblock]
+## var config := StoryConfig.dialogue_only()
+## config.tales_folder = "res://dialogue"
+## Story.start(config)
+## [/codeblock]
+static func dialogue_only() -> StoryConfig:
+	var config := StoryConfig.new()
+	config.crew = [
+		preload("res://addons/storyteller/director/tale_director.gd"),
+		preload("res://addons/storyteller/audio/story_audio.gd"),
+		preload("res://addons/storyteller/saves/story_saves.gd"),
+		preload("res://addons/storyteller/saves/story_settings.gd"),
+		preload("res://addons/storyteller/rewind/story_history.gd"),
+		preload("res://addons/storyteller/ui/story_dialogue.gd"),
+	]
+	config.autosave_on_choice = false
+	config.show_quick_menu = false
+	return config
+
+
 ## Default location of the project's config resource.
 const DEFAULT_PATH := "res://story/story_config.tres"
 
@@ -29,6 +52,10 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 
 ## Folder that holds the project's tales.
 @export_dir var tales_folder := "res://story/tales"
+## Names that game code makes available with [code]Story.expose()[/code]
+## or [code]Story.expose_function()[/code]. Listing them here lets tales
+## that use them import without errors, and the Story editor suggest them.
+@export var exposed_names: PackedStringArray = []
 
 @export_group("Game")
 ## Title shown on the title screen. Empty uses the project name.
@@ -55,6 +82,10 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_group("Audio")
 ## Folder with "music", "sounds", "ambience", and "voice" subfolders.
 @export_dir var audio_folder := "res://story/audio"
+
+@export_group("Effects")
+## Folder with movies (Ogg Theora .ogv files), used by play_movie("name").
+@export_dir var movie_folder := "res://story/movies"
 
 @export_group("Extras")
 ## Folder with [CollectionItem] files: gallery pictures, music room tracks,

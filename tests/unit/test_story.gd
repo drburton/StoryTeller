@@ -101,8 +101,10 @@ func test_restart_replaces_crew() -> void:
 	var empty := StoryConfig.new()
 	empty.crew = []
 	story.start(empty)
-	assert_false(is_instance_valid(first), "old crew is freed")
 	assert_eq(story.get_crew_names().size(), 0)
+	assert_null(first.get_parent(), "old crew leaves the tree at once")
+	await tree.process_frame
+	assert_false(is_instance_valid(first), "and is freed at the end of the frame")
 
 
 func test_shut_down_calls_teardown() -> void:

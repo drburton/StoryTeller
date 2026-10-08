@@ -1,0 +1,28 @@
+## gatekeeper.tale
+## A conversation inside a 3D scene. Game code exposes "gate" with
+## Story.expose(), and listens for emit() signals.
+@title("The Gatekeeper")
+
+const rook := "Rook"
+var asked_twice := false
+
+beat start:
+	if gate.is_open:
+		rook: "The gate's open. Go on, the garden won't wait."
+		return
+	rook: "Halt. Nobody passes without the password."
+	choose:
+		"Tell me the password?":
+			rook: "That's not how passwords work."
+			asked_twice = true
+			jump start
+		"\"Lantern.\"":
+			rook: "...Fine. Who told you?"
+			emit("rook_impressed")
+			await gate.open()
+			rook: "Mind the step."
+		"Never mind.":
+			if asked_twice:
+				rook: "Come back when you remember it."
+			else:
+				rook: "Suit yourself."

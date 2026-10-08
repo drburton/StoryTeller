@@ -68,6 +68,7 @@ const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_exit_all.gd"),
 	preload("res://addons/storyteller/actions/action_autosave.gd"),
 	preload("res://addons/storyteller/actions/action_collect.gd"),
+	preload("res://addons/storyteller/actions/action_play_movie.gd"),
 ]
 ## Actions whose first argument names an asset that can be loaded ahead.
 const PRELOAD_ACTIONS := ["backdrop", "prop", "music", "sound", "ambience", "voice"]
@@ -117,6 +118,8 @@ var _line_pc := -1
 var _read_lines: Dictionary = {}
 ## Translated text to its compiled parts.
 var _translated: Dictionary = {}
+## Names from [member StoryConfig.exposed_names].
+var _declared_names := PackedStringArray()
 ## Source path to modified time, for live reload.
 var _source_times: Dictionary = {}
 var _reload_timer := 0.0
@@ -137,6 +140,7 @@ func _init() -> void:
 func setup(config: StoryConfig) -> void:
 	tales_folder = config.tales_folder
 	source_language = config.source_language
+	_declared_names = config.exposed_names
 
 
 func clear() -> void:
@@ -345,6 +349,8 @@ func make_check_context(tale_name := "") -> TaleCheckContext:
 		context.add_action(action_name, action.get_parameters(), action.get_required_count())
 	for exposed_name in _exposed:
 		context.add_exposed(exposed_name)
+	for declared in _declared_names:
+		context.add_exposed(declared)
 	for crew in _crew_siblings():
 		if crew.has_method("get_tale_names"):
 			for extra in crew.get_tale_names():
