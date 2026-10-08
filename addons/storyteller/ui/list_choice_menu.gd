@@ -23,6 +23,12 @@ func _ready() -> void:
 	hide()
 
 
+## Closes the menu as if the timeout expired.
+func cancel() -> void:
+	if visible:
+		_picked.emit(-1)
+
+
 func choose(options: Array[Dictionary], settings: Dictionary) -> int:
 	for child in _column.get_children():
 		child.queue_free()

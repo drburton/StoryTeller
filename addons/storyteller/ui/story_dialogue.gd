@@ -16,6 +16,7 @@ const INPUT_ACTIONS := {
 var layer: CanvasLayer
 var dialogue_box: DialogueBox
 var choice_menu: ChoiceMenu
+var _line_read := false
 
 
 func get_crew_name() -> StringName:
@@ -37,6 +38,7 @@ func setup(config: StoryConfig) -> void:
 
 ## Presenter method: shows one line. Awaitable.
 func show_line(line: Dictionary) -> void:
+	_line_read = line.get("read", false)
 	await dialogue_box.show_line(line)
 
 
@@ -45,14 +47,35 @@ func choose(options: Array[Dictionary], settings: Dictionary) -> int:
 	return await choice_menu.choose(options, settings)
 
 
+## Presenter method: releases a line or choice that is waiting for the
+## player, used when a save is loaded.
+func cancel() -> void:
+	if dialogue_box != null and dialogue_box.has_method("cancel"):
+		dialogue_box.cancel()
+	if choice_menu != null and choice_menu.has_method("cancel"):
+		choice_menu.cancel()
+
+
+## Called by the Settings crew member.
+func apply_setting(key: String, value: Variant) -> void:
+	match key:
+		"text_speed":
+			dialogue_box.characters_per_second = float(value)
+		"auto_delay":
+			dialogue_box.auto_delay = float(value)
+
+
 func _process(_delta: float) -> void:
 	if dialogue_box == null:
 		return
-	var skip_held := Input.is_action_pressed("story_skip")
-	dialogue_box.skipping = skip_held
+	# Skipping stops at unread lines unless the player allows skipping them.
+	var settings := _crew(&"Settings")
+	var skip_unread: bool = settings != null and settings.get_value("skip_unread")
+	var skip := Input.is_action_pressed("story_skip") and (skip_unread or _line_read)
+	dialogue_box.skipping = skip
 	var director := _director()
 	if director != null:
-		director.skipping = skip_held
+		director.skipping = skip
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -61,9 +84,13 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _director() -> TaleDirector:
+	return _crew(&"TaleDirector") as TaleDirector
+
+
+func _crew(crew_name: StringName) -> Node:
 	var story := get_parent()
 	if story != null and story.has_method("get_crew"):
-		return story.get_crew(&"TaleDirector") as TaleDirector
+		return story.get_crew(crew_name)
 	return null
 
 

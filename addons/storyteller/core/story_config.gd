@@ -16,6 +16,8 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 	preload("res://addons/storyteller/director/tale_director.gd"),
 	preload("res://addons/storyteller/stage/story_stage.gd"),
 	preload("res://addons/storyteller/audio/story_audio.gd"),
+	preload("res://addons/storyteller/saves/story_saves.gd"),
+	preload("res://addons/storyteller/saves/story_settings.gd"),
 	preload("res://addons/storyteller/ui/story_dialogue.gd"),
 ]
 
@@ -35,6 +37,14 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_group("Audio")
 ## Folder with "music", "sounds", "ambience", and "voice" subfolders.
 @export_dir var audio_folder := "res://story/audio"
+
+@export_group("Saves")
+## Folder for save slots and the global data file.
+@export var save_folder := "user://saves"
+## File for player settings.
+@export var settings_path := "user://settings.cfg"
+## Save to the "auto" slot before every choice.
+@export var autosave_on_choice := true
 
 @export_group("Dialogue")
 ## Scene for the dialogue box (its root must extend [DialogueBox]).

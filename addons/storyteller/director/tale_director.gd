@@ -16,8 +16,12 @@ signal story_finished
 signal beat_entered(tale_name: String, beat: String)
 ## Emitted for every line, before the presenter shows it.
 signal line_started(line: Dictionary)
+## Emitted before the presenter shows choices.
+signal choice_started(options: Array[Dictionary])
 ## Emitted after the player picks an option.
 signal choice_made(option: Dictionary)
+## Emitted when a line marked @no_rewind runs: rewinding must not go past it.
+signal rewind_barrier
 ## Emitted by [code]emit("name", value)[/code] in tales.
 signal story_signal(signal_name: String, value: Variant)
 ## Emitted when a tale does something invalid at runtime. The director
@@ -77,6 +81,11 @@ var _pending: Array[TaleTask] = []
 var _evaluator: TaleEvaluator
 var _context: TaleContext
 var _playing := false
+## Index of the say or choose instruction the player is looking at, or -1.
+## Saves record it so loading shows the same line again.
+var _line_pc := -1
+## Line ids the player has seen, kept across playthroughs.
+var _read_lines: Dictionary = {}
 ## Tale and line of the instruction being run, for error reports.
 var _current_tale := ""
 var _current_line := 0
@@ -106,7 +115,7 @@ func clear() -> void:
 # --- Public API -------------------------------------------------------------
 
 ## Plays [param tale_name] from [param beat]. Awaitable: returns when the
-## story finishes or is stopped.
+## story finishes or is stopped. Loading a save while playing does not end it.
 func play(tale_name: String, beat := "start") -> void:
 	stop()
 	var generation := _generation
@@ -123,17 +132,29 @@ func play(tale_name: String, beat := "start") -> void:
 	_stack.append(_enter_beat(tale, beat))
 	_playing = true
 	story_started.emit(tale_name, beat)
-	await _run(generation)
+	_run(generation)
+	if _playing:
+		await story_finished
 
 
 ## Stops playback. A [method play] in progress returns.
 func stop() -> void:
-	_generation += 1
+	_halt()
 	if _playing:
 		_playing = false
 		story_finished.emit()
+
+
+## Ends the current run loop without finishing the story, and releases the
+## presenter if it is waiting for the player.
+func _halt() -> void:
+	_generation += 1
 	_stack.clear()
 	_pending.clear()
+	_line_pc = -1
+	var target := _get_presenter()
+	if target != null and target.has_method("cancel"):
+		target.cancel()
 
 
 func is_playing() -> bool:
@@ -215,11 +236,13 @@ func make_check_context(tale_name := "") -> TaleCheckContext:
 
 func capture() -> Dictionary:
 	var frames: Array = []
-	for frame in _stack:
+	for i in _stack.size():
+		var frame := _stack[i]
+		var top := i == _stack.size() - 1
 		frames.append({
 			"tale": frame.tale.tale_name,
 			"beat": frame.beat,
-			"pc": frame.pc,
+			"pc": _line_pc if top and _line_pc >= 0 else frame.pc,
 			"locals": JSON.from_native(frame.locals),
 			"iterators": JSON.from_native(frame.iterators),
 		})
@@ -231,8 +254,12 @@ func capture() -> Dictionary:
 	}
 
 
+## Replaces the story state with [param data] from [method capture]. Call
+## [method resume] afterwards to continue. A [method play] in progress keeps
+## waiting and returns when the restored story ends.
 func restore(data: Dictionary) -> void:
-	stop()
+	_halt()
+	_playing = false
 	_story_vars = JSON.to_native(data.get("vars", {}))
 	_visited.clear()
 	for key in data.get("visited", []):
@@ -253,7 +280,8 @@ func restore(data: Dictionary) -> void:
 		_stack.append(frame)
 
 
-## Continues playback from a restored state. Awaitable.
+## Continues playback from a restored state. Awaitable: returns when the
+## story ends.
 func resume() -> void:
 	if _stack.is_empty() or _playing:
 		return
@@ -263,13 +291,22 @@ func resume() -> void:
 	await _run(generation)
 
 
-## Global variables, saved separately from save slots.
+## Data kept across playthroughs: global variables and read lines. Saved
+## separately from save slots.
 func capture_globals() -> Dictionary:
-	return JSON.from_native(_global_vars)
+	return {"vars": JSON.from_native(_global_vars), "read": _read_lines.keys()}
 
 
 func restore_globals(data: Dictionary) -> void:
-	_global_vars = JSON.to_native(data)
+	_global_vars = JSON.to_native(data.get("vars", {}))
+	_read_lines.clear()
+	for id in data.get("read", []):
+		_read_lines[id] = true
+
+
+## True if the player has seen the line with [param line_id] in any playthrough.
+func is_line_read(line_id: String) -> bool:
+	return _read_lines.has(line_id)
 
 
 # --- Name resolution (used by TaleEvaluator) ------------------------------------
@@ -393,6 +430,8 @@ func _run(generation: int) -> void:
 			steps = 0
 		_current_tale = frame.tale.tale_name
 		_current_line = instruction["line"]
+		if instruction.get("no_rewind", false):
+			rewind_barrier.emit()
 		_evaluator.reset()
 		await _execute(instruction, frame)
 		if _evaluator.failed():
@@ -454,6 +493,7 @@ func _execute(instruction: Dictionary, frame: TaleFrame) -> void:
 
 
 func _say(instruction: Dictionary, frame: TaleFrame) -> void:
+	var generation := _generation
 	await _finish_pending()
 	var text: String = await _render(instruction["text"], frame)
 	var speaker: String = instruction["speaker"]
@@ -469,11 +509,18 @@ func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 		"tale": frame.tale.tale_name,
 		"beat": frame.beat,
 		"source_line": instruction["line"],
+		"read": _read_lines.has(instruction["id"]),
 	}
+	if generation != _generation:
+		return
+	_line_pc = frame.pc - 1
 	line_started.emit(line)
 	var target := _get_presenter()
 	if target != null:
 		await target.show_line(line)
+	if generation == _generation:
+		_read_lines[instruction["id"]] = true
+		_line_pc = -1
 
 
 func _match(instruction: Dictionary, frame: TaleFrame) -> void:
@@ -496,6 +543,7 @@ func _match(instruction: Dictionary, frame: TaleFrame) -> void:
 
 
 func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
+	var generation := _generation
 	await _finish_pending()
 	var settings := {}
 	for key in instruction["args"]:
@@ -516,10 +564,17 @@ func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 	if not has_enabled:
 		frame.pc = instruction["timeout_target"] if instruction["timeout_target"] >= 0 else instruction["end"]
 		return
+	if generation != _generation:
+		return
+	_line_pc = frame.pc - 1
+	choice_started.emit(shown)
 	var target := _get_presenter()
 	var picked := 0
 	if target != null:
 		picked = await target.choose(shown, settings)
+	if generation != _generation:
+		return
+	_line_pc = -1
 	if picked < 0 or picked >= shown.size() or not shown[picked]["enabled"]:
 		frame.pc = instruction["timeout_target"] if instruction["timeout_target"] >= 0 else instruction["end"]
 		return

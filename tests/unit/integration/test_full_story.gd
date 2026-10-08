@@ -78,4 +78,4 @@ func test_save_mid_story_and_resume_everything() -> void:
 	assert_eq(stage.get_cast("robin").mood, "smile")
 	assert_eq(audio.get_music_track(), "theme")
 	await restored.get_crew(&"TaleDirector").resume()
-	assert_eq(second_presenter.lines, ["Third line."], "continues after the line that was showing")
+	assert_eq(second_presenter.lines, ["Robin: Second line, visit 1.", "Third line."], "shows the saved line again, then continues")

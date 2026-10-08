@@ -11,6 +11,7 @@ var _name_label: Label
 var _text_label: RichTextLabel
 var _indicator: Label
 var _typing := false
+var _cancelled := false
 
 
 func _ready() -> void:
@@ -61,6 +62,7 @@ func _ready() -> void:
 
 
 func show_line(line: Dictionary) -> void:
+	_cancelled = false
 	show()
 	var parsed := DialogueBox.extract_pauses(line["text"])
 	_name_label.text = line["speaker_name"]
@@ -72,6 +74,8 @@ func show_line(line: Dictionary) -> void:
 	var stops: Array = parsed["pauses"].duplicate()
 	stops.append({"at": total, "seconds": -1.0})
 	for stop in stops:
+		if _cancelled:
+			return
 		await _reveal_to(stop["at"])
 		if stop["seconds"] >= 0.0:
 			if not skipping:
@@ -79,6 +83,13 @@ func show_line(line: Dictionary) -> void:
 		else:
 			await _wait_for_continue()
 	line_revealed.emit()
+
+
+## Stops waiting for the player and returns from show_line at once.
+func cancel() -> void:
+	_cancelled = true
+	_typing = false
+	continue_pressed.emit()
 
 
 func _reveal_to(count: int) -> void:
