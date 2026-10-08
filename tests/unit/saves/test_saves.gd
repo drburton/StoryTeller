@@ -137,6 +137,16 @@ func test_globals_and_read_lines_persist() -> void:
 	assert_true(second["presenter"].line_data[0]["read"])
 
 
+func test_skip_safe_beats_count_as_read() -> void:
+	var game := await _make_story()
+	var director: TaleDirector = game["director"]
+	var source := "@skip_safe\nbeat recap:\n\t\"Last time...\"\n\tjump fresh\n\nbeat fresh:\n\t\"Something new.\"\n"
+	director.add_tale(TaleCompiler.build(source, "recap", director.make_check_context("recap"))["tale"])
+	await director.play("recap", "recap")
+	var reads: Array = game["presenter"].line_data.map(func(line: Dictionary) -> bool: return line["read"])
+	assert_eq(reads, [true, false])
+
+
 func test_old_formats_are_migrated() -> void:
 	var game := await _make_story()
 	var saves: StorySaves = game["saves"]

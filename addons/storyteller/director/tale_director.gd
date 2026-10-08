@@ -516,7 +516,7 @@ func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 		"tale": frame.tale.tale_name,
 		"beat": frame.beat,
 		"source_line": instruction["line"],
-		"read": _read_lines.has(instruction["id"]),
+		"read": _read_lines.has(instruction["id"]) or instruction.get("skip_safe", false),
 	}
 	if generation != _generation:
 		return
