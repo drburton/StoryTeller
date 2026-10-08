@@ -2,12 +2,15 @@
 extends EditorPlugin
 ## Editor entry point for StoryTeller.
 ##
-## Registers the [code]Story[/code] autoload and the project settings that
-## StoryTeller reads at runtime.
+## Registers the [code]Story[/code] autoload, the project settings that
+## StoryTeller reads at runtime, and the importer for [code].tale[/code] files.
 
 const AUTOLOAD_NAME := "Story"
 const AUTOLOAD_PATH := "res://addons/storyteller/core/story.gd"
 const StoryScript := preload("res://addons/storyteller/core/story.gd")
+const TaleImporter := preload("res://addons/storyteller/editor/tale_importer.gd")
+
+var _tale_importer: EditorImportPlugin
 
 
 func _enable_plugin() -> void:
@@ -22,6 +25,13 @@ func _disable_plugin() -> void:
 
 func _enter_tree() -> void:
 	_register_project_settings()
+	_tale_importer = TaleImporter.new()
+	add_import_plugin(_tale_importer)
+
+
+func _exit_tree() -> void:
+	remove_import_plugin(_tale_importer)
+	_tale_importer = null
 
 
 func _register_project_settings() -> void:
