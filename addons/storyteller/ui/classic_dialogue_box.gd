@@ -64,9 +64,10 @@ func get_quick_menu_corner() -> Vector2:
 
 
 func show_line(line: Dictionary) -> void:
-	show()
 	_name_label.text = line["speaker_name"]
 	_name_label.add_theme_color_override("font_color", line.get("speaker_color", Color.WHITE))
 	_name_label.visible = not line["speaker_name"].is_empty()
 	_text_label.text = ""
+	if not await begin_line():
+		return
 	await reveal(_text_label, line["text"], _indicator)

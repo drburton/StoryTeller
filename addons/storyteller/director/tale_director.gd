@@ -99,6 +99,9 @@ var live_reload := OS.is_debug_build()
 ## Language the tales are written in. Lines are shown as written while the
 ## game's locale is this language.
 var source_language := "en"
+## Named text styles from [member StoryConfig.text_styles], expanded in
+## every line before it is shown.
+var text_styles: Dictionary = {}
 
 var _tales: Dictionary = {}
 var _story_vars: Dictionary = {}
@@ -146,6 +149,7 @@ func _init() -> void:
 func setup(config: StoryConfig) -> void:
 	tales_folder = config.tales_folder
 	source_language = config.source_language
+	text_styles = config.text_styles
 	_declared_names = config.exposed_names
 
 
@@ -655,6 +659,7 @@ func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	await _finish_pending()
 	var acts: Array = []
 	var text: String = await _render(_localize(instruction["text"], instruction["id"], frame.tale, instruction["line"]), frame, acts)
+	text = TaleText.expand_styles(text, text_styles)
 	var speaker: String = instruction["speaker"]
 	var speaker_info := _speaker_info(speaker, frame)
 	var line := {

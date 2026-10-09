@@ -1,12 +1,15 @@
 class_name TitleScreen
 extends MenuScreen
 ## The title screen: New Game, Continue, Load, Extras (when the game has a
-## collection), Settings, and Quit.
+## collection), Settings, and Quit, over [member StoryConfig.title_background]
+## when the game sets one. [StoryMenus] plays [member StoryConfig.title_music].
 
 var _continue: Button
 var _load: Button
 var _extras: Button
 var _title: Label
+var _art: TextureRect
+var _wash: ColorRect
 
 
 func _ready() -> void:
@@ -15,6 +18,19 @@ func _ready() -> void:
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(background)
+	_art = TextureRect.new()
+	_art.name = "Art"
+	_art.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	_art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_art)
+	# Darkens the art a little so the title and buttons stay readable.
+	_wash = ColorRect.new()
+	_wash.color = Color(0, 0, 0, 0.35)
+	_wash.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_wash.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_wash)
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
@@ -23,6 +39,8 @@ func _ready() -> void:
 	column.add_theme_constant_override("separation", 12)
 	center.add_child(column)
 	_title = MenuScreen.make_title("", 44)
+	_title.add_theme_constant_override("outline_size", 10)
+	_title.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.6))
 	column.add_child(_title)
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0, 24)
@@ -41,6 +59,9 @@ func _ready() -> void:
 
 func open() -> void:
 	_title.text = menus.get_game_title()
+	_art.texture = menus.title_background
+	_art.visible = menus.title_background != null
+	_wash.visible = _art.visible
 	var has_saves := menus.saves() != null and not menus.saves().latest_slot().is_empty()
 	_continue.disabled = not has_saves
 	_load.disabled = not has_saves

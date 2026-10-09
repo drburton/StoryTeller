@@ -237,3 +237,17 @@ func test_menu_text_list_is_complete() -> void:
 					if text not in StoryMenus.UI_TEXT and text not in missing:
 						missing.append(text)
 	assert_eq(missing, [], "add these to StoryMenus.UI_TEXT")
+
+
+func test_named_styles_apply_to_lines_and_translations() -> void:
+	assert_true(director.text_styles.has("whisper"), "the config's default styles reach the director")
+	director.text_styles = {"whisper": "[i]"}
+	var result := TaleCompiler.build("beat start:\n\trobin: \"[whisper]Over here.[/whisper]\"\n", "main", director.make_check_context("main"))
+	director.add_tale(result["tale"])
+	await director.play("main")
+	assert_eq(presenter.lines, ["Robin: [i]Over here.[/i]"])
+	_translate("es", {_key(result["tale"], "[whisper]Over here.[/whisper]"): "[whisper]Por aquí.[/whisper]"})
+	TranslationServer.set_locale("es")
+	presenter.lines.clear()
+	await director.play("main")
+	assert_eq(presenter.lines, ["Robin: [i]Por aquí.[/i]"], "translations use the styles too")

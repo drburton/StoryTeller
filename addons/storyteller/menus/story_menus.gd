@@ -56,6 +56,10 @@ var save_pages := 0
 var start_tale := ""
 var start_beat := "start"
 var game_title := ""
+## Picture behind the title screen, or null for a plain background.
+var title_background: Texture2D
+## Music track for the title screen, or "" for none.
+var title_music := ""
 var return_to_title := true
 var show_quick_menu := true
 
@@ -75,6 +79,8 @@ func setup(config: StoryConfig) -> void:
 	start_tale = config.start_tale
 	start_beat = config.start_beat
 	game_title = config.game_title
+	title_background = config.title_background
+	title_music = config.title_music
 	return_to_title = config.return_to_title
 	show_quick_menu = config.show_quick_menu
 	layer = CanvasLayer.new()
@@ -163,7 +169,23 @@ func show_title() -> void:
 		dialogue.hide_all()
 	_title_active = true
 	open("title")
+	play_title_music()
 	title_shown.emit()
+
+
+## True while the title screen (or a screen opened from it) is showing.
+func is_title_showing() -> bool:
+	return _title_active
+
+
+## Plays [member title_music], fading from whatever plays. Does nothing
+## when there is no title music or it is already playing.
+func play_title_music() -> void:
+	if title_music.is_empty() or audio() == null or audio().get_music_track() == title_music:
+		return
+	var problem: String = audio().play_music(title_music, 1.0, 1.0)
+	if not problem.is_empty():
+		push_warning("StoryTeller: title music: " + problem)
 
 
 ## Clears the story state and plays [member start_tale] from the start.
@@ -175,6 +197,8 @@ func start_new_game() -> void:
 	if start_tale.is_empty():
 		push_error("StoryTeller: set StoryConfig.start_tale to the tale New Game should play.")
 		return
+	if not title_music.is_empty() and audio() != null and audio().get_music_track() == title_music:
+		audio().stop_music(1.0)
 	new_game_started.emit()
 	director().play(start_tale, start_beat)
 

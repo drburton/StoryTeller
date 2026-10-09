@@ -22,6 +22,7 @@ func before_each() -> void:
 	config.start_tale = "menu_tale"
 	config.text_speed = 0.0
 	config.game_title = "Test Game"
+	config.dialogue_box_transition = "none"
 	config.autosave_on_choice = false
 	story = track(StoryScript.new())
 	story.start(config)
@@ -390,3 +391,24 @@ func test_timed_autosave() -> void:
 	assert_true(saves.has_slot(StorySaves.AUTO_SLOT), "saved at the next line")
 	assert_eq(saves.read_slot(StorySaves.AUTO_SLOT)["text"], "Three.")
 	assert_true(saves._since_autosave < 1.0, "the timer starts over")
+
+
+func test_title_screen_art_and_music() -> void:
+	var audio := menus.audio()
+	audio.audio_folder = "res://tests/fixtures/audio"
+	menus.title_music = "theme"
+	var image := Image.create(8, 8, false, Image.FORMAT_RGB8)
+	menus.title_background = ImageTexture.create_from_image(image)
+	_add("beat start:\n\t\"Line.\"\n")
+	menus.show_title()
+	await tree.process_frame
+	assert_eq(audio.get_music_track(), "theme", "title music plays")
+	var art: TextureRect = story.find_child("Art", true, false)
+	assert_true(art.is_visible_in_tree())
+	assert_eq(art.texture, menus.title_background)
+	await _press("New Game")
+	assert_eq(audio.get_music_track(), "", "and stops when a game starts")
+	menus.title_background = null
+	menus.show_title()
+	await tree.process_frame
+	assert_false(art.visible, "plain background without art")

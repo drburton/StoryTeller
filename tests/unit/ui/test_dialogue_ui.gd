@@ -89,6 +89,7 @@ func test_story_plays_through_dialogue_crew() -> void:
 	var story: Node = track(StoryScript.new())
 	var config := StoryConfig.new()
 	config.text_speed = 0.0
+	config.dialogue_box_transition = "none"
 	story.start(config)
 	tree.root.add_child(story)
 	var director: TaleDirector = story.get_crew(&"TaleDirector")
@@ -205,6 +206,7 @@ func test_story_runs_text_tags_while_the_line_shows() -> void:
 	var story: Node = track(StoryScript.new())
 	var config := StoryConfig.new()
 	config.text_speed = 0.0
+	config.dialogue_box_transition = "none"
 	story.start(config)
 	tree.root.add_child(story)
 	var director: TaleDirector = story.get_crew(&"TaleDirector")
@@ -280,3 +282,83 @@ func test_code_is_tinted_by_the_theme() -> void:
 	await tree.process_frame
 	assert_true(text_label.text.contains("[code][color=#%s]x[/color][/code]" % StoryTheme.CODE.to_html(false)), "the default theme tints code")
 	box.cancel()
+
+
+func test_box_fades_in_and_out() -> void:
+	var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+	tree.root.add_child(box)
+	box.characters_per_second = 0.0
+	box.box_transition = "slide"
+	box.box_transition_time = 0.2
+	var state := {"done": false}
+	var finish := func() -> void:
+		await box.show_line(_line("Hello"))
+		state["done"] = true
+	finish.call()
+	await tree.process_frame
+	assert_true(box.visible)
+	assert_true(box.modulate.a < 1.0, "fading in")
+	assert_true(box.position.y > 0.0, "slide starts lower")
+	var text_label: RichTextLabel = box.find_child("Text", true, false)
+	assert_eq(text_label.get_parsed_text(), "", "text waits for the box")
+	await tree.create_timer(0.3).timeout
+	assert_eq(box.modulate.a, 1.0)
+	assert_eq(box.position.y, 0.0)
+	assert_eq(text_label.get_parsed_text(), "Hello")
+	box.continue_pressed.emit()
+	await tree.process_frame
+	assert_true(state["done"])
+	box.hide_box()
+	await tree.process_frame
+	assert_true(box.visible and box.modulate.a < 1.0, "fading out")
+	await tree.create_timer(0.3).timeout
+	assert_false(box.visible)
+	assert_eq(box.modulate.a, 1.0, "ready for next time")
+
+
+func test_box_appears_at_once_when_skipping_or_set_to_none() -> void:
+	for setting in [["fade", true], ["none", false]]:
+		var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+		tree.root.add_child(box)
+		box.characters_per_second = 0.0
+		box.box_transition = setting[0]
+		box.skipping = setting[1]
+		box.show_line(_line("Hi"))
+		await tree.process_frame
+		assert_eq(box.modulate.a, 1.0, "%s, skipping %s" % setting)
+		box.cancel()
+
+
+func test_loading_while_the_box_appears_drops_the_line() -> void:
+	var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+	tree.root.add_child(box)
+	box.box_transition = "fade"
+	box.box_transition_time = 0.2
+	var state := {"done": false}
+	var finish := func() -> void:
+		await box.show_line(_line("Old line"))
+		state["done"] = true
+	finish.call()
+	await tree.process_frame
+	box.cancel()
+	await tree.create_timer(0.3).timeout
+	assert_true(state["done"], "returns without waiting for the player")
+	var text_label: RichTextLabel = box.find_child("Text", true, false)
+	assert_eq(text_label.get_parsed_text(), "", "the old line is not typed")
+
+
+func test_page_box_clears_after_hiding() -> void:
+	var box: PageDialogueBox = track(PageDialogueBox.new())
+	tree.root.add_child(box)
+	box.characters_per_second = 0.0
+	box.box_transition = "fade"
+	box.box_transition_time = 0.1
+	box.show_line(_line("First."))
+	await tree.create_timer(0.2).timeout
+	box.continue_pressed.emit()
+	await tree.process_frame
+	box.hide_box()
+	var text_label: RichTextLabel = box.find_child("Text", true, false)
+	assert_eq(text_label.get_parsed_text(), "First.", "the text stays while fading out")
+	await tree.create_timer(0.2).timeout
+	assert_eq(text_label.get_parsed_text(), "", "and clears once hidden")

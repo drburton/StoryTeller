@@ -26,7 +26,7 @@ beat start:
 	ada.shake(strength = 0.3)
 	ada: "Library voices, please."
 	mira.nod()
-	mira (curious): "Sorry, Ada."
+	mira (curious): "[whisper]Sorry, Ada.[/whisper]"
 	ada (smile): "Exam week. I'll allow whispering."
 	ada.exit(time = 0.6)
 	jump quiz
