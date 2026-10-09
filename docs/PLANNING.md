@@ -8,14 +8,15 @@ Status: **Draft v0.21** (M0 to M6 complete; M7 under way)
 
 - **Built and merged to `main`:** milestones M0 to M6. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
-- **Tests:** 362 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
+- **Tests:** 366 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
 - **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
-- **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4).
-- **Not done yet:** the rest of M7 (setup wizard, guides, the 15-minute sample story, publishing), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
+- **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4), and the setup wizard (§8).
+- **Not done yet:** the rest of M7 (guides, the 15-minute sample story, publishing), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
 
 Changes in v0.21:
-- M7 progress: every extension point in §12.4 is built (decision 0018). Transitions can be added by name with `StoryTransition` resources (a built-in mode with its own mask, direction, and softness, or a custom shader), from `StoryConfig.transition_folder`, `StoryConfig.transitions`, or `StoryStage.add_transition()`, and the card forms list them. The Story tab offers `TaleEditorPanel.get_instance()`, `add_toolbar_control()`, `add_side_panel()`, and the `line_selected` signal for add-ons such as a stage preview.
+- M7 progress: the setup wizard is built (§8). While a project has no StoryConfig, the Story tab offers **Set Up Project**, which makes the story folders, a config, a first tale, and a main scene that opens the title screen.
+- Every extension point in §12.4 is built (decision 0018). Transitions can be added by name with `StoryTransition` resources (a built-in mode with its own mask, direction, and softness, or a custom shader), from `StoryConfig.transition_folder`, `StoryConfig.transitions`, or `StoryStage.add_transition()`, and the card forms list them. The Story tab offers `TaleEditorPanel.get_instance()`, `add_toolbar_control()`, `add_side_panel()`, and the `line_selected` signal for add-ons such as a stage preview.
 
 Changes in v0.20:
 - M6 complete: Yarn Spinner import is built (§11, decision 0017). **Import Yarn** in the Story tab (or `addons/storyteller/editor/import_yarn.gd` from the command line) converts a `.yarn` file into a tale: nodes become beats, with dialogue, options, conditions, variables, jumps, detours, waits, and line ids. Anything else is kept as a comment and listed. `demo/yarn/lighthouse.yarn` is an original sample, and a test converts it and plays it.
@@ -589,7 +590,7 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Live reload | A running game recompiles a tale whose file changed and continues at the same line | M4 ✔ |
 | Export Strings | Writes the translation CSV and registers it (Story tab button or command-line script) | M4 ✔ |
 | Visual editor and Story Map | Cards and Map views; see §9 | M5 ✔ |
-| Setup wizard | Config, folders, starter scene, sample tale | M7 |
+| Setup wizard | Config, folders, starter scene, sample tale (Story tab, while the project has no StoryConfig) | M7 ✔ |
 | Pin line ids | Write `@id` into every line so edits never change ids | Not scheduled |
 | Cast inspector | Custom inspector with mood previews and a "test enter" button | Not scheduled |
 | Language server | LSP for VS Code and other editors | Post-1.0 |
@@ -749,7 +750,8 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 ### M7: Launch preparation (4 weeks)
 - Legal review (§2.8).
 - The remaining extension points Pro needs (§12.4): transition registration and editor hooks. ✔ (Decision 0018.)
-- Setup wizard (§8) and the documentation guides in §17, including generated action reference pages.
+- Setup wizard (§8). ✔ (`StorySetup` makes the story folders, a `StoryConfig`, a first tale, and a main scene that opens the title screen, never overwriting; the Story tab offers it while the project has no config.)
+- The documentation guides in §17, including generated action reference pages.
 - Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots.
 - Publish on the Godot Asset Library or Asset Store and GitHub.
 
@@ -915,7 +917,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-Built (362 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+Built (366 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
 
 - **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, route chart, console and live reload, editor panel, completion, card editor, and Story Map.
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.
@@ -980,6 +982,6 @@ Today the README, the TaleScript specification, and the decision records are the
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
 4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
 5. The extension points in §12.4 are all built. Pro work can start once the free tier ships (decision 0009).
-6. Continue M7: the setup wizard and documentation guides (§17), and the 15-minute original sample story.
+6. Continue M7: the documentation guides (§17) and the 15-minute original sample story. The setup wizard is built.
 7. Play the demo to judge what tests can't: typing speeds in the tour, the chapter 1 CG and its timing, the size and speed of the hop, nod, and shake, and how the route chart reads after two or three playthroughs.
 8. Before accepting outside contributions, add a CLA or DCO (§12.3, §13).
