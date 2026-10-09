@@ -49,7 +49,7 @@ func test_graph_exits_problems_and_endings() -> void:
 
 func test_demo_story_is_fully_connected() -> void:
 	var sources := {}
-	for tale_name in ["welcome", "prologue", "chapter_1"]:
+	for tale_name in ["welcome", "prologue", "chapter_1", "chapter_2"]:
 		sources[tale_name] = FileAccess.get_file_as_string("res://demo/tales/%s.tale" % tale_name)
 	var graph := StoryGraph.build(_docs(sources), "welcome")
 	assert_eq(graph.missing, [])
@@ -58,9 +58,10 @@ func test_demo_story_is_fully_connected() -> void:
 	assert_has(targets, "prologue.start")
 	assert_has(targets, "welcome.farewell")
 	assert_has(graph.beats["prologue.walk"]["exits"].map(func(exit: Dictionary) -> String: return exit["to"]), "chapter_1.start")
-	assert_true(graph.beats["chapter_1.goodbye"]["ends"])
+	assert_has(graph.beats["chapter_1.goodbye"]["exits"].map(func(exit: Dictionary) -> String: return exit["to"]), "chapter_2.start")
+	assert_true(graph.beats["chapter_2.the_end"]["ends"])
 	assert_eq(graph.entries[0], "welcome.start", "New Game's beat comes first")
-	assert_eq(graph.tale_order(), PackedStringArray(["welcome", "prologue", "chapter_1"]), "tales in the order play reaches them")
+	assert_eq(graph.tale_order(), PackedStringArray(["welcome", "prologue", "chapter_1", "chapter_2"]), "tales in the order play reaches them")
 
 
 func test_layout_puts_tales_in_bands_and_steps_in_columns() -> void:

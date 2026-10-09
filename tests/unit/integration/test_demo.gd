@@ -39,12 +39,17 @@ func test_whole_demo_plays_without_errors() -> void:
 	assert_has(lines, "Mira: Thanks for today, Sam. Really.")
 	assert_has(lines, "Mira: Same table tomorrow? I'll bring the coffee.", "two right answers and the umbrella raise friendship to 4")
 	assert_has(lines, "Studied with Mira. Answered 2 of her questions.")
+	assert_has(lines, "Mira: My coat is still drying from last night, you know.", "chapter 2 remembers staying late")
+	assert_has(lines, "Question two asks when the library was built. Easy, after yesterday.", "and the quiz score")
+	assert_has(lines, "Mira: I was going to ask you that.", "friendship opens the last option")
+	assert_has(lines, "Mira: Results come out next week. We'll read them together.", "and the closer ending")
 	assert_eq(lines.back(), "End of the StoryTeller demo. Thank you for playing.")
 	for id in ["library", "library_theme", "talescript", "library_night", "classroom", "quiet_morning", "mira", "history_note"]:
 		assert_true(run["collected"].has(id), id)
 	assert_eq(run["route_titles"], [
 		"A visitor in the library", "Questions for Ada", "The first morning", "An honest answer", "Off to class",
 		"Lunch at the library", "Quiz time", "Rain on the windows", "Goodnight",
+		"Exam morning", "The exam", "After the bell", "Study partners", "The end",
 	], "the route chart shows every beat played, by its heading")
 	assert_true(run["choice_settings"].any(func(settings: Dictionary) -> bool: return settings.get("style") == "pictures"), "chapter 1 has a picture choice")
 
@@ -75,6 +80,7 @@ func test_whole_demo_plays_in_spanish() -> void:
 	assert_has(lines, "Ada: Encantada de conocerte, Robin.")
 	assert_has(lines, "Estudié con Mira. Respondí 2 de sus preguntas.")
 	assert_has(lines, "Mira: ¿La misma mesa mañana? Yo traigo el café.")
+	assert_has(lines, "Mira: Las notas salen la semana que viene. Las leeremos juntos.")
 	assert_eq(lines.back(), "Fin de la demo de StoryTeller. Gracias por jugar.")
 	assert_eq(run["route_titles"].slice(0, 3), ["Una visita en la biblioteca", "Preguntas para Ada", "La primera mañana"])
 

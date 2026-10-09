@@ -9,7 +9,7 @@ Status: **Draft v0.21** (M0 to M6 complete; M7 under way)
 - **Built and merged to `main`:** milestones M0 to M6. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
 - **Tests:** 366 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
-- **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
+- **Demo:** `demo/` plays a tour, a prologue, chapter 1, and chapter 2 with two endings (about 12 to 15 minutes by estimate; not yet timed with a player) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
 - **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4), and the setup wizard (§8).
 - **Not done yet:** the rest of M7 (guides, the 15-minute sample story, publishing), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
@@ -591,7 +591,7 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Export Strings | Writes the translation CSV and registers it (Story tab button or command-line script) | M4 ✔ |
 | Visual editor and Story Map | Cards and Map views; see §9 | M5 ✔ |
 | Setup wizard | Config, folders, starter scene, sample tale (Story tab, while the project has no StoryConfig) | M7 ✔ |
-| Pin line ids | Write `@id` into every line so edits never change ids | Not scheduled |
+| Pin line ids | Write `@id` into every line so edits never change ids (**Pin Line IDs** in the Story tab) | M7 ✔ |
 | Cast inspector | Custom inspector with mood previews and a "test enter" button | Not scheduled |
 | Language server | LSP for VS Code and other editors | Post-1.0 |
 
@@ -752,7 +752,7 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 - The remaining extension points Pro needs (§12.4): transition registration and editor hooks. ✔ (Decision 0018.)
 - Setup wizard (§8). ✔ (`StorySetup` makes the story folders, a `StoryConfig`, a first tale, and a main scene that opens the title screen, never overwriting; the Story tab offers it while the project has no config.)
 - The documentation guides in §17, including generated action reference pages.
-- Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots.
+- Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots. (Progress: chapter 2 adds an exam morning, a timed choice that recalls chapter 1's quiz, a new riverside backdrop, and two endings that follow Mira's friendship. Still to do: time a real playthrough.)
 - Publish on the Godot Asset Library or Asset Store and GitHub.
 
 ### 1.0 Release (about 34 weeks after M0 starts)

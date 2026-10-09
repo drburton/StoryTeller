@@ -1,6 +1,6 @@
 ## chapter_1.tale
 ## Lunch in the library, a study session, and the walk home in the rain.
-## Picks up the choices made in the prologue.
+## Picks up the choices made in the prologue and leads into chapter 2.
 @title("Chapter 1")
 
 var score := 0
@@ -129,6 +129,5 @@ beat goodbye:
 	"Studied with Mira. Answered {score} of her questions."
 	"It rained. I didn't mind."
 	clear_page()
-	"End of the StoryTeller demo. Thank you for playing."
 	dialogue_style("classic")
-	await fade_in(time = 0.5)
+	jump chapter_2.start
