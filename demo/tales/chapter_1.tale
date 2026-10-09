@@ -23,7 +23,9 @@ beat start:
 		mira: "Oh. You're studying after all, Captain Confident."
 		mira (soft): "Kidding. Sit down."
 	ada.enter("neutral", at = RIGHT, time = 0.6)
+	ada.shake(strength = 0.3)
 	ada: "Library voices, please."
+	mira.nod()
 	mira (curious): "Sorry, Ada."
 	ada (smile): "Exam week. I'll allow whispering."
 	ada.exit(time = 0.6)
@@ -69,6 +71,7 @@ beat quiz:
 beat results:
 	match score:
 		3:
+			mira.hop()
 			mira (smile): "Three out of three. I should be asking you for help."
 		0:
 			mira (soft): "Zero. Okay. We start from the beginning, together."

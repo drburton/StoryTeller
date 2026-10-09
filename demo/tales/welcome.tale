@@ -56,6 +56,8 @@ beat topics:
 			prop("book", at = Vector2(0.66, 0.4))
 			sound("page_turn")
 			ada: "Characters move, and props appear wherever you put them:\n[code]prop(\"book\", at = Vector2(0.66, 0.4))[/code]"
+			ada.hop()
+			ada (smile): "Characters can hop, nod, and shake, and step in front of each other:\n[code]ada.hop()[/code]"
 			await camera.zoom(1.15, time = 0.8)
 			ada (curious): "Even the camera can zoom:\n[code]camera.zoom(1.15)[/code]"
 			camera.reset(time = 0.8)
