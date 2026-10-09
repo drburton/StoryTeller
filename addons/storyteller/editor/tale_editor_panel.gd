@@ -61,6 +61,7 @@ var _title: Label
 var _toolbar: HBoxContainer
 var _view_buttons_start: Control
 var _side_tabs: TabContainer
+var _setup_banner: Control
 var _selected_line := 0
 var _view_buttons: Dictionary = {}
 var _save_button: Button
@@ -178,6 +179,20 @@ func _build_ui() -> void:
 	_save_button.disabled = true
 	_save_button.pressed.connect(save_current)
 	toolbar.add_child(_save_button)
+
+	_setup_banner = HBoxContainer.new()
+	_setup_banner.name = "SetupBanner"
+	var banner_text := Label.new()
+	banner_text.text = "This project has no StoryConfig yet."
+	banner_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_setup_banner.add_child(banner_text)
+	var setup_button := Button.new()
+	setup_button.text = "Set Up Project"
+	setup_button.tooltip_text = "Make the story folders, a StoryConfig, a first tale, and a main scene."
+	setup_button.pressed.connect(open_setup)
+	_setup_banner.add_child(setup_button)
+	_setup_banner.visible = StorySetup.needs_setup()
+	root.add_child(_setup_banner)
 
 	var split := HSplitContainer.new()
 	split.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -422,6 +437,28 @@ func import_yarn(yarn_path: String) -> String:
 	refresh_files()
 	open_file(result["path"])
 	return result["path"]
+
+
+## Opens the setup wizard. Once it runs, the new tale opens here.
+func open_setup() -> StorySetupDialog:
+	var dialog := StorySetupDialog.new()
+	dialog.setup_finished.connect(func(result: Dictionary) -> void:
+		var message := "Set up StoryTeller: %d file(s) and folder(s) made." % result["created"].size()
+		if not result["errors"].is_empty():
+			message = "Setup had %d problem(s); see the Output panel." % result["errors"].size()
+		print("StoryTeller: " + message)
+		if Engine.is_editor_hint():
+			EditorInterface.get_resource_filesystem().scan()
+			EditorInterface.get_editor_toaster().push_toast(message)
+		_setup_banner.visible = StorySetup.needs_setup()
+		refresh_files()
+		if not result["tale_path"].is_empty() and FileAccess.file_exists(result["tale_path"]):
+			open_file(result["tale_path"])
+		dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered()
+	return dialog
 
 
 func _choose_yarn_file() -> void:

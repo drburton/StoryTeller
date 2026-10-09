@@ -57,14 +57,19 @@ func test_backdrop_by_name_and_color() -> void:
 
 
 func test_backdrop_transition_runs_over_time() -> void:
-	_play("beat start:\n\tbackdrop(\"night\", transition = \"dissolve\", time = 0.2)\n\t\"after\"\n")
+	# Long enough that a slow first frame (loading the picture) can't reach
+	# the end; the test ends the transition itself once it has seen it run.
+	_play("beat start:\n\tbackdrop(\"night\", transition = \"dissolve\", time = 30.0)\n\t\"after\"\n")
 	await tree.process_frame
 	await tree.process_frame
 	var progress := stage.backdrop_view.get_progress()
 	assert_true(progress > 0.0 and progress < 1.0, "midway: %s" % progress)
+	await tree.process_frame
+	assert_true(presenter.lines.is_empty(), "the line waits for the transition")
+	stage.backdrop_view.finish()
 	while presenter.lines.is_empty():
 		await tree.process_frame
-	assert_eq(stage.backdrop_view.get_progress(), 1.0, "line waited for the transition")
+	assert_eq(stage.backdrop_view.get_progress(), 1.0)
 	assert_eq(stage.backdrop_view.current, "night")
 
 
