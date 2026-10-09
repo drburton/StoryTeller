@@ -567,6 +567,7 @@ Transitions for `backdrop`, `cg`, and `hide_cg`: `none`, `fade`, `dissolve`, `wi
 | `tint` | `Color` multiplied over the character. |
 | `flip` | `true` mirrors the character. |
 | `on_stage` | `true` between `enter()` and `exit()` (read it; don't assign). |
+| `display_name` | Name shown in the dialogue box, the profile's name until a tale assigns another: `mira.display_name = "???"` before she introduces herself, or `mira.display_name = player_name`. Assign `""` to go back to the profile's name. Read it in text as `{mira.display_name}`. The name is saved, and translated by its text like profile names; Export Strings includes names assigned as text. |
 
 Speakers who are not talking are dimmed while a cast member speaks. This can be turned off with `StoryConfig.highlight_speaker`.
 

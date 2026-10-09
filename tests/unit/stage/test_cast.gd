@@ -167,3 +167,25 @@ func test_capture_and_restore() -> void:
 func test_checker_reports_unknown_cast_moods() -> void:
 	var result := TaleCompiler.build("beat start:\n\trobin (furious): \"Grr.\"\n", "main", director.make_check_context("main"))
 	assert_eq(str(result["diagnostics"][0]), "2:2: warning: Cast member 'robin' has no mood 'furious'.")
+
+
+func test_tales_rename_cast_members() -> void:
+	var source := "var typed := \"Robbie\"\n\nbeat start:\n\trobin.display_name = \"???\"\n\trobin: \"Who am I?\"\n\trobin.display_name = typed\n\trobin: \"I'm {robin.display_name}.\"\n\trobin.display_name = \"\"\n\trobin: \"Back to my real name.\"\n\trobin.display_name = 7\n\trobin: \"Lucky.\"\n"
+	await _play(source)
+	assert_eq(errors, [])
+	assert_eq(presenter.lines, ["???: Who am I?", "Robbie: I'm Robbie.", "Robin: Back to my real name.", "7: Lucky."])
+
+
+func test_renames_are_saved_and_reset_on_load() -> void:
+	var robin := stage.get_cast("robin")
+	robin.display_name = "???"
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(stage.capture()))
+	assert_eq(saved["cast"]["robin"]["display_name"], "???")
+	robin.display_name = "Someone else"
+	stage.restore(saved)
+	assert_eq(robin.display_name, "???")
+	stage.restore({})
+	assert_eq(robin.display_name, "Robin", "a save without the rename shows the profile name")
+	robin.display_name = "???"
+	stage.restore({"cast": {"robin": {"mood": "smile"}}})
+	assert_eq(robin.display_name, "Robin", "saves from before renames show the profile name")

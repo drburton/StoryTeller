@@ -34,6 +34,8 @@ func test_whole_demo_plays_without_errors() -> void:
 	assert_eq(run["errors"], [])
 	var lines: Array = run["lines"]
 	assert_has(lines, "Ada: Nice to meet you, Robin.")
+	assert_has(lines, "???: Oh! A visitor.[pause] Welcome to StoryTeller.", "Ada's name is hidden until she introduces herself")
+	assert_has(lines, "Ada: I'm Ada. I look after this library.")
 	assert_has(lines, "Mira: Thanks for today, Sam. Really.")
 	assert_has(lines, "Studied with Mira. Answered 2 of her questions.")
 	assert_eq(lines.back(), "End of the StoryTeller demo. Thank you for playing.")

@@ -110,6 +110,16 @@ func test_lines_options_and_names_use_the_translation() -> void:
 	assert_eq(presenter.offered[0], ["Saludar", "Leave"])
 
 
+func test_names_given_during_play_are_translated() -> void:
+	var result := TaleCompiler.build("beat start:\n\trobin.display_name = \"The Stranger\"\n\trobin: \"Hm.\"\n", "main", director.make_check_context("main"))
+	director.add_tale(result["tale"])
+	_translate("es", {"The Stranger": "El Desconocido"})
+	TranslationServer.set_locale("es")
+	await director.play("main")
+	assert_eq(errors, [])
+	assert_eq(presenter.lines, ["El Desconocido: Hm."])
+
+
 func test_source_language_shows_the_tale_text() -> void:
 	var tale := _tale()
 	_translate("en", {_key(tale, "Hello, {guest}."): "Old text from the CSV."})
@@ -146,6 +156,7 @@ func test_collect_finds_every_string() -> void:
 	assert_eq(texts.get("The Meeting"), "The Meeting", "tale title")
 	assert_eq(texts.get("Your name?"), "Your name?", "tr() text")
 	assert_eq(texts.get("Robin"), "Robin", "cast name")
+	assert_eq(texts.get("The Stranger"), "The Stranger", "a name given during play")
 	assert_eq(texts.get("Test Game"), "Test Game", "game title")
 	assert_eq(texts.get("New Game"), "New Game", "menu text")
 	var lines: Array = result["entries"].filter(func(entry: Dictionary) -> bool: return entry["key"].begins_with("meeting:"))
