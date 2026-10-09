@@ -50,7 +50,8 @@ func _ready() -> void:
 
 
 func show_line(line: Dictionary) -> void:
-	show()
+	if not await begin_line():
+		return
 	if _line_count >= lines_per_page:
 		clear_page()
 	var prefix := ""
@@ -73,6 +74,5 @@ func clear_page() -> void:
 	_line_count = 0
 
 
-func hide_box() -> void:
+func _on_hidden() -> void:
 	clear_page()
-	hide()

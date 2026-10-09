@@ -5,7 +5,7 @@ chapter_1:start_0bb752,You came. I saved us the table by the window.,Viniste. No
 chapter_1:start_ae9b25,"Oh. You're studying after all, Captain Confident.","Vaya. Al final sí estudias, Capitán Confianza.",chapter_1.tale:23 (mira),
 chapter_1:start_04c937,Kidding. Sit down.,Es broma. Siéntate.,chapter_1.tale:24 (mira),
 chapter_1:start_491c22,"Library voices, please.","Voz de biblioteca, por favor.",chapter_1.tale:27 (ada),
-chapter_1:start_4fb0d8,"Sorry, Ada.","Perdón, Ada.",chapter_1.tale:29 (mira),
+chapter_1:start_d17658,"[whisper]Sorry, Ada.[/whisper]","[whisper]Perdón, Ada.[/whisper]",chapter_1.tale:29 (mira),
 chapter_1:start_a4b348,Exam week. I'll allow whispering.,Es semana de exámenes. Permitiré los susurros.,chapter_1.tale:30 (ada),
 chapter_1:quiz_45db75,Quiz time. Ready?,Hora del repaso. ¿Listo?,chapter_1.tale:37 (mira),
 chapter_1:quiz_3de36a,The capital question.,La pregunta de la capital.,chapter_1.tale:39 (choice),
@@ -70,13 +70,13 @@ Reader,Reader,Lector,welcome.tale:20 (tr),
 welcome:start_49699f,"Nice to meet you, {visitor}.","Encantada de conocerte, {visitor}.",welcome.tale:21 (ada),
 welcome:start_cb157e,Everything you see is written in a .tale file. Press Space or click to continue.,Todo lo que ves está escrito en un archivo .tale. Pulsa Espacio o haz clic para continuar.,welcome.tale:22 (ada),
 welcome:topics_3c7cff,How do I write dialogue?,¿Cómo escribo diálogos?,welcome.tale:27 (choice),
-welcome:topics_67bdc0,What about choices?,¿Y las elecciones?,welcome.tale:40 (choice),
-welcome:topics_0f8fd2,Can the stage change?,¿Puede cambiar el escenario?,welcome.tale:46 (choice),
-welcome:topics_fa4fb7,Can tales remember things?,¿Los cuentos pueden recordar cosas?,welcome.tale:66 (choice),
-welcome:topics_da7486,What about saving and menus?,¿Y guardar la partida y los menús?,welcome.tale:74 (choice),
-welcome:topics_8c0912,Show me a sample scene.,Muéstrame una escena de ejemplo.,welcome.tale:89 (choice),
-welcome:topics_ca5847,I'm ready to start writing.,Estoy listo para empezar a escribir.,welcome.tale:96 (choice),
-welcome:topics_c6a7cb,Leave already,Irse ya,welcome.tale:98 (choice),
+welcome:topics_67bdc0,What about choices?,¿Y las elecciones?,welcome.tale:41 (choice),
+welcome:topics_0f8fd2,Can the stage change?,¿Puede cambiar el escenario?,welcome.tale:47 (choice),
+welcome:topics_fa4fb7,Can tales remember things?,¿Los cuentos pueden recordar cosas?,welcome.tale:67 (choice),
+welcome:topics_da7486,What about saving and menus?,¿Y guardar la partida y los menús?,welcome.tale:75 (choice),
+welcome:topics_8c0912,Show me a sample scene.,Muéstrame una escena de ejemplo.,welcome.tale:90 (choice),
+welcome:topics_ca5847,I'm ready to start writing.,Estoy listo para empezar a escribir.,welcome.tale:97 (choice),
+welcome:topics_c6a7cb,Leave already,Irse ya,welcome.tale:99 (choice),
 welcome:topics_bec809,"Put a speaker, a colon, and a quoted line:
 [code]ada: ""Hello!""[/code]","Pon quién habla, dos puntos y una frase entre comillas:
 [code]ada: ""¡Hola!""[/code]",welcome.tale:30 (ada),
@@ -99,63 +99,66 @@ welcome:topics_3805e1,"That line held these two tags:
 [code][lb]sound=page_turn[rb][/code]","Esa línea tenía estas dos etiquetas:
 [code][lb]act=shake(0.3)[rb][/code]
 [code][lb]sound=page_turn[rb][/code]",welcome.tale:37 (ada),
+welcome:topics_3dc601,"[whisper]And named styles format a line for you, like this whisper.[/whisper] The story's config defines them:
+[code][lb]whisper[rb]...[lb]/whisper[rb][/code]","[whisper]Y los estilos con nombre dan formato a una línea por ti, como este susurro.[/whisper] La configuración de la historia los define:
+[code][lb]whisper[rb]...[lb]/whisper[rb][/code]",welcome.tale:38 (ada),
 welcome:topics_9baec3,"You're using one right now. A choose block lists the options:
 [code]choose:
     ""Stay"": jump start[/code]","Estás usando una ahora mismo. Un bloque choose enumera las opciones:
 [code]choose:
-    ""Stay"": jump start[/code]",welcome.tale:43 (ada),
+    ""Stay"": jump start[/code]",welcome.tale:44 (ada),
 welcome:topics_92fa48,"Options marked @once disappear after you pick them, like this one:
 [code]@once ""What about choices?"":[/code]","Las opciones marcadas con @once desaparecen después de elegirlas, como esta:
-[code]@once ""What about choices?"":[/code]",welcome.tale:44 (ada),
-welcome:topics_f99546,Watch the window.,Mira la ventana.,welcome.tale:49 (ada),
+[code]@once ""What about choices?"":[/code]",welcome.tale:45 (ada),
+welcome:topics_f99546,Watch the window.,Mira la ventana.,welcome.tale:50 (ada),
 welcome:topics_61154f,"Backdrops, music, and rain each take one line:
 [code]weather(""rain"", strength = 0.6)[/code]","Los fondos, la música y la lluvia ocupan una línea cada uno:
-[code]weather(""rain"", strength = 0.6)[/code]",welcome.tale:54 (ada),
+[code]weather(""rain"", strength = 0.6)[/code]",welcome.tale:55 (ada),
 welcome:topics_03c9d5,"Characters move, and props appear wherever you put them:
 [code]prop(""book"", at = Vector2(0.66, 0.4))[/code]","Los personajes se mueven y los objetos aparecen donde los pongas:
-[code]prop(""book"", at = Vector2(0.66, 0.4))[/code]",welcome.tale:58 (ada),
+[code]prop(""book"", at = Vector2(0.66, 0.4))[/code]",welcome.tale:59 (ada),
 welcome:topics_2759f0,"Characters can hop, nod, and shake, and step in front of each other:
 [code]ada.hop()[/code]","Los personajes pueden saltar, asentir, sacudirse y ponerse unos delante de otros:
-[code]ada.hop()[/code]",welcome.tale:60 (ada),
+[code]ada.hop()[/code]",welcome.tale:61 (ada),
 welcome:topics_ca7358,"Even the camera can zoom:
 [code]camera.zoom(1.15)[/code]","Hasta la cámara puede acercarse:
-[code]camera.zoom(1.15)[/code]",welcome.tale:62 (ada),
+[code]camera.zoom(1.15)[/code]",welcome.tale:63 (ada),
 welcome:topics_eb89ae,"Big moments can cover the stage with a full-screen picture, a CG, which then appears under Extras:
 [code]cg(""window_table"", ""rain"")[/code]","Los grandes momentos pueden cubrir el escenario con una imagen a pantalla completa, una CG, que luego aparece en Extras:
-[code]cg(""window_table"", ""rain"")[/code]",welcome.tale:64 (ada),
-welcome:topics_05c69c,Yes. Questions you have asked so far: {curiosity}.,Sí. Preguntas que has hecho hasta ahora: {curiosity}.,welcome.tale:69 (ada),
+[code]cg(""window_table"", ""rain"")[/code]",welcome.tale:65 (ada),
+welcome:topics_05c69c,Yes. Questions you have asked so far: {curiosity}.,Sí. Preguntas que has hecho hasta ahora: {curiosity}.,welcome.tale:70 (ada),
 welcome:topics_ae7297,"This tale declares a variable and adds one for each topic:
 [code]var curiosity := 0
 curiosity += 1[/code]","Este cuento declara una variable y suma uno en cada tema:
 [code]var curiosity := 0
-curiosity += 1[/code]",welcome.tale:70 (ada),
+curiosity += 1[/code]",welcome.tale:71 (ada),
 welcome:topics_c95648,"Braces show a value inside a line:
 [code]""Questions so far: {{curiosity}}.""[/code]","Las llaves muestran un valor dentro de una línea:
-[code]""Preguntas hasta ahora: {{curiosity}}.""[/code]",welcome.tale:71 (ada),
+[code]""Preguntas hasta ahora: {{curiosity}}.""[/code]",welcome.tale:72 (ada),
 welcome:topics_fc9b7d,"Characters can keep data of their own, listed in their cast profile's fields. Mira's friendship grows in chapter 1:
 [code]mira.friendship += 1[/code]","Los personajes pueden guardar datos propios, listados en los campos de su perfil. La amistad de Mira crece en el capítulo 1:
-[code]mira.friendship += 1[/code]",welcome.tale:72 (ada),
-welcome:topics_fc17f2,"Press Escape or right-click for the pause menu. Saving, loading, and settings live there.","Pulsa Escape o haz clic derecho para abrir el menú de pausa. Ahí están guardar, cargar y los ajustes.",welcome.tale:77 (ada),
-welcome:topics_336e0b,Roll the mouse wheel up or press Page Up to rewind. Press H to read the history.,Gira la rueda del ratón hacia arriba o pulsa Re Pág para retroceder. Pulsa H para leer el historial.,welcome.tale:78 (ada),
+[code]mira.friendship += 1[/code]",welcome.tale:73 (ada),
+welcome:topics_fc17f2,"Press Escape or right-click for the pause menu. Saving, loading, and settings live there.","Pulsa Escape o haz clic derecho para abrir el menú de pausa. Ahí están guardar, cargar y los ajustes.",welcome.tale:78 (ada),
+welcome:topics_336e0b,Roll the mouse wheel up or press Page Up to rewind. Press H to read the history.,Gira la rueda del ratón hacia arriba o pulsa Re Pág para retroceder. Pulsa H para leer el historial.,welcome.tale:79 (ada),
 welcome:topics_a6a3c9,"Pictures, music, and notes you unlock show up under Extras on the title screen. One line unlocks each:
 [code]collect(""library"")[/code]","Las imágenes, la música y las notas que desbloquees aparecen en Extras, en la pantalla de título. Una línea desbloquea cada una:
-[code]collect(""library"")[/code]",welcome.tale:79 (ada),
+[code]collect(""library"")[/code]",welcome.tale:80 (ada),
 welcome:topics_af3825,"Some stories read better as pages. This line switches to them:
 [code]dialogue_style(""page"")[/code]","Algunas historias se leen mejor como páginas. Esta línea cambia a ese estilo:
-[code]dialogue_style(""page"")[/code]",welcome.tale:80 (ada),
-welcome:topics_d7ad15,"In the page style, lines stack on the screen like a book.","En el estilo de página, las líneas se acumulan en la pantalla como en un libro.",welcome.tale:82,
-welcome:topics_f45e08,Each new line goes under the last one.,Cada línea nueva va debajo de la anterior.,welcome.tale:83,
+[code]dialogue_style(""page"")[/code]",welcome.tale:81 (ada),
+welcome:topics_d7ad15,"In the page style, lines stack on the screen like a book.","En el estilo de página, las líneas se acumulan en la pantalla como en un libro.",welcome.tale:83,
+welcome:topics_f45e08,Each new line goes under the last one.,Cada línea nueva va debajo de la anterior.,welcome.tale:84,
 welcome:topics_4d6e22,"A fresh page starts with:
 [code]clear_page()[/code]","Una página nueva empieza con:
-[code]clear_page()[/code]",welcome.tale:85,
+[code]clear_page()[/code]",welcome.tale:86,
 welcome:topics_0b0580,"And this brings back the classic box:
 [code]dialogue_style(""classic"")[/code]","Y esto trae de vuelta el cuadro clásico:
-[code]dialogue_style(""classic"")[/code]",welcome.tale:87 (ada),
-welcome:topics_36d940,Here is one from the StoryTeller plan.,Aquí tienes una del plan de StoryTeller.,welcome.tale:90 (ada),
-welcome:farewell_d2f003,"You asked about everything, {visitor}. I like that.","Preguntaste por todo, {visitor}. Eso me gusta.",welcome.tale:104 (ada),
-welcome:farewell_99a5b9,"You asked about {len(topics_seen)} topic{""s"" if len(topics_seen) != 1 else """"}.","Preguntaste por {len(topics_seen)} tema{""s"" if len(topics_seen) != 1 else """"}.",welcome.tale:106 (ada),
-welcome:farewell_4ac008,"The lamps dim. Somewhere, a page turns.","Las lámparas se atenúan. En algún lugar, pasa una página.",welcome.tale:108,
-welcome:farewell_6890cd,Open demo/tales/welcome.tale to see how this scene was made.,Abre demo/tales/welcome.tale para ver cómo se hizo esta escena.,welcome.tale:109 (ada),
+[code]dialogue_style(""classic"")[/code]",welcome.tale:88 (ada),
+welcome:topics_36d940,Here is one from the StoryTeller plan.,Aquí tienes una del plan de StoryTeller.,welcome.tale:91 (ada),
+welcome:farewell_d2f003,"You asked about everything, {visitor}. I like that.","Preguntaste por todo, {visitor}. Eso me gusta.",welcome.tale:105 (ada),
+welcome:farewell_99a5b9,"You asked about {len(topics_seen)} topic{""s"" if len(topics_seen) != 1 else """"}.","Preguntaste por {len(topics_seen)} tema{""s"" if len(topics_seen) != 1 else """"}.",welcome.tale:107 (ada),
+welcome:farewell_4ac008,"The lamps dim. Somewhere, a page turns.","Las lámparas se atenúan. En algún lugar, pasa una página.",welcome.tale:109,
+welcome:farewell_6890cd,Open demo/tales/welcome.tale to see how this scene was made.,Abre demo/tales/welcome.tale para ver cómo se hizo esta escena.,welcome.tale:110 (ada),
 Ada,Ada,Ada,name of cast member 'ada',
 Mira,Mira,Mira,name of cast member 'mira',
 The librarian who shows visitors around. She knows every shelf and every command.,The librarian who shows visitors around. She knows every shelf and every command.,La bibliotecaria que guía a las visitas. Conoce cada estante y cada comando.,text of collection item 'ada',

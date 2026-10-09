@@ -77,3 +77,14 @@ func test_typing_tag_checks() -> void:
 	assert_eq(Array(TaleText.check_typing_tags("[/pause]")), ["'[/pause]' is not a closing tag StoryTeller knows."])
 	assert_eq(Array(TaleText.check_typing_tags("[instant=1]")), ["[instant] takes no value."])
 	assert_eq(_split("Bad [speed=0] tag")[1], ["[speed=0] needs a number above 0, e.g. [speed=2] types twice as fast."], "reported with the text")
+
+
+func test_named_styles_expand_with_closing_tags() -> void:
+	var styles := {"whisper": "[i][color=#aabbcc]", "shout": "[b][font_size=26]"}
+	assert_eq(TaleText.closing_tags("[i][color=#aabbcc]"), "[/color][/i]")
+	assert_eq(TaleText.closing_tags("[font_size=26]"), "[/font_size]")
+	assert_eq(TaleText.expand_styles("A [whisper]quiet[/whisper] and [shout]loud[/shout] line.", styles),
+		"A [i][color=#aabbcc]quiet[/color][/i] and [b][font_size=26]loud[/font_size][/b] line.")
+	assert_eq(TaleText.expand_styles("[mumble]unknown[/mumble]", styles), "[mumble]unknown[/mumble]", "unknown names stay")
+	assert_eq(TaleText.expand_styles("[whisper]to the end", styles), "[i][color=#aabbcc]to the end", "an open style lasts to the end")
+	assert_eq(TaleText.expand_styles("plain", {}), "plain")

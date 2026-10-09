@@ -37,6 +37,11 @@ var skipping := false
 ## Returns true while something (such as a menu) should take the player's
 ## input instead of the dialogue box.
 var input_blocked := func() -> bool: return false
+## How the box appears and hides: "fade", "slide" (rises from below while
+## fading), or "none". Set from [member StoryConfig.dialogue_box_transition].
+var box_transition := "none"
+## Seconds the box takes to appear or hide.
+var box_transition_time := 0.2
 ## Called with the tag name and value when typing reaches an
 ## [code][act=N][/code] or [code][sound=N][/code] tag. Typing waits for it.
 ## The Dialogue crew member runs the tag through the director.
@@ -53,6 +58,15 @@ var _rushing := false
 ## Typing speed spans of the text being revealed, in label characters:
 ## [code]{"from", "to", "factor"}[/code], where factor 0 shows text at once.
 var _spans: Array[Dictionary] = []
+var _box_tween: Tween
+## True while the box fades out after hide_box().
+var _hiding := false
+## Goes up on every cancel(), so a line that was waiting for the box to
+## appear knows to stop.
+var _cancel_count := 0
+
+## Pixels the box moves with the "slide" transition.
+const SLIDE_DISTANCE := 40.0
 
 
 ## Shows [param line] (see [method TalePresenter.show_line]). Awaitable.
@@ -60,9 +74,81 @@ func show_line(_line: Dictionary) -> void:
 	pass
 
 
-## Hides the box between scenes.
+## Hides the box between scenes, with [member box_transition].
 func hide_box() -> void:
-	hide()
+	disappear()
+
+
+## Shows the box with [member box_transition] if it is hidden. Awaitable.
+## Returns false when the line was cancelled (a save was loaded) while the
+## box appeared, so [method show_line] should stop. Styles call this at the
+## start of [method show_line].
+func begin_line() -> bool:
+	var token := _cancel_count
+	await appear()
+	return token == _cancel_count
+
+
+## Shows the box with [member box_transition]. Awaitable.
+func appear() -> void:
+	if visible and not _hiding:
+		return
+	_stop_box_tween()
+	if _hiding:
+		# A hide that was still fading out counts as finished.
+		_hiding = false
+		_on_hidden()
+	show()
+	if not _animates_box():
+		_set_box_shown(1.0)
+		return
+	_set_box_shown(0.0)
+	_box_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_box_tween.tween_method(_set_box_shown, 0.0, 1.0, box_transition_time)
+	# A timer rather than the tween's signal: a killed tween never finishes.
+	await get_tree().create_timer(box_transition_time).timeout
+
+
+## Hides the box with [member box_transition], then calls [method _on_hidden].
+func disappear() -> void:
+	if not visible or _hiding:
+		return
+	_stop_box_tween()
+	if not _animates_box():
+		hide()
+		_set_box_shown(1.0)
+		_on_hidden()
+		return
+	_hiding = true
+	_box_tween = create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
+	_box_tween.tween_method(_set_box_shown, 1.0, 0.0, box_transition_time)
+	_box_tween.finished.connect(func() -> void:
+		_hiding = false
+		hide()
+		_set_box_shown(1.0)
+		_on_hidden())
+
+
+## Called once the box is hidden. Styles that keep text between lines
+## clear it here.
+func _on_hidden() -> void:
+	pass
+
+
+func _animates_box() -> bool:
+	return box_transition != "none" and box_transition_time > 0.0 and not skipping and is_inside_tree()
+
+
+## Fades and (for "slide") moves the box: 0 is hidden, 1 is in place.
+func _set_box_shown(amount: float) -> void:
+	modulate.a = amount
+	position.y = SLIDE_DISTANCE * (1.0 - amount) if box_transition == "slide" else 0.0
+
+
+func _stop_box_tween() -> void:
+	if _box_tween != null and _box_tween.is_valid():
+		_box_tween.kill()
+	_box_tween = null
 
 
 ## Where the quick menu's bottom-right corner goes, in canvas coordinates.
@@ -79,6 +165,7 @@ func clear_page() -> void:
 
 ## Stops waiting for the player and returns from show_line at once.
 func cancel() -> void:
+	_cancel_count += 1
 	_cancelled = true
 	_typing = false
 	continue_pressed.emit()

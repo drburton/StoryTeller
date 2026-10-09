@@ -71,6 +71,27 @@ static func split_interpolation(text: String) -> Dictionary:
 	return {"parts": parts, "errors": errors}
 
 
+## Expands named text styles: [code][name]...[/name][/code] becomes the
+## BBCode that [param styles] gives for name, closed with the matching
+## closing tags. Names not in [param styles] are left as they are.
+static func expand_styles(text: String, styles: Dictionary) -> String:
+	if styles.is_empty() or not text.contains("["):
+		return text
+	for style_name in styles:
+		var bbcode: String = styles[style_name]
+		text = text.replace("[%s]" % style_name, bbcode).replace("[/%s]" % style_name, closing_tags(bbcode))
+	return text
+
+
+## Closing tags for the BBCode tags that [param bbcode] opens, innermost
+## first: "[i][color=red]" gives "[/color][/i]".
+static func closing_tags(bbcode: String) -> String:
+	var names := PackedStringArray()
+	for found in RegEx.create_from_string("\\[([A-Za-z_]+)[^\\]]*\\]").search_all(bbcode):
+		names.insert(0, "[/%s]" % found.get_string(1))
+	return "".join(names)
+
+
 ## Problems with the typing tags in [param text]: [code][pause=...][/code]
 ## and [code][speed=...][/code] values that are not numbers, and closing tags
 ## without an opening one.

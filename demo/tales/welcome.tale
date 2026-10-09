@@ -35,6 +35,7 @@ beat topics:
 			ada: "The fast part was written like this:\n[code][lb]speed=3[rb]very quickly indeed[lb]/speed[rb][/code]"
 			ada (curious): "A line can also make things happen as it types.[pause=0.3][act=shake(0.3)] Like that.[sound=page_turn]"
 			ada (smile): "That line held these two tags:\n[code][lb]act=shake(0.3)[rb][/code]\n[code][lb]sound=page_turn[rb][/code]"
+			ada: "[whisper]And named styles format a line for you, like this whisper.[/whisper] The story's config defines them:\n[code][lb]whisper[rb]...[lb]/whisper[rb][/code]"
 			collect("talescript")
 			jump topics
 		@once "What about choices?":

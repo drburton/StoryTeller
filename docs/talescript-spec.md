@@ -361,6 +361,8 @@ Details:
 - Choice options leave out `[act]` and `[sound]` tags.
 - The history and save slots show the text without these tags.
 
+**Named text styles.** `StoryConfig.text_styles` maps names to BBCode, and `[name]...[/name]` in a line expands to that BBCode and its closing tags before the line is shown (and in the history). The defaults are `[whisper]` (gray italic), `[shout]` (large bold), and `[thought]` (pale blue italic); projects change them or add their own. Names that are not in `text_styles` are left as written. Translations use the same styles.
+
 ### 7.2 Interpolation
 
 `{expression}` inserts a value: `"You have {gold} gold."`. Write `{{` and `}}` for literal braces.

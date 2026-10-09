@@ -68,6 +68,12 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export var return_to_title := true
 ## Theme for dialogue boxes and menus. Empty uses StoryTeller's default look.
 @export var theme: Theme
+## Picture behind the title screen, covering the window. Empty uses a plain
+## dark background.
+@export var title_background: Texture2D
+## Music track (a name from the music folder) that plays on the title
+## screen. It fades out when a game starts.
+@export var title_music := ""
 
 @export_group("Stage")
 ## Folder with cast members: "<id>.tres" profiles or "<id>/" image folders.
@@ -139,3 +145,16 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Show the row of buttons (History, Skip, Auto, Save, ...) above the
 ## dialogue box.
 @export var show_quick_menu := true
+## How the dialogue box appears and hides: "fade", "slide" (rises from
+## below while fading), or "none".
+@export_enum("fade", "slide", "none") var dialogue_box_transition := "fade"
+## Seconds the dialogue box takes to appear or hide.
+@export_range(0.0, 2.0, 0.05) var dialogue_box_transition_time := 0.2
+## Named text styles: [code][whisper]...[/whisper][/code] in a line expands
+## to the BBCode given for "whisper", and its closing tags. Add your own or
+## change these.
+@export var text_styles: Dictionary[String, String] = {
+	"whisper": "[i][color=#b4b9c8]",
+	"shout": "[b][font_size=26]",
+	"thought": "[i][color=#9fc4e8]",
+}

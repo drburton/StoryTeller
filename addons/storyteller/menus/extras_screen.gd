@@ -215,4 +215,7 @@ func _play_music(item: CollectionItem) -> void:
 func _stop_music() -> void:
 	if _playing_music and menus.audio() != null:
 		menus.audio().stop_music(0.5)
+		# Opened from the title screen: its music comes back.
+		if menus.is_title_showing():
+			menus.play_title_music()
 	_playing_music = false

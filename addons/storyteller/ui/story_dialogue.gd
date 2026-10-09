@@ -60,6 +60,8 @@ func setup(config: StoryConfig) -> void:
 		box.characters_per_second = config.text_speed
 		box.theme = theme
 		box.on_text_tag = _run_text_tag
+		box.box_transition = config.dialogue_box_transition
+		box.box_transition_time = config.dialogue_box_transition_time
 		layer.add_child(box)
 		_styles[style_name] = box
 	dialogue_box = _styles["classic"]
