@@ -189,3 +189,140 @@ func test_renames_are_saved_and_reset_on_load() -> void:
 	robin.display_name = "???"
 	stage.restore({"cast": {"robin": {"mood": "smile"}}})
 	assert_eq(robin.display_name, "Robin", "saves from before renames show the profile name")
+
+
+## A scene look whose AnimationPlayer has "neutral" (looping, used as the
+## mood), "wave" (0.1 seconds), and "sway" (looping).
+func _scene_look() -> SceneLook:
+	var root := Node2D.new()
+	var player := AnimationPlayer.new()
+	player.name = "AnimationPlayer"
+	root.add_child(player)
+	player.owner = root
+	var library := AnimationLibrary.new()
+	for spec in [["neutral", 0.5, true], ["wave", 0.1, false], ["sway", 0.5, true]]:
+		var animation := Animation.new()
+		animation.length = spec[1]
+		animation.loop_mode = Animation.LOOP_LINEAR if spec[2] else Animation.LOOP_NONE
+		library.add_animation(spec[0], animation)
+	player.add_animation_library("", library)
+	var packed := PackedScene.new()
+	packed.pack(root)
+	root.free()
+	var look := SceneLook.new()
+	look.scene = packed
+	look.mood_names = PackedStringArray(["neutral"])
+	return look
+
+
+func _add_kit() -> CastMember:
+	var profile := CastProfile.new()
+	profile.id = "kit"
+	profile.look = _scene_look()
+	profile.default_mood = "neutral"
+	stage.add_profile(profile)
+	return stage.get_cast("kit")
+
+
+func test_hop_shake_and_nod_move_only_the_look() -> void:
+	var robin := stage.get_cast("robin")
+	robin.enter("", Vector2(0.5, 0.0), 0.0)
+	var resting := robin.position
+	var look: Node2D = robin._visual
+	for call in [["hop", [0.05, 0.3]], ["shake", [1.0, 0.3]], ["nod", [0.3]]]:
+		var done := {"value": false}
+		var run := func() -> void:
+			await robin.callv(call[0], call[1])
+			done["value"] = true
+		run.call()
+		var moved := Vector2.ZERO
+		for i in 6:
+			await tree.process_frame
+			if look.position.length() > moved.length():
+				moved = look.position
+		match call[0]:
+			"hop":
+				assert_true(moved.y < 0.0, "hop lifts the look")
+			"shake":
+				assert_true(absf(moved.x) > 0.0, "shake moves it sideways")
+			"nod":
+				assert_true(moved.y > 0.0, "nod dips it")
+		for i in 40:
+			if done["value"]:
+				break
+			await tree.process_frame
+		assert_true(done["value"], "%s finishes" % call[0])
+		assert_eq(look.position, Vector2.ZERO, "%s comes back to rest" % call[0])
+		assert_eq(robin.position, resting, "the character's place doesn't change")
+
+
+func test_movements_finish_at_once_when_skipping_or_interrupted() -> void:
+	var robin := stage.get_cast("robin")
+	robin.enter("", Vector2(0.5, 0.0), 0.0)
+	robin.hop(0.05, 5.0)
+	await tree.process_frame
+	await tree.process_frame
+	assert_ne(robin._visual.position, Vector2.ZERO)
+	robin.finish_animations()
+	assert_eq(robin._visual.position, Vector2.ZERO)
+	robin.is_skipping = func() -> bool: return true
+	var started := Time.get_ticks_msec()
+	await robin.shake(1.0, 5.0)
+	assert_true(Time.get_ticks_msec() - started < 500, "skipping doesn't wait")
+
+
+func test_tales_use_movements_and_drawing_order() -> void:
+	var kit := _add_kit()
+	await _play("beat start:\n\trobin.enter(time = 0)\n\tkit.enter(time = 0)\n\trobin.hop(time = 0.05)\n\tkit.nod(time = 0.05)\n\tawait robin.shake(time = 0.05)\n\trobin.to_front()\n\t\"one\"\n\trobin.to_back()\n\tkit.draw_order = 5\n\t\"two\"\n")
+	assert_eq(errors, [])
+	assert_eq(presenter.lines, ["one", "two"])
+	var robin := stage.get_cast("robin")
+	assert_true(robin.draw_order < kit.draw_order, "to_back and draw_order")
+	assert_eq(kit.z_index, 5)
+
+
+func test_to_front_and_to_back() -> void:
+	var robin := stage.get_cast("robin")
+	var kit := _add_kit()
+	assert_eq([robin.draw_order, kit.draw_order], [0, 0])
+	robin.to_front()
+	assert_eq([robin.draw_order, kit.draw_order], [1, 0])
+	robin.to_front()
+	assert_eq(robin.draw_order, 1, "already in front")
+	kit.to_front()
+	assert_eq(kit.draw_order, 2)
+	kit.to_back()
+	assert_eq(kit.draw_order, 0)
+	assert_eq([robin.z_index, kit.z_index], [1, 0])
+
+
+func test_drawing_order_is_saved() -> void:
+	var robin := stage.get_cast("robin")
+	robin.draw_order = 3
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(stage.capture()))
+	robin.draw_order = -2
+	stage.restore(saved)
+	assert_eq(robin.draw_order, 3)
+	stage.restore({})
+	assert_eq(robin.draw_order, 0)
+
+
+func test_animate_plays_a_scene_animation_then_the_mood() -> void:
+	var kit := _add_kit()
+	var player: AnimationPlayer = kit._visual.get_node("AnimationPlayer")
+	await _play("beat start:\n\tkit.enter(time = 0)\n\tkit.animate(\"wave\")\n\t\"waving\"\n")
+	assert_eq(errors, [])
+	assert_eq(player.current_animation, "neutral", "the mood plays again after the animation")
+	var started := Time.get_ticks_msec()
+	await kit.animate("sway")
+	assert_true(Time.get_ticks_msec() - started < 100, "a looping animation returns at once")
+	assert_eq(player.current_animation, "sway")
+
+
+func test_animate_reports_missing_animations() -> void:
+	_add_kit()
+	await _play("beat start:\n\tkit.animate(\"dance\")\n\trobin.animate(\"wave\")\n\t\"x\"\n")
+	assert_eq(errors, [
+		"2: kit has no animation 'dance'. Named animations need a scene look with an AnimationPlayer.",
+		"3: robin has no animation 'wave'. Named animations need a scene look with an AnimationPlayer.",
+	])

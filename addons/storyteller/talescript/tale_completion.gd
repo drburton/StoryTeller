@@ -17,8 +17,8 @@ const STATEMENT_KEYWORDS: Array[String] = [
 ]
 const EXPRESSION_KEYWORDS: Array[String] = ["and", "await", "false", "in", "not", "null", "or", "true"]
 const TOP_LEVEL_KEYWORDS: Array[String] = ["beat", "const", "var"]
-const CAST_METHODS: Array[String] = ["enter", "exit", "move_to", "scale_to"]
-const CAST_PROPERTIES: Array[String] = ["display_name", "flip", "mood", "on_stage", "tint"]
+const CAST_METHODS: Array[String] = ["animate", "enter", "exit", "hop", "move_to", "nod", "scale_to", "shake", "to_back", "to_front"]
+const CAST_PROPERTIES: Array[String] = ["display_name", "draw_order", "flip", "mood", "on_stage", "tint"]
 const CAMERA_METHODS: Array[String] = ["pan", "reset", "rotate", "shake", "zoom"]
 const CAMERA_PROPERTIES: Array[String] = ["angle", "offset", "zoom_level"]
 

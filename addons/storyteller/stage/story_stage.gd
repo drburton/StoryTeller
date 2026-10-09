@@ -246,6 +246,7 @@ func get_cast(id: String) -> CastMember:
 	var member := CastMember.new()
 	member.setup(_profiles[id])
 	member.is_skipping = _is_skipping
+	member.report_error = _report_error
 	cast_layer.add_child(member)
 	_cast[id] = member
 	return member
@@ -307,6 +308,7 @@ func restore(data: Dictionary) -> void:
 		member.visible = false
 		member.on_stage = false
 		member.display_name = ""
+		member.draw_order = 0
 	var cast: Dictionary = data.get("cast", {})
 	for id in cast:
 		var member := get_cast(id)
@@ -408,6 +410,14 @@ func _fade(node: CanvasItem, alpha: float, time: float) -> void:
 	var tween := node.create_tween()
 	tween.tween_property(node, "modulate:a", alpha, time)
 	await tween.finished
+
+
+func _report_error(message: String) -> void:
+	var director := _director()
+	if director != null:
+		director.report_error(message)
+	else:
+		push_warning("StoryTeller: " + message)
 
 
 func _is_skipping() -> bool:

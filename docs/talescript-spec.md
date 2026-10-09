@@ -563,11 +563,19 @@ Transitions for `backdrop`, `cg`, and `hide_cg`: `none`, `fade`, `dissolve`, `wi
 | `exit(time = 0.4, transition = "fade")` | Hide the character. |
 | `move_to(at, time = 0.5)` | Move to a stage position. |
 | `scale_to(factor, time = 0.3)` | Resize relative to the profile's size. |
+| `hop(height = 0.04, time = 0.35)` | Jump up and land. `height` is a fraction of the screen height. |
+| `shake(strength = 0.5, time = 0.4)` | Shake from side to side, fading out. At strength 1 the character moves about 3% of the screen width each way. |
+| `nod(time = 0.5)` | Dip and come back up twice. |
+| `animate(name)` | Play a named animation of a scene-based look: the scene's `play_animation(name)` method, or the animation in its `AnimationPlayer`. Returns when it ends (at once for looping animations); the character then shows their mood again. Other looks report an error. |
+| `to_front()`, `to_back()` | Draw the character in front of, or behind, the other cast members. |
 | `mood` | Current mood; assign to change it. `speaker (mood): "..."` also changes it. |
 | `tint` | `Color` multiplied over the character. |
 | `flip` | `true` mirrors the character. |
 | `on_stage` | `true` between `enter()` and `exit()` (read it; don't assign). |
+| `draw_order` | Whole number; higher numbers draw in front. Characters with the same number draw in the order they were first used. Saved with the stage. |
 | `display_name` | Name shown in the dialogue box, the profile's name until a tale assigns another: `mira.display_name = "???"` before she introduces herself, or `mira.display_name = player_name`. Assign `""` to go back to the profile's name. Read it in text as `{mira.display_name}`. The name is saved, and translated by its text like profile names; Export Strings includes names assigned as text. |
+
+`hop`, `shake`, and `nod` move only the character's picture, so they combine with `move_to`, and they finish at once while the player skips.
 
 Speakers who are not talking are dimmed while a cast member speaks. This can be turned off with `StoryConfig.highlight_speaker`.
 
