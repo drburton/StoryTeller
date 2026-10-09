@@ -2,19 +2,19 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.15** (M0 to M5 complete; M6 under way, 4 of its 10 items merged)
+Status: **Draft v0.15** (M0 to M5 complete; M6 under way, 5 of its 10 items built)
 
 ### Where things stand (2026-10-09)
 
 - **Built and merged to `main`:** milestones M0 to M5. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
-- **M6 so far (pull requests #12 to #15):** inline text tags, CGs with gallery variants (decision 0013), character renames, and character animations with drawing order. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
-- **Tests:** 313 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
-- **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, and characters hop, nod, and shake.
-- **Not done yet:** the rest of M6 (per-character data, the save screen, presentation details, the route chart, image choices, and Yarn Spinner import), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
+- **M6 so far:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, and per-character data (`ada.affection`). Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
+- **Tests:** 318 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
+- **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
+- **Not done yet:** the rest of M6 (the save screen, presentation details, the route chart, image choices, and Yarn Spinner import), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
 
 Changes in v0.15:
-- M6 progress: inline text tags, CGs, character renames, and character animations are built and merged (§11). The reference sections describe them: vocabulary (§3), markup (§4.5), runtime and layers (§5.1, §5.3), looks and assets (§5.5, §5.6), actions (§6), player-facing systems (§10), and testing (§16).
+- M6 progress: inline text tags, CGs, character renames, character animations, and per-character data are built (§11). The reference sections describe them: vocabulary (§3), markup (§4.5), runtime and layers (§5.1, §5.3), looks and assets (§5.5, §5.6), actions (§6), player-facing systems (§10), and testing (§16).
 - CGs draw on a new layer 4, so weather and color filters move to layers 5 and 6 (decision 0013).
 - The README now uses "Visual Novel StoryTeller" as its title; the product name question stays open until the trademark search (§19).
 
@@ -465,7 +465,7 @@ func run(ctx: TaleContext, time: float = 0.3) -> void:
 | `SceneLook` | Any `PackedScene`; moods map to `AnimationPlayer` animations, and `animate(name)` plays any named animation. (3D characters rendered into a viewport: not built.) |
 | `VideoLook` | `VideoStreamPlayer`, one clip per mood. Pro, not built. |
 
-Built cast extras: display name (translatable), name color, scale, default mood, and speaker highlighting (others are dimmed). From M6: renaming during play (`display_name`, saved and translated), `hop()`, `shake()`, and `nod()` (they move only the look, so they combine with `move_to()`), `animate(name)` for scene looks, and a saved `draw_order` with `to_front()` and `to_back()`. Cast methods report problems to the tale through the director. Not built: text color, portraits in the dialogue box, lip-flap for voiced lines, and per-character typing sounds. Per-character data is planned for M6.
+Built cast extras: display name (translatable), name color, scale, default mood, and speaker highlighting (others are dimmed). From M6: renaming during play (`display_name`, saved and translated), `hop()`, `shake()`, and `nod()` (they move only the look, so they combine with `move_to()`), `animate(name)` for scene looks, and a saved `draw_order` with `to_front()` and `to_back()`. Cast methods report problems to the tale through the director. Not built: text color, portraits in the dialogue box, lip-flap for voiced lines, and per-character typing sounds. From M6 too: per-character data, declared in `CastProfile.fields` and used as `ada.affection`, checked by the checker, offered by autocomplete, and saved.
 
 ### 5.6 Asset finding
 
@@ -482,7 +482,7 @@ Built (the full reference with arguments is §13 of `docs/talescript-spec.md`):
 | Group | Actions |
 |---|---|
 | Scenery | `backdrop()`, `prop()`, `hide_prop()`, `clear_props()`, `cg()`, `hide_cg()` |
-| Cast | members `enter()`, `exit()`, `move_to()`, `scale_to()`, `hop()`, `shake()`, `nod()`, `animate()`, `to_front()`, `to_back()`, `mood`, `tint`, `flip`, `on_stage`, `display_name`, `draw_order`; action `exit_all()` |
+| Cast | members `enter()`, `exit()`, `move_to()`, `scale_to()`, `hop()`, `shake()`, `nod()`, `animate()`, `to_front()`, `to_back()`, `mood`, `tint`, `flip`, `on_stage`, `display_name`, `draw_order`, and the fields from the cast profile; action `exit_all()` |
 | Dialogue | `dialogue_style()`, `hide_dialogue()`, `clear_page()` |
 | Audio | `music()`, `stop_music()`, `sound()`, `ambience()`, `stop_ambience()`, `voice()`, `stop_audio()` |
 | Camera | `camera.zoom()`, `camera.pan()`, `camera.rotate()`, `camera.shake()`, `camera.reset()`, and the action `shake()` |
@@ -699,16 +699,16 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 - **Character names during play:** change a cast member's displayed name from a tale (for example "???" until they introduce themselves, or a name the player types with `ask_text`). The new name is saved and translated like other names. ✔ (Tales assign `mira.display_name`; "" restores the profile name.)
 - **Character animations and order:** built-in hop, shake, and nod; playing a named animation on scene-based looks; bringing a character to the front or setting their drawing order. ✔ (`hop()`, `shake()`, `nod()`, `animate(name)` for scene looks, `to_front()`, `to_back()`, and a saved `draw_order`.)
 - **Save screen:** as many slots as players want, shown in pages; deleting and labeling saves from the screen; an optional autosave on a timer.
-- **Per-character data:** fields declared in a cast profile (for example `affection`), used in tales as `ada.affection += 1`, known to the checker and autocomplete, and saved with the story.
+- **Per-character data:** fields declared in a cast profile (for example `affection`), used in tales as `ada.affection += 1`, known to the checker and autocomplete, and saved with the story. ✔ (Declared in `CastProfile.fields`; field names that would hide a cast member property or method are refused.)
 - **Presentation details:** title screen artwork and music in `StoryConfig`; a show and hide animation for the dialogue box; named text styles set in the config (for example `[whisper]`) that expand to formatting.
 - **Route chart for players:** a screen that shows the branches a player has explored, built from read tracking and choice ids, with choices they have not seen kept hidden to avoid spoilers.
 - **Image choices:** choices shown as clickable pictures or places on the screen, plus a hook so games can let players choose by interacting with objects in a 2D or 3D scene. (Its tier is open; see §19.)
 - **Yarn Spinner import:** convert Yarn Spinner scripts (an open-source format) into tales, so writers can bring existing dialogue.
 - Every new action and cast field gets a card form in the visual editor automatically and is covered by the checker, translation export, and tests.
 - **Exit criteria:** the demo uses CGs, a character rename, per-character data, an image choice, and the route chart, in English and Spanish; a sample Yarn Spinner script imports into a tale that plays.
-  - Met so far: CGs (chapter 1, `window_table` in two variants) and a character rename (Ada in the tour), in both languages. The demo also uses the text tags and character animations.
-  - Still open: per-character data, an image choice, the route chart, and the Yarn Spinner import.
-- **Progress:** 4 of the 10 items are merged (pull requests #12 to #15). The remaining items are listed in §20.
+  - Met so far: CGs (chapter 1, `window_table` in two variants), a character rename (Ada in the tour), and per-character data (Mira's `friendship` in chapter 1), in both languages. The demo also uses the text tags and character animations.
+  - Still open: an image choice, the route chart, and the Yarn Spinner import.
+- **Progress:** 5 of the 10 items are built. The remaining items are listed in §20.
 
 ### M7: Launch preparation (3 weeks)
 - Legal review (§2.8).
@@ -845,9 +845,9 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-Built (313 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+Built (318 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
 
-- **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, console and live reload, editor panel, completion, card editor, and Story Map.
+- **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, console and live reload, editor panel, completion, card editor, and Story Map.
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.
 - **Golden tests:** fixture parse trees compared against stored `*.expected.txt` dumps (`-- --update-golden` rewrites them).
 - **Playthrough tests:** the whole demo plays in skip mode with scripted choices, in English and Spanish; the 3D scene's conversation opens its gate.
@@ -910,5 +910,5 @@ Today the README, the TaleScript specification, and the decision records are the
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
 4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
 5. Decide the tier question for image choices and the route chart (§19, question 5).
-6. Continue M6: genre features. Inline text tags, CGs, character renames, and character animations are done. Next, in order: per-character data, the save screen, presentation details (title art and music, dialogue box animation, named text styles), the route chart, image choices, and Yarn Spinner import.
+6. Continue M6: genre features. Inline text tags, CGs, character renames, character animations, and per-character data are done. Next, in order: the save screen, presentation details (title art and music, dialogue box animation, named text styles), the route chart, image choices, and Yarn Spinner import.
 7. Play the demo to judge what tests can't: typing speeds in the tour, the chapter 1 CG and its timing, and the size and speed of the hop, nod, and shake.

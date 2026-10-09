@@ -85,8 +85,11 @@ func test_lines_wait_for_entrances() -> void:
 
 
 func test_cast_members_are_sandboxed() -> void:
-	await _play("beat start:\n\trobin.queue_free()\n\trobin.enter(colour = 1)\n\t\"still here\"\n")
-	assert_eq(errors, ["2: 'queue_free' is not available to tales.", "3: 'enter' has no argument named 'colour'."])
+	var result := TaleCompiler.build("beat start:\n\trobin.queue_free()\n", "main", director.make_check_context("main"))
+	assert_eq(str(result["diagnostics"][0]), "2:2: error: Cast member 'robin' has no 'queue_free'. Its fields come from the cast profile.", "the checker catches it")
+	assert_eq(await director.evaluate_source("robin.queue_free()"), [false, "'queue_free' is not available to tales."], "and so does the runtime, for code that skips the checker")
+	await _play("beat start:\n\trobin.enter(colour = 1)\n\t\"still here\"\n")
+	assert_eq(errors, ["2: 'enter' has no argument named 'colour'."])
 	assert_true(is_instance_valid(stage.get_cast("robin")))
 
 
@@ -326,3 +329,70 @@ func test_animate_reports_missing_animations() -> void:
 		"2: kit has no animation 'dance'. Named animations need a scene look with an AnimationPlayer.",
 		"3: robin has no animation 'wave'. Named animations need a scene look with an AnimationPlayer.",
 	])
+
+
+func _add_friend() -> CastMember:
+	var profile := CastProfile.new()
+	profile.id = "pat"
+	profile.fields = {"affection": 0, "met": false, "gifts": []}
+	stage.add_profile(profile)
+	return stage.get_cast("pat")
+
+
+func test_tales_read_and_change_fields() -> void:
+	var pat := _add_friend()
+	await _play("beat start:\n\tpat.affection += 2\n\tpat.met = true\n\tpat.gifts.append(\"tea\")\n\tif pat.affection > 1 and pat.met:\n\t\tpat: \"Affection {pat.affection}, gifts {len(pat.gifts)}.\"\n")
+	assert_eq(errors, [])
+	assert_eq(presenter.lines, ["Pat: Affection 2, gifts 1."])
+	assert_eq([pat.get_field("affection"), pat.get_field("met"), pat.get_field("gifts")], [2, true, ["tea"]])
+	assert_true(pat.set_field("affection", 5))
+	assert_false(pat.set_field("loyalty", 1), "only declared fields")
+	assert_eq(pat.get_field("affection"), 5)
+
+
+func test_fields_start_over_from_the_profile() -> void:
+	var pat := _add_friend()
+	pat.get_field("gifts").append("cake")
+	pat.reset_fields()
+	assert_eq(pat.get_field("gifts"), [], "starting values are copied, not shared")
+	assert_eq(pat.profile.fields["gifts"], [])
+
+
+func test_fields_are_saved_with_their_types() -> void:
+	var pat := _add_friend()
+	pat.set_field("affection", 3)
+	pat.set_field("gifts", ["tea", Vector2(1, 2)])
+	var saved: Dictionary = JSON.parse_string(JSON.stringify(stage.capture()))
+	pat.reset_fields()
+	stage.restore(saved)
+	assert_eq(typeof(pat.get_field("affection")), TYPE_INT, "whole numbers stay whole")
+	assert_eq(pat.get_field("affection"), 3)
+	assert_eq(pat.get_field("gifts"), ["tea", Vector2(1, 2)])
+	stage.restore({})
+	assert_eq(pat.get_field("affection"), 0, "a save without the member starts it over")
+	stage.restore({"cast": {"pat": {"fields": JSON.from_native({"affection": 7, "dropped": 1})}}})
+	assert_eq([pat.get_field("affection"), pat.get_field("met")], [7, false], "new fields keep their starting values")
+	assert_false(pat.has_field("dropped"))
+
+
+func test_checker_and_autocomplete_know_fields() -> void:
+	_add_friend()
+	var context := director.make_check_context("main")
+	assert_eq(context.cast_fields["pat"], PackedStringArray(["affection", "gifts", "met"]))
+	assert_eq(context.cast_fields["robin"], PackedStringArray())
+	var result := TaleCompiler.build("beat start:\n\tpat.affection += 1\n\tpat.afection += 1\n\trobin.affection = 1\n\tpat.hop()\n", "main", context)
+	assert_eq(result["diagnostics"].map(func(d: TaleDiagnostic) -> String: return str(d)), [
+		"3:2: error: Cast member 'pat' has no 'afection'. Its fields come from the cast profile.",
+		"4:2: error: Cast member 'robin' has no 'affection'. Its fields come from the cast profile.",
+	])
+	var found := TaleCompletion.suggest("beat a:\n\tpat.aff", 1, 8, context)
+	assert_eq(found.map(func(item: Dictionary) -> String: return item["text"]), ["affection"])
+
+
+func test_field_names_that_clash_are_left_out() -> void:
+	var profile := CastProfile.new()
+	profile.id = "lee"
+	profile.fields = {"trust": 0, "mood": 1, "rotation": 2, "bad name": 3, "hop": 4}
+	assert_eq(profile.get_field_names(), PackedStringArray(["trust"]))
+	assert_eq(profile.get_field_problems().size(), 4)
+	assert_true(profile.get_field_problems()[0].contains("can't have a field named 'mood'"))

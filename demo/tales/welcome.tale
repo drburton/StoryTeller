@@ -69,6 +69,7 @@ beat topics:
 			ada: "Yes. Questions you have asked so far: {curiosity}."
 			ada (smile): "This tale declares a variable and adds one for each topic:\n[code]var curiosity := 0\ncuriosity += 1[/code]"
 			ada: "Braces show a value inside a line:\n[code]\"Questions so far: {{curiosity}}.\"[/code]"
+			ada (smile): "Characters can keep data of their own, listed in their cast profile's fields. Mira's friendship grows in chapter 1:\n[code]mira.friendship += 1[/code]"
 			jump topics
 		@once "What about saving and menus?":
 			topics_seen.append("menus")

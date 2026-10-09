@@ -27,6 +27,8 @@ var actions: Dictionary = {}
 ## Cast member ids. The value is the list of known moods, or an empty list to
 ## accept any mood.
 var cast: Dictionary = {}
+## Field names of cast members ([member CastProfile.fields]), by id.
+var cast_fields: Dictionary = {}
 ## Names of objects and functions exposed by game code.
 var exposed: Dictionary = {}
 ## Other tales by name: [code]{"beats": PackedStringArray, "vars": PackedStringArray}[/code].
@@ -46,9 +48,18 @@ func add_action_unchecked(action_name: String) -> TaleCheckContext:
 	return self
 
 
-func add_cast(id: String, moods: PackedStringArray = []) -> TaleCheckContext:
+func add_cast(id: String, moods: PackedStringArray = [], fields: PackedStringArray = []) -> TaleCheckContext:
 	cast[id] = moods
+	cast_fields[id] = fields
 	return self
+
+
+## Everything a tale can use after [code]<id>.[/code]: the cast member's
+## methods and properties, then its fields.
+func get_cast_members(id: String) -> PackedStringArray:
+	var members := PackedStringArray(TaleCompletion.CAST_METHODS + TaleCompletion.CAST_PROPERTIES)
+	members.append_array(cast_fields.get(id, PackedStringArray()))
+	return members
 
 
 func add_exposed(exposed_name: String) -> TaleCheckContext:

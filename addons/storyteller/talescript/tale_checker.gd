@@ -386,6 +386,9 @@ func _check_expr(expr: TaleExpr, anchor: TaleExpr = null) -> void:
 			var base_kind := _lookup(base.name) if base.kind == E.IDENTIFIER else ""
 			if base_kind == "tale":
 				_check_tale_member(base.name, expr.name, false, expr, anchor)
+			elif base_kind == "cast":
+				if expr.name not in _context.get_cast_members(base.name):
+					_error_expr(expr, "Cast member '%s' has no '%s'. Its fields come from the cast profile." % [base.name, expr.name], anchor)
 			elif base_kind != "constructor":
 				_check_expr(base, anchor)
 		_:

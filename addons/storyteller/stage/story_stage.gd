@@ -261,6 +261,15 @@ func get_cast_moods() -> Dictionary:
 	return result
 
 
+## Cast ids and the names of their fields ([member CastProfile.fields]),
+## for the checker and autocomplete.
+func get_cast_fields() -> Dictionary:
+	var result := {}
+	for id in _profiles:
+		result[id] = (_profiles[id] as CastProfile).get_field_names()
+	return result
+
+
 ## Starts loading a backdrop or prop in the background.
 func preload_asset(kind: String, asset_name: String) -> void:
 	match kind:
@@ -309,6 +318,7 @@ func restore(data: Dictionary) -> void:
 		member.on_stage = false
 		member.display_name = ""
 		member.draw_order = 0
+		member.reset_fields()
 	var cast: Dictionary = data.get("cast", {})
 	for id in cast:
 		var member := get_cast(id)
