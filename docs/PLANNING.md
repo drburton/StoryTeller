@@ -2,7 +2,21 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.13** (M5 merged; M6 genre features planned)
+Status: **Draft v0.14** (M0 to M5 complete and merged; M6 next)
+
+### Where things stand (2026-10-09)
+
+- **Built and merged to `main`:** milestones M0 to M5. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
+- **Tests:** 281 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
+- **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 7 to 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene.
+- **Not done yet:** the M5 usability test with writers, Windows and web export builds, the platform choice, a trademark search, and the M6 genre features (§11).
+- **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`.
+
+Changes in v0.14:
+- Brought the reference sections up to date with what is built: vocabulary (§3), statements, markup, and annotations (§4), the runtime structure, configuration, layers, custom actions, looks, and asset finding (§5), the action list (§6), editor tooling (§8), the visual editor as built (§9), player-facing systems (§10), repository layout (§15), testing (§16), and risks (§18). Features described in earlier drafts that are not built are now marked as planned, with a milestone where one exists.
+- §7 and §12.2 now match what the free tier already includes: timed choices, rain and snow, color filters, and CSV string export are free. Hotspot and messenger choices, the remaining effects, and the rest of the translation workflow stay Pro.
+- Importing open formats such as Yarn Spinner is no longer a non-goal (§1.1), since M6 plans it.
+- The setup wizard and documentation guides move to M7 (§11).
 
 Changes in v0.13:
 - New milestone M6, "Genre features", from a review of Visual Novel Machinery (an Unreal Engine visual novel plugin). Its feature list showed common genre features StoryTeller lacks: inline text tags, CGs, character renames, character animations, a fuller save screen, per-character data, a player route chart, image choices, and Yarn Spinner import. Each will be designed in StoryTeller's own terms under the originality rules (§2).
@@ -77,7 +91,7 @@ Changes in v0.2:
 
 ### 1.1 Non-goals for 1.0
 
-- Compatibility with, or import from, any other engine's script format.
+- Compatibility with other engines' script formats. (Importing open formats such as Yarn Spinner is planned for M6; StoryTeller still does not read commercial engines' formats.)
 - A general-purpose visual programming language. The visual editor (§9) covers story content; game logic stays in GDScript.
 - C# support. GDScript classes remain callable from C# through Godot's normal interop, and a dedicated C# API can be revisited after 1.0.
 - Spine or Live2D support in the core package (possible later add-ons).
@@ -140,8 +154,8 @@ StoryTeller uses a **theater** metaphor. Every term below is used consistently i
 | **Cast member** | A character that can enter, leave, move, and change mood | `CastMember` node with a pluggable look |
 | **Look** | How a cast member is drawn (sprite set, layered rig, custom scene, video) | `CastLook` resource |
 | **Mood** | A named appearance of a cast member, e.g. `"smile"` | Texture, layer combination, or animation name |
-| **Backdrop** | Full-screen scenery behind the cast | `Backdrop` node |
-| **Prop** | Any extra object placed on stage (item, overlay, custom scene) | `Prop` node wrapping a `PackedScene` |
+| **Backdrop** | Full-screen scenery behind the cast | `BackdropView` with a transition shader |
+| **Prop** | Any extra object placed on stage (item, overlay, custom scene) | Image or `Node2D` scene on the stage's prop layer |
 | **Dialogue box** | UI that shows lines of text | `DialogueBox` scene with interchangeable styles |
 | **Choice menu** | UI that presents options to the player | `ChoiceMenu` scene with interchangeable styles |
 | **Action** | A built-in or custom function callable from TaleScript, e.g. `backdrop()` | `TaleAction` class |
@@ -150,9 +164,10 @@ StoryTeller uses a **theater** metaphor. Every term below is used consistently i
 | **Story vars** | Variables saved per playthrough | Dictionary in save data |
 | **Global vars** | Variables shared across all playthroughs (`@global`) | Separate persistent file |
 | **Rewind** | Stepping back to earlier lines | Snapshot ring buffer |
-| **History** | Scrollable log of past lines with voice replay | `History` system and UI |
-| **Collection** | Unlockable gallery images, music, and codex entries | `Collection` system and UI |
-| **Story Map** | Editor view of beats and the links between them | `GraphEdit`-based editor screen |
+| **History** | Scrollable log of past lines with voice replay | `StoryHistory` crew member and history screen |
+| **Collection** | Unlockable gallery images, music, and codex entries | `StoryCollection` crew member, `CollectionItem` resources, Extras screen |
+| **Cards** | The visual editor's view of a beat, one card per statement | `TaleCardEditor` in the Story tab |
+| **Story Map** | Editor view of beats and the links between them | `StoryMapView` (`GraphEdit`) in the Story tab |
 
 ---
 
@@ -236,12 +251,12 @@ beat walk:
 | Constants | `const HERO := "Alex"` | |
 | Conditionals | `if` / `elif` / `else` | Same as GDScript, including single-line form `if x: jump y`. |
 | Pattern match | `match value:` | Same pattern syntax as GDScript (literals, `_`, arrays, guards with `when`). |
-| Loops | `while cond:` / `for x in list:` | Limited by a configurable iteration cap to prevent runaway scripts. |
+| Loops | `while cond:` / `for x in list:` | A loop that runs 100,000 steps without showing a line or choice is stopped and reported. |
 | Choices | `choose:` block | Each option is a string, optional `if` condition, and an indented body. |
 | Actions | `name(args, key = value)` | Built-in or custom actions. Return immediately unless awaited. |
-| Waiting | `await action(...)` / `await signal_name` | Blocks until an action finishes or a signal fires. |
+| Waiting | `await action(...)` / `await mira.move_to(...)` | Blocks until an action or cast member method finishes. |
 | Signals | `emit("door_opened", arg)` | Notifies game code. |
-| Annotations | `@title`, `@global`, `@once`, `@skip_safe`, `@id` | See §4.8. |
+| Annotations | `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@skip_safe` | See §4.8. |
 
 ### 4.4 Actions and timing
 
@@ -249,7 +264,7 @@ Actions mirror Godot's async model:
 
 - An action call **starts** its effect and returns immediately, so several effects can run at the same time.
 - `await` before an action blocks the tale until that action completes, exactly as `await` works with tweens and signals in GDScript.
-- Before any dialogue or narration line appears, the director waits for running stage effects to finish. This default keeps simple tales in order with no `await` at all, and can be turned off per project or per line.
+- Before any dialogue, narration, or choice appears, the director waits for running actions to finish. This keeps simple tales in order with no `await` at all. (A switch to turn this off per project or per line is not built.)
 
 ```gdscript
 mira.enter("smile", at = LEFT)          # starts sliding in
@@ -274,14 +289,14 @@ mira.exit()
 
 Dialogue strings use Godot's BBCode, so all `RichTextLabel` formatting works (`[b]`, `[i]`, `[color=red]`, `[wave]`, `[shake]`). StoryTeller adds a few tags of its own:
 
-| Tag | Effect |
-|---|---|
-| `[pause]` | Wait for the player to continue, then keep typing on the same line. |
-| `[pause=0.5]` | Wait half a second. |
-| `[speed=2.0]...[/speed]` | Change typing speed for a span. |
-| `[sound=bell]` | Play a sound at this point in the text. |
-| `[act=shake(0.2)]` | Run any action at this point in the text. |
-| `{expression}` | Insert a value, e.g. `{player_name}` or `{gold * 2}`. |
+| Tag | Effect | Status |
+|---|---|---|
+| `[pause]` | Wait for the player to continue, then keep typing on the same line. | Built |
+| `[pause=0.5]` | Wait half a second. | Built |
+| `{expression}` | Insert a value, e.g. `{player_name}` or `{gold * 2}`. | Built |
+| `[speed=2.0]...[/speed]` | Change typing speed for a span. | Planned (M6) |
+| `[sound=bell]` | Play a sound at this point in the text. | Planned (M6) |
+| `[act=shake(0.2)]` | Run any action at this point in the text. | Planned (M6) |
 
 ### 4.6 Choices
 
@@ -300,18 +315,19 @@ choose:
 
 - Options with a false `if` are hidden by default, or shown disabled with `@show_disabled`.
 - `@once` options disappear after being chosen in the current playthrough.
-- `choose(style = "hotspots", timeout = 5.0):` selects a menu style and an optional timer; the `timeout:` branch runs when time expires.
+- `choose(timeout = 5.0):` adds a countdown; the `timeout:` branch runs when time expires. (Built.)
+- `choose(style = "..."):` is parsed and passed to the choice menu, but only the default list menu exists. Image choices are planned for M6; hotspot and messenger styles are Pro.
 
 ### 4.7 Expressions and game code
 
 - Expressions use GDScript's operators and literals: arithmetic, comparison, `and`/`or`/`not`, `in`, `%`, ternary `a if cond else b`, arrays, dictionaries, `Vector2`, `Color`.
-- Built-in functions: `randi_range`, `randf`, `min`, `max`, `clamp`, `round`, `len`, `str`, `visited("tale.beat")`, `collected("id")`, `tr("key")`.
+- Built-in functions: `abs`, `ceil`, `floor`, `round`, `clamp`, `min`, `max`, `randf`, `randi`, `randf_range`, `randi_range`, `len`, `str`, `int`, `float`, `visited("tale.beat")`, `collected("id")`, `tr("key")`, and the constructors `Vector2`, `Vector2i`, `Vector3`, `Color`, `Rect2`.
 - Game code exposes objects and functions to tales explicitly:
 
 ```gdscript
 # In game code (GDScript)
 Story.expose("inventory", $Inventory, ["has", "add", "remove"])
-Story.expose_func("day_of_week", func(): return calendar.weekday)
+Story.expose_function("day_of_week", func(): return calendar.weekday)
 ```
 
 ```gdscript
@@ -321,7 +337,7 @@ if inventory.has("lantern"):
 	inventory.remove("oil")
 ```
 
-Only exposed members are reachable. Tales cannot call arbitrary engine methods, which keeps downloaded mods and user content safe.
+Only exposed members are reachable. Tales cannot call arbitrary engine methods, which keeps user content safe. List exposed names in `StoryConfig.exposed_names` so tales that use them import without errors and the Story tab suggests them.
 
 ### 4.8 Annotations
 
@@ -329,11 +345,12 @@ Only exposed members are reachable. Tales cannot call arbitrary engine methods, 
 |---|---|
 | `@title("...")` | Display name of a tale (save slots, Story Map). |
 | `@global` | Marks a `var` as shared across playthroughs. |
-| `@once` | Choice option or block that runs once per playthrough. |
+| `@once` | Choice option that disappears after it is chosen in a playthrough. |
+| `@show_disabled` | Choice option shown greyed out when its condition is false. |
 | `@no_rewind` | Prevents rewinding past this point (e.g. after a mini-game). |
-| `@id("intro_04")` | Pins a stable translation and voice id to the next line. |
+| `@id("intro_04")` | Pins a stable id (for translation, read tracking, and `@once`) to a line or choice option. |
 | `@voice("mira_004")` | Assigns a voice clip to the next line. |
-| `@skip_safe` | Marks a beat as already seen for skip purposes regardless of read tracking. |
+| `@skip_safe` | Marks a beat's lines as already read for skipping. |
 
 ### 4.9 Why an interpreter instead of compiling to GDScript
 
@@ -350,8 +367,8 @@ Compiling tales to real GDScript was considered. It was rejected because a runni
 - The parser produces a **lossless syntax tree**: comments, blank lines, indentation style, and spacing are kept. The visual editor (§9) edits this tree and writes it back, so a change made visually alters only the affected lines and produces clean diffs in version control. This requirement shapes the parser from M1 onward.
 - Runs in an `EditorImportPlugin`, so errors appear in the Output panel with clickable `file:line`.
 - The **checker** reports unknown actions, wrong argument types, unknown beats, undefined variables, unknown cast members or moods (warnings), unreachable code, and indentation problems.
-- Every dialogue line receives a stable **line id** (beat name plus a content hash, or a pinned `@id`). An editor command, "Pin line ids", writes ids into the file so later edits never break translations or voice mapping.
-- The same parser runs at runtime to load `.tale` files from outside the project (mods, live reload).
+- Every dialogue line and choice option receives a **line id** (beat name plus a content hash, or a pinned `@id`). Translations are keyed `<tale>:<id>` (decision 0011). An editor command to pin ids in bulk, so later edits never change them, is planned but not built.
+- The same parser and compiler run in the game for live reload (§8). Loading tales from outside the project (mods) is not built.
 
 ---
 
@@ -359,27 +376,26 @@ Compiling tales to real GDScript was considered. It was rejected because a runni
 
 ### 5.1 Runtime structure
 
+The `Story` autoload creates the crew members listed in `StoryConfig.crew`, in this order (class, then the name used with `Story.get_crew()`):
+
 ```
 Story (autoload)
-├── TaleDirector       # executes instructions, await handling, skip/auto, call stack
-├── TaleLibrary        # loads and caches Tale resources
-├── Vars               # story vars, global vars, expression evaluation
-├── Cast               # cast members and their looks
-├── Scenery            # backdrops and props
-├── Dialogue           # dialogue boxes and their styles
-├── Choices            # choice menus and their styles
-├── Audio              # music, sound, voice, ambience on Godot audio buses
-├── Camera             # zoom, pan, shake, rotate
-├── Effects            # weather, flashes, screen filters, transitions
-├── Saves              # slots, quick save, auto save, global data
-├── Rewind             # snapshot ring buffer
-├── History            # past lines log
-├── Collection         # gallery, music room, codex
-├── Settings           # player preferences
-├── Locale             # language switching, string tables
-├── Controls           # continue, skip, auto, hide UI, rewind (InputMap actions)
-├── Menus              # title, pause, save/load, settings, history, gallery
-└── AssetFinder        # path conventions, background preloading
+├── TaleDirector     "TaleDirector"  runs tales: instructions, await, call stack, variables,
+│                                    expression evaluation, skip and auto, read tracking,
+│                                    translation lookup, live reload
+├── StoryStage       "Stage"         backdrops, cast members and looks, props, camera,
+│                                    asset preloading
+├── StoryAudio       "Audio"         music crossfade, sounds, ambience, voice on audio buses
+├── StoryEffects     "Effects"       weather, color filters, flashes, screen fades, movies
+├── StoryCollection  "Collection"    gallery, music room, and codex unlocks
+├── StorySaves       "Saves"         slots, quick save, autosave, thumbnails, global data
+├── StorySettings    "Settings"      player preferences and language
+├── StoryRewind      "Rewind"        snapshots for stepping back
+├── StoryHistory     "History"       log of past lines
+├── StoryDialogue    "Dialogue"      dialogue box styles, choice menu, input actions
+├── StoryMenus       "Menus"         title, pause, save and load, settings, history, Extras,
+│                                    confirmations, text input, quick menu, notices
+└── StoryConsole     "Console"       debug console (debug builds only)
 ```
 
 Every crew member extends one small base class:
@@ -387,40 +403,48 @@ Every crew member extends one small base class:
 ```gdscript
 class_name StoryCrew extends Node
 
-func setup(config: StoryConfig) -> void: pass
-func clear() -> void: pass
-func capture() -> Dictionary: return {}      # state for saves and rewind
-func restore(data: Dictionary) -> void: pass
+func get_crew_name() -> StringName      # key for Story.get_crew() and save data
+func setup(config: StoryConfig) -> void
+func clear() -> void                    # new game
+func capture() -> Dictionary            # state for saves and rewind
+func restore(data: Dictionary) -> void
+func teardown() -> void
 ```
 
-Projects can replace any crew member with a subclass through `StoryConfig`.
+Crew members with `capture_globals()` and `restore_globals()` also keep data across playthroughs in the global save file. Projects can replace any crew member with a subclass, or leave members out, through `StoryConfig.crew`. `StoryConfig.dialogue_only()` returns a smaller crew for games that only need conversations (director, audio, saves, settings, history, dialogue).
 
 ### 5.2 Configuration
 
-- `StoryConfig` resource at `res://story/story_config.tres`, with one sub-resource per crew member.
-- A "StoryTeller" section in Project Settings for common options.
-- A **setup wizard** on first enable creates the config, folders, a starter stage scene, two sample cast members, and a sample tale.
+- One `StoryConfig` resource holds every setting, grouped in the inspector (Game, Stage, Audio, Effects, Extras, Localization, Saves, Dialogue). The project setting `storyteller/config_path` points to it (default `res://story/story_config.tres`); without one, defaults are used.
+- A **setup wizard** that creates the config, folders, and a sample tale on first enable is planned for M7.
 
 ### 5.3 Stage layers
 
-`StoryStage` stacks `CanvasLayer`s from back to front: backdrops, cast, props, world effects, dialogue and choices, screen effects, menus, debug console. For 3D games the stage renders as an overlay, and projects can disable the scenery layers to use dialogue and choices only.
+Canvas layers from back to front: the game's own canvas (0), backdrops (1), cast (2), props (3), weather (4), color filter (5), dialogue box and choices (10), flashes, screen fades, and movies (15), menus (20), notices (21), and the debug console (50). The backdrop is transparent until a tale shows one, so dialogue can sit on top of a game's 2D or 3D scene; `StoryConfig.dialogue_only()` leaves the stage out entirely.
 
 ### 5.4 Custom actions
 
 ```gdscript
-class_name ActionLightning extends TaleAction
+extends TaleAction
+## lightning(time = 0.3): flashes the screen and plays thunder.
 
-## Flashes the screen and plays thunder.
-func _name() -> String: return "lightning"
+func get_action_name() -> String:
+	return "lightning"
 
-func run(ctx: TaleContext, intensity: float = 1.0, time: float = 0.3) -> void:
-	ctx.audio.sound("thunder")
-	await ctx.effects.flash(Color.WHITE, intensity, time, ctx.cancel)
+func run(ctx: TaleContext, time: float = 0.3) -> void:
+	var audio := ctx.get_crew(&"Audio") as StoryAudio
+	if audio != null:
+		audio.play_sound("thunder")
+	var effects := ctx.get_crew(&"Effects") as StoryEffects
+	if effects == null:
+		ctx.fail("lightning() needs the Effects crew member.")
+		return
+	await effects.flash(Color.WHITE, time)
 ```
 
-- Parameters are read from the `run` signature, so the checker, autocomplete, and generated docs know names, types, and defaults automatically.
-- `ctx.cancel` lets skip, load, and rewind finish or abort animations instantly.
-- Actions in configured folders are discovered automatically.
+- Register it with `TaleDirector.add_action(preload("action_lightning.gd").new())`. Built-in actions are listed in `TaleDirector.BUILTIN_ACTIONS`; discovering custom actions in a folder automatically is not built.
+- Parameters are read from the `run` signature, so the checker and the visual editor's action forms know names, types, and defaults.
+- Skipping makes effects finish at once (crew members check the director's `skipping` flag), and loading or rewinding stops the running beat through the director's generation counter, so actions never need their own cancellation code.
 
 ### 5.5 Cast looks
 
@@ -428,34 +452,36 @@ func run(ctx: TaleContext, intensity: float = 1.0, time: float = 0.3) -> void:
 |---|---|
 | `SpriteSetLook` | One texture per mood, found by folder convention or explicit table. |
 | `LayeredLook` | Builds a character from named layer groups (body, outfit, face, accessory). Mood strings like `"face=smile, outfit=coat"`. |
-| `SceneLook` | Any `PackedScene`; moods map to `AnimationPlayer` animations or methods. Supports 3D characters rendered into a viewport. |
-| `VideoLook` | `VideoStreamPlayer`, one clip per mood. |
+| `SceneLook` | Any `PackedScene`; moods map to `AnimationPlayer` animations. (3D characters rendered into a viewport: not built.) |
+| `VideoLook` | `VideoStreamPlayer`, one clip per mood. Pro, not built. |
 
-Cast extras: display name (translatable), name and text colors, portrait for dialogue boxes, speaker highlighting (dim others), lip-flap hook for voiced lines, and per-character typing sound.
+Built cast extras: display name (translatable), name color, scale, default mood, and speaker highlighting (others are dimmed). Not built: text color, portraits in the dialogue box, lip-flap for voiced lines, and per-character typing sounds. Character renames during play, per-character data, and character animations are planned for M6.
 
 ### 5.6 Asset finding
 
-- Conventions configured in `StoryConfig`, for example `res://story/cast/{id}/{mood}.png` and `res://story/backdrops/{id}.png`.
-- The checker warns about missing files at import time.
-- `AssetFinder` scans upcoming instructions and preloads with `ResourceLoader.load_threaded_request`, within a memory budget.
+- Assets are found by name in folders set in `StoryConfig`: `cast/<id>.tres` or `cast/<id>/<mood>.png`, `backdrops/<name>.png`, `props/`, `audio/music/`, `sounds/`, `ambience/`, `voice/`, `movies/`, and `collection/`. Folders are read with `ResourceLoader.list_directory`, so exported games find the same files.
+- When a beat starts, the director asks crew members to load the assets it names in the background (`ResourceLoader.load_threaded_request`). There is no memory budget yet.
+- A missing asset is reported when the line runs. Checking for missing files at import time is not built.
 
 ---
 
-## 6. Built-in Actions (initial set)
+## 6. Built-in Actions
+
+Built (the full reference with arguments is §13 of `docs/talescript-spec.md`):
 
 | Group | Actions |
 |---|---|
-| Scenery | `backdrop()`, `prop()`, `clear_props()` |
-| Cast | `enter()`, `exit()`, `move_to()`, `mood`, `tint`, `flip`, `scale_to()`, `line_up()`, `exit_all()` |
-| Dialogue | `dialogue_style()`, `hide_dialogue()`, `show_dialogue()`, `clear_page()` |
-| Audio | `music()`, `stop_music()`, `sound()`, `ambience()`, `voice()`, `stop_audio()` |
-| Camera and effects | `camera.zoom()`, `camera.pan()`, `shake()`, `flash()`, `weather()`, `filter()`, `transition()` |
-| Flow and time | `wait()`, `skip_lock()`, `autosave()` |
+| Scenery | `backdrop()`, `prop()`, `hide_prop()`, `clear_props()` |
+| Cast | members `enter()`, `exit()`, `move_to()`, `scale_to()`, `mood`, `tint`, `flip`, `on_stage`; action `exit_all()` |
+| Dialogue | `dialogue_style()`, `hide_dialogue()`, `clear_page()` |
+| Audio | `music()`, `stop_music()`, `sound()`, `ambience()`, `stop_ambience()`, `voice()`, `stop_audio()` |
+| Camera | `camera.zoom()`, `camera.pan()`, `camera.rotate()`, `camera.shake()`, `camera.reset()`, and the action `shake()` |
+| Effects | `flash()`, `fade_out()`, `fade_in()`, `weather()`, `filter()`, `play_movie()` |
+| Flow | `wait()`, `autosave()`, `emit()` |
 | Player input | `ask_text()`, `ask_number()` |
 | Collection | `collect()` |
-| Integration | `emit()`, `play_movie()`, `change_scene()`, `preload()` |
 
-Reference docs for every action are generated from their signatures and `##` doc comments.
+Planned: `cg()` and `hide_cg()`, character animations, and the other M6 items (§11). Considered in earlier drafts and not scheduled: `line_up()`, `skip_lock()`, `change_scene()`, and a manual `preload()` (beats already preload their assets). Generated reference docs for actions are part of M7.
 
 ---
 
@@ -481,14 +507,15 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Rewind and history | Step back through lines and choices; log with voice replay | M3 | Free |
 | Dialogue style: full page | Full-screen text for prose-heavy scenes | M3 | Free |
 | Dialogue styles: bubble, messenger, caption | Speech bubbles, phone-chat stories, cinematic captions | Pro phase | Pro |
-| Choice styles: hotspots, messenger reply, timed | Point-and-click areas, chat replies, countdown choices | Pro phase | Pro |
+| Timed choices | Countdown with a `timeout:` branch | M1 | Free |
+| Choice styles: hotspots, messenger reply | Point-and-click areas, chat replies | Pro phase | Pro |
 | Menus and default theme | Title, pause, save/load, settings, history, confirm, loading, text input | M3 | Free |
 | Theme and template pack | Extra polished themes and genre starter projects (mystery, romance, messenger story) | Pro phase | Pro |
-| Basic effects | Flash, fade to color, blur, vignette | M4 | Free |
-| Effects pack | Rain, snow, fog, light rays, glitch, film grain, particles presets | Pro phase | Pro |
+| Basic effects | Flash, fade to color, rain and snow, color filters (blur and vignette not built) | M4 | Free |
+| Effects pack | Fog, light rays, glitch, film grain, particle presets | Pro phase | Pro |
 | Collection | Gallery, music room, codex | M4 | Free |
-| Localization runtime | String tables, runtime language switch | M4 | Free |
-| Translation workflow | CSV and `.po` export and import, missing-line reports, translator preview mode | Pro phase | Pro |
+| Localization | Godot translations, language setting, CSV string export that keeps translations (decision 0011) | M4 | Free |
+| Translation workflow | `.po` export, missing-line reports, translator preview mode | Pro phase | Pro |
 | Voice production tools | Per-actor voice scripts, automatic clip mapping by line id, lip-flap from audio | Pro phase | Pro |
 | Debug console | Run TaleScript lines, inspect and edit vars, jump to beats | M4 | Free |
 | Live reload | Edit a tale during play and continue from the same line | M4 | Free |
@@ -516,13 +543,14 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Tool | Description | Milestone |
 |---|---|---|
 | Story screen | Main-screen editor for `.tale` files: syntax highlighting in the editor's colors, live problem list, save and reimport | M1 ✔ |
-| Import diagnostics | Errors and warnings with clickable locations | M1 |
-| Setup wizard | Config, folders, starter scene, sample tale | M1 |
-| Cast inspector | Custom inspector with mood previews and a "test enter" button | M2 |
-| Autocomplete | In-editor completion for actions, cast ids, moods, beats, vars | M4 |
-| Live reload | Re-import on save and resume | M4 |
-| Translation tool | Create and update string tables, report missing lines | M4 |
-| Visual editor and Story Map | See §9 | M5 |
+| Import diagnostics | Errors and warnings in the Output panel and the Story tab's problem list | M1 ✔ |
+| Autocomplete | Completion for actions, cast ids, moods, beats, variables, annotations, camera and cast members | M4 ✔ |
+| Live reload | A running game recompiles a tale whose file changed and continues at the same line | M4 ✔ |
+| Export Strings | Writes the translation CSV and registers it (Story tab button or command-line script) | M4 ✔ |
+| Visual editor and Story Map | Cards and Map views; see §9 | M5 ✔ |
+| Setup wizard | Config, folders, starter scene, sample tale | M7 |
+| Pin line ids | Write `@id` into every line so edits never change ids | Not scheduled |
+| Cast inspector | Custom inspector with mood previews and a "test enter" button | Not scheduled |
 | Language server | LSP for VS Code and other editors | Post-1.0 |
 
 ---
@@ -536,48 +564,54 @@ The visual editor lets writers build complete tales without typing syntax, while
 1. **One source of truth.** The `.tale` file is always the saved format. The visual editor and the text editor are two views of the same file, and a change in either appears in the other immediately.
 2. **Clean round trips.** Visual edits change only the affected lines and keep comments and formatting (§4.10), so writers and programmers can work on the same files in version control.
 3. **Nothing is lost.** Any code the visual editor cannot represent as a card appears as an editable "script card" holding the raw text.
-4. **Godot-native.** Built as a main-screen editor plugin (a "Story" tab next to 2D, 3D, Script, and AssetLib), using Godot's own controls, theme, and `EditorUndoRedoManager` for undo.
+4. **Godot-native.** Built as a main-screen editor plugin (a "Story" tab next to 2D, 3D, Script, and AssetLib), using Godot's own controls and theme. Undo uses the text editor's own history, so it is shared by all views (decision 0012).
 
 ### 9.2 Layout
 
+As built in M5:
+
 ```
-┌──────────────────────── Story tab ────────────────────────┐
-│ Tale list │        Beat editor (cards)        │  Inspector │
-│           │                                   │  for the   │
-│ prologue  │  [Backdrop: classroom_morning]    │  selected  │
-│  ▸ start  │  [Mira enters: smile, left]       │  card      │
-│  ▸ honest │  [Narration: "Sunlight spills…"]  │            │
-│  ▸ bluff  │  [Mira (curious): "Nervous…?"]    │  Stage     │
-│ chapter_1 │  [Choice ▾ 3 options]             │  preview   │
-│           │                                   │  (Pro)     │
-├───────────┴───────────────────────────────────┴────────────┤
-│ Story Map (toggle): beats as nodes, arrows for jump/call/choice │
-└────────────────────────────────────────────────────────────┘
+┌──────────────────────────── Story tab ─────────────────────────────┐
+│ path            [Refresh] [Export Strings] [Text|Cards|Map] [Save] │
+├────────────┬───────────────────────────────────────────────────────┤
+│ Tale list  │ Text:  TaleScript editor with highlighting and         │
+│            │        autocomplete                                    │
+│ prologue   │ Cards: beat list │ cards of the selected beat, edited  │
+│ chapter_1  │                  │ in place (lanes for choices and     │
+│ welcome    │                  │ conditions)                         │
+│            │ Map:   beats of the folder as a graph                  │
+│            ├───────────────────────────────────────────────────────┤
+│            │ Problem list                                           │
+└────────────┴───────────────────────────────────────────────────────┘
 ```
+
+Cards are edited in place, so there is no separate inspector. The stage preview (§9.5) is Pro.
 
 ### 9.3 Cards
 
-| Card | Editing controls |
-|---|---|
-| Narration | Text field with a markup toolbar (bold, pause, speed, sound) |
-| Dialogue | Speaker dropdown with portraits, mood picker with thumbnails, text field |
-| Choice | One lane per option, each with its own condition and nested cards |
-| Condition | `if` / `elif` / `else` lanes with an expression builder or a free-text expression |
-| Action | Form generated automatically from the action's signature: typed fields, color pickers, asset pickers with previews |
-| Jump / call | Beat picker with search |
-| Set variable | Variable picker, operator, value |
-| Script | Raw TaleScript for anything else |
+| Card | Editing controls (as built) | Not built yet |
+|---|---|---|
+| Narration | Text field | Markup toolbar (bold, pause, speed, sound) |
+| Dialogue | Speaker and mood pickers, text field | Portraits and mood thumbnails |
+| Choice | One lane per option with text, condition, `@once`, show-disabled, and nested cards | |
+| Condition | If, else if, and otherwise lanes with a free-text condition | Expression builder |
+| Action | Form from the action's signature: typed fields, color picker, lists of matching assets, transitions, and moods, a "wait until it finishes" switch | Previews in the asset lists |
+| Jump / run beat | Field with a list of beats in this and other tales | Search |
+| Set variable | Variable, operator, value | Variable picker |
+| Comment | Text field | |
+| Script | Raw TaleScript for anything else (loops, `match`, local variables, one-line `if`) | |
 
-Interaction: drag to reorder, multi-select, copy and paste between tales, keyboard navigation for every action, collapse and expand nested lanes, and inline checker warnings on each card.
+Interaction built: add from a menu, move up and down, drag to reorder or into another lane, delete, add, rename, and delete beats, problems shown on the card, and undo shared with the text view. Not built: multi-select, copy and paste between tales, full keyboard navigation, and collapsing lanes.
 
 ### 9.4 Story Map
 
 - Each beat is a `GraphNode`; arrows show jumps, calls, and choice branches, colored by tale.
 - Automatic layout with manual adjustment saved to a sidecar file (`.tale.map`), so the tale file itself stays clean.
-- Highlights unreachable beats, dead ends, and missing targets.
+- Highlights unreachable beats and jumps to missing beats, and marks beats where the story can end.
 - Drag from a node's output to empty space to create and link a new beat.
 - Double-click a node to open it in the beat editor.
-- Pro overlay: route coverage from playtests and word counts per branch.
+- Tales appear in horizontal bands in the order play reaches them, and beats in columns by step.
+- Pro overlay (not built): route coverage from playtests and word counts per branch.
 
 ### 9.5 Stage preview (Pro)
 
@@ -587,13 +621,17 @@ Selecting any card shows the stage as it would look at that line. The director r
 
 ## 10. Player-Facing Systems
 
-- **Dialogue boxes:** each style is a scene implementing a small `DialogueBox` interface (`show_line`, `finish_typing`, `clear`). Restyle with a Godot `Theme` or replace the scene.
-- **Typewriter:** per character, per word, fade-in, or instant; speed from settings; typing sounds per cast member.
-- **Playback controls:** continue (click, key, tap, gamepad), auto (delay scales with line length and voice length), skip (seen lines only or all), hide UI, rewind (wheel, key, gamepad). All bound through `InputMap` actions.
-- **Saves:** JSON in `user://saves/` with version number and migration hooks; thumbnails as PNG; optional encryption.
-- **Rewind:** each crew member's `capture()` result stored per line in a ring buffer, delta-compressed, with `@no_rewind` barriers.
-- **Read tracking:** seen line ids stored in global data, used by skip and by "new line" indicators.
-- **Accessibility:** text size and font options, high-contrast theme, auto mode, screen reader hook for dialogue text, configurable typing speed including instant.
+Built:
+
+- **Dialogue boxes:** each style extends `DialogueBox` (`show_line`, `hide_box`, `clear_page`, `cancel`, and `reveal` for the typewriter). Two styles ship: "classic" (box with name plate) and "page" (lines collect on a full page). Restyle with a Godot `Theme` (`StoryConfig.theme`) or add styles in `StoryConfig.dialogue_styles`.
+- **Typewriter:** per character, speed from settings (0 shows text at once), `[pause]` tags.
+- **Playback controls:** continue (click, tap, Space, Enter), auto (delay scales with line length), skip (read lines only, or all with the setting), rewind (mouse wheel, Page Up), history (H), pause menu (Escape, right click), quick save and load (F5, F9). All are `InputMap` actions (`story_*`) that games can rebind. A quick menu sits beside the dialogue box.
+- **Saves:** JSON in `user://saves/` with a format number and migration hooks, PNG thumbnails, nine numbered slots plus quick and auto slots, autosave before choices, and a global file for `@global` variables, read lines, and collection unlocks.
+- **Rewind:** a snapshot of every crew member's `capture()` at each line and choice, up to `StoryConfig.rewind_depth`, with `@no_rewind` barriers.
+- **Read tracking:** read line ids kept in global data and used by skip; each line passed to dialogue boxes says whether it was read.
+- **Settings:** text speed, auto delay, five volumes, full screen, skipping unread lines, and language.
+
+Not built yet: per-word and fade-in typing, typing sounds, gamepad bindings by default, a hide-UI button, delta-compressed rewind snapshots, save encryption, a "new line" indicator, and accessibility options (text size and font, high-contrast theme, screen reader hook). The paged save screen and timed autosave are planned for M6.
 
 ---
 
@@ -607,7 +645,7 @@ Selecting any card shows the stage as it would look at that line. The director r
 - License file added (MIT). ✔
 - Private repository for the Pro add-on: deferred with the Pro tier (decision 0009).
 
-### M1: TaleScript and a minimal playable (5 weeks)
+### M1: TaleScript and a minimal playable (5 weeks) ✔
 - Formal grammar and specification (`docs/talescript-spec.md`). ✔
 - Lexer and **lossless** parser with round-trip and golden tests. ✔
 - Checker, compiler, import plugin. ✔
@@ -616,12 +654,12 @@ Selecting any card shows the stage as it would look at that line. The director r
 - Flow: beats, `jump`, beat calls, `if`/`elif`/`else`, `match`, `choose`. ✔
 - Classic dialogue box and list choice menu. ✔
 - Syntax highlighting, in a "Story" editor screen with live checking. ✔
-- **Exit criteria:** the §4.2 sample runs end to end with placeholder art; parsing and re-printing every fixture reproduces the original file byte for byte.
+- **Exit criteria:** the §4.2 sample runs end to end with placeholder art; parsing and re-printing every fixture reproduces the original file byte for byte. ✔
 
-### M2: Stage, cast, audio (5 weeks)
+### M2: Stage, cast, audio (5 weeks) ✔
 - Cast looks (sprite set, layered, scene), backdrops, props, core transitions, camera, audio, asset finder with preloading. ✔
 - Demo plays the §4.2 sample with original placeholder art and music generated by `tools/demo_assets/generate.py`. ✔
-- **Exit criteria:** the §4.2 sample runs with real art, music, and transitions.
+- **Exit criteria:** the §4.2 sample runs with real art, music, and transitions. ✔
 
 ### M3: Saves and menus (4 weeks)
 - Saves, rewind, history, read tracking, settings. ✔
@@ -631,7 +669,7 @@ Selecting any card shows the stage as it would look at that line. The director r
   - Met so far: an exported Linux pack plays the demo from the title screen through saving, loading, and every menu.
   - Still open: Windows and web builds have not been run, since they need export templates and a browser. The platform choice (§14) is also still open. The 15-minute story moved to launch preparation, now M7 (it runs about 7 to 8 minutes after M4).
 
-### M4: Production features (4 weeks)
+### M4: Production features (4 weeks) ✔
 - Effects, collection, localization, debug console, live reload, autocomplete, movies, embedding preset. ✔
 - **Exit criteria:** demo translated into a second language ✔ (Spanish); demo embedded in a small 3D scene ✔ (`demo/embedded`).
 
@@ -660,6 +698,7 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 
 ### M7: Launch preparation (3 weeks)
 - Legal review (§2.8).
+- Setup wizard (§8) and the documentation guides in §17, including generated action reference pages.
 - Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots.
 - Publish on the Godot Asset Library or Asset Store and GitHub.
 
@@ -691,12 +730,12 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 | TaleScript, checker, highlighting, autocomplete | Everything in Free |
 | Director, variables, expressions | Video cast look |
 | Cast (sprite set, layered, scene looks), backdrops, props | Bubble, messenger, and caption dialogue styles |
-| Core transitions and basic effects | Hotspot, messenger, and timed choice menus |
+| Core transitions and basic effects (flash, fades, rain, snow, filters) | Hotspot and messenger choice menus |
 | Audio, camera, movies | Transition pack and effects pack |
 | Saves, rewind, history, read tracking | Theme and genre template pack |
-| Classic and full-page dialogue, list choices | Translation workflow tools |
+| Classic and full-page dialogue, list and timed choices | Translation workflow tools (`.po`, missing-line reports, preview) |
 | Full menu set and default theme | Voice production tools |
-| Collection, localization runtime | Stage preview and play from here |
+| Collection, localization with CSV string export | Stage preview and play from here |
 | Debug console, live reload, embedding preset | Story analytics |
 | **Visual editor and Story Map** | Priority support and early access builds |
 
@@ -738,7 +777,9 @@ All platforms below are supported by Godot's export system. The question is whic
 | iOS | Same design needs as Android; exporting requires a Mac and an Apple developer account. | M4 |
 | Consoles | Godot console exports come from third-party porting partners under platform NDAs. | Out of scope; keep code portable (no OS-specific file access, all saves under `user://`). |
 
-**Current recommendation:** design the default UI for mouse, keyboard, gamepad, and touch from M1, test desktop and web from M3, and add mobile testing in M4. This keeps mobile-friendly layouts from becoming a costly retrofit.
+**Current recommendation:** design the default UI for mouse, keyboard, gamepad, and touch, test desktop and web first, then mobile. This keeps mobile-friendly layouts from becoming a costly retrofit.
+
+**Status (2026-10-09):** Linux is tested in CI (tests and a `.pck` export check) and Windows runs the tests in CI. No Windows, web, or mobile game build has been made yet; the mobile testing once suggested for M4 did not happen. Touch works for continuing lines; gamepad buttons are not bound by default.
 
 **Notes from M3:**
 - Asset discovery uses `ResourceLoader.list_directory`, because exported games keep only imported files. `tools/check_export.sh` guards this in CI.
@@ -748,26 +789,35 @@ All platforms below are supported by Godot's export system. The question is whic
 
 ---
 
-## 15. Repository Layout (proposed)
+## 15. Repository Layout
+
+As built:
 
 ```
 StoryTeller/                     # public repository (free tier)
 ├── addons/storyteller/
-│   ├── plugin.cfg
-│   ├── plugin.gd
+│   ├── plugin.cfg, plugin.gd, LICENSE
 │   ├── core/            # Story autoload, StoryCrew base, StoryConfig
-│   ├── talescript/      # lexer, lossless parser, checker, compiler, importer, evaluator
-│   ├── director/        # TaleDirector, TaleContext, cancellation
+│   ├── talescript/      # lexer, lossless parser, checker, compiler, Tale resource, completion
+│   ├── director/        # TaleDirector, evaluator, tasks, context, presenter interface
 │   ├── actions/         # built-in TaleAction classes
-│   ├── stage/           # cast, looks, backdrops, props, camera
-│   ├── crew/            # audio, saves, rewind, history, collection, locale...
-│   ├── ui/              # dialogue styles, choice styles, menus, theme
-│   ├── effects/         # basic effects and shaders
-│   ├── transitions/     # core transition shaders and masks
-│   └── editor/          # highlighter, inspectors, wizard, visual editor, Story Map
-├── demo/                # original sample story and assets
-├── tests/               # GUT tests and .tale fixtures
-└── docs/                # guides, TaleScript spec, decisions, this plan
+│   ├── stage/           # stage, cast members and looks, backdrops, props, camera, assets
+│   ├── audio/           # StoryAudio
+│   ├── effects/         # StoryEffects and the filter shader
+│   ├── collection/      # StoryCollection and CollectionItem
+│   ├── saves/           # StorySaves and StorySettings
+│   ├── rewind/          # StoryRewind and StoryHistory
+│   ├── ui/              # dialogue styles, choice menu, StoryDialogue, default theme
+│   ├── menus/           # StoryMenus and its screens
+│   ├── localization/    # StoryStrings (string export)
+│   ├── debug/           # StoryConsole
+│   ├── editor/          # import plugin, Story tab panel, highlighter, export script
+│   └── visual/          # card editor, Story Map, and their editing layer
+├── demo/                # original sample story, generated assets, translations, 3D scene
+├── tests/               # built-in runner, unit tests, fixtures
+├── tools/               # test and export-check scripts, CI installer, demo asset generator
+├── docs/                # TaleScript spec, decisions, this plan
+└── .github/             # CI workflow, issue and pull request templates
 
 StoryTellerPro/                  # private repository (Pro tier)
 ├── addons/storyteller_pro/
@@ -781,17 +831,22 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-- **Unit tests (built-in runner):** lexer, parser, checker messages, expression evaluator, save round trips, rewind correctness.
-- **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; scripted visual-editor operations produce the expected minimal text diffs.
-- **Golden tests:** every fixture compiles to an instruction dump compared against a stored snapshot.
-- **Playthrough tests:** headless runs that pick scripted choices and assert vars, visited beats, and stage state at checkpoints.
-- **Interruption tests:** save, load, skip, and rewind at every line of the fixtures to catch async cancellation bugs.
-- **Pro compatibility tests:** the Pro test suite runs against each free-tier build to catch broken extension points.
-- **CI:** headless Godot on Linux for the supported version, a non-blocking job on the newest beta, and export smoke tests for each target platform.
+Built (281 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+
+- **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, audio, effects, saves, rewind, menus, localization, collection, console and live reload, editor panel, completion, card editor, and Story Map.
+- **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.
+- **Golden tests:** fixture parse trees compared against stored `*.expected.txt` dumps (`-- --update-golden` rewrites them).
+- **Playthrough tests:** the whole demo plays in skip mode with scripted choices, in English and Spanish; the 3D scene's conversation opens its gate.
+- **Script error watcher:** any script error during a test fails it.
+- **CI:** GitHub Actions on Linux and Windows for Godot 4.7.2, a non-blocking job on a Godot beta when `GODOT_BETA` is set, and an export check of the demo as a `.pck` (`tools/check_export.sh`).
+
+Planned: save, load, skip, and rewind at every line of the fixtures (interruption tests), export checks for each chosen platform, and the Pro compatibility suite.
 
 ---
 
 ## 17. Documentation Plan
+
+Today the README, the TaleScript specification, and the decision records are the documentation. The guides below are planned for M7.
 
 - **Getting Started:** install, wizard, first scene in ten minutes.
 - **Visual Editor Guide:** building a branching scene without typing syntax.
@@ -816,8 +871,9 @@ StoryTellerPro/                  # private repository (Pro tier)
 | Pro copied without paying | Lost revenue | Clear EULA, fair pricing, updates and support as the main value; avoid DRM that burdens customers. |
 | Godot releases break the addon | Breakage | Track latest stable with a non-blocking beta CI job (§1.3). |
 | TaleScript drifts from GDScript | Steeper learning curve | Keep the five deliberate additions only; review the "for GDScript users" page each release. |
-| Async cancellation bugs (skip, load, rewind mid-effect) | Broken stage state | Single cancellation path through `ctx.cancel`; interruption tests. |
-| Rewind memory use | Slow on mobile | Delta snapshots, configurable depth, `@no_rewind`. |
+| Async cancellation bugs (skip, load, rewind mid-effect) | Broken stage state | The director's generation counter stops a superseded run; crew members finish effects at once while skipping; tests cover loading and rewinding mid-scene. Interruption tests at every line are planned. |
+| Rewind memory use | Slow on mobile | Configurable depth and `@no_rewind` today; delta snapshots if mobile testing shows a need. |
+| Visual editor not yet tried by writers | Writers may find cards hard to use | M5 usability test (§20), then fix what it finds before M7. |
 | Overlap with Dialogic, Dialogue Manager, Escoria | Low adoption | Differentiate with the visual editor, a GDScript-style language, a full visual novel stack, and rewind. |
 | Unsafe scripts from mods | Code execution | Own evaluator; only explicitly exposed members are reachable. |
 
