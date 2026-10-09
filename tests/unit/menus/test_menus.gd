@@ -278,3 +278,115 @@ func _find_button(text: String) -> Button:
 		if button.text == text and button.is_visible_in_tree():
 			return button
 	return null
+
+
+func _screen() -> SaveLoadScreen:
+	return story.find_child("SaveLoadScreen", true, false) as SaveLoadScreen
+
+
+func _visible_slot_names() -> Array:
+	var names := []
+	for label in story.find_children("*", "Label", true, false):
+		if label.is_visible_in_tree() and (label.text.begins_with("Slot ") or label.text.begins_with("Auto save") or label.text.begins_with("Quick save")):
+			names.append(label.text.get_slice("  ", 0))
+	return names
+
+
+func test_save_screen_adds_pages_as_slots_fill() -> void:
+	menus.slot_count = 3
+	_add("beat start:\n\t\"Line.\"\n")
+	await _press_new_game()
+	menus.open("save")
+	await tree.process_frame
+	assert_eq(_screen().get_page_count(), 1)
+	assert_false(_screen()._nav.visible, "no page controls for one page")
+	for slot in ["1", "2", "3"]:
+		menus.saves().save_slot(slot)
+	_screen().show_page(1)
+	assert_eq(_screen().get_page_count(), 2, "a new page once the last one is full")
+	assert_true(_screen()._nav.visible)
+	assert_eq(_screen()._page_label.text, "Page 1 of 2")
+	await _press("Next")
+	assert_eq(_visible_slot_names(), ["Slot 4", "Slot 5", "Slot 6"])
+	await _press_slot("Slot 5")
+	assert_true(menus.saves().has_slot("5"))
+	assert_eq(_screen().get_page_count(), 2)
+	menus.saves().save_slot("6")
+	_screen().show_page(2)
+	assert_eq(_screen().get_page_count(), 3)
+	menus.close_all()
+	menus.open("load")
+	await tree.process_frame
+	assert_eq(_screen().get_page_count(), 2, "load pages stop at the last save")
+	assert_eq(_screen().page, 2, "the screen remembers its page")
+	_screen().show_page(1)
+	assert_eq(_visible_slot_names(), ["Auto save", "Quick save", "Slot 1", "Slot 2", "Slot 3"])
+
+
+func test_page_limit() -> void:
+	menus.slot_count = 3
+	menus.save_pages = 2
+	_add("beat start:\n\t\"Line.\"\n")
+	await _press_new_game()
+	for slot in ["1", "2", "3", "4", "5", "6"]:
+		menus.saves().save_slot(slot)
+	menus.open("save")
+	await tree.process_frame
+	assert_eq(_screen().get_page_count(), 2)
+	_screen().show_page(9)
+	assert_eq(_screen().page, 2)
+
+
+func test_rename_and_delete_from_the_screen() -> void:
+	_add("beat start:\n\t\"Line.\"\n")
+	await _press_new_game()
+	menus.saves().save_slot("1")
+	menus.open("load")
+	await tree.process_frame
+	await _press("Rename")
+	var edit: LineEdit = story.find_children("*", "LineEdit", true, false)[0]
+	edit.text = "  Before the exam  "
+	await _press("OK")
+	await tree.process_frame
+	assert_eq(menus.saves().get_slot_info("1")["label"], "Before the exam")
+	var labels := story.find_children("*", "Label", true, false).filter(func(label: Label) -> bool: return label.is_visible_in_tree() and label.text == "Before the exam")
+	assert_eq(labels.size(), 1, "the name shows on the slot")
+	await _press("Delete")
+	await _press("No")
+	assert_true(menus.saves().has_slot("1"), "kept after answering No")
+	await _press("Delete")
+	await _press("Yes")
+	assert_false(menus.saves().has_slot("1"))
+	assert_null(_find_button("Rename"), "empty slots have no actions")
+
+
+func test_slot_labels() -> void:
+	_add("beat start:\n\t\"Line.\"\n")
+	await _press_new_game()
+	var saves := menus.saves()
+	assert_eq(saves.set_slot_label("4", "x"), ERR_FILE_NOT_FOUND)
+	saves.save_slot("4")
+	assert_eq(saves.set_slot_label("4", "Chapter one"), OK)
+	assert_eq(saves.read_slot("4")["label"], "Chapter one")
+	assert_eq(saves.highest_numbered_slot(), 4)
+	saves.save_slot("4")
+	assert_false(saves.get_slot_info("4").has("label"), "saving again starts without a name")
+	saves.set_slot_label("4", "Again")
+	saves.set_slot_label("4", "")
+	assert_false(saves.get_slot_info("4").has("label"), "an empty name removes it")
+
+
+func test_timed_autosave() -> void:
+	_add("beat start:\n\t\"One.\"\n\t\"Two.\"\n\t\"Three.\"\n")
+	var saves := menus.saves()
+	await _press_new_game()
+	assert_false(saves.has_slot(StorySaves.AUTO_SLOT), "off by default")
+	saves.autosave_minutes = 1.0
+	saves._since_autosave = 59.0
+	await _continue()
+	assert_false(saves.has_slot(StorySaves.AUTO_SLOT), "not yet a minute")
+	saves._since_autosave = 61.0
+	await _continue()
+	assert_true(saves.has_slot(StorySaves.AUTO_SLOT), "saved at the next line")
+	assert_eq(saves.read_slot(StorySaves.AUTO_SLOT)["text"], "Three.")
+	assert_true(saves._since_autosave < 1.0, "the timer starts over")

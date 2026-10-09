@@ -115,8 +115,14 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_range(0, 500) var rewind_depth := 50
 ## How many lines the history screen keeps.
 @export_range(10, 2000) var history_size := 200
-## Numbered slots on the save and load screens.
-@export_range(1, 60) var save_slot_count := 9
+## Numbered slots on each page of the save and load screens.
+@export_range(1, 60) var save_slot_count := 6
+## Pages of numbered slots. 0 gives players a new page whenever they fill
+## the last one.
+@export_range(0, 100) var save_pages := 0
+## Minutes of play between saves to the "auto" slot, made at the next line.
+## 0 turns timed autosaves off.
+@export_range(0, 120, 0.5, "suffix:min") var autosave_minutes := 0.0
 
 @export_group("Dialogue")
 ## Scene for the dialogue box (its root must extend [DialogueBox]).

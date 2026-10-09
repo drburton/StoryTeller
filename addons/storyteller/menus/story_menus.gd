@@ -42,14 +42,17 @@ const UI_TEXT: Array[String] = [
 	"Text speed", "Auto mode delay", "Master volume", "Music volume",
 	"Sound volume", "Ambience volume", "Voice volume", "Full screen",
 	"Skip unread lines", "Extras", "Gallery", "Music", "Codex", "Locked",
-	"Unlocked: %s",
+	"Unlocked: %s", "Previous", "Next", "Page %d of %d", "Rename", "Delete",
+	"Delete %s?", "Name this save",
 ]
 
 var layer: CanvasLayer
 var root: Control
 var quick_menu: QuickMenu
-## Numbered save slots shown on the save and load screens.
-var slot_count := 9
+## Numbered save slots on each page of the save and load screens.
+var slot_count := 6
+## Pages of numbered slots, or 0 for as many as players fill.
+var save_pages := 0
 var start_tale := ""
 var start_beat := "start"
 var game_title := ""
@@ -68,6 +71,7 @@ func get_crew_name() -> StringName:
 
 func setup(config: StoryConfig) -> void:
 	slot_count = config.save_slot_count
+	save_pages = config.save_pages
 	start_tale = config.start_tale
 	start_beat = config.start_beat
 	game_title = config.game_title

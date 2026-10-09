@@ -26,6 +26,9 @@ var folder := "user://saves"
 var thumbnail_size := Vector2i(320, 180)
 ## Save to the "auto" slot before every choice.
 var autosave_on_choice := true
+## Minutes of play between saves to the "auto" slot, made when the next
+## line shows. 0 turns timed autosaves off.
+var autosave_minutes := 0.0
 ## Seconds played in the current game.
 var playtime := 0.0
 ## Upgrades for older slot files: format number to a Callable that takes the
@@ -36,6 +39,8 @@ var _thumbnail: Image
 var _last_line := {"speaker": "", "text": ""}
 var _globals_dirty := false
 var _since_global_save := 0.0
+## Seconds played since the last timed autosave.
+var _since_autosave := 0.0
 
 
 func get_crew_name() -> StringName:
@@ -45,12 +50,14 @@ func get_crew_name() -> StringName:
 func setup(config: StoryConfig) -> void:
 	folder = config.save_folder
 	autosave_on_choice = config.autosave_on_choice
+	autosave_minutes = config.autosave_minutes
 	DirAccess.make_dir_recursive_absolute(folder)
 	_connect_director.call_deferred()
 
 
 func clear() -> void:
 	playtime = 0.0
+	_since_autosave = 0.0
 	_last_line = {"speaker": "", "text": ""}
 
 
@@ -107,6 +114,7 @@ func load_slot(slot: String) -> Error:
 	var story := get_parent()
 	story.restore(data["state"])
 	playtime = float(data.get("playtime", 0.0))
+	_since_autosave = 0.0
 	_last_line = {"speaker": data.get("speaker", ""), "text": data.get("text", "")}
 	loaded.emit(slot)
 	var director := _director()
@@ -136,8 +144,40 @@ func read_slot(slot: String) -> Dictionary:
 	return data
 
 
+## Gives a saved slot a name chosen by the player, shown on the save and
+## load screens. An empty name removes it. Saving to the slot again starts
+## without a name. Returns OK, or an error code when the slot is empty.
+func set_slot_label(slot: String, label: String) -> Error:
+	if not has_slot(slot):
+		return ERR_FILE_NOT_FOUND
+	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_slot_path(slot)))
+	if not parsed is Dictionary:
+		return ERR_FILE_CORRUPT
+	var data: Dictionary = parsed
+	if label.strip_edges().is_empty():
+		data.erase("label")
+	else:
+		data["label"] = label.strip_edges()
+	var file := FileAccess.open(_slot_path(slot), FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
+	file.store_string(JSON.stringify(data, "\t"))
+	file.close()
+	return OK
+
+
+## The highest numbered slot that holds a save, or 0 when there is none.
+func highest_numbered_slot() -> int:
+	var highest := 0
+	for slot in list_slots():
+		if slot.is_valid_int():
+			highest = maxi(highest, slot.to_int())
+	return highest
+
+
 ## Information about a slot for menus: slot, saved_at, playtime, speaker,
-## text, and thumbnail (a Texture2D or null). Returns {} for empty slots.
+## text, label (the player's name for it, if any), and thumbnail (a
+## Texture2D or null). Returns {} for empty slots.
 func get_slot_info(slot: String) -> Dictionary:
 	var data := read_slot(slot)
 	if data.is_empty():
@@ -224,6 +264,7 @@ func _process(delta: float) -> void:
 	var director := _director()
 	if director != null and director.is_playing():
 		playtime += delta
+		_since_autosave += delta
 	if _globals_dirty:
 		_since_global_save += delta
 		if _since_global_save >= GLOBAL_SAVE_DELAY:
@@ -243,7 +284,10 @@ func _connect_director() -> void:
 	load_globals()
 	director.line_started.connect(func(line: Dictionary) -> void:
 		_last_line = {"speaker": line["speaker_name"], "text": DialogueBox.plain_text(line["text"])}
-		_globals_dirty = true)
+		_globals_dirty = true
+		if autosave_minutes > 0.0 and _since_autosave >= autosave_minutes * 60.0:
+			_since_autosave = 0.0
+			save_slot(AUTO_SLOT))
 	director.choice_started.connect(func(_options: Array[Dictionary]) -> void:
 		if autosave_on_choice:
 			save_slot(AUTO_SLOT))
