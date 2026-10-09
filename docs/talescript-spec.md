@@ -1,6 +1,6 @@
 # TaleScript Language Specification
 
-Version: **draft 0.3** (milestone M4)
+Version: **draft 0.4** (milestone M6)
 
 TaleScript is the language StoryTeller stories are written in. It follows GDScript's syntax wherever GDScript has a way to express something, and adds a few statements for writing stories. This document is the reference for the parser, the checker, the editor tools, and writers who want precise rules.
 
@@ -12,7 +12,8 @@ Implementation status:
 | Checks listed in §9 | Implemented (`TaleChecker`) |
 | Runtime meaning of statements (§5) | Implemented (`TaleCompiler`, `TaleDirector`) |
 | Interpolation (§7.2) and `[pause]` tags (§7.1) | Implemented |
-| `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned (M6) |
+| `[speed]`, `[instant]`, `[sound]`, `[act]` tags (§7.1) | Implemented (M6) |
+| CGs (`cg`, `hide_cg`), cast renames (`display_name`), cast animations and drawing order (§13.1, §13.2, §13.4) | Implemented (M6) |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 | `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
 | Translation (§7.3), effect, collection, and movie actions (§13.1) | Implemented (M4) |
