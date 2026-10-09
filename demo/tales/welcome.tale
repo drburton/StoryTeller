@@ -25,6 +25,8 @@ beat topics:
 			topics_seen.append("dialogue")
 			curiosity += 1
 			ada (smile): "Put a speaker, a colon, and a quoted line. Narration is just the quoted line."
+			ada: "Tags change how a line types: [speed=0.3]slowly[/speed], [speed=3]very quickly indeed[/speed], or [instant]all at once[/instant]."
+			ada (curious): "A line can also make things happen as it types.[pause=0.3][act=shake(0.3)] Like that.[sound=page_turn]"
 			collect("talescript")
 			jump topics
 		@once "What about choices?":

@@ -114,6 +114,10 @@ var _playing := false
 ## Index of the say or choose instruction the player is looking at, or -1.
 ## Saves record it so loading shows the same line again.
 var _line_pc := -1
+## Expressions of the [act] and [sound] tags in the line on screen, and the
+## frame they run in (see [method run_text_act]).
+var _text_acts: Array = []
+var _text_frame: TaleFrame
 ## Line ids the player has seen, kept across playthroughs.
 var _read_lines: Dictionary = {}
 ## Translated text to its compiled parts.
@@ -217,6 +221,21 @@ func evaluate_source(source: String) -> Array:
 	if evaluator.failed():
 		return [false, evaluator.error]
 	return [true, value]
+
+
+## Runs the [code][act=N][/code] or [code][sound=N][/code] tag number
+## [param index] of the line on screen. The dialogue box calls this when
+## typing reaches the tag. Awaitable: it returns once the expression is
+## evaluated, so [code][act=await wait(1)][/code] holds the typing.
+func run_text_act(index: int) -> void:
+	if index < 0 or index >= _text_acts.size() or _text_frame == null:
+		return
+	var generation := _generation
+	var frame := _text_frame
+	var evaluator := TaleEvaluator.new(self)
+	await evaluator.evaluate(_text_acts[index], frame)
+	if evaluator.failed() and generation == _generation:
+		_report(evaluator.error, frame.tale.tale_name, _current_line)
 
 
 ## Where the story is: [code]{"tale", "beat", "line"}[/code] (source line),
@@ -631,7 +650,8 @@ func _execute(instruction: Dictionary, frame: TaleFrame) -> void:
 func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	var generation := _generation
 	await _finish_pending()
-	var text: String = await _render(_localize(instruction["text"], instruction["id"], frame.tale, instruction["line"]), frame)
+	var acts: Array = []
+	var text: String = await _render(_localize(instruction["text"], instruction["id"], frame.tale, instruction["line"]), frame, acts)
 	var speaker: String = instruction["speaker"]
 	var speaker_info := _speaker_info(speaker, frame)
 	var line := {
@@ -650,11 +670,15 @@ func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	if generation != _generation:
 		return
 	_line_pc = frame.pc - 1
+	_text_acts = acts
+	_text_frame = frame
 	line_started.emit(line)
 	var target := _get_presenter()
 	if target != null:
 		await target.show_line(line)
 	if generation == _generation:
+		_text_acts = []
+		_text_frame = null
 		_read_lines[instruction["id"]] = true
 		_line_pc = -1
 		line_finished.emit(line)
@@ -998,11 +1022,19 @@ func _construct(type_name: String, args: Array) -> Variant:
 	return null
 
 
-func _render(parts: Array, frame: TaleFrame) -> String:
+## Builds the text of a line. [code][act][/code] and [code][sound][/code]
+## tags become [code][act=N][/code] and [code][sound=N][/code], where N
+## indexes the expression added to [param acts]; without [param acts]
+## (choice options) they are left out.
+func _render(parts: Array, frame: TaleFrame, acts: Variant = null) -> String:
 	var text := ""
 	for part in parts:
 		if part is String:
 			text += part
+		elif part is Dictionary:
+			if acts is Array:
+				text += "[%s=%d]" % [part["tag"], acts.size()]
+				acts.append(part["expr"])
 		else:
 			text += str(await _evaluator.evaluate(part, frame))
 	return text

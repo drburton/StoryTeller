@@ -221,6 +221,8 @@ func _check_text(text: TaleExpr) -> void:
 	for part in result["parts"]:
 		if part is TaleExpr:
 			_check_expr(part, text)
+		elif part is Dictionary:
+			_check_expr(part["expr"], text)
 
 
 func _check_jump(node: TaleNode) -> void:

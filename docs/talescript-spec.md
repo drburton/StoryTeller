@@ -345,9 +345,20 @@ Dialogue and narration strings use Godot BBCode (`[b]`, `[i]`, `[color=red]`, `[
 |---|---|
 | `[pause]` | Wait for the player, then keep typing on the same line. |
 | `[pause=0.5]` | Wait half a second. |
-| `[speed=2.0]...[/speed]` | Change typing speed. |
-| `[sound=bell]` | Play a sound at this point. |
-| `[act=shake(0.2)]` | Run an action at this point. |
+| `[speed=2.0]...[/speed]` | Type the enclosed text at a multiple of the player's text speed: `2.0` is twice as fast, `0.5` half as fast. Spans can nest; their speeds multiply. |
+| `[instant]...[/instant]` | Show the enclosed text at once, without typing. |
+| `[sound=bell]` | Play a sound when typing reaches this point. Same as `[act=sound("bell")]`. |
+| `[act=shake(0.2)]` | Evaluate an expression, usually an action, when typing reaches this point. |
+
+Details:
+
+- `[speed]` and `[instant]` without a closing tag last to the end of the line. A closing tag without an opening one is an error.
+- `[act=...]` takes any expression, checked like `{expression}`. Typing continues while the action runs, unless the expression awaits: `[act=await wait(1)]` holds the typing for a second. As with actions on their own lines, the next line waits for actions that are still running.
+- `[sound=...]` takes a name, optionally quoted. To choose a sound with an expression, write `[act=sound(name)]`.
+- When the player clicks while a line types, the text shows at once up to the next `[pause]`, and the `[act]` and `[sound]` tags on the way still run. While skipping, timed pauses are skipped and sounds are silent; actions still run and finish at once.
+- Values may come from `{expression}`, for example `[pause={delay}]`; such values are checked while the story plays.
+- Choice options leave out `[act]` and `[sound]` tags.
+- The history and save slots show the text without these tags.
 
 ### 7.2 Interpolation
 

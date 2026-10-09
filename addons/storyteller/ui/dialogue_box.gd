@@ -3,13 +3,17 @@ extends Control
 ## Base class for dialogue box styles. A style shows one line at a time and
 ## returns from [method show_line] when the player continues.
 ##
-## The base class handles the typewriter effect, the [code][pause][/code]
-## tags, auto mode, skipping, and continue input, so a style only needs to
-## build its controls and call [method reveal].
+## The base class handles the typewriter effect, the typing tags, auto mode,
+## skipping, and continue input, so a style only needs to build its controls
+## and call [method reveal].
 ##
 ## Tags handled here before the text reaches the [RichTextLabel]:
 ## [code][pause][/code] waits for the player, [code][pause=0.5][/code] waits
-## half a second. Everything else is passed on as BBCode.
+## half a second, [code][speed=2]...[/speed][/code] types twice as fast,
+## [code][instant]...[/instant][/code] shows its text at once, and
+## [code][act=N][/code] and [code][sound=N][/code] (made by the director from
+## the tale's tags) call [member on_text_tag] when typing reaches them.
+## Everything else is passed on as BBCode.
 
 ## Emitted when the player asks to continue (click, tap, or accept key).
 signal continue_pressed
@@ -33,10 +37,22 @@ var skipping := false
 ## Returns true while something (such as a menu) should take the player's
 ## input instead of the dialogue box.
 var input_blocked := func() -> bool: return false
+## Called with the tag name and value when typing reaches an
+## [code][act=N][/code] or [code][sound=N][/code] tag. Typing waits for it.
+## The Dialogue crew member runs the tag through the director.
+var on_text_tag := Callable()
 
 var _typing := false
 var _cancelled := false
 var _waiting := false
+## True from the start of [method reveal] until it returns.
+var _revealing := false
+## Set when the player clicks while text types: the text shows at once up
+## to the next pause.
+var _rushing := false
+## Typing speed spans of the text being revealed, in label characters:
+## [code]{"from", "to", "factor"}[/code], where factor 0 shows text at once.
+var _spans: Array[Dictionary] = []
 
 
 ## Shows [param line] (see [method TalePresenter.show_line]). Awaitable.
@@ -72,7 +88,9 @@ func cancel() -> void:
 ## for the player. Awaitable. [param indicator] is shown while waiting.
 func reveal(label: RichTextLabel, text: String, indicator: CanvasItem = null) -> void:
 	_cancelled = false
-	var parsed := extract_pauses(text)
+	_rushing = false
+	_revealing = true
+	var parsed := extract_tags(text)
 	var start := label.get_parsed_text().length()
 	if label.get_parsed_text().is_empty():
 		label.text = parsed["text"]
@@ -80,59 +98,155 @@ func reveal(label: RichTextLabel, text: String, indicator: CanvasItem = null) ->
 		label.append_text(parsed["text"])
 	var total := label.get_parsed_text().length()
 	label.visible_characters = start
+	_spans.clear()
+	for span in parsed["spans"]:
+		_spans.append({"from": start + span["from"], "to": start + span["to"], "factor": span["factor"]})
 	var stops: Array = []
-	for pause in parsed["pauses"]:
-		stops.append({"at": start + pause["at"], "seconds": pause["seconds"]})
-	stops.append({"at": total, "seconds": -1.0})
+	for stop in parsed["stops"]:
+		var moved: Dictionary = stop.duplicate()
+		moved["at"] += start
+		stops.append(moved)
+	stops.append({"at": total, "kind": "pause", "seconds": -1.0})
 	for stop in stops:
 		if _cancelled:
-			return
+			break
 		await _reveal_to(label, stop["at"])
-		if stop["seconds"] >= 0.0:
+		if _cancelled:
+			break
+		if stop["kind"] == "tag":
+			if on_text_tag.is_valid():
+				await on_text_tag.call(stop["tag"], stop["value"])
+		elif stop["seconds"] >= 0.0:
 			if not skipping:
 				await get_tree().create_timer(stop["seconds"]).timeout
+			_rushing = false
 		else:
 			if indicator:
 				indicator.visible = true
 			await _wait_for_continue(total - start)
 			if indicator:
 				indicator.visible = false
+			_rushing = false
+	_revealing = false
+	if _cancelled:
+		return
 	label.visible_characters = -1
 	line_revealed.emit()
 
 
-## Splits text at pause tags. Returns {"text": bbcode without pause tags,
-## "pauses": [{"at": visible character index, "seconds": float or -1}]}.
-static func extract_pauses(text: String) -> Dictionary:
-	var regex := RegEx.create_from_string("\\[pause(?:=([0-9.]+))?\\]")
+## Splits text at the tags this class handles. Returns a dictionary with:
+## - [code]text[/code]: the BBCode without those tags;
+## - [code]stops[/code]: points where typing stops, in visible characters:
+##   [code]{"at", "kind": "pause", "seconds"}[/code] (seconds is -1 to wait
+##   for the player) or [code]{"at", "kind": "tag", "tag", "value"}[/code]
+##   for [code][act][/code] and [code][sound][/code];
+## - [code]spans[/code]: [code]{"from", "to", "factor"}[/code] for
+##   [code][speed][/code] (factor times the typing speed) and
+##   [code][instant][/code] (factor 0). An unclosed span runs to the end.
+static func extract_tags(text: String) -> Dictionary:
+	var regex := RegEx.create_from_string("\\[(/?)(pause|speed|instant|act|sound)(?:=([^\\]]*))?\\]")
 	var measure := RichTextLabel.new()
 	measure.bbcode_enabled = true
-	var pauses: Array[Dictionary] = []
+	var stops: Array[Dictionary] = []
+	var spans: Array[Dictionary] = []
+	var open: Array[Dictionary] = []
 	var clean := ""
 	var last := 0
 	for found in regex.search_all(text):
 		clean += text.substr(last, found.get_start() - last)
 		last = found.get_end()
 		measure.text = clean
-		var seconds := found.get_string(1).to_float() if found.get_string(1) else -1.0
-		pauses.append({"at": measure.get_parsed_text().length(), "seconds": seconds})
+		var at := measure.get_parsed_text().length()
+		var tag := found.get_string(2)
+		var value := found.get_string(3)
+		if found.get_string(1) == "/":
+			for i in range(open.size() - 1, -1, -1):
+				if open[i]["tag"] == tag:
+					var closed: Dictionary = open.pop_at(i)
+					spans.append({"from": closed["from"], "to": at, "factor": closed["factor"]})
+					break
+			continue
+		match tag:
+			"pause":
+				var seconds := value.to_float() if value.is_valid_float() else -1.0
+				stops.append({"at": at, "kind": "pause", "seconds": seconds})
+			"speed":
+				var factor := value.to_float() if value.is_valid_float() and value.to_float() > 0.0 else 1.0
+				open.append({"tag": tag, "from": at, "factor": factor})
+			"instant":
+				open.append({"tag": tag, "from": at, "factor": 0.0})
+			_:
+				stops.append({"at": at, "kind": "tag", "tag": tag, "value": value})
 	clean += text.substr(last)
+	measure.text = clean
+	var total := measure.get_parsed_text().length()
+	for unclosed in open:
+		spans.append({"from": unclosed["from"], "to": total, "factor": unclosed["factor"]})
 	measure.free()
-	return {"text": clean, "pauses": pauses}
+	return {"text": clean, "stops": stops, "spans": spans}
+
+
+## The text a player reads in [param text], without BBCode or typing tags,
+## for places that show plain text such as save slots.
+static func plain_text(text: String) -> String:
+	var measure := RichTextLabel.new()
+	measure.bbcode_enabled = true
+	measure.text = extract_tags(text)["text"]
+	var plain := measure.get_parsed_text()
+	measure.free()
+	return plain
+
+
+## Splits text at pause tags and removes the other typing tags. Returns
+## {"text": bbcode without the tags, "pauses": [{"at": visible character
+## index, "seconds": float or -1}]}.
+static func extract_pauses(text: String) -> Dictionary:
+	var parsed := extract_tags(text)
+	var pauses: Array[Dictionary] = []
+	for stop in parsed["stops"]:
+		if stop["kind"] == "pause":
+			pauses.append({"at": stop["at"], "seconds": stop["seconds"]})
+	return {"text": parsed["text"], "pauses": pauses}
 
 
 func _reveal_to(label: RichTextLabel, count: int) -> void:
-	if skipping or characters_per_second <= 0.0:
+	if skipping or characters_per_second <= 0.0 or _rushing:
 		label.visible_characters = count
 		return
 	_typing = true
 	var shown := float(maxi(label.visible_characters, 0))
 	while _typing and shown < count:
+		var factor := _speed_at(int(shown))
+		if factor == 0.0:
+			shown = float(mini(_instant_end(int(shown)), count))
+			label.visible_characters = int(shown)
+			continue
 		await get_tree().process_frame
-		shown += characters_per_second * get_process_delta_time()
+		shown += characters_per_second * factor * get_process_delta_time()
 		label.visible_characters = mini(int(shown), count)
 	label.visible_characters = count
 	_typing = false
+
+
+## Typing speed factor at label character [param index]: the product of
+## the [speed] spans around it, or 0 inside an [instant] span.
+func _speed_at(index: int) -> float:
+	var factor := 1.0
+	for span in _spans:
+		if index >= span["from"] and index < span["to"]:
+			if span["factor"] == 0.0:
+				return 0.0
+			factor *= span["factor"]
+	return factor
+
+
+## Where the [instant] spans around [param index] end.
+func _instant_end(index: int) -> int:
+	var end := index + 1
+	for span in _spans:
+		if span["factor"] == 0.0 and index >= span["from"] and index < span["to"]:
+			end = maxi(end, span["to"])
+	return end
 
 
 func _wait_for_continue(length: int) -> void:
@@ -176,7 +290,9 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _advance() -> void:
-	if _typing:
+	if _typing or (_revealing and not _waiting):
+		# Show the rest of the text up to the next pause at once.
 		_typing = false
+		_rushing = true
 	else:
 		continue_pressed.emit()

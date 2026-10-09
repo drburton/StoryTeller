@@ -115,3 +115,117 @@ func test_story_plays_through_dialogue_crew() -> void:
 			box.continue_pressed.emit()
 	assert_true(state["done"], "story finished")
 	assert_eq(shown, ["First.", "You went right."])
+
+
+func test_extract_tags() -> void:
+	var parsed := DialogueBox.extract_tags("A[speed=2]bc[/speed]d[instant]ef[act=0]g[/instant][sound=1]h[speed=0.5]ij")
+	assert_eq(parsed["text"], "Abcdefghij")
+	assert_eq(parsed["stops"], [
+		{"at": 6, "kind": "tag", "tag": "act", "value": "0"},
+		{"at": 7, "kind": "tag", "tag": "sound", "value": "1"},
+	])
+	assert_eq(parsed["spans"], [
+		{"from": 1, "to": 3, "factor": 2.0},
+		{"from": 4, "to": 7, "factor": 0.0},
+		{"from": 8, "to": 10, "factor": 0.5},
+	], "an unclosed span runs to the end")
+	assert_eq(DialogueBox.extract_pauses("Hi[act=0] [b]you[/b][pause]")["text"], "Hi [b]you[/b]", "history text leaves out every typing tag")
+	assert_eq(DialogueBox.plain_text("[b]Hi[/b][pause] [speed=2]you[/speed][act=0]."), "Hi you.")
+
+
+func test_instant_span_shows_at_once_while_typing() -> void:
+	var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+	tree.root.add_child(box)
+	box.characters_per_second = 1.0
+	box.show_line(_line("a[instant]long sentence[/instant]b"))
+	var text_label: RichTextLabel = box.find_child("Text", true, false)
+	for i in 3:
+		await tree.process_frame
+	assert_true(text_label.visible_characters < 2, "slow typing before the span")
+	box.characters_per_second = 1000.0
+	for i in 3:
+		await tree.process_frame
+	assert_true(text_label.visible_characters >= 15, "the span appears in one step")
+	box.cancel()
+
+
+func test_speed_span_changes_typing_speed() -> void:
+	var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+	tree.root.add_child(box)
+	box._spans = [{"from": 2, "to": 4, "factor": 3.0}, {"from": 3, "to": 6, "factor": 0.5}, {"from": 8, "to": 9, "factor": 0.0}]
+	assert_eq(box._speed_at(0), 1.0)
+	assert_eq(box._speed_at(2), 3.0)
+	assert_eq(box._speed_at(3), 1.5, "nested spans multiply")
+	assert_eq(box._speed_at(5), 0.5)
+	assert_eq(box._speed_at(8), 0.0)
+	assert_eq(box._instant_end(8), 9)
+
+
+func test_text_tags_call_handler_in_order() -> void:
+	var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+	tree.root.add_child(box)
+	box.characters_per_second = 0.0
+	var calls: Array = []
+	var text_label: RichTextLabel = box.find_child("Text", true, false)
+	box.on_text_tag = func(tag: String, value: String) -> void:
+		calls.append([tag, value, text_label.visible_characters])
+	var state := {"done": false}
+	var finish := func() -> void:
+		await box.show_line(_line("One[act=0] two[pause][sound=1] three"))
+		state["done"] = true
+	finish.call()
+	await tree.process_frame
+	assert_eq(calls, [["act", "0", 3]], "runs where the tag is, then stops at the pause")
+	box.continue_pressed.emit()
+	await tree.process_frame
+	assert_eq(calls, [["act", "0", 3], ["sound", "1", 7]])
+	box.continue_pressed.emit()
+	await tree.process_frame
+	assert_true(state["done"])
+
+
+func test_click_while_typing_shows_text_up_to_next_pause() -> void:
+	var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+	tree.root.add_child(box)
+	box.characters_per_second = 1.0
+	var calls: Array = []
+	box.on_text_tag = func(tag: String, _value: String) -> void: calls.append(tag)
+	box.show_line(_line("Slow text[act=0] keeps going[pause] then more"))
+	await tree.process_frame
+	box._advance()
+	for i in 3:
+		await tree.process_frame
+	var text_label: RichTextLabel = box.find_child("Text", true, false)
+	assert_eq(text_label.visible_characters, 21, "past the act tag, up to the pause")
+	assert_eq(calls, ["act"], "tags passed on the way still run")
+	box.cancel()
+
+
+func test_story_runs_text_tags_while_the_line_shows() -> void:
+	var story: Node = track(StoryScript.new())
+	var config := StoryConfig.new()
+	config.text_speed = 0.0
+	story.start(config)
+	tree.root.add_child(story)
+	var director: TaleDirector = story.get_crew(&"TaleDirector")
+	var dialogue: StoryDialogue = story.get_crew(&"Dialogue")
+	var source := "var hits := 0\nbeat start:\n\t\"Ow![act=emit(\\\"hit\\\", hits + 1)] That hurt.\"\n\tchoose:\n\t\t\"Pick[act=emit(\\\"never\\\")]\": pass\n"
+	var result := TaleCompiler.build(source, "tag_tale", director.make_check_context("tag_tale"))
+	assert_eq(result["diagnostics"].size(), 0)
+	director.add_tale(result["tale"])
+	var signals: Array = []
+	director.story_signal.connect(func(signal_name: String, value: Variant) -> void: signals.append([signal_name, value]))
+	var lines: Array[String] = []
+	director.line_started.connect(func(line: Dictionary) -> void: lines.append(line["text"]))
+	story.play("tag_tale")
+	await tree.process_frame
+	await tree.process_frame
+	assert_eq(lines, ["Ow![act=0] That hurt."])
+	assert_eq(signals, [["hit", 1]], "the act ran before the player continued")
+	dialogue.dialogue_box.continue_pressed.emit()
+	for i in 3:
+		await tree.process_frame
+	var buttons := dialogue.choice_menu.find_children("*", "Button", true, false)
+	assert_eq(buttons.size(), 1)
+	assert_eq(buttons[0].text, "Pick", "choices leave tags out")
+	director.stop()
