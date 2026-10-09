@@ -78,6 +78,11 @@ func _build_ui() -> void:
 	export.tooltip_text = "Write every line, choice, name, and menu text to the translation CSV set in StoryConfig."
 	export.pressed.connect(export_strings)
 	toolbar.add_child(export)
+	var import_yarn := Button.new()
+	import_yarn.text = "Import Yarn"
+	import_yarn.tooltip_text = "Convert a Yarn Spinner script (.yarn) into a tale in the tales folder set in StoryConfig."
+	import_yarn.pressed.connect(_choose_yarn_file)
+	toolbar.add_child(import_yarn)
 	var views := ButtonGroup.new()
 	for view_name in ["Text", "Cards", "Map"]:
 		var button := Button.new()
@@ -297,6 +302,46 @@ func export_strings() -> void:
 	if Engine.is_editor_hint():
 		EditorInterface.get_resource_filesystem().scan()
 		EditorInterface.get_editor_toaster().push_toast(message)
+
+
+## Converts the Yarn Spinner file at [param yarn_path] into a tale in the
+## tales folder (see [YarnConverter]), opens it, and lists anything that
+## could not be converted in the Output panel. Returns the new tale's path,
+## or "" when nothing was written.
+func import_yarn(yarn_path: String) -> String:
+	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").load_config()
+	var cast_ids := PackedStringArray(StoryStage.scan_cast(config.cast_folder).keys())
+	var result := YarnConverter.import_file(yarn_path, config.tales_folder, cast_ids)
+	var message: String = result["error"]
+	if message.is_empty():
+		message = "Imported %s as %s." % [yarn_path.get_file(), result["path"]]
+		for note in result["notes"]:
+			print("StoryTeller: %s: %s" % [yarn_path.get_file(), note])
+		if not result["notes"].is_empty():
+			message += " %d note(s) in the Output panel." % result["notes"].size()
+	print("StoryTeller: " + message)
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+		EditorInterface.get_editor_toaster().push_toast(message)
+	if not result["error"].is_empty():
+		return ""
+	refresh_files()
+	open_file(result["path"])
+	return result["path"]
+
+
+func _choose_yarn_file() -> void:
+	var dialog := FileDialog.new()
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.filters = PackedStringArray(["*.yarn ; Yarn Spinner scripts"])
+	dialog.title = "Import a Yarn Spinner script"
+	dialog.file_selected.connect(func(path: String) -> void:
+		import_yarn(path)
+		dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered_ratio(0.6)
 
 
 ## Writes the open tale to disk and reimports it.

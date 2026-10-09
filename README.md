@@ -4,7 +4,7 @@ A visual novel and interactive story framework for Godot.
 
 Writers create stories in TaleScript, a small language that looks and feels like GDScript. StoryTeller handles characters, scenery, dialogue, choices, audio, saving, localization, and menus.
 
-> **Status:** early development (M5 complete, M6 under way). The language, runtime, Story tab (text, cards, and Story Map), characters with renames, animations, drawing order, and their own data, backdrops, CGs, inline text tags, transitions, camera, audio, effects, movies, saves with pages, renaming, and timed autosave, rewind, history, settings, menus, the Extras screen with a route chart for players, picture choices, title art and music, an animated dialogue box, named text styles, translation, the debug console, and live reload work. Next: usability testing with writers, then the last M6 genre feature (Yarn Spinner import) and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
+> **Status:** early development (M6 complete, M7 next). The language, runtime, Story tab (text, cards, and Story Map), characters with renames, animations, drawing order, and their own data, backdrops, CGs, inline text tags, transitions, camera, audio, effects, movies, saves with pages, renaming, and timed autosave, rewind, history, settings, menus, the Extras screen with a route chart for players, picture choices, title art and music, an animated dialogue box, named text styles, translation, the debug console, and live reload work. Yarn Spinner scripts can be imported. Next: usability testing with writers and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
 
 ## Requirements
 
@@ -123,6 +123,16 @@ choose(style = "doors"):
 - **Extras:** save `CollectionItem` resources (gallery pictures, music tracks, codex entries) in `res://story/collection/` and unlock them with `collect("id")`. CGs, full-screen event pictures in `res://story/cgs/` shown with `cg("name", "variant")`, join the gallery on their own, with every variant the player has seen. The title screen shows an Extras button when there are items or a route chart.
 - **Route chart:** Extras has a Routes tab once the player has played. It shows each beat they reached, grouped by tale, with lines for the ways they went between beats, and the choices they met there: picked options with a filled dot, options seen but never picked with an empty one, and options never shown left out. It covers every playthrough and is saved with the global data. Name beats for the chart with `@heading("The walk home")` above `beat walk:`; beats without one show their own name. Turn it off with `StoryConfig.show_route_chart`.
 - **Debug console:** press F3 (or the key left of 1) in a debug build to see where the story is and its variables, and to run `jump tale.beat`, `name = value`, any expression, `reload`, or `unlock_all`.
+
+## Importing Yarn Spinner scripts
+
+Click **Import Yarn** in the Story tab and pick a `.yarn` file. StoryTeller writes a tale with the same name into your tales folder and opens it. Each node becomes a beat, `Name: line` becomes dialogue (speakers who are not cast members become constants), `$variables` become story variables, and shortcut options, `<<if>>`, `<<set>>`, `<<declare>>`, `<<jump>>`, `<<detour>>`, `<<return>>`, `<<stop>>`, `<<wait>>`, and `#line:` ids convert. Other commands are kept as `# Yarn:` comments and listed in the Output panel. From the command line:
+
+```
+godot --headless --path . -s res://addons/storyteller/editor/import_yarn.gd -- path/to/intro.yarn
+```
+
+`demo/yarn/lighthouse.yarn` is a small sample to try.
 
 ## Translating
 
