@@ -138,6 +138,91 @@ def classroom():
     img.convert("RGB").save(path("backdrops", "classroom_morning.png"))
 
 
+# --- CGs -------------------------------------------------------------------
+
+def window_table(variant):
+    """The study table by the library window, used as a CG in chapter 1.
+    Variants: "afternoon" (sunlight) and "rain" (after dark, lamp-lit)."""
+    rain = variant == "rain"
+    dim = 0.5 if rain else 1.0
+    img = vertical_gradient((WIDTH, HEIGHT), [int(c * dim) for c in (128, 92, 64)], [int(c * dim) for c in (96, 66, 44)]).convert("RGBA")
+    rng = random.Random(11)
+    # Window with sky, clouds or rain on the glass.
+    wx0, wy0, wx1, wy1 = 236, 40, 916, 410
+    sky = vertical_gradient((wx1 - wx0, wy1 - wy0), (32, 40, 66) if rain else (150, 200, 240), (58, 66, 92) if rain else (248, 228, 196)).convert("RGBA")
+    if rain:
+        sdraw = ImageDraw.Draw(sky)
+        for _ in range(140):
+            x, y = rng.randint(0, sky.width), rng.randint(0, sky.height)
+            sdraw.line((x, y, x - 4, y + rng.randint(14, 34)), fill=(150, 165, 200, 255), width=1)
+        for _ in range(40):
+            x, y, r = rng.randint(0, sky.width), rng.randint(0, sky.height), rng.randint(2, 5)
+            sdraw.ellipse((x - r, y - r, x + r, y + r), fill=(170, 185, 215, 255))
+    else:
+        clouds = Image.new("RGBA", sky.size, (255, 255, 255, 0))
+        cdraw = ImageDraw.Draw(clouds)
+        for _ in range(6):
+            cx, cy = rng.randint(40, sky.width - 40), rng.randint(30, 200)
+            cdraw.ellipse((cx - 90, cy - 26, cx + 90, cy + 26), fill=(255, 255, 255, 150))
+        sky = Image.alpha_composite(sky, clouds.filter(ImageFilter.GaussianBlur(14)))
+    img.paste(sky, (wx0, wy0))
+    draw = ImageDraw.Draw(img)
+    frame = (60, 40, 26) if rain else (88, 60, 38)
+    draw.rectangle((wx0 - 14, wy0 - 14, wx1 + 14, wy1 + 14), outline=frame, width=16)
+    for i in (1, 2):
+        x = wx0 + (wx1 - wx0) * i // 3
+        draw.line((x, wy0, x, wy1), fill=frame, width=10)
+    draw.line((wx0, (wy0 + wy1) // 2, wx1, (wy0 + wy1) // 2), fill=frame, width=10)
+    # Table top in perspective, with grain.
+    top_y = 392
+    draw.polygon([(0, HEIGHT), (WIDTH, HEIGHT), (1040, top_y), (112, top_y)], fill=tuple(int(c * dim) for c in (156, 110, 70)))
+    draw.line((112, top_y, 1040, top_y), fill=tuple(int(c * dim) for c in (190, 140, 95)), width=4)
+    for i in range(1, 6):
+        y = top_y + i * 48
+        inset = 112 * (HEIGHT - y) / (HEIGHT - top_y)
+        draw.line((inset + 20, y, WIDTH - inset - 20, y), fill=tuple(int(c * dim) for c in (136, 94, 58)), width=1)
+    # Sunlight from the window, or a lamp's glow.
+    light = Image.new("RGBA", (WIDTH, HEIGHT), (255, 200, 120, 0) if rain else (255, 240, 200, 0))
+    ldraw = ImageDraw.Draw(light)
+    if rain:
+        ldraw.ellipse((700, 380, 1150, 648), fill=(255, 200, 120, 90))
+    else:
+        ldraw.polygon([(wx0 + 40, wy1), (wx1 - 40, wy1), (wx1 + 120, HEIGHT), (wx0 - 120, HEIGHT)], fill=(255, 240, 200, 55))
+    img = Image.alpha_composite(img, light.filter(ImageFilter.GaussianBlur(30)))
+    # Two open notebooks.
+    paper = tuple(int(c * (0.75 if rain else 1.0)) for c in (246, 242, 230)) + (255,)
+    ruling = (160, 175, 200, 255)
+    for cx, cy, angle, cover in [(380, 520, 8, (70, 90, 130, 255)), (780, 530, -6, (130, 70, 70, 255))]:
+        book = Image.new("RGBA", (300, 190), (0, 0, 0, 0))
+        bdraw = ImageDraw.Draw(book)
+        bdraw.rectangle((0, 0, 299, 189), fill=cover)
+        bdraw.rectangle((8, 6, 145, 183), fill=paper)
+        bdraw.rectangle((154, 6, 291, 183), fill=paper)
+        for ly in range(30, 175, 16):
+            bdraw.line((18, ly, 135, ly), fill=ruling)
+            bdraw.line((164, ly, 281, ly), fill=ruling)
+        book = book.rotate(angle, expand=True, resample=Image.BICUBIC)
+        img.alpha_composite(book, (cx - book.width // 2, cy - book.height // 2))
+    # Coffee cups, steaming in the afternoon.
+    draw = ImageDraw.Draw(img)
+    cup = tuple(int(c * (0.8 if rain else 1.0)) for c in (232, 226, 214))
+    for cx, cy in [(160, 470), (960, 480)]:
+        draw.ellipse((cx - 28, cy, cx + 28, cy + 20), fill=cup)
+        draw.rectangle((cx - 28, cy - 40, cx + 28, cy + 10), fill=cup)
+        draw.arc((cx + 18, cy - 30, cx + 46, cy - 2), -90, 90, fill=cup, width=6)
+        draw.ellipse((cx - 28, cy - 50, cx + 28, cy - 30), fill=cup)
+        draw.ellipse((cx - 22, cy - 46, cx + 22, cy - 34), fill=(90, 58, 36))
+    if not rain:
+        steam = Image.new("RGBA", (WIDTH, HEIGHT), (255, 255, 255, 0))
+        sdraw = ImageDraw.Draw(steam)
+        for cx, cy in [(160, 470), (960, 480)]:
+            for k in (-8, 8):
+                points = [(cx + k + 8 * math.sin(t / 6), cy - 56 - t) for t in range(0, 70, 4)]
+                sdraw.line(points, fill=(255, 255, 255, 110), width=4)
+        img = Image.alpha_composite(img, steam.filter(ImageFilter.GaussianBlur(3)))
+    img.convert("RGB").save(path("cgs", "window_table", f"{variant}.png"))
+
+
 # --- Characters --------------------------------------------------------------
 
 S = 2  # Supersampling factor for smooth edges.
@@ -358,6 +443,8 @@ def main():
     library(False)
     library(True)
     classroom()
+    window_table("afternoon")
+    window_table("rain")
     for mood in ("neutral", "smile", "curious", "thinking"):
         character(ADA, mood).save(path("cast", "ada", f"{mood}.png"))
     for mood in ("neutral", "smile", "curious", "soft", "smirk"):

@@ -18,3 +18,4 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0010](0010-lossless-line-based-syntax-tree.md) | Lossless, line-based syntax tree | Accepted |
 | [0011](0011-localization-with-godot-translations.md) | Localization with Godot's translation system | Accepted |
 | [0012](0012-visual-editor-edits-text-by-line.md) | The visual editor edits the text, line by line | Accepted |
+| [0013](0013-cgs-and-gallery-variants.md) | CGs, their layer, and gallery variants | Accepted |

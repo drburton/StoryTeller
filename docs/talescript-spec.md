@@ -528,6 +528,8 @@ Actions are called like functions. Named arguments may be given in any order aft
 | `prop` | `name`, `at = Vector2(0.5, 0.5)`, `time = 0.3` | Show an image or scene, centered at a stage position. |
 | `hide_prop` | `name`, `time = 0.3` | Remove a prop. |
 | `clear_props` | `time = 0.3` | Remove all props. |
+| `cg` | `name`, `variant = ""`, `transition = "fade"`, `time = 1.0` | Show a CG, a full-screen event picture, over the stage. A CG folder holds one image per variant; `variant` picks one (`""` shows `default`, or the first). Showing another CG or variant blends from the one on screen. Unlocks the CG's gallery entry. |
+| `hide_cg` | `transition = "fade"`, `time = 1.0` | Remove the CG and show the stage again. |
 | `shake` | `strength = 0.5`, `time = 0.4` | Shake the stage. |
 | `music` | `track`, `volume = 1.0`, `fade = 1.0`, `loop = true` | Play music, crossfading from the current track. |
 | `stop_music` | `fade = 1.0` | Fade out the music. |
@@ -551,7 +553,7 @@ Actions are called like functions. Named arguments may be given in any order aft
 | `collect` | `id`, `notify = true` | Unlock a gallery picture, music track, or codex entry (a `CollectionItem` in `res://story/collection/`). `collected("id")` reads it. Unlocks are kept across playthroughs. |
 | `play_movie` | `name`, `skippable = true` | Play an Ogg Theora (`.ogv`) movie from `res://story/movies/` over everything but the menus. A click or the continue key skips it. Use with `await`. |
 
-Transitions for `backdrop`: `none`, `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, `slide_down`. With `dissolve`, `mask` names a grayscale image in `res://story/transitions/` that sets the order in which pixels change (dark first).
+Transitions for `backdrop`, `cg`, and `hide_cg`: `none`, `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, `slide_down`. With `dissolve`, `mask` names a grayscale image in `res://story/transitions/` that sets the order in which pixels change (dark first).
 
 ### 13.2 Cast members
 
@@ -591,9 +593,10 @@ Assets are found by name, without extension, in the folders set in `StoryConfig`
 | Cast members | `res://story/cast/` | `<id>.tres` (a `CastProfile`) or a `<id>/` folder with one image per mood |
 | Backdrops | `res://story/backdrops/` | png, webp, jpg, svg |
 | Props | `res://story/props/` | images, or scenes with a `Node2D` root |
+| CGs | `res://story/cgs/` | `<name>.png` for a single picture, or a `<name>/` folder with one image per variant |
 | Transition masks | `res://story/transitions/` | grayscale images |
 | Music, sounds, ambience, voice | `res://story/audio/music/`, `sounds/`, `ambience/`, `voice/` | ogg, mp3, wav |
-| Collection items | `res://story/collection/` | `CollectionItem` resources (`.tres`) |
+| Collection items | `res://story/collection/` | `CollectionItem` resources (`.tres`). Every CG gets a gallery item automatically; save one with `cg` set to give it a title, caption, or order. |
 | Movies | `res://story/movies/` | ogv (Ogg Theora) |
 
 When a beat starts, StoryTeller begins loading the assets it names in the background.

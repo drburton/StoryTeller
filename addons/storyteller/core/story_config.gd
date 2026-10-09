@@ -78,6 +78,9 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_dir var backdrop_folder := "res://story/backdrops"
 ## Folder with prop images and scenes, used by prop("name").
 @export_dir var prop_folder := "res://story/props"
+## Folder with CGs, the full-screen event pictures shown by cg("name"):
+## "<name>.png", or a "<name>/" folder with one image per variant.
+@export_dir var cg_folder := "res://story/cgs"
 
 @export_group("Audio")
 ## Folder with "music", "sounds", "ambience", and "voice" subfolders.

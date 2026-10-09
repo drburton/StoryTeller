@@ -75,12 +75,15 @@ beat results:
 		_:
 			mira: "{score} right. Not bad for a lunch break."
 	sound("page_turn")
+	cg("window_table", "afternoon", time = 1.5)
 	"The afternoon slips by between pages."
-	backdrop("library_night", transition = "dissolve", time = 2.0)
+	cg("window_table", "rain", transition = "dissolve", time = 2.0)
+	backdrop("library_night", transition = "none")
 	ambience("rain", volume = 0.4, fade = 2.0)
 	weather("rain", strength = 0.5)
 	filter("cold", strength = 0.4, time = 2.0)
 	"When you look up, the windows have gone dark."
+	hide_cg(time = 1.0)
 	mira (curious): "Is that rain? I didn't bring an umbrella."
 	choose:
 		"Share mine.":

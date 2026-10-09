@@ -55,6 +55,7 @@ beat topics:
 			await camera.zoom(1.15, time = 0.8)
 			ada (curious): "Even the camera can zoom:\n[code]camera.zoom(1.15)[/code]"
 			camera.reset(time = 0.8)
+			ada: "Big moments can cover the stage with a full-screen picture, a CG, which then appears under Extras:\n[code]cg(\"window_table\", \"rain\")[/code]"
 			jump topics
 		@once "Can tales remember things?":
 			topics_seen.append("variables")

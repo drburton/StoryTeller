@@ -420,7 +420,7 @@ Crew members with `capture_globals()` and `restore_globals()` also keep data acr
 
 ### 5.3 Stage layers
 
-Canvas layers from back to front: the game's own canvas (0), backdrops (1), cast (2), props (3), weather (4), color filter (5), dialogue box and choices (10), flashes, screen fades, and movies (15), menus (20), notices (21), and the debug console (50). The backdrop is transparent until a tale shows one, so dialogue can sit on top of a game's 2D or 3D scene; `StoryConfig.dialogue_only()` leaves the stage out entirely.
+Canvas layers from back to front: the game's own canvas (0), backdrops (1), cast (2), props (3), CGs (4), weather (5), color filter (6), dialogue box and choices (10), flashes, screen fades, and movies (15), menus (20), notices (21), and the debug console (50). The backdrop is transparent until a tale shows one, so dialogue can sit on top of a game's 2D or 3D scene; `StoryConfig.dialogue_only()` leaves the stage out entirely.
 
 ### 5.4 Custom actions
 
@@ -471,7 +471,7 @@ Built (the full reference with arguments is §13 of `docs/talescript-spec.md`):
 
 | Group | Actions |
 |---|---|
-| Scenery | `backdrop()`, `prop()`, `hide_prop()`, `clear_props()` |
+| Scenery | `backdrop()`, `prop()`, `hide_prop()`, `clear_props()`, `cg()`, `hide_cg()` |
 | Cast | members `enter()`, `exit()`, `move_to()`, `scale_to()`, `mood`, `tint`, `flip`, `on_stage`; action `exit_all()` |
 | Dialogue | `dialogue_style()`, `hide_dialogue()`, `clear_page()` |
 | Audio | `music()`, `stop_music()`, `sound()`, `ambience()`, `stop_ambience()`, `voice()`, `stop_audio()` |
@@ -481,7 +481,7 @@ Built (the full reference with arguments is §13 of `docs/talescript-spec.md`):
 | Player input | `ask_text()`, `ask_number()` |
 | Collection | `collect()` |
 
-Planned: `cg()` and `hide_cg()`, character animations, and the other M6 items (§11). Considered in earlier drafts and not scheduled: `line_up()`, `skip_lock()`, `change_scene()`, and a manual `preload()` (beats already preload their assets). Generated reference docs for actions are part of M7.
+Planned: character animations, character renames, and the other M6 items (§11). Considered in earlier drafts and not scheduled: `line_up()`, `skip_lock()`, `change_scene()`, and a manual `preload()` (beats already preload their assets). Generated reference docs for actions are part of M7.
 
 ---
 
@@ -684,7 +684,7 @@ Not built yet: per-word and fade-in typing, typing sounds, gamepad bindings by d
 ### M6: Genre features (5 weeks)
 Features most visual novels expect that StoryTeller lacks, found by reviewing Visual Novel Machinery (October 2026). Only the feature ideas come from that review; names, syntax, and designs are StoryTeller's own (§2).
 - **Inline text tags:** finish the tags planned in the spec (§7.1 of `docs/talescript-spec.md`): `[speed]` for typing speed, `[instant]` for a span shown at once without typing, `[sound]` at a point in the text, and `[act]` to run an action mid-line. ✔
-- **CGs:** full-screen event pictures on their own layer, above the cast and below the dialogue box (`cg()` and `hide_cg()`). Showing a CG unlocks its gallery entry, and one gallery entry can hold several variants of a picture.
+- **CGs:** full-screen event pictures on their own layer, above the cast and below the dialogue box (`cg()` and `hide_cg()`). Showing a CG unlocks its gallery entry, and one gallery entry can hold several variants of a picture. ✔ (CGs live in `res://story/cgs/` as single images or folders of variants; every CG gets a gallery item, and the gallery shows the variants a player has seen. Weather and filters draw over CGs; the camera does not move them. Decision 0013.)
 - **Character names during play:** change a cast member's displayed name from a tale (for example "???" until they introduce themselves, or a name the player types with `ask_text`). The new name is saved and translated like other names.
 - **Character animations and order:** built-in hop, shake, and nod; playing a named animation on scene-based looks; bringing a character to the front or setting their drawing order.
 - **Save screen:** as many slots as players want, shown in pages; deleting and labeling saves from the screen; an optional autosave on a timer.
@@ -896,4 +896,4 @@ Today the README, the TaleScript specification, and the decision records are the
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
 4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
 5. Decide the tier question for image choices and the route chart (§19, question 5).
-6. Continue M6: genre features. Inline text tags are done; CGs and character renames come next.
+6. Continue M6: genre features. Inline text tags and CGs are done; character renames come next.

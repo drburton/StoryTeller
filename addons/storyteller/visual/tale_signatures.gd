@@ -43,8 +43,12 @@ static func choices(callee: String, param: String, config: StoryConfig, context:
 	match [method, param]:
 		["backdrop", "name"]:
 			return _assets(config.backdrop_folder, StoryAssets.IMAGE_EXTENSIONS)
-		["backdrop", "transition"]:
+		["backdrop", "transition"], ["cg", "transition"], ["hide_cg", "transition"]:
 			return PackedStringArray(BackdropView.TRANSITIONS.keys())
+		["cg", "name"]:
+			var cgs := PackedStringArray(StoryAssets.scan_cgs(config.cg_folder).keys())
+			cgs.sort()
+			return cgs
 		["backdrop", "mask"]:
 			return _assets("res://story/transitions", StoryAssets.IMAGE_EXTENSIONS)
 		["prop", "name"], ["hide_prop", "name"]:
@@ -81,11 +85,4 @@ static func choices(callee: String, param: String, config: StoryConfig, context:
 
 
 static func _assets(folder: String, extensions: Array) -> PackedStringArray:
-	var names := PackedStringArray()
-	if not DirAccess.dir_exists_absolute(folder):
-		return names
-	for file_name in ResourceLoader.list_directory(folder):
-		if file_name.get_extension().to_lower() in extensions and file_name.get_basename() not in names:
-			names.append(file_name.get_basename())
-	names.sort()
-	return names
+	return StoryAssets.list_names(folder, extensions)
