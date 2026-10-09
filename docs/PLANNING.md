@@ -2,16 +2,20 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.20** (M0 to M6 complete; M7 next)
+Status: **Draft v0.21** (M0 to M6 complete; M7 under way)
 
 ### Where things stand (2026-10-09)
 
 - **Built and merged to `main`:** milestones M0 to M6. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
-- **Tests:** 356 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
+- **Tests:** 362 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
 - **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
-- **Not done yet:** M7 (launch preparation), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
+- **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4).
+- **Not done yet:** the rest of M7 (setup wizard, guides, the 15-minute sample story, publishing), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.21:
+- M7 progress: every extension point in §12.4 is built (decision 0018). Transitions can be added by name with `StoryTransition` resources (a built-in mode with its own mask, direction, and softness, or a custom shader), from `StoryConfig.transition_folder`, `StoryConfig.transitions`, or `StoryStage.add_transition()`, and the card forms list them. The Story tab offers `TaleEditorPanel.get_instance()`, `add_toolbar_control()`, `add_side_panel()`, and the `line_selected` signal for add-ons such as a stage preview.
 
 Changes in v0.20:
 - M6 complete: Yarn Spinner import is built (§11, decision 0017). **Import Yarn** in the Story tab (or `addons/storyteller/editor/import_yarn.gd` from the command line) converts a `.yarn` file into a tale: nodes become beats, with dialogue, options, conditions, variables, jumps, detours, waits, and line ids. Anything else is kept as a comment and listed. `demo/yarn/lighthouse.yarn` is an original sample, and a test converts it and plays it.
@@ -744,7 +748,7 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 
 ### M7: Launch preparation (4 weeks)
 - Legal review (§2.8).
-- The remaining extension points Pro needs (§12.4): transition registration and editor hooks.
+- The remaining extension points Pro needs (§12.4): transition registration and editor hooks. ✔ (Decision 0018.)
 - Setup wizard (§8) and the documentation guides in §17, including generated action reference pages.
 - Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots.
 - Publish on the Godot Asset Library or Asset Store and GitHub.
@@ -815,8 +819,8 @@ Pro uses only public extension points (§12.1, rule 3), so each Pro feature need
 | Effects pack | Custom actions (§5.4) and extra crew members (`StoryConfig.crew`) | Built |
 | Theme and template pack | `StoryConfig.theme` and starter projects | Built |
 | Hotspot and messenger choice styles | A registry of choice menu styles, chosen with `choose(style = ...)`: `StoryConfig.choice_styles` and `StoryDialogue.add_choice_style()` | Built (M6) |
-| Transition pack | Registering named transitions (today a fixed table in `backdrop_view.gd`), known to the checker and the card forms | M7 |
-| Stage preview, analytics, translation and voice tools | Editor hooks: add panels and toolbar buttons to the Story tab, and a signal for the selected line | M7 |
+| Transition pack | `StoryTransition` resources registered by name (`StoryConfig.transition_folder`, `StoryConfig.transitions`, `StoryStage.add_transition()`), listed by the card forms | Built (M7) |
+| Stage preview, analytics, translation and voice tools | Story tab hooks: `TaleEditorPanel.get_instance()`, `add_toolbar_control()`, `add_side_panel()`, and the `line_selected` signal | Built (M7) |
 
 ---
 
@@ -911,7 +915,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-Built (356 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+Built (362 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
 
 - **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, route chart, console and live reload, editor panel, completion, card editor, and Story Map.
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.
@@ -975,7 +979,7 @@ Today the README, the TaleScript specification, and the decision records are the
 2. Run a quick trademark and name search for "StoryTeller" and "Visual Novel StoryTeller", then settle the name (§19, question 2).
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
 4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
-5. Add transition registration and editor hooks in M7 (§12.4). The choice style registry is built.
-6. Start M7: the extension points in step 5, the setup wizard and documentation guides (§17), and the 15-minute original sample story.
+5. The extension points in §12.4 are all built. Pro work can start once the free tier ships (decision 0009).
+6. Continue M7: the setup wizard and documentation guides (§17), and the 15-minute original sample story.
 7. Play the demo to judge what tests can't: typing speeds in the tour, the chapter 1 CG and its timing, the size and speed of the hop, nod, and shake, and how the route chart reads after two or three playthroughs.
 8. Before accepting outside contributions, add a CLA or DCO (§12.3, §13).

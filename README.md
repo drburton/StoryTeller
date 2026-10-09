@@ -114,6 +114,14 @@ choose(style = "doors"):
 	@id("blue") "The blue door": jump blue
 ```
 
+## Transitions
+
+`backdrop()`, `cg()`, and `hide_cg()` take a `transition`: `fade`, `dissolve`, `cut`, `none`, and wipes and slides in four directions. Add your own by saving a `StoryTransition` resource in `res://story/transitions/` (`StoryConfig.transition_folder`); tales use it by its file name. A `StoryTransition` either reuses a built-in effect with its own grayscale mask, direction, and softness, or brings a shader that draws the whole transition. Games and add-ons can also register them with `StoryConfig.transitions` or `StoryStage.add_transition()`.
+
+## Extending the Story tab
+
+Editor add-ons can reach the Story tab with `TaleEditorPanel.get_instance()`, add buttons with `add_toolbar_control()`, add panels beside the editor with `add_side_panel()`, and follow the line being edited (in text or cards) through the `line_selected(path, line)` signal.
+
 ## Choice styles
 
 `choose:` shows a column of buttons. `choose(style = "pictures"):` shows picture cards instead, with each option's picture named by `@picture("umbrella")` and kept in `res://story/choices/` (`StoryConfig.choice_picture_folder`). Add your own styles as scenes in `StoryConfig.choice_styles`; each extends `ChoiceMenu`.

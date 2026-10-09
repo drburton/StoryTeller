@@ -100,3 +100,42 @@ func test_panel_keeps_unsaved_edits_when_switching() -> void:
 	assert_false(panel.is_dirty(second))
 	for path in [first, second]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+func test_add_ons_can_extend_the_story_tab() -> void:
+	var path := "user://hooks_test.tale"
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string("beat start:\n\t\"One.\"\n\t\"Two.\"\n")
+	file.close()
+	assert_null(TaleEditorPanel.get_instance(), "no Story tab yet")
+	var panel: TaleEditorPanel = track(TaleEditorPanel.new())
+	tree.root.add_child(panel)
+	assert_eq(TaleEditorPanel.get_instance(), panel)
+	var lines := []
+	panel.line_selected.connect(func(selected_path: String, line: int) -> void: lines.append([selected_path.get_file(), line]))
+	panel.open_file(path)
+	panel.code_edit.set_caret_line(2)
+	await tree.process_frame
+	assert_eq(panel.get_selected_line(), 3)
+	panel.show_view("cards")
+	await tree.process_frame
+	var field: Control = panel.card_editor.get_fields()["b/0:text"]
+	(field.get_meta("line_edit") if field.has_meta("line_edit") else field).grab_focus()
+	await tree.process_frame
+	assert_eq(lines, [["hooks_test.tale", 1], ["hooks_test.tale", 3], ["hooks_test.tale", 2]], "opening, the caret, then a card")
+	var button := Button.new()
+	panel.add_toolbar_control(button)
+	var toolbar := button.get_parent()
+	assert_eq(toolbar.get_child(button.get_index() + 1).text, "Text", "added before the view buttons")
+	var side := Label.new()
+	var tabs: TabContainer = panel.find_child("SidePanels", true, false)
+	assert_false(tabs.visible)
+	panel.add_side_panel(side, "Preview")
+	assert_true(tabs.visible)
+	assert_eq(tabs.get_tab_title(0), "Preview")
+	panel.remove_side_panel(side)
+	panel.remove_toolbar_control(button)
+	assert_false(tabs.visible)
+	side.free()
+	button.free()
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

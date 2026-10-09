@@ -44,13 +44,20 @@ static func choices(callee: String, param: String, config: StoryConfig, context:
 		["backdrop", "name"]:
 			return _assets(config.backdrop_folder, StoryAssets.IMAGE_EXTENSIONS)
 		["backdrop", "transition"], ["cg", "transition"], ["hide_cg", "transition"]:
-			return PackedStringArray(BackdropView.TRANSITIONS.keys())
+			var names := PackedStringArray(BackdropView.TRANSITIONS.keys())
+			var extra := StoryStage.scan_transitions(config.transition_folder).keys()
+			extra.append_array(config.transitions.keys())
+			extra.sort()
+			for transition_name in extra:
+				if transition_name not in names:
+					names.append(transition_name)
+			return names
 		["cg", "name"]:
 			var cgs := PackedStringArray(StoryAssets.scan_cgs(config.cg_folder).keys())
 			cgs.sort()
 			return cgs
 		["backdrop", "mask"]:
-			return _assets("res://story/transitions", StoryAssets.IMAGE_EXTENSIONS)
+			return _assets(config.transition_folder, StoryAssets.IMAGE_EXTENSIONS)
 		["prop", "name"], ["hide_prop", "name"]:
 			return _assets(config.prop_folder, StoryAssets.IMAGE_EXTENSIONS + StoryAssets.SCENE_EXTENSIONS)
 		["music", "track"]:

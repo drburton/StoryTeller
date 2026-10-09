@@ -8,9 +8,26 @@ extends Control
 ##
 ## Edits are kept per file until saved, so switching files loses nothing.
 ## Ctrl+S (Cmd+S on macOS) saves the open tale and reimports it.
+##
+## [b]For add-ons:[/b] [method get_instance] returns the Story tab once
+## StoryTeller's plugin has made it. Add buttons with
+## [method add_toolbar_control], panels beside the editor with
+## [method add_side_panel], and follow the line being edited, in the text
+## or the cards, through [signal line_selected].
+## [codeblock]
+## func _enter_tree() -> void:
+##     await get_tree().process_frame
+##     var story_tab := TaleEditorPanel.get_instance()
+##     if story_tab != null:
+##         story_tab.add_side_panel(my_preview, "Preview")
+##         story_tab.line_selected.connect(my_preview.show_line)
+## [/codeblock]
 
 ## Emitted after a tale is saved.
 signal tale_saved(path: String)
+## Emitted when the line being edited changes: the caret line in the text
+## view, or the first line of the card being edited. Lines count from 1.
+signal line_selected(path: String, line: int)
 
 const CHECK_DELAY := 0.4
 const ERROR_LINE_COLOR := Color(1.0, 0.3, 0.3, 0.15)
@@ -38,7 +55,13 @@ var story_map: StoryMapView
 ## "text", "cards", or "map".
 var view := "text"
 
+static var _instance: TaleEditorPanel
+
 var _title: Label
+var _toolbar: HBoxContainer
+var _view_buttons_start: Control
+var _side_tabs: TabContainer
+var _selected_line := 0
 var _view_buttons: Dictionary = {}
 var _save_button: Button
 var _check_timer: Timer
@@ -49,6 +72,59 @@ var _loading := false
 var _diagnostics: Array[TaleDiagnostic] = []
 ## Check context from the last check, reused for autocomplete.
 var _context: TaleCheckContext
+
+
+## The Story tab in the editor, or null before the StoryTeller plugin has
+## made it.
+static func get_instance() -> TaleEditorPanel:
+	return _instance if is_instance_valid(_instance) else null
+
+
+func _enter_tree() -> void:
+	_instance = self
+
+
+func _exit_tree() -> void:
+	if _instance == self:
+		_instance = null
+
+
+## Adds [param control] to the Story tab's toolbar, before the view
+## buttons.
+func add_toolbar_control(control: Control) -> void:
+	_toolbar.add_child(control)
+	_toolbar.move_child(control, _view_buttons_start.get_index())
+
+
+func remove_toolbar_control(control: Control) -> void:
+	if control.get_parent() == _toolbar:
+		_toolbar.remove_child(control)
+
+
+## Adds [param control] as a tab titled [param title] in a column to the
+## right of the editor. The column shows while it has tabs.
+func add_side_panel(control: Control, title: String) -> void:
+	_side_tabs.add_child(control)
+	_side_tabs.set_tab_title(_side_tabs.get_tab_count() - 1, title)
+	_side_tabs.show()
+
+
+func remove_side_panel(control: Control) -> void:
+	if control.get_parent() == _side_tabs:
+		_side_tabs.remove_child(control)
+	_side_tabs.visible = _side_tabs.get_tab_count() > 0
+
+
+## The line being edited, counting from 1, or 0 when no tale is open.
+func get_selected_line() -> int:
+	return _selected_line
+
+
+func _select_line(line: int) -> void:
+	if line == _selected_line or _current_path.is_empty():
+		return
+	_selected_line = line
+	line_selected.emit(_current_path, line)
 
 
 func _ready() -> void:
@@ -64,6 +140,7 @@ func _build_ui() -> void:
 	add_child(root)
 
 	var toolbar := HBoxContainer.new()
+	_toolbar = toolbar
 	root.add_child(toolbar)
 	_title = Label.new()
 	_title.text = "No tale open"
@@ -94,6 +171,8 @@ func _build_ui() -> void:
 		button.pressed.connect(show_view.bind(view_name.to_lower()))
 		toolbar.add_child(button)
 		_view_buttons[view_name.to_lower()] = button
+		if _view_buttons_start == null:
+			_view_buttons_start = button
 	_save_button = Button.new()
 	_save_button.text = "Save"
 	_save_button.disabled = true
@@ -110,9 +189,18 @@ func _build_ui() -> void:
 	file_list.item_selected.connect(func(index: int) -> void: open_file(file_list.get_item_metadata(index)))
 	split.add_child(file_list)
 
+	var with_side := HSplitContainer.new()
+	with_side.split_offset = -280
+	split.add_child(with_side)
 	var right := VSplitContainer.new()
 	right.split_offset = -140
-	split.add_child(right)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	with_side.add_child(right)
+	_side_tabs = TabContainer.new()
+	_side_tabs.name = "SidePanels"
+	_side_tabs.custom_minimum_size = Vector2(220, 0)
+	_side_tabs.visible = false
+	with_side.add_child(_side_tabs)
 
 	code_edit = CodeEdit.new()
 	code_edit.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -136,6 +224,9 @@ func _build_ui() -> void:
 	code_edit.code_completion_requested.connect(_on_completion_requested)
 	code_edit.text_changed.connect(_on_text_changed)
 	code_edit.gui_input.connect(_on_code_input)
+	code_edit.caret_changed.connect(func() -> void:
+		if not _loading:
+			_select_line(code_edit.get_caret_line() + 1))
 	if Engine.is_editor_hint():
 		var editor_font := EditorInterface.get_editor_theme().get_font("source", "EditorFonts")
 		if editor_font:
@@ -145,6 +236,7 @@ func _build_ui() -> void:
 	card_editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	card_editor.visible = false
 	card_editor.source_changed.connect(apply_edit)
+	card_editor.card_focused.connect(_select_line)
 	card_editor.undo_requested.connect(func() -> void:
 		code_edit.undo()
 		_refresh_cards())
@@ -281,6 +373,8 @@ func open_file(path: String) -> void:
 	code_edit.clear_undo_history()
 	code_edit.editable = true
 	_loading = false
+	_selected_line = 0
+	_select_line(code_edit.get_caret_line() + 1)
 	_update_title()
 	for i in file_list.item_count:
 		if file_list.get_item_metadata(i) == path:

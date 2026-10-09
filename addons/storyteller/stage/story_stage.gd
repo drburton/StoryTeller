@@ -38,6 +38,10 @@ var backdrop_folder := "res://story/backdrops"
 var prop_folder := "res://story/props"
 var transition_folder := "res://story/transitions"
 var cg_folder := "res://story/cgs"
+## Transitions beyond the built-in ones, by name: [StoryTransition] files
+## in [member transition_folder], [member StoryConfig.transitions], and
+## those added with [method add_transition].
+var transitions: Dictionary = {}
 
 var _profiles: Dictionary = {}
 var _cast: Dictionary = {}
@@ -56,15 +60,21 @@ func setup(config: StoryConfig) -> void:
 	backdrop_folder = config.backdrop_folder
 	prop_folder = config.prop_folder
 	cg_folder = config.cg_folder
+	transition_folder = config.transition_folder
+	transitions = scan_transitions(transition_folder)
+	for transition_name in config.transitions:
+		transitions[transition_name] = config.transitions[transition_name]
 	backdrop_layer = _make_layer("Backdrops", BACKDROP_LAYER)
 	cast_layer = _make_layer("Cast", CAST_LAYER)
 	prop_layer = _make_layer("Props", PROP_LAYER)
 	cg_layer = _make_layer("CGs", CG_LAYER)
 	backdrop_view = BackdropView.new()
 	backdrop_view.name = "BackdropView"
+	backdrop_view.transitions = transitions
 	backdrop_layer.add_child(backdrop_view)
 	cg_view = BackdropView.new()
 	cg_view.name = "CGView"
+	cg_view.transitions = transitions
 	cg_layer.add_child(cg_view)
 	camera = StageCamera.new()
 	camera.name = "Camera"
@@ -73,6 +83,22 @@ func setup(config: StoryConfig) -> void:
 	add_child(camera)
 	_profiles = scan_cast(config.cast_folder)
 	_connect_director.call_deferred()
+
+
+## Adds or replaces the transition [param transition_name] for backdrops
+## and CGs, for example from a game's own code or an add-on.
+func add_transition(transition_name: String, transition: StoryTransition) -> void:
+	transitions[transition_name] = transition
+
+
+## [StoryTransition] files in [param folder] by file name.
+static func scan_transitions(folder: String) -> Dictionary:
+	var found := {}
+	for transition_name in StoryAssets.list_names(folder, ["tres", "res"]):
+		var resource := StoryAssets.load_asset(folder, transition_name, ["tres", "res"])
+		if resource is StoryTransition:
+			found[transition_name] = resource
+	return found
 
 
 func _ready() -> void:

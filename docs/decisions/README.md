@@ -23,3 +23,4 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0015](0015-route-chart.md) | The route chart: what it records and what it shows | Accepted |
 | [0016](0016-choice-styles-and-pictures.md) | Choice styles and picture choices | Accepted |
 | [0017](0017-yarn-spinner-import.md) | Importing Yarn Spinner scripts | Accepted |
+| [0018](0018-transitions-and-story-tab-hooks.md) | Named transitions and Story tab hooks | Accepted |
