@@ -14,6 +14,7 @@ Implementation status:
 | Interpolation (§7.2) and `[pause]` tags (§7.1) | Implemented |
 | `[speed]`, `[instant]`, `[sound]`, `[act]` tags (§7.1) | Implemented (M6) |
 | CGs (`cg`, `hide_cg`), cast renames (`display_name`), cast animations and drawing order, cast fields (§13.1, §13.2, §13.4) | Implemented (M6) |
+| `@heading` for the route chart (§8) | Implemented (M6) |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 | `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
 | Translation (§7.3), effect, collection, and movie actions (§13.1) | Implemented (M4) |
@@ -373,7 +374,7 @@ Lines, narration, and choice options are translated through Godot's translation 
 
 A translation may use `{expression}` and the markup in §7.1, just like the original. While the game's language is `StoryConfig.source_language`, lines are shown as written in the tale.
 
-Speaker names, tale titles, and text passed through `tr("...")` are keyed by their text:
+Speaker names, tale titles, beat headings, and text passed through `tr("...")` are keyed by their text:
 
 ```gdscript
 player_name = await ask_text(tr("What's your name?"), tr("Sam"))
@@ -395,6 +396,7 @@ player_name = await ask_text(tr("What's your name?"), tr("Sam"))
 | `@voice("...")` | Dialogue or narration | Assigns a voice clip. |
 | `@no_rewind` | Any statement | The player cannot rewind past this point. |
 | `@skip_safe` | Beat | Treat the beat's lines as already read, so skip passes them even when the player only skips read lines. Useful for recaps. |
+| `@heading("...")` | Beat | Name shown for the beat in the players' route chart. Translated like tale titles, keyed by its text. Without it, the chart shows the beat's name. |
 
 ---
 
@@ -486,7 +488,7 @@ TaleScript is GDScript plus the following. Anything not listed here behaves as i
 4. `jump` for one-way transfer between beats.
 5. `choose:` blocks with string options and `timeout:`.
 6. Named arguments in calls: `f(x, time = 1.0)`.
-7. Story annotations: `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@skip_safe`.
+7. Story annotations: `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@skip_safe`, `@heading`.
 
 **Restrictions**
 

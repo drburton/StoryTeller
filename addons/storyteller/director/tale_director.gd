@@ -125,6 +125,9 @@ var _text_acts: Array = []
 var _text_frame: TaleFrame
 ## Line ids the player has seen, kept across playthroughs.
 var _read_lines: Dictionary = {}
+## Beats entered and choice options seen and picked, kept across
+## playthroughs for the route chart.
+var routes := RouteLog.new()
 ## Translated text to its compiled parts.
 var _translated: Dictionary = {}
 ## Names from [member StoryConfig.exposed_names].
@@ -453,10 +456,10 @@ func resume() -> void:
 	await _run(generation)
 
 
-## Data kept across playthroughs: global variables and read lines. Saved
-## separately from save slots.
+## Data kept across playthroughs: global variables, read lines, and the
+## routes explored. Saved separately from save slots.
 func capture_globals() -> Dictionary:
-	return {"vars": JSON.from_native(_global_vars), "read": _read_lines.keys()}
+	return {"vars": JSON.from_native(_global_vars), "read": _read_lines.keys(), "routes": routes.to_dict()}
 
 
 func restore_globals(data: Dictionary) -> void:
@@ -464,6 +467,7 @@ func restore_globals(data: Dictionary) -> void:
 	_read_lines.clear()
 	for id in data.get("read", []):
 		_read_lines[id] = true
+	routes.from_dict(data.get("routes", {}))
 
 
 ## True if the player has seen the line with [param line_id] in any playthrough.
@@ -730,6 +734,7 @@ func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 		var parts := _localize(option["text"], option["id"], frame.tale, option["line"])
 		shown.append({"text": await _render(parts, frame), "id": option["id"], "enabled": enabled})
 		sources.append(option)
+		routes.see_option(frame.tale.translation_key(option["id"]))
 	var has_enabled := shown.any(func(option: Dictionary) -> bool: return option["enabled"])
 	if not has_enabled:
 		frame.pc = instruction["timeout_target"] if instruction["timeout_target"] >= 0 else instruction["end"]
@@ -751,14 +756,19 @@ func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 	var option := sources[picked]
 	if option["once"]:
 		_once_chosen[option["id"]] = true
+	routes.pick_option(frame.tale.translation_key(option["id"]))
 	choice_made.emit(shown[picked])
 	frame.pc = option["target"]
 
 
 # --- Helpers --------------------------------------------------------------------
 
+## Called while the frame the story comes from is still on top of the stack.
 func _enter_beat(tale: Tale, beat: String) -> TaleFrame:
-	_visited["%s.%s" % [tale.tale_name, beat]] = true
+	var beat_id := "%s.%s" % [tale.tale_name, beat]
+	_visited[beat_id] = true
+	var from: TaleFrame = _stack.back() if not _stack.is_empty() else null
+	routes.enter(beat_id, "%s.%s" % [from.tale.tale_name, from.beat] if from != null else "")
 	beat_entered.emit(tale.tale_name, beat)
 	_preload_beat(tale, tale.get_beat_start(beat))
 	return TaleFrame.new(tale, beat)

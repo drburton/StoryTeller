@@ -35,6 +35,12 @@ func test_beats_and_variables() -> void:
 	assert_eq(tale.variables[1]["value"], ["lit", 1])
 
 
+func test_beat_headings() -> void:
+	var tale := _build("@title(\"T\")\n@heading(\"First\")\nbeat one:\n\t\"x\"\n@skip_safe @heading(\"Second\") beat two:\n\tpass\nbeat three:\n\tpass\n")
+	assert_eq(tale.title, "T", "a heading is not the tale's title")
+	assert_eq(tale.headings, {"one": "First", "two": "Second"})
+
+
 func test_say_instruction() -> void:
 	var tale := _build("const N := \"Ned\"\nvar g := 2\nbeat b:\n\tN: \"Gold: {g * 2}!\"\n")
 	var say := tale.instructions[0]

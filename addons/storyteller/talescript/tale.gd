@@ -40,7 +40,7 @@ extends Resource
 ## literal text and expression arrays for interpolated values.
 
 ## Version of the compiled format. Changes when the layout above changes.
-const FORMAT := 2
+const FORMAT := 3
 
 @export var format := FORMAT
 ## The tale's name: its file name without extension.
@@ -54,6 +54,9 @@ const FORMAT := 2
 @export var variables: Array[Dictionary] = []
 ## Beat name to index of its first instruction.
 @export var beats: Dictionary = {}
+## Beat name to its display heading from [code]@heading[/code], shown in
+## the route chart. Beats without one show their name there.
+@export var headings: Dictionary = {}
 @export var instructions: Array[Dictionary] = []
 ## Source text of every line and choice option, by id. Used to export
 ## strings for translation.

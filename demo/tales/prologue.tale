@@ -7,6 +7,7 @@ var trust := 0
 var player_name := "Sam"
 @global var prologue_done := false
 
+@heading("The first morning")
 beat start:
 	backdrop("classroom_morning", transition = "fade", time = 1.0)
 	music("quiet_morning", volume = 0.8)
@@ -28,16 +29,19 @@ beat start:
 		"Change the subject" if trust > 2:
 			mira: "Smooth. Really smooth."
 
+@heading("An honest answer")
 beat honest:
 	mira (soft): "Same here, honestly."
 	await mira.move_to(CENTER, time = 0.6)
 	mira: "Want to study together at lunch?"
 	jump walk
 
+@heading("All confidence")
 beat bluff:
 	mira (smirk): "Look at you, all confident."
 	jump walk
 
+@heading("Off to class")
 beat walk:
 	if trust > 0:
 		mira: "Let's head out, {player_name}."

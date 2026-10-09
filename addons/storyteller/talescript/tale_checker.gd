@@ -347,6 +347,10 @@ func _check_annotations(annotations: Array[TaleExpr], node: TaleNode, top_level:
 				if node.kind != K.BEAT:
 					_error_expr(annotation, "@skip_safe only applies to beats.")
 				_expect_no_arguments(annotation)
+			"heading":
+				if node.kind != K.BEAT:
+					_error_expr(annotation, "@heading only applies to beats.")
+				_expect_one_string(annotation)
 			_:
 				_error_expr(annotation, "Unknown annotation '@%s'." % annotation.name)
 

@@ -90,6 +90,11 @@ func _compile(doc: TaleDocument, tale_name: String, call_kinds: Dictionary) -> T
 			K.BEAT:
 				_beat = node.name
 				_skip_safe = _has_annotation(pending, node, "skip_safe")
+				var beat_annotations: Array[TaleExpr] = pending.duplicate()
+				beat_annotations.append_array(node.annotations)
+				var heading := _annotation_text(beat_annotations, "heading")
+				if not heading.is_empty():
+					_tale.headings[node.name] = heading
 				_tale.beats[node.name] = _tale.instructions.size()
 				_block(node.body)
 				_emit({"op": "end"}, node.line_end)

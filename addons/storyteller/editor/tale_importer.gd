@@ -31,6 +31,11 @@ func _get_priority() -> float:
 	return 1.0
 
 
+## Tales imported with an older compiled format are imported again.
+func _get_format_version() -> int:
+	return Tale.FORMAT
+
+
 func _get_import_order() -> int:
 	return 0
 

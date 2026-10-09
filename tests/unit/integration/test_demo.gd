@@ -42,6 +42,10 @@ func test_whole_demo_plays_without_errors() -> void:
 	assert_eq(lines.back(), "End of the StoryTeller demo. Thank you for playing.")
 	for id in ["library", "library_theme", "talescript", "library_night", "classroom", "quiet_morning", "mira", "history_note"]:
 		assert_true(run["collected"].has(id), id)
+	assert_eq(run["route_titles"], [
+		"A visitor in the library", "Questions for Ada", "The first morning", "An honest answer", "Off to class",
+		"Lunch at the library", "Quiz time", "Rain on the windows", "Goodnight",
+	], "the route chart shows every beat played, by its heading")
 
 
 func test_whole_demo_plays_in_spanish() -> void:
@@ -52,6 +56,7 @@ func test_whole_demo_plays_in_spanish() -> void:
 	assert_has(lines, "Estudié con Mira. Respondí 2 de sus preguntas.")
 	assert_has(lines, "Mira: ¿La misma mesa mañana? Yo traigo el café.")
 	assert_eq(lines.back(), "Fin de la demo de StoryTeller. Gracias por jugar.")
+	assert_eq(run["route_titles"].slice(0, 3), ["Una visita en la biblioteca", "Preguntas para Ada", "La primera mañana"])
 
 
 func test_spanish_translation_is_complete() -> void:
@@ -100,13 +105,15 @@ func _play_demo(locale: String) -> Dictionary:
 		for item in collection.get_items(item_kind):
 			if collection.is_collected(item.id):
 				collected.append(item.id)
+	var chart := RouteChart.build(director.routes, director)
+	var titles := chart.nodes.map(func(node: Dictionary) -> String: return node["title"])
 	for file_name in DirAccess.get_files_at("user://test_demo_saves"):
 		DirAccess.remove_absolute("user://test_demo_saves".path_join(file_name))
 	DirAccess.remove_absolute("user://test_demo_settings.cfg")
 	TranslationServer.set_locale(previous_locale)
 	if not presenter.picks.is_empty():
 		errors.append("unused picks: %s" % [presenter.picks])
-	return {"errors": errors, "lines": presenter.lines, "collected": collected}
+	return {"errors": errors, "lines": presenter.lines, "collected": collected, "route_titles": titles}
 
 
 ## Types "Robin" into the name prompt whenever it opens, until the story ends.
