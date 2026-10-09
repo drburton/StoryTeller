@@ -59,6 +59,7 @@ func setup(config: StoryConfig) -> void:
 		box.name = style_name.capitalize() + "Box"
 		box.characters_per_second = config.text_speed
 		box.theme = theme
+		box.on_text_tag = _run_text_tag
 		layer.add_child(box)
 		_styles[style_name] = box
 	dialogue_box = _styles["classic"]
@@ -157,6 +158,13 @@ func _process(_delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if dialogue_box != null and not input_blocked.call() and event.is_action_pressed("story_auto"):
 		dialogue_box.auto_advance = not dialogue_box.auto_advance
+
+
+## Runs an [code][act][/code] or [code][sound][/code] tag that typing reached.
+func _run_text_tag(_tag: String, value: String) -> void:
+	var director := _director()
+	if director != null and value.is_valid_int():
+		await director.run_text_act(value.to_int())
 
 
 func _director() -> TaleDirector:

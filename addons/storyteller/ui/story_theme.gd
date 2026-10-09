@@ -6,6 +6,8 @@ extends RefCounted
 
 const ACCENT := Color(0.55, 0.75, 1.0)
 const TEXT := Color(0.92, 0.93, 0.96)
+## Color of [code][code][/code] text in dialogue boxes.
+const CODE := Color(0.98, 0.80, 0.45)
 
 
 static func build_default() -> Theme:
@@ -34,6 +36,12 @@ static func build_default() -> Theme:
 	theme.set_color("default_color", "RichTextLabel", TEXT)
 	theme.set_stylebox("normal", "LineEdit", _box(Color(0.12, 0.13, 0.17, 1.0), 6, 8))
 	theme.set_stylebox("focus", "LineEdit", focus)
+	# [code] in dialogue, for tales that show script or other code.
+	var mono := SystemFont.new()
+	mono.font_names = PackedStringArray(["Cascadia Mono", "Consolas", "Menlo", "DejaVu Sans Mono", "Liberation Mono", "monospace"])
+	theme.set_font("mono_font", "RichTextLabel", mono)
+	theme.set_font_size("mono_font_size", "RichTextLabel", 18)
+	theme.set_color("code_color", "DialogueBox", CODE)
 	return theme
 
 

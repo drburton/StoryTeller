@@ -186,3 +186,11 @@ func test_parse_errors_are_not_repeated() -> void:
 	var doc := TaleParser.parse("beat main:\n\tif x y:\n\t\tpass\n")
 	assert_eq(doc.diagnostics.size(), 1)
 	assert_eq(TaleChecker.check(doc, _context()).size(), 0)
+
+
+func test_text_tags_are_checked() -> void:
+	assert_eq(_beat("\t\"Wait[act=wait(0.5)] and [speed=2]go[/speed].\"\n"), PackedStringArray())
+	assert_eq(_beat("\t\"Boom[act=explode()]\"\n"), PackedStringArray(["2: Unknown action or beat 'explode'."]))
+	assert_eq(_beat("\t\"Hm[act=wait()]\"\n"), PackedStringArray(["2: 'wait' needs the argument 'seconds'."]))
+	assert_eq(_beat("\tchoose:\n\t\t\"Ring[sound=bell]\":\n\t\t\tpass\n"), PackedStringArray(["3: Unknown action or beat 'sound'."]), "sound tags check the sound action")
+	assert_eq(_beat("\t\"Too [speed=x]fast\"\n"), PackedStringArray(["2: [speed=x] needs a number above 0, e.g. [speed=2] types twice as fast."]))

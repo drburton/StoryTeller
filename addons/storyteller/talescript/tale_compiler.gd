@@ -36,7 +36,7 @@ static func compile_text(text: String) -> Dictionary:
 	var compiler := TaleCompiler.new()
 	var parts: Array = []
 	for part in split["parts"]:
-		parts.append(compiler._expr(part) if part is TaleExpr else part)
+		parts.append(compiler._text_part(part))
 	return {"parts": parts, "errors": split.get("errors", PackedStringArray())}
 
 
@@ -325,8 +325,18 @@ func _expr(expr: TaleExpr) -> Array:
 func _text(text: String) -> Array:
 	var parts: Array = []
 	for part in TaleText.split_interpolation(text)["parts"]:
-		parts.append(_expr(part) if part is TaleExpr else part)
+		parts.append(_text_part(part))
 	return parts
+
+
+## A text part as the director uses it: a String, a compiled expression
+## (Array), or [code]{"tag": "act" or "sound", "expr": compiled}[/code].
+func _text_part(part: Variant) -> Variant:
+	if part is TaleExpr:
+		return _expr(part)
+	if part is Dictionary:
+		return {"tag": part["tag"], "expr": _expr(part["expr"])}
+	return part
 
 
 ## Pinned id from @id, or "<beat>_<hash>" made unique within the tale.

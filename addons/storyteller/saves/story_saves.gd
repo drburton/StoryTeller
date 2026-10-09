@@ -242,7 +242,7 @@ func _connect_director() -> void:
 		return
 	load_globals()
 	director.line_started.connect(func(line: Dictionary) -> void:
-		_last_line = {"speaker": line["speaker_name"], "text": line["text"]}
+		_last_line = {"speaker": line["speaker_name"], "text": DialogueBox.plain_text(line["text"])}
 		_globals_dirty = true)
 	director.choice_started.connect(func(_options: Array[Dictionary]) -> void:
 		if autosave_on_choice:

@@ -24,14 +24,20 @@ beat topics:
 		@once "How do I write dialogue?":
 			topics_seen.append("dialogue")
 			curiosity += 1
-			ada (smile): "Put a speaker, a colon, and a quoted line. Narration is just the quoted line."
+			ada (smile): "Put a speaker, a colon, and a quoted line:\n[code]ada: \"Hello!\"[/code]"
+			ada: "Narration is just the quoted line:\n[code]\"The lamps hum.\"[/code]"
+			ada (curious): "A mood in parentheses changes my face. This line starts with:\n[code]ada (curious):[/code]"
+			ada: "Tags change how a line types: [speed=0.3]slowly[/speed], [speed=3]very quickly indeed[/speed], or [instant]all at once[/instant]."
+			ada: "The fast part was written like this:\n[code][lb]speed=3[rb]very quickly indeed[lb]/speed[rb][/code]"
+			ada (curious): "A line can also make things happen as it types.[pause=0.3][act=shake(0.3)] Like that.[sound=page_turn]"
+			ada (smile): "That line held these two tags:\n[code][lb]act=shake(0.3)[rb][/code]\n[code][lb]sound=page_turn[rb][/code]"
 			collect("talescript")
 			jump topics
 		@once "What about choices?":
 			topics_seen.append("choices")
 			curiosity += 1
-			ada (curious): "You're using one right now. Each option is a string with its own block."
-			ada: "Options marked @once disappear after you pick them."
+			ada (curious): "You're using one right now. A choose block lists the options:\n[code]choose:\n    \"Stay\": jump start[/code]"
+			ada: "Options marked @once disappear after you pick them, like this one:\n[code]@once \"What about choices?\":[/code]"
 			jump topics
 		@once "Can the stage change?":
 			topics_seen.append("stage")
@@ -41,34 +47,36 @@ beat topics:
 			ambience("rain", volume = 0.5)
 			weather("rain", strength = 0.6)
 			collect("library_night")
-			ada (smile): "Backdrops, music, and rain each take one line."
+			ada (smile): "Backdrops, music, and rain each take one line:\n[code]weather(\"rain\", strength = 0.6)[/code]"
 			await ada.move_to(Vector2(0.32, 0.0), time = 0.6)
 			prop("book", at = Vector2(0.66, 0.4))
 			sound("page_turn")
-			ada: "Characters move, and props appear wherever you put them."
+			ada: "Characters move, and props appear wherever you put them:\n[code]prop(\"book\", at = Vector2(0.66, 0.4))[/code]"
 			await camera.zoom(1.15, time = 0.8)
-			ada (curious): "Even the camera can zoom."
+			ada (curious): "Even the camera can zoom:\n[code]camera.zoom(1.15)[/code]"
 			camera.reset(time = 0.8)
 			jump topics
 		@once "Can tales remember things?":
 			topics_seen.append("variables")
 			curiosity += 1
 			ada: "Yes. Questions you have asked so far: {curiosity}."
+			ada (smile): "This tale declares a variable and adds one for each topic:\n[code]var curiosity := 0\ncuriosity += 1[/code]"
+			ada: "Braces show a value inside a line:\n[code]\"Questions so far: {{curiosity}}.\"[/code]"
 			jump topics
 		@once "What about saving and menus?":
 			topics_seen.append("menus")
 			curiosity += 1
 			ada: "Press Escape or right-click for the pause menu. Saving, loading, and settings live there."
 			ada (curious): "Roll the mouse wheel up or press Page Up to rewind. Press H to read the history."
-			ada: "Pictures, music, and notes you unlock show up under Extras on the title screen."
-			ada (smile): "Some stories read better as pages. Let me show you."
+			ada: "Pictures, music, and notes you unlock show up under Extras on the title screen. One line unlocks each:\n[code]collect(\"library\")[/code]"
+			ada (smile): "Some stories read better as pages. This line switches to them:\n[code]dialogue_style(\"page\")[/code]"
 			dialogue_style("page")
 			"In the page style, lines stack on the screen like a book."
 			"Each new line goes under the last one."
 			clear_page()
-			"A call to clear_page() starts a fresh page."
+			"A fresh page starts with:\n[code]clear_page()[/code]"
 			dialogue_style("classic")
-			ada: "And now we're back to the classic box."
+			ada: "And this brings back the classic box:\n[code]dialogue_style(\"classic\")[/code]"
 			jump topics
 		"Show me a sample scene." if curiosity > 0:
 			ada (smile): "Here is one from the StoryTeller plan."
