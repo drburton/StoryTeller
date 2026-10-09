@@ -2,7 +2,12 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.12** (M5 features complete; writer testing pending)
+Status: **Draft v0.13** (M5 merged; M6 genre features planned)
+
+Changes in v0.13:
+- New milestone M6, "Genre features", from a review of Visual Novel Machinery (an Unreal Engine visual novel plugin). Its feature list showed common genre features StoryTeller lacks: inline text tags, CGs, character renames, character animations, a fuller save screen, per-character data, a player route chart, image choices, and Yarn Spinner import. Each will be designed in StoryTeller's own terms under the originality rules (§2).
+- Launch preparation becomes M7, and the 1.0 estimate grows to about 33 weeks.
+- New open question on the tier of image choices and the route chart (§19, question 5).
 
 Changes in v0.12:
 - M5 features complete: the Story tab has Text, Cards, and Map views of the same file. Edits are line-level and share one undo history (decision 0012).
@@ -493,6 +498,15 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Story Map | Graph of beats, jumps, calls, and choices (§9) | M5 | Free |
 | Stage preview and play from here | Live preview of the stage at any line; launch the game from that line | Pro phase | Pro |
 | Story analytics | Route coverage, word counts per character, choice statistics from playtests | Pro phase | Pro |
+| Inline text tags | Typing speed, instant spans, sounds and actions at points in a line | M6 | Free |
+| CGs | Event pictures on their own layer that unlock gallery entries, with variants | M6 | Free |
+| Character names during play | Rename cast members from tales; saved and translated | M6 | Free |
+| Character animations | Hop, shake, nod, named animations, drawing order | M6 | Free |
+| Save screen paging | Unlimited slots in pages, delete and label saves, timed autosave | M6 | Free |
+| Per-character data | Fields declared in cast profiles, such as affection | M6 | Free |
+| Route chart | Player-facing map of explored branches without spoilers | M6 | Open (§19) |
+| Image choices | Choices as pictures or screen areas; a hook for in-world choices | M6 | Open (§19) |
+| Yarn Spinner import | Convert Yarn Spinner scripts into tales | M6 | Free |
 | Language server | Autocomplete and diagnostics in VS Code and other editors | Post-1.0 | Free |
 
 ---
@@ -615,7 +629,7 @@ Selecting any card shows the stage as it would look at that line. The director r
 - Export check in CI: the project is exported as a `.pck` and checked the way a shipped game sees it. ✔
 - **Exit criteria:** a 15-minute original demo story exports and plays on the platforms chosen for M3 (§14).
   - Met so far: an exported Linux pack plays the demo from the title screen through saving, loading, and every menu.
-  - Still open: Windows and web builds have not been run, since they need export templates and a browser. The platform choice (§14) is also still open. The 15-minute story moved to M6 (it runs about 7 to 8 minutes after M4).
+  - Still open: Windows and web builds have not been run, since they need export templates and a browser. The platform choice (§14) is also still open. The 15-minute story moved to launch preparation, now M7 (it runs about 7 to 8 minutes after M4).
 
 ### M4: Production features (4 weeks)
 - Effects, collection, localization, debug console, live reload, autocomplete, movies, embedding preset. ✔
@@ -629,12 +643,27 @@ Selecting any card shows the stage as it would look at that line. The director r
   - Met in an automated test (`tests/unit/visual/test_visual_scene.gd`): a branching scene built only with cards matches hand-written TaleScript and checks cleanly.
   - Still open: the same with real writers, which the usability test covers.
 
-### M6: Launch preparation (3 weeks)
+### M6: Genre features (5 weeks)
+Features most visual novels expect that StoryTeller lacks, found by reviewing Visual Novel Machinery (October 2026). Only the feature ideas come from that review; names, syntax, and designs are StoryTeller's own (§2).
+- **Inline text tags:** finish the tags planned in the spec (§7.1 of `docs/talescript-spec.md`): `[speed]` for typing speed, a span shown at once without typing, `[sound]` at a point in the text, and `[act]` to run an action mid-line.
+- **CGs:** full-screen event pictures on their own layer, above the cast and below the dialogue box (`cg()` and `hide_cg()`). Showing a CG unlocks its gallery entry, and one gallery entry can hold several variants of a picture.
+- **Character names during play:** change a cast member's displayed name from a tale (for example "???" until they introduce themselves, or a name the player types with `ask_text`). The new name is saved and translated like other names.
+- **Character animations and order:** built-in hop, shake, and nod; playing a named animation on scene-based looks; bringing a character to the front or setting their drawing order.
+- **Save screen:** as many slots as players want, shown in pages; deleting and labeling saves from the screen; an optional autosave on a timer.
+- **Per-character data:** fields declared in a cast profile (for example `affection`), used in tales as `ada.affection += 1`, known to the checker and autocomplete, and saved with the story.
+- **Presentation details:** title screen artwork and music in `StoryConfig`; a show and hide animation for the dialogue box; named text styles set in the config (for example `[whisper]`) that expand to formatting.
+- **Route chart for players:** a screen that shows the branches a player has explored, built from read tracking and choice ids, with choices they have not seen kept hidden to avoid spoilers.
+- **Image choices:** choices shown as clickable pictures or places on the screen, plus a hook so games can let players choose by interacting with objects in a 2D or 3D scene. (Its tier is open; see §19.)
+- **Yarn Spinner import:** convert Yarn Spinner scripts (an open-source format) into tales, so writers can bring existing dialogue.
+- Every new action and cast field gets a card form in the visual editor automatically and is covered by the checker, translation export, and tests.
+- **Exit criteria:** the demo uses CGs, a character rename, per-character data, an image choice, and the route chart, in English and Spanish; a sample Yarn Spinner script imports into a tale that plays.
+
+### M7: Launch preparation (3 weeks)
 - Legal review (§2.8).
 - Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots.
 - Publish on the Godot Asset Library or Asset Store and GitHub.
 
-### 1.0 Release (about 28 weeks after M0 starts)
+### 1.0 Release (about 33 weeks after M0 starts)
 
 ### After 1.0
 - **Pro phase:** build the Pro add-on once the free tier is a working system (§12), starting with the features marked Pro in §7.
@@ -676,7 +705,7 @@ The visual editor sits in the free tier because it is the strongest reason to ch
 ### 12.3 Pricing and sales (to explore)
 
 - **Pricing models:** one-time purchase with a year of updates, yearly subscription, or per-seat licenses for teams. A one-time price with paid major upgrades is common for game tools and simple to explain.
-- **Storefronts:** the official Godot Asset Store has announced plans for paid assets, but reports through mid-2026 describe paid listings as not yet open to all creators; check its current status during M6. Alternatives include itch.io, Gumroad, Lemon Squeezy, and a dedicated website.
+- **Storefronts:** the official Godot Asset Store has announced plans for paid assets, but reports through mid-2026 describe paid listings as not yet open to all creators; check its current status during M7. Alternatives include itch.io, Gumroad, Lemon Squeezy, and a dedicated website.
 - **Contributor agreements:** if outside contributors send code to the free tier, a Contributor License Agreement (or at least a Developer Certificate of Origin) keeps future licensing options open. Discuss with the lawyer during the §2.8 review.
 
 ---
@@ -800,6 +829,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 2. **Product name:** keep "StoryTeller" after a trademark search, or choose a more distinctive name?
 3. **Dialogue strings:** require quotes (closest to GDScript, as planned) or also allow an unquoted shorthand for heavy prose?
 4. **Pro tier details** (deferred): feature split (§12.2), pricing, and storefront.
+5. **Tier of image choices and the route chart (M6):** §7 lists hotspot, messenger, and timed choice styles as Pro. Timed choices are already built in the free tier, and image choices overlap the hotspot style. Should image choices and the player route chart be free (common genre features) or Pro?
 
 ---
 
@@ -809,4 +839,5 @@ StoryTellerPro/                  # private repository (Pro tier)
 2. Run a quick trademark and name search for "StoryTeller".
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
 4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
-5. Start M6: legal review, full documentation, the 15-minute sample project, and publishing.
+5. Decide the tier question for image choices and the route chart (§19, question 5).
+6. Start M6: genre features, beginning with inline text tags, CGs, and character renames.
