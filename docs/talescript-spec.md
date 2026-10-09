@@ -373,7 +373,7 @@ Details:
 
 ### 7.3 Translation
 
-Lines, narration, and choice options are translated through Godot's translation system (decision 0011). Each one is keyed `<tale>:<id>`, where the id comes from `@id("...")` or, without it, from the beat name and a hash of the text. Changing the text of a line without `@id` therefore gives it a new key.
+Lines, narration, and choice options are translated through Godot's translation system (decision 0011). Each one is keyed `<tale>:<id>`, where the id comes from `@id("...")` or, without it, from the beat name and a hash of the text. Changing the text of a line without `@id` therefore gives it a new key. **Pin Line IDs** in the Story tab writes the current id of every line into the tale as `@id`, so later edits keep their keys.
 
 A translation may use `{expression}` and the markup in §7.1, just like the original. While the game's language is `StoryConfig.source_language`, lines are shown as written in the tale.
 

@@ -161,6 +161,11 @@ func _build_ui() -> void:
 	import_yarn.tooltip_text = "Convert a Yarn Spinner script (.yarn) into a tale in the tales folder set in StoryConfig."
 	import_yarn.pressed.connect(_choose_yarn_file)
 	toolbar.add_child(import_yarn)
+	var pin_ids := Button.new()
+	pin_ids.text = "Pin Line IDs"
+	pin_ids.tooltip_text = "Write @id(\"...\") on every line and choice of this tale that has none, so editing their text later keeps their translations and read state."
+	pin_ids.pressed.connect(pin_line_ids)
+	toolbar.add_child(pin_ids)
 	var views := ButtonGroup.new()
 	for view_name in ["Text", "Cards", "Map"]:
 		var button := Button.new()
@@ -437,6 +442,23 @@ func import_yarn(yarn_path: String) -> String:
 	refresh_files()
 	open_file(result["path"])
 	return result["path"]
+
+
+## Pins the ids of every line in the open tale (see [TaleLineIds]). The
+## change can be undone like any edit. Returns how many lines were pinned.
+func pin_line_ids() -> int:
+	if _current_path.is_empty():
+		return 0
+	var result := TaleLineIds.pin(code_edit.text, _current_path.get_file().get_basename())
+	var message: String = result["error"]
+	if message.is_empty():
+		message = "Pinned %d line id(s) in %s." % [result["count"], _current_path.get_file()] if result["count"] > 0 else "Every line in %s already has an id." % _current_path.get_file()
+		if result["count"] > 0:
+			apply_edit(result["text"])
+	print("StoryTeller: " + message)
+	if Engine.is_editor_hint():
+		EditorInterface.get_editor_toaster().push_toast(message)
+	return result["count"]
 
 
 ## Opens the setup wizard. Once it runs, the new tale opens here.

@@ -591,7 +591,7 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Export Strings | Writes the translation CSV and registers it (Story tab button or command-line script) | M4 ✔ |
 | Visual editor and Story Map | Cards and Map views; see §9 | M5 ✔ |
 | Setup wizard | Config, folders, starter scene, sample tale (Story tab, while the project has no StoryConfig) | M7 ✔ |
-| Pin line ids | Write `@id` into every line so edits never change ids | Not scheduled |
+| Pin line ids | Write `@id` into every line so edits never change ids (**Pin Line IDs** in the Story tab) | M7 ✔ |
 | Cast inspector | Custom inspector with mood previews and a "test enter" button | Not scheduled |
 | Language server | LSP for VS Code and other editors | Post-1.0 |
 

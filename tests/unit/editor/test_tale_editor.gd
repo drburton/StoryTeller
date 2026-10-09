@@ -139,3 +139,19 @@ func test_add_ons_can_extend_the_story_tab() -> void:
 	side.free()
 	button.free()
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+
+func test_pin_line_ids_button_edits_the_open_tale() -> void:
+	var path := "user://pin_test.tale"
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string("beat start:\n\t\"One.\"\n")
+	file.close()
+	var panel: TaleEditorPanel = track(TaleEditorPanel.new())
+	tree.root.add_child(panel)
+	panel.open_file(path)
+	assert_eq(panel.pin_line_ids(), 1)
+	assert_true(panel.code_edit.text.contains("\t@id(\"start_"), panel.code_edit.text)
+	assert_true(panel.is_dirty(path), "pinning is an unsaved edit")
+	panel.code_edit.undo()
+	assert_eq(panel.code_edit.text, "beat start:\n\t\"One.\"\n", "and can be undone")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
