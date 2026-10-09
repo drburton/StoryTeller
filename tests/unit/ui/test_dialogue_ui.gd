@@ -263,3 +263,20 @@ func test_clicking_the_box_continues() -> void:
 		assert_true(state["done"], "a click on the arrow of %s continues" % script.get_global_name())
 		box.hide_box()
 	tree.root.size = old_size
+
+
+func test_code_is_tinted_by_the_theme() -> void:
+	assert_eq(DialogueBox.tint_code("Use [code]wait(1)[/code].", Color(1, 0, 0)), "Use [code][color=#ff0000]wait(1)[/color][/code].")
+	var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+	tree.root.add_child(box)
+	box.characters_per_second = 0.0
+	var text_label: RichTextLabel = box.find_child("Text", true, false)
+	box.show_line(_line("Plain [code]x[/code]"))
+	await tree.process_frame
+	assert_false(text_label.text.contains("[color="), "no tint without a code_color in the theme")
+	box.cancel()
+	box.theme = StoryTheme.build_default()
+	box.show_line(_line("Tinted [code]x[/code]"))
+	await tree.process_frame
+	assert_true(text_label.text.contains("[code][color=#%s]x[/color][/code]" % StoryTheme.CODE.to_html(false)), "the default theme tints code")
+	box.cancel()

@@ -90,6 +90,8 @@ func reveal(label: RichTextLabel, text: String, indicator: CanvasItem = null) ->
 	_cancelled = false
 	_rushing = false
 	_revealing = true
+	if has_theme_color("code_color", "DialogueBox"):
+		text = tint_code(text, get_theme_color("code_color", "DialogueBox"))
 	var parsed := extract_tags(text)
 	var start := label.get_parsed_text().length()
 	if label.get_parsed_text().is_empty():
@@ -184,6 +186,14 @@ static func extract_tags(text: String) -> Dictionary:
 		spans.append({"from": unclosed["from"], "to": total, "factor": unclosed["factor"]})
 	measure.free()
 	return {"text": clean, "stops": stops, "spans": spans}
+
+
+## Colors every [code][code][/code] span in [param text] with [param color].
+## [method reveal] does this when the theme has a [code]code_color[/code]
+## for the [code]DialogueBox[/code] type, as the default theme does.
+static func tint_code(text: String, color: Color) -> String:
+	var open := "[code][color=#%s]" % color.to_html(false)
+	return text.replace("[code]", open).replace("[/code]", "[/color][/code]")
 
 
 ## The text a player reads in [param text], without BBCode or typing tags,
