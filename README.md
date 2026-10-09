@@ -4,7 +4,7 @@ A visual novel and interactive story framework for Godot.
 
 Writers create stories in TaleScript, a small language that looks and feels like GDScript. StoryTeller handles characters, scenery, dialogue, choices, audio, saving, localization, and menus.
 
-> **Status:** early development (milestone M5 features complete). The language, runtime, Story tab (text, cards, and Story Map), characters, backdrops, transitions, camera, audio, effects, movies, saves, rewind, history, settings, menus, the Extras screen, translation, the debug console, and live reload work. Next: usability testing with writers, then launch preparation.
+> **Status:** early development (milestone M5 features complete). The language, runtime, Story tab (text, cards, and Story Map), characters, backdrops, transitions, camera, audio, effects, movies, saves, rewind, history, settings, menus, the Extras screen, translation, the debug console, and live reload work. Next: usability testing with writers, then the M6 genre features (CGs, character renames, inline text tags, and more) and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
 
 ## Requirements
 

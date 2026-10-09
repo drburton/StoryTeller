@@ -12,10 +12,11 @@ Implementation status:
 | Checks listed in §9 | Implemented (`TaleChecker`) |
 | Runtime meaning of statements (§5) | Implemented (`TaleCompiler`, `TaleDirector`) |
 | Interpolation (§7.2) and `[pause]` tags (§7.1) | Implemented |
-| `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned |
+| `[speed]`, `[sound]`, `[act]` tags (§7.1) | Planned (M6) |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 | `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
 | Translation (§7.3), effect, collection, and movie actions (§13.1) | Implemented (M4) |
+| Syntax tree guarantees used by the visual editor (§12) | Implemented (M5) |
 
 ---
 
