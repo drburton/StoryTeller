@@ -15,6 +15,7 @@ Implementation status:
 | `[speed]`, `[instant]`, `[sound]`, `[act]` tags (§7.1) | Implemented (M6) |
 | CGs (`cg`, `hide_cg`), cast renames (`display_name`), cast animations and drawing order, cast fields (§13.1, §13.2, §13.4) | Implemented (M6) |
 | `@heading` for the route chart (§8) | Implemented (M6) |
+| Choice styles and `@picture` (§5.9) | Implemented (M6) |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 | `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
 | Translation (§7.3), effect, collection, and movie actions (§13.1) | Implemented (M4) |
@@ -265,9 +266,9 @@ choose:
 ```
 
 ```gdscript
-choose(style = "hotspots", timeout = 5.0):
-	"Left door": jump left
-	"Right door": jump right
+choose(style = "pictures", timeout = 5.0):
+	@picture("red_door") "Left door": jump left
+	@picture("blue_door") "Right door": jump right
 	timeout:
 		"You hesitate too long."
 ```
@@ -276,6 +277,8 @@ choose(style = "hotspots", timeout = 5.0):
 - Options whose condition is false are hidden, unless `@show_disabled` is used.
 - `timeout:` runs when the `timeout` argument expires.
 - `choose` arguments: `style` (menu style name), `timeout` (seconds), and style-specific options.
+- Built-in styles: `"list"` (the default, a column of buttons) and `"pictures"` (a row of picture cards, with `columns = n` to wrap). `StoryConfig.choice_styles` adds styles, and game code can add one at runtime with `StoryDialogue.add_choice_style()`, for example to let players choose by clicking objects in a scene. An unknown style is reported and the list is used.
+- `@picture("name")` on an option gives it a picture from `StoryConfig.choice_picture_folder`. Styles that do not show pictures ignore it.
 
 ### 5.10 Other statements
 
@@ -396,6 +399,7 @@ player_name = await ask_text(tr("What's your name?"), tr("Sam"))
 | `@voice("...")` | Dialogue or narration | Assigns a voice clip. |
 | `@no_rewind` | Any statement | The player cannot rewind past this point. |
 | `@skip_safe` | Beat | Treat the beat's lines as already read, so skip passes them even when the player only skips read lines. Useful for recaps. |
+| `@picture("...")` | Choice option | Picture shown for the option by the `"pictures"` choice style (§5.9). |
 | `@heading("...")` | Beat | Name shown for the beat in the players' route chart. Translated like tale titles, keyed by its text. Without it, the chart shows the beat's name. |
 
 ---
@@ -488,7 +492,7 @@ TaleScript is GDScript plus the following. Anything not listed here behaves as i
 4. `jump` for one-way transfer between beats.
 5. `choose:` blocks with string options and `timeout:`.
 6. Named arguments in calls: `f(x, time = 1.0)`.
-7. Story annotations: `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@skip_safe`, `@heading`.
+7. Story annotations: `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@skip_safe`, `@heading`, `@picture`.
 
 **Restrictions**
 

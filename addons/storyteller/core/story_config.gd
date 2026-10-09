@@ -137,9 +137,15 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Scene for the dialogue box (its root must extend [DialogueBox]).
 ## Empty uses the built-in classic box.
 @export var dialogue_box_scene: PackedScene
-## Scene for the choice menu (its root must extend [ChoiceMenu]).
-## Empty uses the built-in list menu.
+## Scene for the default "list" choice menu (its root must extend
+## [ChoiceMenu]). Empty uses the built-in list menu.
 @export var choice_menu_scene: PackedScene
+## Extra choice styles by name, picked with [code]choose(style = "name")[/code],
+## or a replacement for "pictures". Each scene's root must extend [ChoiceMenu].
+@export var choice_styles: Dictionary[String, PackedScene] = {}
+## Folder with the pictures that [code]@picture("name")[/code] names on
+## choice options.
+@export_dir var choice_picture_folder := "res://story/choices"
 ## Typing speed in characters per second. 0 shows text instantly.
 @export_range(0, 200, 1) var text_speed := 40.0
 ## Extra dialogue styles by name, or replacements for "classic" and "page".

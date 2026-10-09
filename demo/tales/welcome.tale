@@ -45,6 +45,7 @@ beat topics:
 			curiosity += 1
 			ada (curious): "You're using one right now. A choose block lists the options:\n[code]choose:\n    \"Stay\": jump start[/code]"
 			ada: "Options marked @once disappear after you pick them, like this one:\n[code]@once \"What about choices?\":[/code]"
+			ada (smile): "Choices can be pictures too. Chapter 1 has one, written like this:\n[code]choose(style = \"pictures\"):\n    @picture(\"umbrella\") \"Share mine.\":[/code]"
 			jump topics
 		@once "Can the stage change?":
 			topics_seen.append("stage")

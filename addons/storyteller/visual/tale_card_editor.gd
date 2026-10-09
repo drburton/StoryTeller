@@ -542,6 +542,10 @@ func _set_fields(card: TaleCard, path: String) -> Control:
 
 
 func _choice_lanes(column: VBoxContainer, card: TaleCard, path: String) -> void:
+	# Picture fields show for the "pictures" style or once any option has one.
+	var with_pictures := _choice_style(card.node) == "pictures"
+	for lane in card.lanes:
+		with_pictures = with_pictures or _has_annotation(lane["node"], "picture")
 	for i in card.lanes.size():
 		var lane: Dictionary = card.lanes[i]
 		var node: TaleNode = lane["node"]
@@ -564,18 +568,28 @@ func _choice_lanes(column: VBoxContainer, card: TaleCard, path: String) -> void:
 			row.add_child(once)
 			var disabled := _check(lane_path + ":show_disabled", "Show when unavailable", _has_annotation(node, "show_disabled"))
 			row.add_child(disabled)
+			var picture: Control = null
+			if with_pictures:
+				picture = _line_field(lane_path + ":picture", _annotation_text(node, "picture"), "picture", func(_text: String) -> void: pass)
+				row.add_child(picture)
 			var write := func() -> void:
 				var keep: Array[TaleExpr] = []
 				for annotation in node.annotations:
-					if annotation.name not in ["once", "show_disabled"]:
+					if annotation.name not in ["once", "show_disabled", "picture"]:
 						keep.append(annotation)
 				var prefix := TaleWriter.annotations_prefix(keep)
+				var picture_name := "" if picture == null else String(picture.get_meta("line_edit").text).strip_edges()
+				if not picture_name.is_empty():
+					prefix += "@picture(%s) " % TaleExpr.quote(picture_name)
 				prefix += ("@once " if once.button_pressed else "") + ("@show_disabled " if disabled.button_pressed else "")
 				_set_line(node, prefix + TaleWriter.option(text.get_meta("line_edit").text, condition.get_meta("line_edit").text) + TaleWriter.comment_suffix(node))
 			text.set_meta("commit", write)
 			condition.set_meta("commit", write)
 			_bind_commit(text)
 			_bind_commit(condition)
+			if picture != null:
+				picture.set_meta("commit", write)
+				_bind_commit(picture)
 			once.toggled.connect(func(_on: bool) -> void: write.call())
 			disabled.toggled.connect(func(_on: bool) -> void: write.call())
 		if card.lanes.size() > 1:
@@ -845,6 +859,22 @@ func _string_constants() -> PackedStringArray:
 		if statement.kind == TaleNode.Kind.CONST and statement.expr != null and statement.expr.kind == TaleExpr.Kind.LITERAL and statement.expr.value is String:
 			names.append(statement.name)
 	return names
+
+
+## Text argument of [param node]'s annotation [param annotation_name], or "".
+static func _annotation_text(node: TaleNode, annotation_name: String) -> String:
+	for annotation in node.annotations:
+		if annotation.name == annotation_name and annotation.args.size() == 1 and annotation.args[0].value is String:
+			return annotation.args[0].value
+	return ""
+
+
+## The literal style argument of a choose block, or "".
+static func _choice_style(node: TaleNode) -> String:
+	if node.expr == null or not node.expr.named_args.has("style"):
+		return ""
+	var style: TaleExpr = node.expr.named_args["style"]
+	return style.value if style.kind == TaleExpr.Kind.LITERAL and style.value is String else ""
 
 
 static func _has_annotation(node: TaleNode, annotation_name: String) -> bool:

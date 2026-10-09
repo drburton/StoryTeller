@@ -732,7 +732,7 @@ func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 		if not enabled and not option["show_disabled"]:
 			continue
 		var parts := _localize(option["text"], option["id"], frame.tale, option["line"])
-		shown.append({"text": await _render(parts, frame), "id": option["id"], "enabled": enabled})
+		shown.append({"text": await _render(parts, frame), "id": option["id"], "enabled": enabled, "picture": option.get("picture", "")})
 		sources.append(option)
 		routes.see_option(frame.tale.translation_key(option["id"]))
 	var has_enabled := shown.any(func(option: Dictionary) -> bool: return option["enabled"])

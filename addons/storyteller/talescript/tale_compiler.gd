@@ -279,6 +279,7 @@ func _choose(node: TaleNode) -> void:
 				"cond": _expr(child.condition) if child.condition else null,
 				"once": _has_annotation(annotations, null, "once"),
 				"show_disabled": _has_annotation(annotations, null, "show_disabled"),
+				"picture": _annotation_text(annotations, "picture"),
 				"id": _line_id(annotations, child.expr.value),
 				"target": target,
 				"line": child.line_start,

@@ -369,6 +369,68 @@ def props():
     img.save(path("props", "book.png"))
 
 
+# --- Choice pictures -----------------------------------------------------------
+
+def choice_pictures():
+    """Pictures for the rain choice in chapter 1 (choose(style = "pictures"))."""
+    size = (480, 300)
+
+    def base(top, bottom):
+        return vertical_gradient(size, top, bottom).convert("RGBA")
+
+    # Share mine: an open umbrella in the rain.
+    img = base((38, 52, 78), (22, 28, 44))
+    d = ImageDraw.Draw(img)
+    rng = random.Random(7)
+    for _ in range(90):
+        x, y = rng.randrange(0, 480), rng.randrange(0, 300)
+        d.line((x, y, x - 6, y + 18), fill=(150, 175, 215), width=1)
+    d.pieslice((120, 60, 360, 240), 180, 360, fill=(196, 72, 64))
+    for i in range(5):
+        x0 = 120 + i * 48
+        d.arc((x0, 130, x0 + 48, 170), 180, 360, fill=(150, 50, 46), width=4)
+    d.line((240, 150, 240, 262), fill=(70, 50, 40), width=6)
+    d.arc((222, 246, 246, 276), 0, 180, fill=(70, 50, 40), width=6)
+    img.save(path("choices", "umbrella.png"))
+
+    # Wait it out here: a lamp-lit armchair by a dark window.
+    img = base((58, 44, 34), (36, 26, 20))
+    d = ImageDraw.Draw(img)
+    d.rectangle((280, 40, 440, 190), fill=(24, 32, 52))
+    d.rectangle((280, 40, 440, 190), outline=(110, 82, 58), width=8)
+    d.line((360, 40, 360, 190), fill=(110, 82, 58), width=6)
+    for i in range(12):
+        x = 292 + i * 13
+        d.line((x, 52 + (i * 7) % 40, x - 4, 64 + (i * 7) % 40), fill=(120, 140, 180), width=1)
+    d.rounded_rectangle((70, 150, 250, 270), 18, fill=(120, 60, 52))
+    d.rounded_rectangle((90, 110, 230, 190), 16, fill=(140, 72, 60))
+    d.rounded_rectangle((56, 160, 96, 260), 12, fill=(108, 54, 46))
+    d.rounded_rectangle((224, 160, 264, 260), 12, fill=(108, 54, 46))
+    glow = Image.new("RGBA", size, (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse((-40, -60, 200, 160), fill=(255, 210, 140, 90))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(30)))
+    d = ImageDraw.Draw(img)
+    d.polygon([(40, 30), (110, 30), (125, 70), (25, 70)], fill=(236, 200, 130))
+    d.line((75, 70, 75, 150), fill=(60, 44, 34), width=4)
+    img.save(path("choices", "armchair.png"))
+
+    # Run for it: an open door onto a rainy street.
+    img = base((46, 40, 36), (30, 26, 24))
+    d = ImageDraw.Draw(img)
+    d.rectangle((150, 40, 330, 290), fill=(30, 44, 70))
+    rng = random.Random(11)
+    for _ in range(60):
+        x, y = rng.randrange(155, 325), rng.randrange(45, 285)
+        d.line((x, y, x - 4, y + 14), fill=(150, 175, 215), width=1)
+    d.rectangle((150, 230, 330, 290), fill=(40, 52, 74))
+    d.ellipse((190, 250, 290, 270), fill=(70, 90, 120))
+    d.polygon([(330, 40), (400, 20), (400, 300), (330, 290)], fill=(96, 64, 42))
+    d.ellipse((380, 160, 392, 172), fill=(210, 180, 90))
+    d.rectangle((140, 30, 340, 40), fill=(80, 56, 40))
+    d.rectangle((140, 30, 150, 290), fill=(80, 56, 40))
+    img.save(path("choices", "door.png"))
+
+
 # --- Audio -------------------------------------------------------------------
 
 def save_wav(name, samples):
@@ -456,6 +518,7 @@ def main():
     write_profile("ada", "Ada", (0.55, 0.85, 0.65), "neutral")
     write_profile("mira", "Mira", (0.95, 0.6, 0.45), "neutral", {"friendship": 0})
     props()
+    choice_pictures()
     music("library_theme", [[60, 64, 67, 71], [57, 60, 64, 67], [53, 57, 60, 64], [55, 59, 62, 64]])
     music("quiet_morning", [[62, 66, 69, 73], [59, 62, 66, 69], [55, 59, 62, 66], [57, 61, 64, 67]], beat=0.36)
     chime()

@@ -22,7 +22,8 @@ extends Resource
 ## iter_begin   slot, iterable                      Start a for loop.
 ## iter_next    slot, var, target                   Next loop value, or go to target when done.
 ## match        subject, branches, end              Pick a branch: {patterns, guard, target}.
-## choose       args, options, timeout_target, end  Show a choice menu.
+## choose       args, options, timeout_target, end  Show a choice menu. Options:
+##              {text, cond, once, show_disabled, picture, id, target, line}.
 ## end                                              End of a beat.
 ## [/codeblock]
 ## Any instruction may carry [code]"no_rewind": true[/code]. Say instructions in
@@ -40,7 +41,7 @@ extends Resource
 ## literal text and expression arrays for interpolated values.
 
 ## Version of the compiled format. Changes when the layout above changes.
-const FORMAT := 3
+const FORMAT := 4
 
 @export var format := FORMAT
 ## The tale's name: its file name without extension.
