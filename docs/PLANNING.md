@@ -2,7 +2,7 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.15** (M0 to M5 complete; M6 under way, 7 of its 10 items built)
+Status: **Draft v0.16** (M0 to M5 complete; M6 under way, 7 of its 10 items built)
 
 ### Where things stand (2026-10-09)
 
@@ -12,6 +12,9 @@ Status: **Draft v0.15** (M0 to M5 complete; M6 under way, 7 of its 10 items buil
 - **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
 - **Not done yet:** the rest of M6 (the route chart, image choices, and Yarn Spinner import), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.16:
+- The MIT license is reconfirmed after weighing Apache 2.0, MPL 2.0, and source-available licenses (§13). The name and the Pro tier are protected by a trademark, Pro's own EULA, and a contributor agreement, not by the free tier's license.
 
 Changes in v0.15:
 - M6 progress: inline text tags, CGs, character renames, character animations, per-character data, the save screen, and presentation details are built (§11). The reference sections describe them: vocabulary (§3), markup (§4.5), runtime and layers (§5.1, §5.3), looks and assets (§5.5, §5.6), actions (§6), player-facing systems (§10), and testing (§16).
@@ -115,7 +118,7 @@ Changes in v0.2:
 | D5 | 2026-10-08 | Names accepted: TaleScript, `.tale` files, `beat` blocks. |
 | D6 | 2026-10-08 | The visual editor ships before 1.0 as a key differentiator (§9). |
 | D7 | 2026-10-08 | Business model: free base tier plus a paid Pro tier (§12). |
-| D8 | 2026-10-08 | MIT license for StoryTeller (§13). |
+| D8 | 2026-10-08 | MIT license for StoryTeller (§13). Reconfirmed 2026-10-09. |
 | D9 | open | Target platforms and their order (exploring, §14). |
 | D10 | 2026-10-08 | Built-in test runner instead of GUT. |
 | D11 | 2026-10-08 | Pro tier deferred until the free tier is a working system (§12). |
@@ -778,6 +781,15 @@ The license affects adoption, what competitors may do with the code, and how the
 
 **Decision (0008):** StoryTeller is released under the **MIT license**, the same license as Godot. Anyone may use, modify, and redistribute it, including in commercial games, as long as the copyright notice is kept. A future Pro add-on can still use its own proprietary EULA, because it will be a separate work. MIT also allows others to fork or resell the free tier; the project accepts this in exchange for maximum adoption.
 
+**Reconfirmed (2026-10-09):** the other options were weighed again before the first public release. Apache 2.0 adds a patent grant and a trademark clause but changes little for a GDScript tool; MPL 2.0 would require changes to StoryTeller's own files to be shared, at some cost to adoption; source-available licenses would keep the free tier off the Godot Asset Library and cost trust in an MIT-heavy community. MIT stays. Protection comes from elsewhere:
+
+- **Trademark:** register the final product name after the trademark search (§19, question 2). The license grants no trademark rights, so forks cannot use the name.
+- **Pro EULA:** the Pro add-on is a separate work under its own proprietary license (§12).
+- **Contributor agreement:** require a CLA or DCO before accepting outside contributions (§12.3), so future licensing choices stay open.
+- **Value:** updates, support, content packs, and time-saving tools, since anyone may rebuild free-tier features.
+
+This plan is general guidance; the legal review (§2.8) confirms these steps.
+
 ---
 
 ## 14. Platform Exploration
@@ -913,3 +925,4 @@ Today the README, the TaleScript specification, and the decision records are the
 5. Decide the tier question for image choices and the route chart (§19, question 5).
 6. Continue M6: genre features. Inline text tags, CGs, character renames, character animations, per-character data, the save screen, and presentation details are done. Next, in order: the route chart, image choices, and Yarn Spinner import.
 7. Play the demo to judge what tests can't: typing speeds in the tour, the chapter 1 CG and its timing, and the size and speed of the hop, nod, and shake.
+8. Before accepting outside contributions, add a CLA or DCO (§12.3, §13).
