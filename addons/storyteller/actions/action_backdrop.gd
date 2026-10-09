@@ -3,8 +3,9 @@ extends TaleAction
 ## image from the backdrop folder, or a Color such as Color.BLACK.
 ## Color.TRANSPARENT removes the backdrop and shows the game behind it.
 ## Transitions: none, fade, dissolve, wipe_left/right/up/down,
-## slide_left/right/up/down. [code]mask[/code] names a grayscale image in
-## res://story/transitions for "dissolve".
+## slide_left/right/up/down, and any [StoryTransition] the project adds.
+## [code]mask[/code] names a grayscale image in the transition folder for
+## "dissolve".
 
 
 func get_action_name() -> String:
