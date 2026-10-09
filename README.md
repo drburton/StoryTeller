@@ -1,4 +1,4 @@
-# StoryTeller
+# Visual Novel StoryTeller
 
 A visual novel and interactive story framework for Godot.
 
