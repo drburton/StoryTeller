@@ -128,7 +128,8 @@ func _make_slot(slot: String) -> Control:
 	box.add_child(picture)
 	var name_label := Label.new()
 	name_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
-	name_label.text = _slot_label(slot) + ("" if info.is_empty() else "  " + _date(info.get("saved_at", 0.0)))
+	var tale_title := str(info.get("title", ""))
+	name_label.text = _slot_label(slot) + ("" if tale_title.is_empty() else "  " + tr(tale_title)) + ("" if info.is_empty() else "  " + _date(info.get("saved_at", 0.0)))
 	name_label.add_theme_font_size_override("font_size", 14)
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name_label.custom_minimum_size = Vector2(THUMBNAIL_SIZE.x, 0)

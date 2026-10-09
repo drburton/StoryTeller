@@ -88,6 +88,7 @@ func save_slot(slot: String) -> Error:
 		"playtime": playtime,
 		"speaker": _last_line["speaker"],
 		"text": _last_line["text"],
+		"title": _current_title(),
 		"state": story.capture(),
 	}
 	var file := FileAccess.open(_slot_path(slot), FileAccess.WRITE)
@@ -314,6 +315,16 @@ func _global_keepers() -> Array[Node]:
 		if member.has_method("capture_globals") and member.has_method("restore_globals"):
 			result.append(member)
 	return result
+
+
+## The @title of the tale playing now, untranslated, or "".
+func _current_title() -> String:
+	var director := _director()
+	if director == null:
+		return ""
+	var position := director.get_position()
+	var tale := director.get_tale(position.get("tale", "")) if not position.is_empty() else null
+	return tale.title if tale != null else ""
 
 
 func _slot_path(slot: String) -> String:

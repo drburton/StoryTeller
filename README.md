@@ -168,6 +168,13 @@ CI runs this check on every pull request.
 
 ## Documentation
 
+- [Getting started](docs/guides/getting-started.md): install, set up, and play a first scene
+- [The visual editor](docs/guides/visual-editor.md): Text, Cards, and Map views
+- [TaleScript for writers](docs/guides/talescript-for-writers.md): a cheat sheet with examples
+- [TaleScript for GDScript users](docs/guides/talescript-for-gdscript-users.md): only the differences
+- [Developer guide](docs/guides/developer-guide.md): crew members, actions, looks, styles, transitions, embedding, editor add-ons
+- [Recipes](docs/guides/recipes.md): relationship meters, inventories, mini-games, timed and picture choices
+- [Action reference](docs/action-reference.md), generated from the built-in actions
 - [TaleScript specification](docs/talescript-spec.md)
 - [Project plan](docs/PLANNING.md)
 - [Decision records](docs/decisions/README.md)
