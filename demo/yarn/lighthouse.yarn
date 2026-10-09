@@ -1,0 +1,41 @@
+// A short Yarn Spinner script for the import sample. Convert it with
+// "Import Yarn" in the Story tab, or see tests/unit/talescript/test_yarn_converter.gd.
+title: Start
+tags: intro
+position: 0,0
+---
+<<declare $lamps_lit = 0>>
+<<declare $has_key = false>>
+The lighthouse door is open. Wind pulls at your coat. #line:lh_start_1
+Keeper: You came up the long stairs for something. What is it? #line:lh_start_2
+-> Ask about the lamp. #line:lh_opt_lamp
+    Keeper: It has not been lit in a year. #line:lh_lamp_1
+    <<set $lamps_lit to $lamps_lit + 1>>
+    <<jump Lamp>>
+-> Ask about the key. <<if $has_key is false>> #line:lh_opt_key
+    Keeper: Here. Don't lose it. #line:lh_key_1
+    <<set $has_key to true>>
+    <<jump Start>>
+-> Leave. #line:lh_opt_leave
+    <<jump Shore>>
+===
+title: Lamp
+---
+<<wait 0.5>>
+<<if $has_key and $lamps_lit >= 1>>
+    You turn the key, and the lamp flares to life. #line:lh_lamp_lit
+<<elseif $lamps_lit > 3>>
+    Keeper: Stop pacing and fetch the key. #line:lh_lamp_pace
+<<else>>
+    The lamp stays dark. Lamps lit so far: {$lamps_lit}. #line:lh_lamp_dark
+<<endif>>
+<<fade_out 1>>
+<<jump Shore>>
+===
+title: Shore
+---
+<<if visited("Lamp")>>
+    Keeper: Thank you for climbing up. #line:lh_shore_thanks
+<<endif>>
+The waves keep their own time. #line:lh_shore_end
+===

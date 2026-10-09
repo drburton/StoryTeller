@@ -22,3 +22,4 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0014](0014-free-and-pro-split.md) | Where the free tier ends and Pro begins | Accepted |
 | [0015](0015-route-chart.md) | The route chart: what it records and what it shows | Accepted |
 | [0016](0016-choice-styles-and-pictures.md) | Choice styles and picture choices | Accepted |
+| [0017](0017-yarn-spinner-import.md) | Importing Yarn Spinner scripts | Accepted |

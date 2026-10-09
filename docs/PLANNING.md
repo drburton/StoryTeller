@@ -2,16 +2,20 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.19** (M0 to M5 complete; M6 under way, 9 of its 10 items built)
+Status: **Draft v0.20** (M0 to M6 complete; M7 next)
 
 ### Where things stand (2026-10-09)
 
-- **Built and merged to `main`:** milestones M0 to M5. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
-- **M6 so far:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, and picture choices with a registry of choice styles. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
-- **Tests:** 349 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
+- **Built and merged to `main`:** milestones M0 to M6. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
+- **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
+- **Tests:** 356 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
 - **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
-- **Not done yet:** the rest of M6 (Yarn Spinner import), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
+- **Not done yet:** M7 (launch preparation), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.20:
+- M6 complete: Yarn Spinner import is built (§11, decision 0017). **Import Yarn** in the Story tab (or `addons/storyteller/editor/import_yarn.gd` from the command line) converts a `.yarn` file into a tale: nodes become beats, with dialogue, options, conditions, variables, jumps, detours, waits, and line ids. Anything else is kept as a comment and listed. `demo/yarn/lighthouse.yarn` is an original sample, and a test converts it and plays it.
+- §1.1 and §20 updated now that M6 is done.
 
 Changes in v0.19:
 - M6 progress: image choices are built (§11, decision 0016). `choose(style = "pictures"):` shows picture cards, each option's picture named with the new `@picture` annotation (§4.6, §4.8). Choice styles now have a registry: `StoryConfig.choice_styles` adds menus, and game code can add any object as a style at runtime, which is the hook for choices made by clicking objects in a 2D or 3D scene. This is also the first extension point Pro needs (§12.4).
@@ -115,7 +119,7 @@ Changes in v0.2:
 
 ### 1.1 Non-goals for 1.0
 
-- Compatibility with other engines' script formats. (Importing open formats such as Yarn Spinner is planned for M6; StoryTeller still does not read commercial engines' formats.)
+- Compatibility with other engines' script formats. (Yarn Spinner scripts, an open format, can be imported since M6; StoryTeller does not read commercial engines' formats.)
 - A general-purpose visual programming language. The visual editor (§9) covers story content; game logic stays in GDScript.
 - C# support. GDScript classes remain callable from C# through Godot's normal interop, and a dedicated C# API can be revisited after 1.0.
 - Spine or Live2D support in the core package (possible later add-ons).
@@ -718,7 +722,7 @@ Not built yet: per-word and fade-in typing, typing sounds, gamepad bindings by d
   - Met in an automated test (`tests/unit/visual/test_visual_scene.gd`): a branching scene built only with cards matches hand-written TaleScript and checks cleanly.
   - Still open: the same with real writers, which the usability test covers.
 
-### M6: Genre features (5 weeks)
+### M6: Genre features (5 weeks) ✔
 Features most visual novels expect that StoryTeller lacks, found by reviewing Visual Novel Machinery (October 2026). Only the feature ideas come from that review; names, syntax, and designs are StoryTeller's own (§2).
 - **Inline text tags:** finish the tags planned in the spec (§7.1 of `docs/talescript-spec.md`): `[speed]` for typing speed, `[instant]` for a span shown at once without typing, `[sound]` at a point in the text, and `[act]` to run an action mid-line. ✔
 - **CGs:** full-screen event pictures on their own layer, above the cast and below the dialogue box (`cg()` and `hide_cg()`). Showing a CG unlocks its gallery entry, and one gallery entry can hold several variants of a picture. ✔ (CGs live in `res://story/cgs/` as single images or folders of variants; every CG gets a gallery item, and the gallery shows the variants a player has seen. Weather and filters draw over CGs; the camera does not move them. Decision 0013.)
@@ -729,14 +733,14 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 - **Presentation details:** title screen artwork and music in `StoryConfig`; a show and hide animation for the dialogue box; named text styles set in the config (for example `[whisper]`) that expand to formatting. ✔ (`title_background` and `title_music`; `dialogue_box_transition` "fade" (default), "slide", or "none", instant while skipping; `text_styles` with whisper, shout, and thought.)
 - **Route chart for players:** a screen that shows the branches a player has explored, built from read tracking and choice ids, with choices they have not seen kept hidden to avoid spoilers. ✔ (A Routes tab in Extras. The director records beats entered, the links between them, and options seen and picked in a `RouteLog` kept with the global data; beats are named with `@heading`. Decision 0015.)
 - **Image choices:** choices shown as clickable pictures, plus a hook so games can let players choose by interacting with objects in a 2D or 3D scene. Free (decision 0014). Built as a second choice style through a new choice style registry, so `choose(style = ...)` picks the menu (§12.4). ✔ (`choose(style = "pictures")` with `@picture("name")` on options, pictures in `StoryConfig.choice_picture_folder`; `StoryConfig.choice_styles` for more menus; `StoryDialogue.add_choice_style()` for game code. Decision 0016.)
-- **Yarn Spinner import:** convert Yarn Spinner scripts (an open-source format) into tales, so writers can bring existing dialogue.
+- **Yarn Spinner import:** convert Yarn Spinner scripts (an open-source format) into tales, so writers can bring existing dialogue. ✔ (`YarnConverter`: nodes become beats named in snake_case with the node title as `@heading`; speakers that are not cast members become constants; `$variables` become story variables; shortcut options, `<<if>>` chains, `<<set>>`, `<<declare>>`, `<<jump>>`, `<<detour>>`, `<<return>>`, `<<stop>>`, `<<wait>>`, `#line:` ids, and the common functions convert; other commands stay as comments and are listed. Decision 0017.)
 - Every new action and cast field gets a card form in the visual editor automatically and is covered by the checker, translation export, and tests.
 - **Exit criteria:** the demo uses CGs, a character rename, per-character data, an image choice, and the route chart, in English and Spanish; a sample Yarn Spinner script imports into a tale that plays.
   - Met so far: CGs (chapter 1, `window_table` in two variants), a character rename (Ada in the tour), and per-character data (Mira's `friendship` in chapter 1), in both languages. The demo also uses the text tags and character animations.
   - The route chart: every beat of the demo has a heading in both languages, and the playthrough tests check the chart.
   - An image choice: chapter 1's rain choice shows three pictures in both languages, and the playthrough tests check it.
-  - Still open: the Yarn Spinner import.
-- **Progress:** 9 of the 10 items are built. The remaining items are listed in §20.
+  - Yarn Spinner import: `demo/yarn/lighthouse.yarn` converts into a tale that checks cleanly and plays through its choices in a test.
+- **Progress:** all 10 items are built. Still to do by hand: play the demo to judge timing and feel (§20, step 7).
 
 ### M7: Launch preparation (4 weeks)
 - Legal review (§2.8).
@@ -907,7 +911,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-Built (349 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+Built (356 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
 
 - **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, route chart, console and live reload, editor panel, completion, card editor, and Story Map.
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.
@@ -972,6 +976,6 @@ Today the README, the TaleScript specification, and the decision records are the
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
 4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
 5. Add transition registration and editor hooks in M7 (§12.4). The choice style registry is built.
-6. Continue M6: genre features. Inline text tags, CGs, character renames, character animations, per-character data, the save screen, presentation details, the route chart, and image choices are done. Next: Yarn Spinner import.
+6. Start M7: the extension points in step 5, the setup wizard and documentation guides (§17), and the 15-minute original sample story.
 7. Play the demo to judge what tests can't: typing speeds in the tour, the chapter 1 CG and its timing, the size and speed of the hop, nod, and shake, and how the route chart reads after two or three playthroughs.
 8. Before accepting outside contributions, add a CLA or DCO (§12.3, §13).
