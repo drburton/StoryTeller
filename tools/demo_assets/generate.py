@@ -138,6 +138,47 @@ def classroom():
     img.convert("RGB").save(path("backdrops", "classroom_morning.png"))
 
 
+def riverside():
+    """The river at dusk, for chapter 2."""
+    img = vertical_gradient((WIDTH, HEIGHT), (64, 60, 110), (238, 150, 110)).convert("RGBA")
+    draw = ImageDraw.Draw(img)
+    # Low sun behind the far bank.
+    glow = Image.new("RGBA", (WIDTH, HEIGHT), (0, 0, 0, 0))
+    ImageDraw.Draw(glow).ellipse((720, 250, 900, 430), fill=(255, 210, 150, 200))
+    img.alpha_composite(glow.filter(ImageFilter.GaussianBlur(24)))
+    draw = ImageDraw.Draw(img)
+    # Far bank with rooftops.
+    rng = random.Random(5)
+    x = 0
+    while x < WIDTH:
+        w = rng.randrange(60, 130)
+        h = rng.randrange(30, 90)
+        draw.rectangle((x, 330 - h, x + w, 340), fill=(58, 48, 70))
+        draw.polygon([(x - 6, 330 - h), (x + w // 2, 300 - h), (x + w + 6, 330 - h)], fill=(52, 42, 62))
+        x += w + rng.randrange(4, 20)
+    draw.rectangle((0, 336, WIDTH, 350), fill=(48, 40, 58))
+    # Water with streaks of reflected light.
+    water = vertical_gradient((WIDTH, HEIGHT - 350), (120, 96, 120), (40, 44, 70)).convert("RGBA")
+    img.paste(water, (0, 350))
+    draw = ImageDraw.Draw(img)
+    for i in range(26):
+        y = 360 + i * 9
+        half = 90 - i * 3
+        draw.line((810 - half, y, 810 + half, y), fill=(255, 200, 150, 120), width=2)
+    # Near bank: railing and lamp posts.
+    draw.polygon([(0, 560), (WIDTH, 520), (WIDTH, HEIGHT), (0, HEIGHT)], fill=(70, 60, 64))
+    for post in range(0, WIDTH + 1, 96):
+        y = 560 - post * 40 // WIDTH
+        draw.line((post, y - 70, post, y), fill=(36, 32, 40), width=6)
+    draw.line((0, 490, WIDTH, 450), fill=(36, 32, 40), width=6)
+    draw.line((0, 520, WIDTH, 480), fill=(36, 32, 40), width=4)
+    for lamp_x in (180, 980):
+        y = 560 - lamp_x * 40 // WIDTH
+        draw.line((lamp_x, y - 260, lamp_x, y), fill=(30, 28, 34), width=8)
+        draw.ellipse((lamp_x - 18, y - 290, lamp_x + 18, y - 254), fill=(255, 226, 160))
+    img.convert("RGB").save(path("backdrops", "riverside_evening.png"))
+
+
 # --- CGs -------------------------------------------------------------------
 
 def window_table(variant):
@@ -509,6 +550,7 @@ def main():
     library(False)
     library(True)
     classroom()
+    riverside()
     window_table("afternoon")
     window_table("rain")
     for mood in ("neutral", "smile", "curious", "thinking"):

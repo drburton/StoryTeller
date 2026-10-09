@@ -100,10 +100,21 @@ func test_loading_a_save_continues_the_same_way() -> void:
 
 func test_rewinding_one_step_shows_the_line_before() -> void:
 	await _start()
+	# Choices offered before each line: rewinding just after a choice goes
+	# back to the choice, so those lines are skipped.
+	var choices_before := {}
+	director.choice_started.connect(func(_options: Array[Dictionary]) -> void: choices_before["now"] = choices_before.get("now", 0) + 1)
+	director.line_started.connect(func(_line: Dictionary) -> void: choices_before[presenter.lines.size()] = choices_before.get("now", 0))
 	var first := await _play_and_save([])
 	var lines: Array = first["lines"]
 	var rewind: StoryRewind = story.get_crew(&"Rewind")
-	for point in _points(lines.size()).slice(1):
+	# Later runs keep adding to choices_before, so keep the first run's.
+	var first_choices := choices_before.duplicate()
+	# Not the last point: the story ends before a rewind there could run.
+	for start_point in _points(lines.size()).slice(1, -1):
+		var point: int = start_point
+		while point < lines.size() and first_choices.get(point) != first_choices.get(point - 1):
+			point += 1
 		presenter.lines.clear()
 		var done := {"rewound": false}
 		presenter.on_line = func(_line: Dictionary) -> void:
