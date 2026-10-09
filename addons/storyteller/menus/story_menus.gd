@@ -43,7 +43,7 @@ const UI_TEXT: Array[String] = [
 	"Sound volume", "Ambience volume", "Voice volume", "Full screen",
 	"Skip unread lines", "Extras", "Gallery", "Music", "Codex", "Locked",
 	"Unlocked: %s", "Previous", "Next", "Page %d of %d", "Rename", "Delete",
-	"Delete %s?", "Name this save",
+	"Delete %s?", "Name this save", "Routes",
 ]
 
 var layer: CanvasLayer
@@ -62,6 +62,7 @@ var title_background: Texture2D
 var title_music := ""
 var return_to_title := true
 var show_quick_menu := true
+var show_route_chart := true
 
 var _notices: VBoxContainer
 var _screens: Dictionary = {}
@@ -83,6 +84,7 @@ func setup(config: StoryConfig) -> void:
 	title_music = config.title_music
 	return_to_title = config.return_to_title
 	show_quick_menu = config.show_quick_menu
+	show_route_chart = config.show_route_chart
 	layer = CanvasLayer.new()
 	layer.name = "MenuLayer"
 	layer.layer = 20
@@ -277,6 +279,17 @@ func history() -> StoryHistory:
 
 func collection() -> StoryCollection:
 	return _crew(&"Collection") as StoryCollection
+
+
+## True when the route chart has something to show.
+func has_route_chart() -> bool:
+	return show_route_chart and director() != null and not director().routes.is_empty()
+
+
+## True when Extras has something to show: collection items or the route
+## chart.
+func has_extras() -> bool:
+	return (collection() != null and not collection().is_empty()) or has_route_chart()
 
 
 ## Shows a short message in the top-right corner, such as an unlock.

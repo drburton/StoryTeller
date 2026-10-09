@@ -7,6 +7,7 @@ var score := 0
 var questions_left := ["capital", "formula", "date"]
 var stayed_late := false
 
+@heading("Lunch at the library")
 beat start:
 	stop_music(fade = 1.5)
 	await fade_out(Color.BLACK, time = 1.0)
@@ -31,6 +32,7 @@ beat start:
 	ada.exit(time = 0.6)
 	jump quiz
 
+@heading("Quiz time")
 beat quiz:
 	if questions_left.is_empty():
 		jump results
@@ -71,6 +73,7 @@ beat quiz:
 			jump results
 	jump quiz
 
+@heading("Rain on the windows")
 beat results:
 	match score:
 		3:
@@ -107,6 +110,7 @@ beat results:
 			mira (smirk): "You first. I'll watch you slip."
 	jump goodbye
 
+@heading("Goodnight")
 beat goodbye:
 	if stayed_late:
 		mira: "Thanks for today, {prologue.player_name}. Really."

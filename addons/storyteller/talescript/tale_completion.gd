@@ -10,7 +10,7 @@ extends RefCounted
 
 enum Kind { KEYWORD, ACTION, CAST, MOOD, BEAT, TALE, VARIABLE, FUNCTION, CONSTANT, MEMBER, ANNOTATION }
 
-const ANNOTATIONS: Array[String] = ["global", "id", "no_rewind", "once", "show_disabled", "skip_safe", "title", "voice"]
+const ANNOTATIONS: Array[String] = ["global", "heading", "id", "no_rewind", "once", "show_disabled", "skip_safe", "title", "voice"]
 const STATEMENT_KEYWORDS: Array[String] = [
 	"await", "break", "choose", "continue", "elif", "else", "for", "if", "jump",
 	"match", "pass", "return", "var", "while",

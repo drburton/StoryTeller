@@ -58,6 +58,8 @@ static func collect(config: StoryConfig) -> Dictionary:
 			continue
 		if not tale.title.is_empty():
 			_add(entries, seen, tale.title, tale.title, "title of %s" % file_name)
+		for beat in tale.headings:
+			_add(entries, seen, tale.headings[beat], tale.headings[beat], "heading of beat '%s' in %s" % [beat, file_name])
 		for instruction in tale.instructions:
 			_collect_instruction(entries, seen, tale, file_name, instruction)
 	var profiles := StoryStage.scan_cast(config.cast_folder)

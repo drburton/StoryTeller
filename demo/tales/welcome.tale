@@ -6,6 +6,7 @@ var curiosity := 0
 var topics_seen := []
 var visitor := ""
 
+@heading("A visitor in the library")
 beat start:
 	backdrop("library", transition = "fade", time = 1.5)
 	music("library_theme", volume = 0.6, fade = 2.0)
@@ -22,6 +23,7 @@ beat start:
 	ada (neutral): "Everything you see is written in a .tale file. Press Space or click to continue."
 	jump topics
 
+@heading("Questions for Ada")
 beat topics:
 	choose:
 		@once "How do I write dialogue?":
@@ -78,6 +80,7 @@ beat topics:
 			ada: "Press Escape or right-click for the pause menu. Saving, loading, and settings live there."
 			ada (curious): "Roll the mouse wheel up or press Page Up to rewind. Press H to read the history."
 			ada: "Pictures, music, and notes you unlock show up under Extras on the title screen. One line unlocks each:\n[code]collect(\"library\")[/code]"
+			ada (curious): "Extras also keeps a route chart of the scenes you have reached and the choices you made there. A heading above a beat names it on the chart:\n[code]@heading(\"Questions for Ada\")[/code]"
 			ada (smile): "Some stories read better as pages. This line switches to them:\n[code]dialogue_style(\"page\")[/code]"
 			dialogue_style("page")
 			"In the page style, lines stack on the screen like a book."
@@ -99,6 +102,7 @@ beat topics:
 		@show_disabled "Leave already" if curiosity == 0:
 			pass
 
+@heading("The lamps dim")
 beat farewell:
 	match curiosity:
 		5:

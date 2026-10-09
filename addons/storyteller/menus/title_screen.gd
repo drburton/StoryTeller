@@ -1,8 +1,9 @@
 class_name TitleScreen
 extends MenuScreen
-## The title screen: New Game, Continue, Load, Extras (when the game has a
-## collection), Settings, and Quit, over [member StoryConfig.title_background]
-## when the game sets one. [StoryMenus] plays [member StoryConfig.title_music].
+## The title screen: New Game, Continue, Load, Extras (when there is a
+## collection or a route chart to show), Settings, and Quit, over
+## [member StoryConfig.title_background] when the game sets one.
+## [StoryMenus] plays [member StoryConfig.title_music].
 
 var _continue: Button
 var _load: Button
@@ -65,7 +66,7 @@ func open() -> void:
 	var has_saves := menus.saves() != null and not menus.saves().latest_slot().is_empty()
 	_continue.disabled = not has_saves
 	_load.disabled = not has_saves
-	_extras.visible = menus.collection() != null and not menus.collection().is_empty()
+	_extras.visible = menus.has_extras()
 	focus_first()
 
 

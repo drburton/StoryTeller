@@ -1,7 +1,7 @@
 class_name ExtrasScreen
 extends MenuScreen
-## Extras: the gallery, music room, and codex filled by collect(). Locked
-## items are shown but cannot be opened.
+## Extras: the gallery, music room, and codex filled by collect(), and the
+## route chart. Locked items are shown but cannot be opened.
 
 const THUMBNAIL_SIZE := Vector2(176, 99)
 
@@ -64,6 +64,8 @@ func open() -> void:
 			_add_tab(_build_music(collection), "Music")
 		if not collection.get_items("entry").is_empty():
 			_add_tab(_build_codex(collection), "Codex")
+	if menus.has_route_chart():
+		_add_tab(_build_routes(), "Routes")
 	_viewer.hide()
 	focus_first()
 
@@ -198,6 +200,15 @@ func _build_codex(collection: StoryCollection) -> Control:
 	_codex_list.item_selected.connect(_show_entry)
 	_codex_text.text = ""
 	return split
+
+
+func _build_routes() -> Control:
+	var scroll := ScrollContainer.new()
+	var view := RouteChartView.new()
+	view.name = "RouteChartView"
+	scroll.add_child(view)
+	view.show_chart(RouteChart.build(menus.director().routes, menus.director()))
+	return scroll
 
 
 func _show_entry(index: int) -> void:

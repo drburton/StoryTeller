@@ -100,6 +100,9 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Folder with [CollectionItem] files: gallery pictures, music room tracks,
 ## and codex entries unlocked with collect().
 @export_dir var collection_folder := "res://story/collection"
+## Show the route chart in Extras: the beats the player has reached and the
+## choices they met there, with options they have not seen left out.
+@export var show_route_chart := true
 
 @export_group("Localization")
 ## Language the tales are written in, such as "en".

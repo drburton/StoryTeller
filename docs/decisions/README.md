@@ -20,3 +20,4 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0012](0012-visual-editor-edits-text-by-line.md) | The visual editor edits the text, line by line | Accepted |
 | [0013](0013-cgs-and-gallery-variants.md) | CGs, their layer, and gallery variants | Accepted |
 | [0014](0014-free-and-pro-split.md) | Where the free tier ends and Pro begins | Accepted |
+| [0015](0015-route-chart.md) | The route chart: what it records and what it shows | Accepted |

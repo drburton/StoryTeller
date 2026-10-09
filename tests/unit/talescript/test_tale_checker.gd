@@ -182,6 +182,13 @@ func test_annotations() -> void:
 	assert_eq(_check("@global const A := 1\n"), PackedStringArray(["1: @global only applies to a 'var' at the top level of the tale."]))
 
 
+func test_heading_annotation() -> void:
+	assert_eq(_check("@title(\"T\")\n@heading(\"The walk home\")\nbeat main:\n\tpass\n"), PackedStringArray())
+	assert_eq(_check("@heading(\"The walk home\") beat main:\n\tpass\n"), PackedStringArray(), "on the same line")
+	assert_eq(_beat("\t@heading(\"x\") \"one\"\n"), PackedStringArray(["2: @heading only applies to beats."]))
+	assert_eq(_check("@heading\nbeat main:\n\tpass\n"), PackedStringArray(["1: @heading needs one text argument, e.g. @heading(\"...\")."]))
+
+
 func test_parse_errors_are_not_repeated() -> void:
 	var doc := TaleParser.parse("beat main:\n\tif x y:\n\t\tpass\n")
 	assert_eq(doc.diagnostics.size(), 1)
