@@ -2,7 +2,7 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.16** (M0 to M5 complete; M6 under way, 7 of its 10 items built)
+Status: **Draft v0.17** (M0 to M5 complete; M6 under way, 7 of its 10 items built)
 
 ### Where things stand (2026-10-09)
 
@@ -12,6 +12,11 @@ Status: **Draft v0.16** (M0 to M5 complete; M6 under way, 7 of its 10 items buil
 - **Demo:** `demo/` plays a tour, a prologue, and chapter 1 (about 8 minutes) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
 - **Not done yet:** the rest of M6 (the route chart, image choices, and Yarn Spinner import), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.17:
+- The free and Pro split is decided (decision 0014, §12.2). Free covers everything needed to make and ship a complete game, including every system players see and the whole visual editor; Pro covers production tools and extra presentation content.
+- The route chart and image choices are free (§7), which closes question 5 (§19). Pro keeps the hotspot authoring tool, messenger replies, and story analytics.
+- New §12.4 lists the extension points the free tier must add before Pro work starts: a choice style registry (built with image choices in M6), transition registration, and editor hooks (M7, now 4 weeks; 1.0 moves to about 34 weeks).
 
 Changes in v0.16:
 - The MIT license is reconfirmed after weighing Apache 2.0, MPL 2.0, and source-available licenses (§13). The name and the Pro tier are protected by a trademark, Pro's own EULA, and a contributor agreement, not by the free tier's license.
@@ -122,6 +127,7 @@ Changes in v0.2:
 | D9 | open | Target platforms and their order (exploring, §14). |
 | D10 | 2026-10-08 | Built-in test runner instead of GUT. |
 | D11 | 2026-10-08 | Pro tier deferred until the free tier is a working system (§12). |
+| D12 | 2026-10-09 | Free and Pro split: free ships complete games, Pro saves production time (§12.2, decision 0014). |
 
 From M0 onward, each decision has a full record in `docs/decisions/`.
 
@@ -521,7 +527,7 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Dialogue style: full page | Full-screen text for prose-heavy scenes | M3 | Free |
 | Dialogue styles: bubble, messenger, caption | Speech bubbles, phone-chat stories, cinematic captions | Pro phase | Pro |
 | Timed choices | Countdown with a `timeout:` branch | M1 | Free |
-| Choice styles: hotspots, messenger reply | Point-and-click areas, chat replies | Pro phase | Pro |
+| Choice styles: hotspots, messenger reply | Hotspot authoring tool (clickable regions drawn over a backdrop in the editor), chat replies | Pro phase | Pro |
 | Menus and default theme | Title, pause, save/load, settings, history, confirm, loading, text input | M3 | Free |
 | Theme and template pack | Extra polished themes and genre starter projects (mystery, romance, messenger story) | Pro phase | Pro |
 | Basic effects | Flash, fade to color, rain and snow, color filters (blur and vignette not built) | M4 | Free |
@@ -544,8 +550,8 @@ Standard visual novel genre features, with the milestone (§11) and the proposed
 | Character animations | Hop, shake, nod, named animations, drawing order | M6 | Free |
 | Save screen paging | Unlimited slots in pages, delete and label saves, timed autosave | M6 | Free |
 | Per-character data | Fields declared in cast profiles, such as affection | M6 | Free |
-| Route chart | Player-facing map of explored branches without spoilers | M6 | Open (§19) |
-| Image choices | Choices as pictures or screen areas; a hook for in-world choices | M6 | Open (§19) |
+| Route chart | Player-facing map of explored branches without spoilers | M6 | Free |
+| Image choices | Choices as pictures; a hook for in-world choices in 2D and 3D scenes | M6 | Free |
 | Yarn Spinner import | Convert Yarn Spinner scripts into tales | M6 | Free |
 | Language server | Autocomplete and diagnostics in VS Code and other editors | Post-1.0 | Free |
 
@@ -706,7 +712,7 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 - **Per-character data:** fields declared in a cast profile (for example `affection`), used in tales as `ada.affection += 1`, known to the checker and autocomplete, and saved with the story. ✔ (Declared in `CastProfile.fields`; field names that would hide a cast member property or method are refused.)
 - **Presentation details:** title screen artwork and music in `StoryConfig`; a show and hide animation for the dialogue box; named text styles set in the config (for example `[whisper]`) that expand to formatting. ✔ (`title_background` and `title_music`; `dialogue_box_transition` "fade" (default), "slide", or "none", instant while skipping; `text_styles` with whisper, shout, and thought.)
 - **Route chart for players:** a screen that shows the branches a player has explored, built from read tracking and choice ids, with choices they have not seen kept hidden to avoid spoilers.
-- **Image choices:** choices shown as clickable pictures or places on the screen, plus a hook so games can let players choose by interacting with objects in a 2D or 3D scene. (Its tier is open; see §19.)
+- **Image choices:** choices shown as clickable pictures, plus a hook so games can let players choose by interacting with objects in a 2D or 3D scene. Free (decision 0014). Built as a second choice style through a new choice style registry, so `choose(style = ...)` picks the menu (§12.4).
 - **Yarn Spinner import:** convert Yarn Spinner scripts (an open-source format) into tales, so writers can bring existing dialogue.
 - Every new action and cast field gets a card form in the visual editor automatically and is covered by the checker, translation export, and tests.
 - **Exit criteria:** the demo uses CGs, a character rename, per-character data, an image choice, and the route chart, in English and Spanish; a sample Yarn Spinner script imports into a tale that plays.
@@ -714,13 +720,14 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
   - Still open: an image choice, the route chart, and the Yarn Spinner import.
 - **Progress:** 7 of the 10 items are built. The remaining items are listed in §20.
 
-### M7: Launch preparation (3 weeks)
+### M7: Launch preparation (4 weeks)
 - Legal review (§2.8).
+- The remaining extension points Pro needs (§12.4): transition registration and editor hooks.
 - Setup wizard (§8) and the documentation guides in §17, including generated action reference pages.
 - Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots.
 - Publish on the Godot Asset Library or Asset Store and GitHub.
 
-### 1.0 Release (about 33 weeks after M0 starts)
+### 1.0 Release (about 34 weeks after M0 starts)
 
 ### After 1.0
 - **Pro phase:** build the Pro add-on once the free tier is a working system (§12), starting with the features marked Pro in §7.
@@ -741,7 +748,9 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 4. **No license checks in the free tier.** Pro relies on its EULA. GDScript ships as readable source, so technical copy protection would be weak and would hurt honest customers.
 5. **Games stay free of fees.** Games built with either tier owe no royalties, and players never need a license.
 
-### 12.2 Proposed split
+### 12.2 The split (decision 0014)
+
+The line falls between **making a complete game** and **producing one faster, at a larger scale, or with more variety**. Free holds everything a solo creator needs to write, play, save, translate, and ship a full visual novel, including every system players see and use. Pro holds production tools for teams, voice work, and translation, plus extra presentation content.
 
 | Free (StoryTeller) | Pro (StoryTeller Pro) |
 |---|---|
@@ -753,17 +762,39 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 | Saves, rewind, history, read tracking | Theme and genre template pack |
 | Classic and full-page dialogue, list and timed choices | Translation workflow tools (`.po`, missing-line reports, preview) |
 | Full menu set and default theme | Voice production tools |
-| Collection, localization with CSV string export | Stage preview and play from here |
-| Debug console, live reload, embedding preset | Story analytics |
-| **Visual editor and Story Map** | Priority support and early access builds |
+| Collection, localization with CSV string export | Hotspot authoring tool and messenger replies |
+| Debug console, live reload, embedding preset | Stage preview and play from here |
+| Genre features from M6: text tags, CGs, renames, character animations, per-character data, paged saves, presentation details | Story analytics (route coverage, word counts, choice statistics) |
+| Route chart for players, image choices and the in-world choice hook | Priority support and early access builds |
+| Yarn Spinner import, language server (after 1.0) | |
+| **Visual editor and Story Map** | |
 
-The visual editor sits in the free tier because it is the strongest reason to choose StoryTeller; putting it behind payment would limit adoption. This is a recommendation and is listed in §19 for confirmation.
+Notes on the boundary:
+
+- **Visual editor:** free, because it is the strongest reason to choose StoryTeller; putting it behind payment would limit adoption.
+- **Route chart:** free, because players see it and it is becoming a standard genre feature. The editor-side analytics in Pro answer a different question (how playtesters moved through the story).
+- **Image choices:** the mechanism is free (picture buttons and the in-world choice hook). Pro sells the authoring tool that saves time, drawing hotspot regions over a backdrop in the editor.
+- **MIT and Pro:** anyone may rebuild a Pro feature on the free tier (§13). Pro's value comes from content packs, time-saving tools, and support, so pricing should assume buyers pay for convenience.
 
 ### 12.3 Pricing and sales (to explore)
 
 - **Pricing models:** one-time purchase with a year of updates, yearly subscription, or per-seat licenses for teams. A one-time price with paid major upgrades is common for game tools and simple to explain.
 - **Storefronts:** the official Godot Asset Store has announced plans for paid assets, but reports through mid-2026 describe paid listings as not yet open to all creators; check its current status during M7. Alternatives include itch.io, Gumroad, Lemon Squeezy, and a dedicated website.
 - **Contributor agreements:** if outside contributors send code to the free tier, a Contributor License Agreement (or at least a Developer Certificate of Origin) keeps future licensing options open. Discuss with the lawyer during the §2.8 review.
+
+### 12.4 Extension points Pro needs
+
+Pro uses only public extension points (§12.1, rule 3), so each Pro feature needs a hook in the free tier first. Community add-ons get the same hooks.
+
+| Pro feature | Extension point | Status |
+|---|---|---|
+| Bubble, messenger, and caption dialogue styles | `StoryConfig.dialogue_styles` | Built |
+| Video cast look | Scene looks (any Godot scene) | Built |
+| Effects pack | Custom actions (§5.4) and extra crew members (`StoryConfig.crew`) | Built |
+| Theme and template pack | `StoryConfig.theme` and starter projects | Built |
+| Hotspot and messenger choice styles | A registry of choice menu styles, chosen with `choose(style = ...)`. Tales can already write the style argument, but only `StoryConfig.choice_menu_scene` exists. | M6, with image choices |
+| Transition pack | Registering named transitions (today a fixed table in `backdrop_view.gd`), known to the checker and the card forms | M7 |
+| Stage preview, analytics, translation and voice tools | Editor hooks: add panels and toolbar buttons to the Story tab, and a signal for the selected line | M7 |
 
 ---
 
@@ -911,8 +942,8 @@ Today the README, the TaleScript specification, and the decision records are the
 1. **Platforms (D9):** exploring; see §14.
 2. **Product name:** keep "StoryTeller" after a trademark search, or choose a more distinctive name? The README's title is now "Visual Novel StoryTeller"; the code, addon folder, and other documents still say StoryTeller.
 3. **Dialogue strings:** require quotes (closest to GDScript, as planned) or also allow an unquoted shorthand for heavy prose?
-4. **Pro tier details** (deferred): feature split (§12.2), pricing, and storefront.
-5. **Tier of image choices and the route chart (M6):** §7 lists hotspot, messenger, and timed choice styles as Pro. Timed choices are already built in the free tier, and image choices overlap the hotspot style. Should image choices and the player route chart be free (common genre features) or Pro?
+4. **Pro tier details** (deferred): pricing and storefront (§12.3). The feature split is decided (§12.2, decision 0014).
+5. ~~**Tier of image choices and the route chart (M6).**~~ Resolved 2026-10-09: both are free; Pro keeps the hotspot authoring tool and messenger replies (decision 0014).
 
 ---
 
@@ -922,7 +953,7 @@ Today the README, the TaleScript specification, and the decision records are the
 2. Run a quick trademark and name search for "StoryTeller" and "Visual Novel StoryTeller", then settle the name (§19, question 2).
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
 4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
-5. Decide the tier question for image choices and the route chart (§19, question 5).
+5. Build the choice style registry with image choices, then transition registration and editor hooks in M7 (§12.4).
 6. Continue M6: genre features. Inline text tags, CGs, character renames, character animations, per-character data, the save screen, and presentation details are done. Next, in order: the route chart, image choices, and Yarn Spinner import.
 7. Play the demo to judge what tests can't: typing speeds in the tour, the chapter 1 CG and its timing, and the size and speed of the hop, nod, and shake.
 8. Before accepting outside contributions, add a CLA or DCO (§12.3, §13).
