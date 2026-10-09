@@ -229,3 +229,37 @@ func test_story_runs_text_tags_while_the_line_shows() -> void:
 	assert_eq(buttons.size(), 1)
 	assert_eq(buttons[0].text, "Pick", "choices leave tags out")
 	director.stop()
+
+
+func _click(at: Vector2) -> void:
+	for pressed in [true, false]:
+		var event := InputEventMouseButton.new()
+		event.button_index = MOUSE_BUTTON_LEFT
+		event.pressed = pressed
+		event.position = at
+		event.global_position = at
+		tree.root.push_input(event)
+
+
+func test_clicking_the_box_continues() -> void:
+	var old_size := tree.root.size
+	tree.root.size = Vector2i(1280, 720)
+	for script in [ClassicDialogueBox, PageDialogueBox]:
+		var box: DialogueBox = track(script.new())
+		tree.root.add_child(box)
+		box.characters_per_second = 0.0
+		var state := {"done": false}
+		var finish := func() -> void:
+			await box.show_line(_line("Hello", "Ada"))
+			state["done"] = true
+		finish.call()
+		await tree.process_frame
+		await tree.process_frame
+		var indicator: Control = box.find_child("Indicator", true, false)
+		if indicator == null:
+			indicator = box.get_node("Panel")
+		_click(indicator.get_global_rect().get_center())
+		await tree.process_frame
+		assert_true(state["done"], "a click on the arrow of %s continues" % script.get_global_name())
+		box.hide_box()
+	tree.root.size = old_size

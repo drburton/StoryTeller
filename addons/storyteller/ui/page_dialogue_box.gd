@@ -17,6 +17,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_panel = PanelContainer.new()
 	_panel.name = "Panel"
+	# Let clicks on the box reach _gui_input so they continue the story.
+	_panel.mouse_filter = Control.MOUSE_FILTER_PASS
 	_panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_panel.offset_left = 80
 	_panel.offset_right = -80
