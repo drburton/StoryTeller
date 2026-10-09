@@ -90,6 +90,87 @@ func to_sexpr() -> String:
 	return "?"
 
 
+## Returns TaleScript source for this expression, with parentheses only
+## where precedence needs them. Used by the visual editor to rewrite a
+## statement after one of its fields changes.
+func to_source() -> String:
+	return _source(0)
+
+
+## Quotes [param text] as a TaleScript string literal.
+static func quote(text: String) -> String:
+	var escaped := text.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\t", "\\t").replace("\r", "\\r")
+	return "\"%s\"" % escaped
+
+
+## Binding strength of this expression, as in [TaleParser].
+func precedence() -> int:
+	match kind:
+		Kind.BINARY:
+			return TaleParser.BINARY_PRECEDENCE.get(op, 0)
+		Kind.TERNARY:
+			return TaleParser.PREC_TERNARY
+		Kind.UNARY:
+			if op == "not":
+				return TaleParser.PREC_NOT
+			return TaleParser.PREC_BIT_NOT if op == "~" else TaleParser.PREC_UNARY
+		Kind.AWAIT:
+			return TaleParser.PREC_AWAIT
+	return 100
+
+
+func _source(min_precedence: int) -> String:
+	var text := _source_unwrapped()
+	return "(%s)" % text if precedence() < min_precedence else text
+
+
+func _source_unwrapped() -> String:
+	match kind:
+		Kind.LITERAL:
+			return quote(value) if value is String else _literal_text(value)
+		Kind.IDENTIFIER:
+			return name
+		Kind.UNARY:
+			return ("not " if op == "not" else op) + operands[0]._source(precedence())
+		Kind.AWAIT:
+			return "await " + operands[0]._source(precedence())
+		Kind.BINARY:
+			var own := precedence()
+			return "%s %s %s" % [operands[0]._source(own), op, operands[1]._source(own + 1)]
+		Kind.TERNARY:
+			var own := precedence()
+			return "%s if %s else %s" % [operands[0]._source(own + 1), operands[1]._source(own + 1), operands[2]._source(own)]
+		Kind.CALL:
+			return "%s(%s)" % [operands[0]._source(100), ", ".join(_arg_sources())]
+		Kind.ANNOTATION:
+			var texts := _arg_sources()
+			return "@%s" % name if texts.is_empty() else "@%s(%s)" % [name, ", ".join(texts)]
+		Kind.ATTRIBUTE:
+			return "%s.%s" % [operands[0]._source(100), name]
+		Kind.INDEX:
+			return "%s[%s]" % [operands[0]._source(100), operands[1]._source(0)]
+		Kind.ARRAY:
+			var items := PackedStringArray()
+			for item in operands:
+				items.append(item._source(0))
+			return "[%s]" % ", ".join(items)
+		Kind.DICTIONARY:
+			var entries := PackedStringArray()
+			for i in range(0, operands.size(), 2):
+				entries.append("%s: %s" % [operands[i]._source(0), operands[i + 1]._source(0)])
+			return "{%s}" % ", ".join(entries)
+	return ""
+
+
+func _arg_sources() -> PackedStringArray:
+	var texts := PackedStringArray()
+	for arg in args:
+		texts.append(arg._source(0))
+	for key in named_args:
+		texts.append("%s = %s" % [key, named_args[key]._source(0)])
+	return texts
+
+
 func _arg_texts() -> PackedStringArray:
 	var texts := PackedStringArray()
 	for arg in args:

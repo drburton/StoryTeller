@@ -4,7 +4,7 @@ A visual novel and interactive story framework for Godot.
 
 Writers create stories in TaleScript, a small language that looks and feels like GDScript. StoryTeller handles characters, scenery, dialogue, choices, audio, saving, localization, and menus.
 
-> **Status:** early development (milestone M4 complete). The language, runtime, Story editor tab with autocomplete, characters, backdrops, transitions, camera, audio, effects, movies, saves, rewind, history, settings, menus, the Extras screen, translation, the debug console, and live reload work. The visual editor and Story Map come next.
+> **Status:** early development (milestone M5 features complete). The language, runtime, Story tab (text, cards, and Story Map), characters, backdrops, transitions, camera, audio, effects, movies, saves, rewind, history, settings, menus, the Extras screen, translation, the debug console, and live reload work. Next: usability testing with writers, then launch preparation.
 
 ## Requirements
 
@@ -60,7 +60,13 @@ beat start:
 
 Characters, backdrops, and audio are found by name in `res://story/` (see the [asset folders](docs/talescript-spec.md#134-asset-folders)).
 
-Edit tales in the **Story** tab at the top of the Godot editor. It highlights TaleScript, suggests actions, characters, moods, beats, and variables as you type, and lists problems; Ctrl+S saves and reimports. While the game runs from the editor, saving a tale reloads it in the running game and continues at the same line.
+Edit tales in the **Story** tab at the top of the Godot editor. It has three views of the same file:
+
+- **Text:** TaleScript with highlighting and suggestions for actions, characters, moods, beats, and variables as you type.
+- **Cards:** each line of a beat as a card you can fill in without typing syntax. Dialogue cards have speaker and mood pickers, action cards have forms with lists of your backdrops, music, and other assets, and choices and conditions have a lane per branch. Drag cards to reorder them or move them between lanes. Anything without a card (loops, for example) shows as a script card with its text.
+- **Map:** every beat of the tales in the folder, with arrows for jumps and choices. Beats nothing leads to are highlighted. Double-click a beat to edit it, drag between beats to add a jump, or drag into empty space to create a new beat.
+
+The views edit the same `.tale` file, change only the lines they touch, and share one undo history. Problems are listed as you type (and shown on the card that has them); Ctrl+S saves and reimports. While the game runs from the editor, saving a tale reloads it in the running game and continues at the same line.
 
 Then play it from game code:
 

@@ -49,6 +49,33 @@ static func signature(target: Object, method: String, skip := 0) -> Dictionary:
 	return {"params": params, "required": params.size() - defaults.size()}
 
 
+## Parameters of [param method] in [param script], after skipping the first
+## [param skip]: a list of [code]{"name", "type", "default", "required"}[/code],
+## where type is a [enum Variant.Type] ([constant TYPE_NIL] for untyped).
+## Used by the visual editor to build forms.
+static func parameters(script: Script, method: String, skip := 0) -> Array[Dictionary]:
+	var result: Array[Dictionary] = []
+	var info := {}
+	while script != null and info.is_empty():
+		for entry in script.get_script_method_list():
+			if entry["name"] == method:
+				info = entry
+				break
+		script = script.get_base_script()
+	var all_args: Array = info.get("args", [])
+	var defaults: Array = info.get("default_args", [])
+	var first_default := all_args.size() - defaults.size()
+	for i in range(skip, all_args.size()):
+		var has_default := i >= first_default
+		result.append({
+			"name": all_args[i]["name"],
+			"type": all_args[i]["type"],
+			"default": defaults[i - first_default] if has_default else null,
+			"required": not has_default,
+		})
+	return result
+
+
 static func find_method(target: Object, method: String) -> Dictionary:
 	var script := target.get_script() as Script
 	while script != null:
