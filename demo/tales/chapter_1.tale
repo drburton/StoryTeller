@@ -42,6 +42,7 @@ beat quiz:
 			choose:
 				"The Amber.":
 					score += 1
+					mira.friendship += 1
 					mira (smile): "Correct. You actually read chapter three."
 				"The Silver.":
 					mira (smirk): "That's the one in the poem. Close, though."
@@ -51,6 +52,7 @@ beat quiz:
 			choose:
 				"The same area.":
 					score += 1
+					mira.friendship += 1
 					mira (smile): "Exactly. The teacher loves that trick."
 				"Twice the area.":
 					mira: "Draw it out. The two changes cancel."
@@ -60,6 +62,7 @@ beat quiz:
 			choose:
 				"Before the school.":
 					score += 1
+					mira.friendship += 1
 					mira (soft): "Right. The school grew up around it."
 					collect("history_note")
 				"Last year.":
@@ -91,9 +94,11 @@ beat results:
 	choose:
 		"Share mine.":
 			stayed_late = true
+			mira.friendship += 2
 			mira (smile): "My hero. A slightly damp hero."
 		"Wait it out here.":
 			stayed_late = true
+			mira.friendship += 1
 			mira (soft): "Fine by me. Ada won't kick us out yet."
 			ada.enter("thinking", at = RIGHT, time = 0.6)
 			ada: "I'm closing in ten minutes, whatever the weather."
@@ -105,6 +110,8 @@ beat results:
 beat goodbye:
 	if stayed_late:
 		mira: "Thanks for today, {prologue.player_name}. Really."
+		if mira.friendship >= 4:
+			mira (soft): "Same table tomorrow? I'll bring the coffee."
 	else:
 		mira: "See you tomorrow. Try not to catch a cold."
 	mira.exit(time = 0.8)

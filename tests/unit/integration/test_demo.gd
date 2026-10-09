@@ -37,6 +37,7 @@ func test_whole_demo_plays_without_errors() -> void:
 	assert_has(lines, "???: Oh! A visitor.[pause] Welcome to StoryTeller.", "Ada's name is hidden until she introduces herself")
 	assert_has(lines, "Ada: I'm Ada. I look after this library.")
 	assert_has(lines, "Mira: Thanks for today, Sam. Really.")
+	assert_has(lines, "Mira: Same table tomorrow? I'll bring the coffee.", "two right answers and the umbrella raise friendship to 4")
 	assert_has(lines, "Studied with Mira. Answered 2 of her questions.")
 	assert_eq(lines.back(), "End of the StoryTeller demo. Thank you for playing.")
 	for id in ["library", "library_theme", "talescript", "library_night", "classroom", "quiet_morning", "mira", "history_note"]:
@@ -49,6 +50,7 @@ func test_whole_demo_plays_in_spanish() -> void:
 	var lines: Array = run["lines"]
 	assert_has(lines, "Ada: Encantada de conocerte, Robin.")
 	assert_has(lines, "Estudié con Mira. Respondí 2 de sus preguntas.")
+	assert_has(lines, "Mira: ¿La misma mesa mañana? Yo traigo el café.")
 	assert_eq(lines.back(), "Fin de la demo de StoryTeller. Gracias por jugar.")
 
 

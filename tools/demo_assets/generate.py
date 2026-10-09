@@ -330,7 +330,11 @@ MIRA = {"skin": (242, 210, 185), "hair": (150, 70, 40), "eyes": (90, 70, 50), "o
         "hair_style": "long", "collar": "uniform"}
 
 
-def write_profile(cast_id, display_name, color, default_mood):
+def write_profile(cast_id, display_name, color, default_mood, fields=None):
+    """Writes a CastProfile. fields maps field names to whole-number starting values."""
+    field_lines = ""
+    if fields:
+        field_lines = "fields = {\n" + ",\n".join(f'"{name}": {value}' for name, value in fields.items()) + "\n}\n"
     with open(path("cast", f"{cast_id}.tres"), "w") as f:
         f.write(f"""[gd_resource type="Resource" script_class="CastProfile" load_steps=4 format=3]
 
@@ -348,7 +352,7 @@ display_name = "{display_name}"
 name_color = Color({color[0]}, {color[1]}, {color[2]}, 1)
 look = SubResource("Resource_look")
 default_mood = "{default_mood}"
-""")
+{field_lines}""")
 
 
 def props():
@@ -450,7 +454,7 @@ def main():
     for mood in ("neutral", "smile", "curious", "soft", "smirk"):
         character(MIRA, mood).save(path("cast", "mira", f"{mood}.png"))
     write_profile("ada", "Ada", (0.55, 0.85, 0.65), "neutral")
-    write_profile("mira", "Mira", (0.95, 0.6, 0.45), "neutral")
+    write_profile("mira", "Mira", (0.95, 0.6, 0.45), "neutral", {"friendship": 0})
     props()
     music("library_theme", [[60, 64, 67, 71], [57, 60, 64, 67], [53, 57, 60, 64], [55, 59, 62, 64]])
     music("quiet_morning", [[62, 66, 69, 73], [59, 62, 66, 69], [55, 59, 62, 66], [57, 61, 64, 67]], beat=0.36)

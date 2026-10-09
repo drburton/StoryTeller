@@ -62,6 +62,8 @@ var report_error := func(message: String) -> void: push_warning("StoryTeller: " 
 var _visual: Node2D
 ## Name set during play, or "" for the profile's name.
 var _display_name := ""
+## Values of the profile's fields ([member CastProfile.fields]).
+var _fields: Dictionary = {}
 var _alpha := 1.0
 ## Offset of the look from hop(), shake(), and nod().
 var _motion := Vector2.ZERO
@@ -81,14 +83,59 @@ func setup(p_profile: CastProfile) -> void:
 	visible = false
 	if not profile.default_mood.is_empty():
 		set_mood(profile.default_mood)
+	for problem in profile.get_field_problems():
+		push_warning("StoryTeller: " + problem)
+	reset_fields()
 
 
 ## What tales may use on this object.
 func get_tale_api() -> Dictionary:
 	return {
 		"methods": PackedStringArray(["enter", "exit", "move_to", "scale_to", "hop", "shake", "nod", "animate", "to_front", "to_back"]),
-		"properties": PackedStringArray(["mood", "tint", "flip", "on_stage", "display_name", "draw_order"]),
+		"properties": PackedStringArray(["mood", "tint", "flip", "on_stage", "display_name", "draw_order"]) + PackedStringArray(_fields.keys()),
 	}
+
+
+## The value of the field [param field] (see [member CastProfile.fields]),
+## or null when the profile has no such field.
+func get_field(field: String) -> Variant:
+	return _fields.get(field)
+
+
+## Changes a field. Returns false when the profile has no such field.
+func set_field(field: String, value: Variant) -> bool:
+	if not _fields.has(field):
+		return false
+	_fields[field] = value
+	return true
+
+
+func has_field(field: String) -> bool:
+	return _fields.has(field)
+
+
+## Sets every field back to the profile's starting value.
+func reset_fields() -> void:
+	_fields.clear()
+	if profile == null:
+		return
+	for field in profile.get_field_names():
+		var value: Variant = profile.fields[field]
+		_fields[field] = value.duplicate(true) if value is Array or value is Dictionary else value
+
+
+# Fields read and written like properties, as tales do with ada.affection.
+func _get(property: StringName) -> Variant:
+	if _fields.has(property):
+		return _fields[property]
+	return null
+
+
+func _set(property: StringName, value: Variant) -> bool:
+	if _fields.has(property):
+		_fields[property] = value
+		return true
+	return false
 
 
 func get_display_name() -> String:
@@ -256,6 +303,7 @@ func capture() -> Dictionary:
 		"scale": scale.x,
 		"display_name": _display_name,
 		"draw_order": draw_order,
+		"fields": JSON.from_native(_fields),
 	}
 
 
@@ -272,6 +320,14 @@ func restore(data: Dictionary) -> void:
 	scale = Vector2.ONE * float(data.get("scale", 1.0))
 	_display_name = str(data.get("display_name", ""))
 	draw_order = int(data.get("draw_order", 0))
+	reset_fields()
+	# Fields saved before the profile dropped them are ignored; fields added
+	# since keep their starting values.
+	var saved_fields: Variant = JSON.to_native(data.get("fields", {}))
+	if saved_fields is Dictionary:
+		for field in saved_fields:
+			if _fields.has(field):
+				_fields[field] = saved_fields[field]
 	visible = on_stage
 	_set_alpha(1.0)
 	relayout()

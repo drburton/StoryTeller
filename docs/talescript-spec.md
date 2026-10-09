@@ -13,7 +13,7 @@ Implementation status:
 | Runtime meaning of statements (§5) | Implemented (`TaleCompiler`, `TaleDirector`) |
 | Interpolation (§7.2) and `[pause]` tags (§7.1) | Implemented |
 | `[speed]`, `[instant]`, `[sound]`, `[act]` tags (§7.1) | Implemented (M6) |
-| CGs (`cg`, `hide_cg`), cast renames (`display_name`), cast animations and drawing order (§13.1, §13.2, §13.4) | Implemented (M6) |
+| CGs (`cg`, `hide_cg`), cast renames (`display_name`), cast animations and drawing order, cast fields (§13.1, §13.2, §13.4) | Implemented (M6) |
 | Cast members, moods, stage positions, camera, built-in actions (§13) | Implemented (M2) |
 | `@no_rewind`, `@skip_safe` (§8), player input and dialogue style actions (§13.1) | Implemented (M3) |
 | Translation (§7.3), effect, collection, and movie actions (§13.1) | Implemented (M4) |
@@ -573,6 +573,7 @@ Transitions for `backdrop`, `cg`, and `hide_cg`: `none`, `fade`, `dissolve`, `wi
 | `tint` | `Color` multiplied over the character. |
 | `flip` | `true` mirrors the character. |
 | `on_stage` | `true` between `enter()` and `exit()` (read it; don't assign). |
+| fields | Data the character keeps, declared with starting values in the cast profile's `fields` (for example `{"affection": 0}`). Read and change them like properties: `ada.affection += 1`, `if ada.affection > 2:`, `"{ada.affection}"`. Saved with the story and started over in a new game. The checker reports names that are not a member or field of that cast member. |
 | `draw_order` | Whole number; higher numbers draw in front. Characters with the same number draw in the order they were first used. Saved with the stage. |
 | `display_name` | Name shown in the dialogue box, the profile's name until a tale assigns another: `mira.display_name = "???"` before she introduces herself, or `mira.display_name = player_name`. Assign `""` to go back to the profile's name. Read it in text as `{mira.display_name}`. The name is saved, and translated by its text like profile names; Export Strings includes names assigned as text. |
 

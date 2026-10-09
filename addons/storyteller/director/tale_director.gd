@@ -378,8 +378,9 @@ func make_check_context(tale_name := "") -> TaleCheckContext:
 				context.add_exposed(extra)
 		if crew.has_method("get_cast_moods"):
 			var cast: Dictionary = crew.get_cast_moods()
+			var fields: Dictionary = crew.get_cast_fields() if crew.has_method("get_cast_fields") else {}
 			for id in cast:
-				context.add_cast(id, cast[id])
+				context.add_cast(id, cast[id], fields.get(id, PackedStringArray()))
 	for other in _tales:
 		var tale: Tale = _tales[other]
 		var vars := PackedStringArray()

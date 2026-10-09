@@ -63,6 +63,7 @@ static func suggest(source: String, line: int, column: int, context: TaleCheckCo
 		if context.cast.has(owner):
 			_add_calls(found, CAST_METHODS, Kind.MEMBER)
 			_add_all(found, CAST_PROPERTIES, Kind.MEMBER)
+			_add_all(found, context.cast_fields.get(owner, PackedStringArray()), Kind.MEMBER)
 		elif owner == "camera":
 			_add_calls(found, CAMERA_METHODS, Kind.MEMBER)
 			_add_all(found, CAMERA_PROPERTIES, Kind.MEMBER)
