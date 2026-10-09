@@ -14,7 +14,8 @@ func show_line(_line: Dictionary) -> void:
 
 
 ## Shows choices and returns the index of the chosen option, or -1 when the
-## timeout expires. Each option has: text, id, enabled. [param settings] has
+## timeout expires. Each option has: text, id, enabled, and picture (the
+## name from [code]@picture[/code], or ""). [param settings] has
 ## the choose arguments, such as style and timeout.
 func choose(_options: Array[Dictionary], _settings: Dictionary) -> int:
 	return 0

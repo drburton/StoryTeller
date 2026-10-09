@@ -124,6 +124,23 @@ func test_choice_lanes() -> void:
 	assert_false(panel.code_edit.text.contains("New option"))
 
 
+func test_picture_fields_for_picture_choices() -> void:
+	assert_false(editor.get_fields().has("b/3/o0:picture"), "a list choice has no picture fields")
+	var pictures_path := "user://card_editor_pictures.tale"
+	var file := FileAccess.open(pictures_path, FileAccess.WRITE)
+	file.store_string("beat start:\n\tchoose(style = \"pictures\"):\n\t\t@once \"Red\":\n\t\t\tpass\n\t\t@picture(\"blue_door\") \"Blue\":\n\t\t\tpass\n")
+	file.close()
+	panel.open_file(pictures_path)
+	panel.show_view("cards")
+	await tree.process_frame
+	assert_eq(_field("b/0/o1:picture").get_meta("line_edit").text, "blue_door")
+	_set_text("b/0/o0:picture", "red_door")
+	assert_true(panel.code_edit.text.contains("\t\t@picture(\"red_door\") @once \"Red\":\n"), panel.code_edit.text)
+	_set_text("b/0/o1:picture", "")
+	assert_true(panel.code_edit.text.contains("\t\t\"Blue\":\n"), panel.code_edit.text)
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(pictures_path))
+
+
 func test_condition_lanes() -> void:
 	_set_text("b/4/c0:condition", "trust > 1")
 	assert_eq(_changed_lines(panel.code_edit.text), ["\tif trust > 1:"])

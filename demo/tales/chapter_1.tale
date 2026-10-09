@@ -94,19 +94,19 @@ beat results:
 	"When you look up, the windows have gone dark."
 	hide_cg(time = 1.0)
 	mira (curious): "Is that rain? I didn't bring an umbrella."
-	choose:
-		"Share mine.":
+	choose(style = "pictures"):
+		@picture("umbrella") "Share mine.":
 			stayed_late = true
 			mira.friendship += 2
 			mira (smile): "My hero. A slightly damp hero."
-		"Wait it out here.":
+		@picture("armchair") "Wait it out here.":
 			stayed_late = true
 			mira.friendship += 1
 			mira (soft): "Fine by me. Ada won't kick us out yet."
 			ada.enter("thinking", at = RIGHT, time = 0.6)
 			ada: "I'm closing in ten minutes, whatever the weather."
 			ada.exit(time = 0.6)
-		"Run for it.":
+		@picture("door") "Run for it.":
 			mira (smirk): "You first. I'll watch you slip."
 	jump goodbye
 

@@ -46,6 +46,26 @@ func test_whole_demo_plays_without_errors() -> void:
 		"A visitor in the library", "Questions for Ada", "The first morning", "An honest answer", "Off to class",
 		"Lunch at the library", "Quiz time", "Rain on the windows", "Goodnight",
 	], "the route chart shows every beat played, by its heading")
+	assert_true(run["choice_settings"].any(func(settings: Dictionary) -> bool: return settings.get("style") == "pictures"), "chapter 1 has a picture choice")
+
+
+func test_demo_choice_pictures_exist() -> void:
+	var config := load("res://demo/story_config.tres") as StoryConfig
+	var pictures := []
+	for file_name in DirAccess.get_files_at(DEMO_TALES):
+		if not file_name.ends_with(".tale"):
+			continue
+		var path := DEMO_TALES.path_join(file_name)
+		var context := TaleImporter._make_context(path, file_name.get_basename())
+		var tale: Tale = TaleCompiler.build(FileAccess.get_file_as_string(path), file_name.get_basename(), context)["tale"]
+		for instruction in tale.instructions:
+			if instruction["op"] == "choose":
+				for option in instruction["options"]:
+					if not option["picture"].is_empty():
+						pictures.append(option["picture"])
+	assert_eq(pictures, ["umbrella", "armchair", "door"])
+	for picture in pictures:
+		assert_ne(StoryAssets.find(config.choice_picture_folder, picture, StoryAssets.IMAGE_EXTENSIONS), "", picture)
 
 
 func test_whole_demo_plays_in_spanish() -> void:
@@ -113,7 +133,7 @@ func _play_demo(locale: String) -> Dictionary:
 	TranslationServer.set_locale(previous_locale)
 	if not presenter.picks.is_empty():
 		errors.append("unused picks: %s" % [presenter.picks])
-	return {"errors": errors, "lines": presenter.lines, "collected": collected, "route_titles": titles}
+	return {"errors": errors, "lines": presenter.lines, "collected": collected, "route_titles": titles, "choice_settings": presenter.settings}
 
 
 ## Types "Robin" into the name prompt whenever it opens, until the story ends.

@@ -4,7 +4,7 @@ A visual novel and interactive story framework for Godot.
 
 Writers create stories in TaleScript, a small language that looks and feels like GDScript. StoryTeller handles characters, scenery, dialogue, choices, audio, saving, localization, and menus.
 
-> **Status:** early development (M5 complete, M6 under way). The language, runtime, Story tab (text, cards, and Story Map), characters with renames, animations, drawing order, and their own data, backdrops, CGs, inline text tags, transitions, camera, audio, effects, movies, saves with pages, renaming, and timed autosave, rewind, history, settings, menus, the Extras screen with a route chart for players, title art and music, an animated dialogue box, named text styles, translation, the debug console, and live reload work. Next: usability testing with writers, then the rest of the M6 genre features (image choices and Yarn Spinner import) and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
+> **Status:** early development (M5 complete, M6 under way). The language, runtime, Story tab (text, cards, and Story Map), characters with renames, animations, drawing order, and their own data, backdrops, CGs, inline text tags, transitions, camera, audio, effects, movies, saves with pages, renaming, and timed autosave, rewind, history, settings, menus, the Extras screen with a route chart for players, picture choices, title art and music, an animated dialogue box, named text styles, translation, the debug console, and live reload work. Next: usability testing with writers, then the last M6 genre feature (Yarn Spinner import) and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
 
 ## Requirements
 
@@ -101,6 +101,22 @@ func talk_to_guard() -> void:
 ```
 
 List exposed names in `StoryConfig.exposed_names` so the Story tab knows them. Tales can also send signals to game code with `emit("name")`, which arrive through `TaleDirector.story_signal`.
+
+Choices can happen in your scene too. Register any object with an awaitable `choose(options, settings) -> int` as a choice style, then name it in the tale. Each option has its `text`, its `id` (pin it with `@id`), and whether it is `enabled`:
+
+```gdscript
+Story.get_crew(&"Dialogue").add_choice_style("doors", $DoorPicker)
+```
+
+```gdscript
+choose(style = "doors"):
+	@id("red") "The red door": jump red
+	@id("blue") "The blue door": jump blue
+```
+
+## Choice styles
+
+`choose:` shows a column of buttons. `choose(style = "pictures"):` shows picture cards instead, with each option's picture named by `@picture("umbrella")` and kept in `res://story/choices/` (`StoryConfig.choice_picture_folder`). Add your own styles as scenes in `StoryConfig.choice_styles`; each extends `ChoiceMenu`.
 
 ## Extras and the debug console
 

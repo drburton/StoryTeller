@@ -7,6 +7,12 @@ extends StoryCrew
 ## Two dialogue styles are built in: "classic" (a box at the bottom) and
 ## "page" (full-screen text). Tales switch with [code]dialogue_style("page")[/code].
 ## Projects can replace or add styles in [StoryConfig].
+##
+## Choice menus have styles too, picked with [code]choose(style = "...")[/code]:
+## "list" (the default) and "pictures" are built in,
+## [member StoryConfig.choice_styles] adds scenes, and
+## [method add_choice_style] lets game code take over choices, for example
+## to let players choose by clicking objects in a 2D or 3D scene.
 
 ## Input actions registered at runtime when the project doesn't define them.
 const INPUT_ACTIONS := {
@@ -23,7 +29,10 @@ const INPUT_ACTIONS := {
 var layer: CanvasLayer
 ## The dialogue box in use.
 var dialogue_box: DialogueBox
+## The default ("list") choice menu.
 var choice_menu: ChoiceMenu
+## Folder with the pictures that [code]@picture("name")[/code] names.
+var choice_picture_folder := "res://story/choices"
 ## Name of the dialogue style in use.
 var style := "classic"
 ## Skip mode switched on from the quick menu (as opposed to holding Ctrl).
@@ -36,6 +45,9 @@ var input_blocked := func() -> bool: return false:
 			box.input_blocked = value
 
 var _styles: Dictionary = {}
+## Choice style name to its menu: a [ChoiceMenu] or any object with
+## [method ChoiceMenu.choose].
+var _choice_styles: Dictionary = {}
 var _line_read := false
 
 
@@ -65,9 +77,18 @@ func setup(config: StoryConfig) -> void:
 		layer.add_child(box)
 		_styles[style_name] = box
 	dialogue_box = _styles["classic"]
-	choice_menu = _instantiate(config.choice_menu_scene, ListChoiceMenu) as ChoiceMenu
-	choice_menu.theme = theme
-	layer.add_child(choice_menu)
+	choice_picture_folder = config.choice_picture_folder
+	var choice_scenes := {"list": config.choice_menu_scene, "pictures": null}
+	for style_name in config.choice_styles:
+		choice_scenes[style_name] = config.choice_styles[style_name]
+	for style_name in choice_scenes:
+		var fallback: Script = PictureChoiceMenu if style_name == "pictures" else ListChoiceMenu
+		var menu := _instantiate(choice_scenes[style_name], fallback) as ChoiceMenu
+		menu.name = style_name.capitalize().replace(" ", "") + "ChoiceMenu"
+		menu.theme = theme
+		layer.add_child(menu)
+		_choice_styles[style_name] = menu
+	choice_menu = _choice_styles["list"]
 
 
 func clear() -> void:
@@ -111,9 +132,57 @@ func show_line(line: Dictionary) -> void:
 	await dialogue_box.show_line(line)
 
 
-## Presenter method: shows choices and returns the picked index. Awaitable.
+## Presenter method: shows choices in the menu of the style named by
+## [code]settings["style"][/code] ("list" when there is none) and returns
+## the picked index. Options with a [code]"picture"[/code] name get the
+## texture in its place. Awaitable.
 func choose(options: Array[Dictionary], settings: Dictionary) -> int:
-	return await choice_menu.choose(options, settings)
+	var style_name := str(settings.get("style", "list"))
+	var menu: Object = _choice_styles.get(style_name)
+	if menu == null or not is_instance_valid(menu):
+		_report("There is no choice style '%s'. Styles: %s." % [style_name, ", ".join(get_choice_style_names())])
+		menu = choice_menu
+	var shown: Array[Dictionary] = []
+	for option in options:
+		var copy := option.duplicate()
+		var picture_name := str(option.get("picture", ""))
+		copy["picture"] = null
+		if not picture_name.is_empty():
+			copy["picture"] = StoryAssets.load_asset(choice_picture_folder, picture_name, StoryAssets.IMAGE_EXTENSIONS)
+			if copy["picture"] == null:
+				_report("There is no choice picture '%s' in %s." % [picture_name, choice_picture_folder])
+		shown.append(copy)
+	return await menu.choose(shown, settings)
+
+
+## Adds or replaces the choice style [param style_name]. [param menu] is a
+## [ChoiceMenu] or any object with an awaitable
+## [code]choose(options, settings) -> int[/code], and optionally
+## [code]cancel()[/code]. It is used as it is, not added to the dialogue
+## layer, so a node in the game's own scene can offer the choices:
+## [codeblock]
+## # In the game: let the player pick by clicking doors in the 3D scene.
+## Story.get_crew(&"Dialogue").add_choice_style("doors", $DoorPicker)
+## # In a tale, with option ids the picker knows:
+## # choose(style = "doors"):
+## #     @id("red") "The red door": jump red
+## [/codeblock]
+func add_choice_style(style_name: String, menu: Object) -> void:
+	_choice_styles[style_name] = menu
+
+
+func remove_choice_style(style_name: String) -> void:
+	if style_name != "list":
+		_choice_styles.erase(style_name)
+
+
+func get_choice_style_names() -> PackedStringArray:
+	return PackedStringArray(_choice_styles.keys())
+
+
+## The menu of [param style_name], or null.
+func get_choice_menu(style_name: String) -> Object:
+	return _choice_styles.get(style_name)
 
 
 ## Presenter method: releases a line or choice that is waiting for the
@@ -121,8 +190,9 @@ func choose(options: Array[Dictionary], settings: Dictionary) -> int:
 func cancel() -> void:
 	for box in _styles.values():
 		box.cancel()
-	if choice_menu != null and choice_menu.has_method("cancel"):
-		choice_menu.cancel()
+	for menu in _choice_styles.values():
+		if is_instance_valid(menu) and menu.has_method("cancel"):
+			menu.cancel()
 
 
 ## Called by the Settings crew member.
@@ -171,6 +241,14 @@ func _run_text_tag(_tag: String, value: String) -> void:
 
 func _director() -> TaleDirector:
 	return _crew(&"TaleDirector") as TaleDirector
+
+
+func _report(message: String) -> void:
+	var director := _director()
+	if director != null:
+		director.report_error(message)
+	else:
+		push_warning("StoryTeller: " + message)
 
 
 func _crew(crew_name: StringName) -> Node:
