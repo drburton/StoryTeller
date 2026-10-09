@@ -923,10 +923,11 @@ Built (366 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.
 - **Golden tests:** fixture parse trees compared against stored `*.expected.txt` dumps (`-- --update-golden` rewrites them).
 - **Playthrough tests:** the whole demo plays in skip mode with scripted choices, in English and Spanish; the 3D scene's conversation opens its gate.
+- **Interruption tests:** the demo is saved at eight points spread through it; loading each save goes on exactly as the first playthrough did, and rewinding one step at the same points shows the line before and goes on the same way.
 - **Script error watcher:** any script error during a test fails it.
 - **CI:** GitHub Actions on Linux and Windows for Godot 4.7.2, a non-blocking job on a Godot beta when `GODOT_BETA` is set, and an export check of the demo as a `.pck` (`tools/check_export.sh`).
 
-Planned: save, load, skip, and rewind at every line of the fixtures (interruption tests), export checks for each chosen platform, and the Pro compatibility suite.
+Planned: interruption tests at every line rather than eight points (if CI time allows), export checks for each chosen platform, and the Pro compatibility suite.
 
 ---
 
@@ -957,7 +958,7 @@ Today the README, the TaleScript specification, and the decision records are the
 | Pro copied without paying | Lost revenue | Clear EULA, fair pricing, updates and support as the main value; avoid DRM that burdens customers. |
 | Godot releases break the addon | Breakage | Track latest stable with a non-blocking beta CI job (§1.3). |
 | TaleScript drifts from GDScript | Steeper learning curve | Keep the five deliberate additions only; review the "for GDScript users" page each release. |
-| Async cancellation bugs (skip, load, rewind mid-effect) | Broken stage state | The director's generation counter stops a superseded run; crew members finish effects at once while skipping; tests cover loading and rewinding mid-scene. Interruption tests at every line are planned. |
+| Async cancellation bugs (skip, load, rewind mid-effect) | Broken stage state | The director's generation counter stops a superseded run; crew members finish effects at once while skipping; tests cover loading and rewinding mid-scene, and interruption tests save, load, and rewind at points through the whole demo. |
 | Rewind memory use | Slow on mobile | Configurable depth and `@no_rewind` today; delta snapshots if mobile testing shows a need. |
 | Visual editor not yet tried by writers | Writers may find cards hard to use | M5 usability test (§20), then fix what it finds before M7. |
 | Overlap with Dialogic, Dialogue Manager, Escoria | Low adoption | Differentiate with the visual editor, a GDScript-style language, a full visual novel stack, and rewind. |
