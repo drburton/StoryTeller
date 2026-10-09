@@ -30,22 +30,22 @@ chapter_1:quiz_a27667,Look at the shelves. Do they look new to you?,Mira los est
 chapter_1:results_68c5c8,Three out of three. I should be asking you for help.,Tres de tres. Debería pedirte ayuda yo a ti.,chapter_1.tale:72 (mira),
 chapter_1:results_262993,"Zero. Okay. We start from the beginning, together.","Cero. Bueno. Empezamos desde el principio, juntos.",chapter_1.tale:74 (mira),
 chapter_1:results_0ff996,{score} right. Not bad for a lunch break.,{score} bien. Nada mal para un descanso de almuerzo.,chapter_1.tale:76 (mira),
-chapter_1:results_eac6ab,The afternoon slips by between pages.,La tarde se escurre entre páginas.,chapter_1.tale:78,
-chapter_1:results_2116a5,"When you look up, the windows have gone dark.","Cuando levantas la vista, las ventanas ya están oscuras.",chapter_1.tale:83,
-chapter_1:results_c9ccc1,Is that rain? I didn't bring an umbrella.,¿Eso es lluvia? No traje paraguas.,chapter_1.tale:84 (mira),
-chapter_1:results_289136,Share mine.,Compartir el mío.,chapter_1.tale:86 (choice),
-chapter_1:results_a107c6,Wait it out here.,Esperar aquí a que pase.,chapter_1.tale:89 (choice),
-chapter_1:results_25b442,Run for it.,Salir corriendo.,chapter_1.tale:95 (choice),
-chapter_1:results_80f851,My hero. A slightly damp hero.,Mi héroe. Un héroe un poco mojado.,chapter_1.tale:88 (mira),
-chapter_1:results_b00c53,Fine by me. Ada won't kick us out yet.,Por mí bien. Ada todavía no nos va a echar.,chapter_1.tale:91 (mira),
-chapter_1:results_7207fc,"I'm closing in ten minutes, whatever the weather.","Cierro en diez minutos, haga el tiempo que haga.",chapter_1.tale:93 (ada),
-chapter_1:results_6fb1cf,You first. I'll watch you slip.,Tú primero. Yo miro cómo te resbalas.,chapter_1.tale:96 (mira),
-chapter_1:goodbye_9d712a,"Thanks for today, {prologue.player_name}. Really.","Gracias por hoy, {prologue.player_name}. De verdad.",chapter_1.tale:101 (mira),
-chapter_1:goodbye_f66b86,See you tomorrow. Try not to catch a cold.,Nos vemos mañana. Intenta no resfriarte.,chapter_1.tale:103 (mira),
-chapter_1:goodbye_c527c8,"That night, a page in a notebook:","Esa noche, una página de un cuaderno:",chapter_1.tale:111,
-chapter_1:goodbye_7ae4bd,Studied with Mira. Answered {score} of her questions.,Estudié con Mira. Respondí {score} de sus preguntas.,chapter_1.tale:112,
-chapter_1:goodbye_194511,It rained. I didn't mind.,Llovió. No me importó.,chapter_1.tale:113,
-chapter_1:goodbye_38f60b,End of the StoryTeller demo. Thank you for playing.,Fin de la demo de StoryTeller. Gracias por jugar.,chapter_1.tale:115,
+chapter_1:results_eac6ab,The afternoon slips by between pages.,La tarde se escurre entre páginas.,chapter_1.tale:79,
+chapter_1:results_2116a5,"When you look up, the windows have gone dark.","Cuando levantas la vista, las ventanas ya están oscuras.",chapter_1.tale:85,
+chapter_1:results_c9ccc1,Is that rain? I didn't bring an umbrella.,¿Eso es lluvia? No traje paraguas.,chapter_1.tale:87 (mira),
+chapter_1:results_289136,Share mine.,Compartir el mío.,chapter_1.tale:89 (choice),
+chapter_1:results_a107c6,Wait it out here.,Esperar aquí a que pase.,chapter_1.tale:92 (choice),
+chapter_1:results_25b442,Run for it.,Salir corriendo.,chapter_1.tale:98 (choice),
+chapter_1:results_80f851,My hero. A slightly damp hero.,Mi héroe. Un héroe un poco mojado.,chapter_1.tale:91 (mira),
+chapter_1:results_b00c53,Fine by me. Ada won't kick us out yet.,Por mí bien. Ada todavía no nos va a echar.,chapter_1.tale:94 (mira),
+chapter_1:results_7207fc,"I'm closing in ten minutes, whatever the weather.","Cierro en diez minutos, haga el tiempo que haga.",chapter_1.tale:96 (ada),
+chapter_1:results_6fb1cf,You first. I'll watch you slip.,Tú primero. Yo miro cómo te resbalas.,chapter_1.tale:99 (mira),
+chapter_1:goodbye_9d712a,"Thanks for today, {prologue.player_name}. Really.","Gracias por hoy, {prologue.player_name}. De verdad.",chapter_1.tale:104 (mira),
+chapter_1:goodbye_f66b86,See you tomorrow. Try not to catch a cold.,Nos vemos mañana. Intenta no resfriarte.,chapter_1.tale:106 (mira),
+chapter_1:goodbye_c527c8,"That night, a page in a notebook:","Esa noche, una página de un cuaderno:",chapter_1.tale:114,
+chapter_1:goodbye_7ae4bd,Studied with Mira. Answered {score} of her questions.,Estudié con Mira. Respondí {score} de sus preguntas.,chapter_1.tale:115,
+chapter_1:goodbye_194511,It rained. I didn't mind.,Llovió. No me importó.,chapter_1.tale:116,
+chapter_1:goodbye_38f60b,End of the StoryTeller demo. Thank you for playing.,Fin de la demo de StoryTeller. Gracias por jugar.,chapter_1.tale:118,
 Prologue,Prologue,Prólogo,title of prologue.tale,
 prologue:start_6e4cad,Sunlight spills across rows of empty desks.,La luz del sol se derrama sobre filas de pupitres vacíos.,prologue.tale:18,
 prologue:start_12b190,You're here early.[pause] Couldn't sleep?,Llegaste temprano.[pause] ¿No podías dormir?,prologue.tale:19 (mira),
@@ -69,11 +69,11 @@ welcome:start_cb157e,Everything you see is written in a .tale file. Press Space 
 welcome:topics_3c7cff,How do I write dialogue?,¿Cómo escribo diálogos?,welcome.tale:24 (choice),
 welcome:topics_67bdc0,What about choices?,¿Y las elecciones?,welcome.tale:36 (choice),
 welcome:topics_0f8fd2,Can the stage change?,¿Puede cambiar el escenario?,welcome.tale:42 (choice),
-welcome:topics_fa4fb7,Can tales remember things?,¿Los cuentos pueden recordar cosas?,welcome.tale:59 (choice),
-welcome:topics_da7486,What about saving and menus?,¿Y guardar la partida y los menús?,welcome.tale:66 (choice),
-welcome:topics_8c0912,Show me a sample scene.,Muéstrame una escena de ejemplo.,welcome.tale:81 (choice),
-welcome:topics_ca5847,I'm ready to start writing.,Estoy listo para empezar a escribir.,welcome.tale:88 (choice),
-welcome:topics_c6a7cb,Leave already,Irse ya,welcome.tale:90 (choice),
+welcome:topics_fa4fb7,Can tales remember things?,¿Los cuentos pueden recordar cosas?,welcome.tale:60 (choice),
+welcome:topics_da7486,What about saving and menus?,¿Y guardar la partida y los menús?,welcome.tale:67 (choice),
+welcome:topics_8c0912,Show me a sample scene.,Muéstrame una escena de ejemplo.,welcome.tale:82 (choice),
+welcome:topics_ca5847,I'm ready to start writing.,Estoy listo para empezar a escribir.,welcome.tale:89 (choice),
+welcome:topics_c6a7cb,Leave already,Irse ya,welcome.tale:91 (choice),
 welcome:topics_bec809,"Put a speaker, a colon, and a quoted line:
 [code]ada: ""Hello!""[/code]","Pon quién habla, dos puntos y una frase entre comillas:
 [code]ada: ""¡Hola!""[/code]",welcome.tale:27 (ada),
@@ -111,36 +111,39 @@ welcome:topics_03c9d5,"Characters move, and props appear wherever you put them:
 welcome:topics_ca7358,"Even the camera can zoom:
 [code]camera.zoom(1.15)[/code]","Hasta la cámara puede acercarse:
 [code]camera.zoom(1.15)[/code]",welcome.tale:56 (ada),
-welcome:topics_05c69c,Yes. Questions you have asked so far: {curiosity}.,Sí. Preguntas que has hecho hasta ahora: {curiosity}.,welcome.tale:62 (ada),
+welcome:topics_eb89ae,"Big moments can cover the stage with a full-screen picture, a CG, which then appears under Extras:
+[code]cg(""window_table"", ""rain"")[/code]","Los grandes momentos pueden cubrir el escenario con una imagen a pantalla completa, una CG, que luego aparece en Extras:
+[code]cg(""window_table"", ""rain"")[/code]",welcome.tale:58 (ada),
+welcome:topics_05c69c,Yes. Questions you have asked so far: {curiosity}.,Sí. Preguntas que has hecho hasta ahora: {curiosity}.,welcome.tale:63 (ada),
 welcome:topics_ae7297,"This tale declares a variable and adds one for each topic:
 [code]var curiosity := 0
 curiosity += 1[/code]","Este cuento declara una variable y suma uno en cada tema:
 [code]var curiosity := 0
-curiosity += 1[/code]",welcome.tale:63 (ada),
+curiosity += 1[/code]",welcome.tale:64 (ada),
 welcome:topics_c95648,"Braces show a value inside a line:
 [code]""Questions so far: {{curiosity}}.""[/code]","Las llaves muestran un valor dentro de una línea:
-[code]""Preguntas hasta ahora: {{curiosity}}.""[/code]",welcome.tale:64 (ada),
-welcome:topics_fc17f2,"Press Escape or right-click for the pause menu. Saving, loading, and settings live there.","Pulsa Escape o haz clic derecho para abrir el menú de pausa. Ahí están guardar, cargar y los ajustes.",welcome.tale:69 (ada),
-welcome:topics_336e0b,Roll the mouse wheel up or press Page Up to rewind. Press H to read the history.,Gira la rueda del ratón hacia arriba o pulsa Re Pág para retroceder. Pulsa H para leer el historial.,welcome.tale:70 (ada),
+[code]""Preguntas hasta ahora: {{curiosity}}.""[/code]",welcome.tale:65 (ada),
+welcome:topics_fc17f2,"Press Escape or right-click for the pause menu. Saving, loading, and settings live there.","Pulsa Escape o haz clic derecho para abrir el menú de pausa. Ahí están guardar, cargar y los ajustes.",welcome.tale:70 (ada),
+welcome:topics_336e0b,Roll the mouse wheel up or press Page Up to rewind. Press H to read the history.,Gira la rueda del ratón hacia arriba o pulsa Re Pág para retroceder. Pulsa H para leer el historial.,welcome.tale:71 (ada),
 welcome:topics_a6a3c9,"Pictures, music, and notes you unlock show up under Extras on the title screen. One line unlocks each:
 [code]collect(""library"")[/code]","Las imágenes, la música y las notas que desbloquees aparecen en Extras, en la pantalla de título. Una línea desbloquea cada una:
-[code]collect(""library"")[/code]",welcome.tale:71 (ada),
+[code]collect(""library"")[/code]",welcome.tale:72 (ada),
 welcome:topics_af3825,"Some stories read better as pages. This line switches to them:
 [code]dialogue_style(""page"")[/code]","Algunas historias se leen mejor como páginas. Esta línea cambia a ese estilo:
-[code]dialogue_style(""page"")[/code]",welcome.tale:72 (ada),
-welcome:topics_d7ad15,"In the page style, lines stack on the screen like a book.","En el estilo de página, las líneas se acumulan en la pantalla como en un libro.",welcome.tale:74,
-welcome:topics_f45e08,Each new line goes under the last one.,Cada línea nueva va debajo de la anterior.,welcome.tale:75,
+[code]dialogue_style(""page"")[/code]",welcome.tale:73 (ada),
+welcome:topics_d7ad15,"In the page style, lines stack on the screen like a book.","En el estilo de página, las líneas se acumulan en la pantalla como en un libro.",welcome.tale:75,
+welcome:topics_f45e08,Each new line goes under the last one.,Cada línea nueva va debajo de la anterior.,welcome.tale:76,
 welcome:topics_4d6e22,"A fresh page starts with:
 [code]clear_page()[/code]","Una página nueva empieza con:
-[code]clear_page()[/code]",welcome.tale:77,
+[code]clear_page()[/code]",welcome.tale:78,
 welcome:topics_0b0580,"And this brings back the classic box:
 [code]dialogue_style(""classic"")[/code]","Y esto trae de vuelta el cuadro clásico:
-[code]dialogue_style(""classic"")[/code]",welcome.tale:79 (ada),
-welcome:topics_36d940,Here is one from the StoryTeller plan.,Aquí tienes una del plan de StoryTeller.,welcome.tale:82 (ada),
-welcome:farewell_d2f003,"You asked about everything, {visitor}. I like that.","Preguntaste por todo, {visitor}. Eso me gusta.",welcome.tale:96 (ada),
-welcome:farewell_99a5b9,"You asked about {len(topics_seen)} topic{""s"" if len(topics_seen) != 1 else """"}.","Preguntaste por {len(topics_seen)} tema{""s"" if len(topics_seen) != 1 else """"}.",welcome.tale:98 (ada),
-welcome:farewell_4ac008,"The lamps dim. Somewhere, a page turns.","Las lámparas se atenúan. En algún lugar, pasa una página.",welcome.tale:100,
-welcome:farewell_6890cd,Open demo/tales/welcome.tale to see how this scene was made.,Abre demo/tales/welcome.tale para ver cómo se hizo esta escena.,welcome.tale:101 (ada),
+[code]dialogue_style(""classic"")[/code]",welcome.tale:80 (ada),
+welcome:topics_36d940,Here is one from the StoryTeller plan.,Aquí tienes una del plan de StoryTeller.,welcome.tale:83 (ada),
+welcome:farewell_d2f003,"You asked about everything, {visitor}. I like that.","Preguntaste por todo, {visitor}. Eso me gusta.",welcome.tale:97 (ada),
+welcome:farewell_99a5b9,"You asked about {len(topics_seen)} topic{""s"" if len(topics_seen) != 1 else """"}.","Preguntaste por {len(topics_seen)} tema{""s"" if len(topics_seen) != 1 else """"}.",welcome.tale:99 (ada),
+welcome:farewell_4ac008,"The lamps dim. Somewhere, a page turns.","Las lámparas se atenúan. En algún lugar, pasa una página.",welcome.tale:101,
+welcome:farewell_6890cd,Open demo/tales/welcome.tale to see how this scene was made.,Abre demo/tales/welcome.tale para ver cómo se hizo esta escena.,welcome.tale:102 (ada),
 Ada,Ada,Ada,name of cast member 'ada',
 Mira,Mira,Mira,name of cast member 'mira',
 The librarian who shows visitors around. She knows every shelf and every command.,The librarian who shows visitors around. She knows every shelf and every command.,La bibliotecaria que guía a las visitas. Conoce cada estante y cada comando.,text of collection item 'ada',
@@ -157,6 +160,8 @@ Library Theme,Library Theme,Tema de la biblioteca,title of collection item 'libr
 Quiet Morning,Quiet Morning,Mañana tranquila,title of collection item 'quiet_morning',
 TaleScript,TaleScript,TaleScript,title of collection item 'talescript',
 "TaleScript is the language StoryTeller stories are written in. It looks like GDScript: beats instead of functions, quoted lines for dialogue, and choose blocks for choices.","TaleScript is the language StoryTeller stories are written in. It looks like GDScript: beats instead of functions, quoted lines for dialogue, and choose blocks for choices.","TaleScript es el lenguaje en que se escriben las historias de StoryTeller. Se parece a GDScript: beats en lugar de funciones, frases entre comillas para el diálogo y bloques choose para las elecciones.",text of collection item 'talescript',
+The Window Table,The Window Table,La mesa junto a la ventana,title of collection item 'window_table',
+"An afternoon of studying, and the rain that ended it.","An afternoon of studying, and the rain that ended it.","Una tarde de estudio, y la lluvia que le puso fin.",text of collection item 'window_table',
 StoryTeller Demo,StoryTeller Demo,Demo de StoryTeller,game title,
 New Game,New Game,Nueva partida,menu,
 Continue,Continue,Continuar,menu,

@@ -1,25 +1,35 @@
 class_name StoryStage
 extends StoryCrew
 ## Crew member that owns what is drawn behind the dialogue box: backdrops,
-## cast members, and props, each on its own [CanvasLayer], plus the camera
-## that moves them.
+## cast members, props, and CGs, each on its own [CanvasLayer], plus the
+## camera that moves the backdrop, cast, and props.
 ##
 ## Cast members are found in [member StoryConfig.cast_folder]:
 ## [code]<id>.tres[/code] ([CastProfile]) files, or [code]<id>/[/code]
 ## folders of mood images. Backdrops and props are images (or scenes, for
-## props) named after the files in their folders.
+## props) named after the files in their folders. CGs are full-screen event
+## pictures in [member StoryConfig.cg_folder] (see [method StoryAssets.scan_cgs]).
+
+## Emitted when a CG is shown by [method show_cg], so the gallery can
+## unlock it. Not emitted when a save is restored.
+signal cg_shown(cg_name: String, variant: String)
 
 ## Canvas layers, back to front. They draw above the game's own canvas
 ## (layer 0) and below the dialogue box (layer 10). The backdrop is
 ## transparent until a tale shows one, so games that only use dialogue are
-## not covered.
+## not covered. CGs cover the stage; weather and color filters (layers 5
+## and 6) draw over them.
 const BACKDROP_LAYER := 1
 const CAST_LAYER := 2
 const PROP_LAYER := 3
+const CG_LAYER := 4
 
 var backdrop_layer: CanvasLayer
 var cast_layer: CanvasLayer
 var prop_layer: CanvasLayer
+var cg_layer: CanvasLayer
+## Shows CGs, with the same transitions as backdrops.
+var cg_view: BackdropView
 var backdrop_view: BackdropView
 var camera: StageCamera
 ## Dim cast members who are not speaking.
@@ -27,11 +37,14 @@ var highlight_speaker := true
 var backdrop_folder := "res://story/backdrops"
 var prop_folder := "res://story/props"
 var transition_folder := "res://story/transitions"
+var cg_folder := "res://story/cgs"
 
 var _profiles: Dictionary = {}
 var _cast: Dictionary = {}
 ## Prop name to {"node": Node2D, "at": Vector2}.
 var _props: Dictionary = {}
+## The CG on screen: {"name", "variant"}, or empty.
+var _cg: Dictionary = {}
 
 
 func get_crew_name() -> StringName:
@@ -42,12 +55,17 @@ func setup(config: StoryConfig) -> void:
 	highlight_speaker = config.highlight_speaker
 	backdrop_folder = config.backdrop_folder
 	prop_folder = config.prop_folder
+	cg_folder = config.cg_folder
 	backdrop_layer = _make_layer("Backdrops", BACKDROP_LAYER)
 	cast_layer = _make_layer("Cast", CAST_LAYER)
 	prop_layer = _make_layer("Props", PROP_LAYER)
+	cg_layer = _make_layer("CGs", CG_LAYER)
 	backdrop_view = BackdropView.new()
 	backdrop_view.name = "BackdropView"
 	backdrop_layer.add_child(backdrop_view)
+	cg_view = BackdropView.new()
+	cg_view.name = "CGView"
+	cg_layer.add_child(cg_view)
 	camera = StageCamera.new()
 	camera.name = "Camera"
 	camera.layers = [backdrop_layer, cast_layer, prop_layer]
@@ -70,6 +88,9 @@ func clear() -> void:
 	_props.clear()
 	if backdrop_view:
 		backdrop_view.show_backdrop(Color.TRANSPARENT, Color.TRANSPARENT, "none", 0.0)
+	_cg = {}
+	if cg_view:
+		cg_view.show_backdrop(Color.TRANSPARENT, Color.TRANSPARENT, "none", 0.0)
 	if camera:
 		camera.restore({})
 
@@ -90,6 +111,52 @@ func show_backdrop(source: Variant, transition := "fade", time := 1.0, mask := "
 		return "Backdrop '%s' was not found in %s." % [source, backdrop_folder]
 	await backdrop_view.show_backdrop(texture, str(source), transition, time, mask_texture, _is_skipping())
 	return ""
+
+
+## Shows a CG over the stage: a full-screen picture from [member cg_folder].
+## [param variant] picks one picture of a CG folder; empty shows the
+## "default" variant, or the first. Showing another CG, or another variant
+## of the same one, blends from the picture on screen. Awaitable. Returns
+## an error message, or "" on success.
+func show_cg(cg_name: String, variant := "", transition := "fade", time := 1.0) -> String:
+	var found := _find_cg(cg_name, variant)
+	if found[1] is String:
+		return found[1]
+	_cg = {"name": cg_name, "variant": found[0]}
+	cg_shown.emit(cg_name, found[0])
+	await cg_view.show_backdrop(found[1], "%s/%s" % [cg_name, found[0]], transition, time, null, _is_skipping())
+	return ""
+
+
+## Removes the CG and shows the stage again. Awaitable.
+func hide_cg(transition := "fade", time := 1.0) -> void:
+	if _cg.is_empty():
+		return
+	_cg = {}
+	await cg_view.show_backdrop(Color.TRANSPARENT, Color.TRANSPARENT, transition, time, null, _is_skipping())
+
+
+## The CG on screen as [code]{"name", "variant"}[/code], or an empty
+## dictionary.
+func get_cg() -> Dictionary:
+	return _cg.duplicate()
+
+
+## Returns [variant, Texture2D] for a CG, or [variant, error message].
+func _find_cg(cg_name: String, variant: String) -> Array:
+	var variants: PackedStringArray = StoryAssets.scan_cgs(cg_folder).get(cg_name, PackedStringArray())
+	if variants.is_empty():
+		return [variant, "CG '%s' was not found in %s." % [cg_name, cg_folder]]
+	if variant.is_empty():
+		variant = StoryAssets.default_cg_variant(variants)
+	elif variant not in variants:
+		if variants[0].is_empty():
+			return [variant, "CG '%s' is a single picture and has no variant '%s'." % [cg_name, variant]]
+		return [variant, "CG '%s' has no variant '%s'. Its variants are: %s." % [cg_name, variant, ", ".join(variants)]]
+	var texture := load(StoryAssets.find_cg(cg_folder, cg_name, variant)) as Texture2D
+	if texture == null:
+		return [variant, "CG '%s' could not be loaded." % cg_name]
+	return [variant, texture]
 
 
 ## Shows a prop (an image or scene from [member prop_folder]) centered at a
@@ -200,6 +267,10 @@ func preload_asset(kind: String, asset_name: String) -> void:
 			StoryAssets.preload_path(StoryAssets.find(backdrop_folder, asset_name, StoryAssets.IMAGE_EXTENSIONS))
 		"prop":
 			StoryAssets.preload_path(StoryAssets.find(prop_folder, asset_name, StoryAssets.IMAGE_EXTENSIONS + StoryAssets.SCENE_EXTENSIONS))
+		"cg":
+			var variants: PackedStringArray = StoryAssets.scan_cgs(cg_folder).get(asset_name, PackedStringArray())
+			if not variants.is_empty():
+				StoryAssets.preload_path(StoryAssets.find_cg(cg_folder, asset_name, StoryAssets.default_cg_variant(variants)))
 
 
 ## Names this crew member adds to tales, for the checker.
@@ -227,7 +298,7 @@ func capture() -> Dictionary:
 	var backdrop: Variant = backdrop_view.current
 	if backdrop is Color:
 		backdrop = [backdrop.r, backdrop.g, backdrop.b, backdrop.a]
-	return {"cast": cast, "backdrop": backdrop, "props": props, "camera": camera.capture()}
+	return {"cast": cast, "backdrop": backdrop, "props": props, "camera": camera.capture(), "cg": _cg.duplicate()}
 
 
 func restore(data: Dictionary) -> void:
@@ -251,6 +322,16 @@ func restore(data: Dictionary) -> void:
 	for prop_name in props:
 		show_prop(prop_name, Vector2(props[prop_name][0], props[prop_name][1]), 0.0)
 	camera.restore(data.get("camera", {}))
+	var cg: Dictionary = data.get("cg", {})
+	var found := _find_cg(str(cg.get("name", "")), str(cg.get("variant", ""))) if not cg.is_empty() else []
+	if not found.is_empty() and found[1] is Texture2D:
+		_cg = {"name": str(cg["name"]), "variant": found[0]}
+		cg_view.show_backdrop(found[1], "%s/%s" % [_cg["name"], found[0]], "none", 0.0)
+	else:
+		if not found.is_empty():
+			push_warning("StoryTeller: %s" % found[1])
+		_cg = {}
+		cg_view.show_backdrop(Color.TRANSPARENT, Color.TRANSPARENT, "none", 0.0)
 
 
 ## Finds cast profiles in [param folder]: "<id>.tres" files holding a

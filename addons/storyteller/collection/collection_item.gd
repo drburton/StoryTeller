@@ -16,6 +16,11 @@ extends Resource
 @export_multiline var text := ""
 ## Gallery picture, or a picture for a codex entry.
 @export var image: Texture2D
+## CG name from [member StoryConfig.cg_folder]. Showing the CG unlocks this
+## item, and the gallery shows each variant of it the player has seen.
+## Every CG gets a gallery item automatically; save an item with this set
+## (or with the CG's name as its id) to give it a title, caption, or order.
+@export var cg := ""
 ## Music track name from the audio folder, for the music room.
 @export var music := ""
 ## Lower numbers are listed first; ties are sorted by title.

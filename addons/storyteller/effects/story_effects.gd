@@ -3,9 +3,9 @@ extends StoryCrew
 ## Crew member for whole-screen effects: weather, color filters, flashes,
 ## fading the screen to a color, and movies.
 ##
-## Weather and filters sit just above the stage, so the dialogue box and
-## menus are not affected. Flashes and screen fades cover the dialogue box
-## too.
+## Weather and filters sit just above the stage and its CGs, so the
+## dialogue box and menus are not affected. Flashes and screen fades cover
+## the dialogue box too.
 ## [codeblock]
 ## weather("rain", strength = 0.6)
 ## filter("sepia")
@@ -13,8 +13,8 @@ extends StoryCrew
 ## await fade_in()
 ## [/codeblock]
 
-const WEATHER_LAYER := 4
-const FILTER_LAYER := 5
+const WEATHER_LAYER := 5
+const FILTER_LAYER := 6
 ## Above the dialogue box (10), below the menus (20).
 const SCREEN_LAYER := 15
 const WEATHER_KINDS := ["none", "rain", "snow"]

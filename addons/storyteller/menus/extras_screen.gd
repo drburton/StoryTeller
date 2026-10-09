@@ -9,6 +9,9 @@ var _tabs: TabContainer
 var _viewer: Control
 var _viewer_picture: TextureRect
 var _viewer_caption: Label
+var _viewer_item: CollectionItem
+var _viewer_pictures: Array[Texture2D] = []
+var _viewer_index := 0
 var _codex_list: ItemList
 var _codex_text: RichTextLabel
 var _codex_items: Array[CollectionItem] = []
@@ -28,7 +31,7 @@ func _ready() -> void:
 	_viewer.visible = false
 	_viewer.gui_input.connect(func(event: InputEvent) -> void:
 		if event is InputEventMouseButton and event.pressed:
-			_viewer.hide())
+			_on_viewer_clicked())
 	add_child(_viewer)
 	var black := ColorRect.new()
 	black.color = Color(0, 0, 0, 0.95)
@@ -73,11 +76,45 @@ func on_back() -> bool:
 	return true
 
 
-## Shows a gallery picture full screen.
+## Shows a gallery picture full screen. For a CG with several variants
+## seen, each click shows the next one, and the click after the last closes
+## the viewer.
 func view(item: CollectionItem) -> void:
-	_viewer_picture.texture = item.image
-	_viewer_caption.text = item.text if not item.text.is_empty() else item.title
+	_viewer_item = item
+	_viewer_pictures = _pictures(item)
+	_show_picture(0)
 	_viewer.show()
+
+
+## Index of the picture in the viewer, for CGs with several variants.
+func get_viewer_index() -> int:
+	return _viewer_index if _viewer.visible else -1
+
+
+func _show_picture(index: int) -> void:
+	_viewer_index = index
+	_viewer_picture.texture = _viewer_pictures[index] if index < _viewer_pictures.size() else null
+	var caption := _viewer_item.text if not _viewer_item.text.is_empty() else _viewer_item.title
+	if _viewer_pictures.size() > 1:
+		caption += "  (%d/%d)" % [index + 1, _viewer_pictures.size()]
+	_viewer_caption.text = caption
+
+
+func _on_viewer_clicked() -> void:
+	if _viewer_index + 1 < _viewer_pictures.size():
+		_show_picture(_viewer_index + 1)
+	else:
+		_viewer.hide()
+
+
+func _pictures(item: CollectionItem) -> Array[Texture2D]:
+	var collection := menus.collection() if menus != null else null
+	if collection != null:
+		return collection.get_pictures(item)
+	var pictures: Array[Texture2D] = []
+	if item.image != null:
+		pictures.append(item.image)
+	return pictures
 
 
 func _leave() -> void:
@@ -115,7 +152,8 @@ func _build_gallery(collection: StoryCollection) -> Control:
 		picture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		picture.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 		picture.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		picture.texture = item.image if unlocked else null
+		var pictures: Array = _pictures(item) if unlocked else []
+		picture.texture = pictures[0] if not pictures.is_empty() else null
 		box.add_child(picture)
 		var label := Label.new()
 		label.text = item.title if unlocked else "Locked"

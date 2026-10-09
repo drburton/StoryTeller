@@ -21,6 +21,15 @@ func _check() -> void:
 		for id in moods:
 			if moods[id].is_empty():
 				failures.append("Cast member '%s' has no moods." % id)
+		var cgs := StoryAssets.scan_cgs(stage.cg_folder)
+		var described := PackedStringArray()
+		for cg_name in cgs:
+			var variants: PackedStringArray = cgs[cg_name]
+			described.append(cg_name if variants[0].is_empty() else "%s (%s)" % [cg_name, ", ".join(variants)])
+			for variant in variants:
+				if load(StoryAssets.find_cg(stage.cg_folder, cg_name, variant)) == null:
+					failures.append("CG '%s' variant '%s' did not load." % [cg_name, variant])
+		print("CGs: %s" % ", ".join(described))
 	var director := story.get_crew(&"TaleDirector") as TaleDirector
 	var tales := PackedStringArray()
 	for file_name in ResourceLoader.list_directory(director.tales_folder):

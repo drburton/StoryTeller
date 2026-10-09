@@ -47,6 +47,8 @@ const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_prop.gd"),
 	preload("res://addons/storyteller/actions/action_hide_prop.gd"),
 	preload("res://addons/storyteller/actions/action_clear_props.gd"),
+	preload("res://addons/storyteller/actions/action_cg.gd"),
+	preload("res://addons/storyteller/actions/action_hide_cg.gd"),
 	preload("res://addons/storyteller/actions/action_shake.gd"),
 	preload("res://addons/storyteller/actions/action_music.gd"),
 	preload("res://addons/storyteller/actions/action_stop_music.gd"),
@@ -71,7 +73,7 @@ const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_play_movie.gd"),
 ]
 ## Actions whose first argument names an asset that can be loaded ahead.
-const PRELOAD_ACTIONS := ["backdrop", "prop", "music", "sound", "ambience", "voice"]
+const PRELOAD_ACTIONS := ["backdrop", "prop", "cg", "music", "sound", "ambience", "voice"]
 ## How many instructions of a beat are scanned for assets to preload.
 const PRELOAD_SCAN_LIMIT := 400
 

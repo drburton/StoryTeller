@@ -4,7 +4,7 @@ A visual novel and interactive story framework for Godot.
 
 Writers create stories in TaleScript, a small language that looks and feels like GDScript. StoryTeller handles characters, scenery, dialogue, choices, audio, saving, localization, and menus.
 
-> **Status:** early development (milestone M5 features complete). The language, runtime, Story tab (text, cards, and Story Map), characters, backdrops, transitions, camera, audio, effects, movies, saves, rewind, history, settings, menus, the Extras screen, translation, the debug console, and live reload work. Next: usability testing with writers, then the M6 genre features (CGs, character renames, inline text tags, and more) and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
+> **Status:** early development (M5 complete, M6 under way). The language, runtime, Story tab (text, cards, and Story Map), characters, backdrops, CGs, inline text tags, transitions, camera, audio, effects, movies, saves, rewind, history, settings, menus, the Extras screen, translation, the debug console, and live reload work. Next: usability testing with writers, then the rest of the M6 genre features (character renames, per-character data, and more) and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
 
 ## Requirements
 
@@ -104,7 +104,7 @@ List exposed names in `StoryConfig.exposed_names` so the Story tab knows them. T
 
 ## Extras and the debug console
 
-- **Extras:** save `CollectionItem` resources (gallery pictures, music tracks, codex entries) in `res://story/collection/` and unlock them with `collect("id")`. The title screen shows an Extras button when there are items.
+- **Extras:** save `CollectionItem` resources (gallery pictures, music tracks, codex entries) in `res://story/collection/` and unlock them with `collect("id")`. CGs, full-screen event pictures in `res://story/cgs/` shown with `cg("name", "variant")`, join the gallery on their own, with every variant the player has seen. The title screen shows an Extras button when there are items.
 - **Debug console:** press F3 (or the key left of 1) in a debug build to see where the story is and its variables, and to run `jump tale.beat`, `name = value`, any expression, `reload`, or `unlock_all`.
 
 ## Translating
