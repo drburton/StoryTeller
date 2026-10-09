@@ -10,6 +10,9 @@ extends HSplitContainer
 signal source_changed(new_source: String)
 ## Emitted when the player presses Ctrl+Z or Ctrl+Shift+Z (Ctrl+Y) here.
 signal undo_requested
+## Emitted when a field of a card gets focus, with the card's first source
+## line (counting from 1), so the Story tab can report the selected line.
+signal card_focused(line: int)
 signal redo_requested
 
 const KIND_COLORS := {
@@ -151,8 +154,23 @@ func rebuild() -> void:
 		warning.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		cards_box.add_child(warning)
 	_add_card_list(cards_box, beat, "b")
+	for field in get_fields().values():
+		var line := _card_line_of(field)
+		if line >= 0:
+			field.focus_entered.connect(func() -> void: card_focused.emit(line))
 	if not _focus_key.is_empty():
 		_restore_focus.call_deferred(_focus_key)
+
+
+## First source line of the card that holds [param control], or -1.
+func _card_line_of(control: Node) -> int:
+	var node := control
+	while node != null and node != self:
+		if node.has_meta("card"):
+			var card: TaleCard = node.get_meta("card")
+			return card.node.line_start
+		node = node.get_parent()
+	return -1
 
 
 ## Every card control, for tests: field key to Control.

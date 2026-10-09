@@ -87,6 +87,13 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Folder with CGs, the full-screen event pictures shown by cg("name"):
 ## "<name>.png", or a "<name>/" folder with one image per variant.
 @export_dir var cg_folder := "res://story/cgs"
+## Folder with transition masks (grayscale images for
+## [code]backdrop(..., mask = "name")[/code]) and [StoryTransition] files,
+## which tales use by file name as transitions.
+@export_dir var transition_folder := "res://story/transitions"
+## Extra transitions by name, added to the built-in ones and those in
+## [member transition_folder].
+@export var transitions: Dictionary[String, StoryTransition] = {}
 
 @export_group("Audio")
 ## Folder with "music", "sounds", "ambience", and "voice" subfolders.
