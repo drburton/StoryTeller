@@ -2,6 +2,7 @@ extends "res://tests/framework/story_test.gd"
 ## Tests for TaleDirector and TaleEvaluator, running real tales headless.
 
 const ScriptedPresenter := preload("res://tests/fixtures/scripted_presenter.gd")
+const EngineClock := preload("res://tests/fixtures/engine_clock.gd")
 
 var director: TaleDirector
 var presenter: ScriptedPresenter
@@ -89,11 +90,15 @@ func test_jump_to_other_tale() -> void:
 func test_actions_and_signals() -> void:
 	var signals := []
 	director.story_signal.connect(func(signal_name: String, value: Variant) -> void: signals.append([signal_name, value]))
-	var started := Time.get_ticks_msec()
+	var clock: EngineClock = track(EngineClock.new())
+	tree.root.add_child(clock)
+	var started: float = await clock.start()
+	var signal_times := []
+	director.story_signal.connect(func(_signal_name: String, _value: Variant) -> void: signal_times.append(clock.seconds))
 	var lines := await _play("beat start:\n\twait(0.05)\n\t\"after wait\"\n\tawait wait(seconds = 0.05)\n\temit(\"door\", 3)\n\temit(\"bell\")\n")
 	assert_eq(lines, ["after wait"])
-	assert_true(Time.get_ticks_msec() - started >= 90, "both waits happened")
 	assert_eq(signals, [["door", 3], ["bell", null]])
+	assert_true(signal_times[0] - started >= 0.099, "both waits happened")
 
 
 func test_exposed_objects_are_sandboxed() -> void:

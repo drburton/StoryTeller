@@ -4,6 +4,7 @@ extends "res://tests/framework/story_test.gd"
 
 const StoryScript := preload("res://addons/storyteller/core/story.gd")
 const ScriptedPresenter := preload("res://tests/fixtures/scripted_presenter.gd")
+const EngineClock := preload("res://tests/fixtures/engine_clock.gd")
 
 var story: Node
 var director: TaleDirector
@@ -67,10 +68,14 @@ func test_stop_music_and_audio() -> void:
 
 
 func test_awaited_sound_takes_its_length() -> void:
-	var started := Time.get_ticks_msec()
+	var clock: EngineClock = track(EngineClock.new())
+	tree.root.add_child(clock)
+	var started: float = await clock.start()
+	var line_times := []
+	presenter.on_line = func(_line: Dictionary) -> void: line_times.append(clock.seconds)
 	await _play("beat start:\n\tawait sound(\"bell\")\n\t\"after bell\"\n")
-	assert_true(Time.get_ticks_msec() - started >= 140, "waited for the 0.15 s sound")
 	assert_eq(presenter.lines, ["after bell"])
+	assert_true(line_times[0] - started >= 0.149, "waited for the 0.15 s sound")
 
 
 func test_voice_annotation_plays_clip() -> void:
