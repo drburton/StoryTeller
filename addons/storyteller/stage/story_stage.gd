@@ -306,6 +306,7 @@ func restore(data: Dictionary) -> void:
 		member.finish_animations()
 		member.visible = false
 		member.on_stage = false
+		member.display_name = ""
 	var cast: Dictionary = data.get("cast", {})
 	for id in cast:
 		var member := get_cast(id)

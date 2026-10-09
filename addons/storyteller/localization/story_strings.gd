@@ -174,6 +174,13 @@ static func _collect_instruction(entries: Array[Dictionary], seen: Dictionary, t
 		"choose":
 			for option in instruction["options"]:
 				_add(entries, seen, tale.translation_key(option["id"]), tale.texts.get(option["id"], ""), "%s:%d (choice)" % [file_name, option["line"]])
+		"set":
+			# A name given during play, such as mira.display_name = "???".
+			var place: Array = instruction["place"]
+			var value: Array = instruction["value"]
+			if place[0] == "attr" and place[2] == "display_name" and place[1][0] == "name" \
+					and value[0] == "lit" and value[1] is String:
+				_add(entries, seen, value[1], value[1], "%s:%d (name of %s)" % [file_name, instruction["line"], place[1][1]])
 	for value in instruction.values():
 		_collect_tr_calls(entries, seen, value, "%s:%d" % [file_name, instruction["line"]])
 

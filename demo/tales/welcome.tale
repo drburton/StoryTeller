@@ -12,8 +12,11 @@ beat start:
 	collect("library")
 	collect("library_theme")
 	"A quiet library. Lamps hum above long wooden tables."
+	ada.display_name = "???"
 	ada.enter("smile", at = CENTER)
 	ada: "Oh! A visitor.[pause] Welcome to StoryTeller."
+	ada.display_name = ""
+	ada (smile): "I'm Ada. I look after this library."
 	visitor = await ask_text(tr("What should Ada call you?"), tr("Reader"))
 	ada (smile): "Nice to meet you, {visitor}."
 	ada (neutral): "Everything you see is written in a .tale file. Press Space or click to continue."
@@ -27,6 +30,7 @@ beat topics:
 			ada (smile): "Put a speaker, a colon, and a quoted line:\n[code]ada: \"Hello!\"[/code]"
 			ada: "Narration is just the quoted line:\n[code]\"The lamps hum.\"[/code]"
 			ada (curious): "A mood in parentheses changes my face. This line starts with:\n[code]ada (curious):[/code]"
+			ada: "Before I introduced myself, the box called me ???. One line hides a name, and an empty one brings it back:\n[code]ada.display_name = \"???\"[/code]"
 			ada: "Tags change how a line types: [speed=0.3]slowly[/speed], [speed=3]very quickly indeed[/speed], or [instant]all at once[/instant]."
 			ada: "The fast part was written like this:\n[code][lb]speed=3[rb]very quickly indeed[lb]/speed[rb][/code]"
 			ada (curious): "A line can also make things happen as it types.[pause=0.3][act=shake(0.3)] Like that.[sound=page_turn]"

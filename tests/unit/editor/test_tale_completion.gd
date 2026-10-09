@@ -64,6 +64,7 @@ func test_jump_targets() -> void:
 func test_members_of_cast_and_camera() -> void:
 	assert_has(_texts("\tmira."), "enter")
 	assert_has(_texts("\tmira."), "mood")
+	assert_has(_texts("\tmira."), "display_name")
 	assert_eq(_texts("\tcamera.z"), ["zoom", "zoom_level"])
 	assert_eq(_texts("\tinventory."), [], "exposed objects have no known members")
 

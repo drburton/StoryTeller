@@ -4,6 +4,7 @@ extends Node2D
 ## [codeblock]
 ## mira.enter("smile", at = LEFT)
 ## mira.mood = "worried"
+## mira.display_name = "???"
 ## await mira.move_to(CENTER, time = 0.6)
 ## mira.exit()
 ## [/codeblock]
@@ -32,12 +33,23 @@ var flip := false:
 		flip = value
 		if _visual:
 			_visual.scale.x = -absf(_visual.scale.x) if flip else absf(_visual.scale.x)
+## Name shown in the dialogue box: the profile's name until a tale sets
+## another, such as "???" before the character introduces themselves, or a
+## name the player typed. Setting "" goes back to the profile's name. The
+## name is saved, and translated by its text like the profile's name.
+var display_name: Variant:
+	get:
+		return _display_name if not _display_name.is_empty() else profile.get_display_name()
+	set(value):
+		_display_name = str(value) if value != null else ""
 ## True between enter() and exit().
 var on_stage := false
 ## Returns true while the player skips; animations then finish at once.
 var is_skipping := func() -> bool: return false
 
 var _visual: Node2D
+## Name set during play, or "" for the profile's name.
+var _display_name := ""
 var _alpha := 1.0
 var _highlight := Color.WHITE
 var _tweens: Array[Tween] = []
@@ -61,12 +73,12 @@ func setup(p_profile: CastProfile) -> void:
 func get_tale_api() -> Dictionary:
 	return {
 		"methods": PackedStringArray(["enter", "exit", "move_to", "scale_to"]),
-		"properties": PackedStringArray(["mood", "tint", "flip", "on_stage"]),
+		"properties": PackedStringArray(["mood", "tint", "flip", "on_stage", "display_name"]),
 	}
 
 
 func get_display_name() -> String:
-	return profile.get_display_name()
+	return display_name
 
 
 func get_name_color() -> Color:
@@ -167,6 +179,7 @@ func capture() -> Dictionary:
 		"tint": [tint.r, tint.g, tint.b, tint.a],
 		"flip": flip,
 		"scale": scale.x,
+		"display_name": _display_name,
 	}
 
 
@@ -181,6 +194,7 @@ func restore(data: Dictionary) -> void:
 	tint = Color(color[0], color[1], color[2], color[3])
 	flip = data.get("flip", false)
 	scale = Vector2.ONE * float(data.get("scale", 1.0))
+	_display_name = str(data.get("display_name", ""))
 	visible = on_stage
 	_set_alpha(1.0)
 	relayout()

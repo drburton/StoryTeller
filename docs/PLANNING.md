@@ -481,7 +481,7 @@ Built (the full reference with arguments is §13 of `docs/talescript-spec.md`):
 | Player input | `ask_text()`, `ask_number()` |
 | Collection | `collect()` |
 
-Planned: character animations, character renames, and the other M6 items (§11). Considered in earlier drafts and not scheduled: `line_up()`, `skip_lock()`, `change_scene()`, and a manual `preload()` (beats already preload their assets). Generated reference docs for actions are part of M7.
+Planned: character animations and the other M6 items (§11). Considered in earlier drafts and not scheduled: `line_up()`, `skip_lock()`, `change_scene()`, and a manual `preload()` (beats already preload their assets). Generated reference docs for actions are part of M7.
 
 ---
 
@@ -685,7 +685,7 @@ Not built yet: per-word and fade-in typing, typing sounds, gamepad bindings by d
 Features most visual novels expect that StoryTeller lacks, found by reviewing Visual Novel Machinery (October 2026). Only the feature ideas come from that review; names, syntax, and designs are StoryTeller's own (§2).
 - **Inline text tags:** finish the tags planned in the spec (§7.1 of `docs/talescript-spec.md`): `[speed]` for typing speed, `[instant]` for a span shown at once without typing, `[sound]` at a point in the text, and `[act]` to run an action mid-line. ✔
 - **CGs:** full-screen event pictures on their own layer, above the cast and below the dialogue box (`cg()` and `hide_cg()`). Showing a CG unlocks its gallery entry, and one gallery entry can hold several variants of a picture. ✔ (CGs live in `res://story/cgs/` as single images or folders of variants; every CG gets a gallery item, and the gallery shows the variants a player has seen. Weather and filters draw over CGs; the camera does not move them. Decision 0013.)
-- **Character names during play:** change a cast member's displayed name from a tale (for example "???" until they introduce themselves, or a name the player types with `ask_text`). The new name is saved and translated like other names.
+- **Character names during play:** change a cast member's displayed name from a tale (for example "???" until they introduce themselves, or a name the player types with `ask_text`). The new name is saved and translated like other names. ✔ (Tales assign `mira.display_name`; "" restores the profile name.)
 - **Character animations and order:** built-in hop, shake, and nod; playing a named animation on scene-based looks; bringing a character to the front or setting their drawing order.
 - **Save screen:** as many slots as players want, shown in pages; deleting and labeling saves from the screen; an optional autosave on a timer.
 - **Per-character data:** fields declared in a cast profile (for example `affection`), used in tales as `ada.affection += 1`, known to the checker and autocomplete, and saved with the story.
@@ -896,4 +896,4 @@ Today the README, the TaleScript specification, and the decision records are the
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
 4. Fill the §9.3 gaps the usability test shows matter most (markup toolbar, multi-select, copy and paste, mood thumbnails).
 5. Decide the tier question for image choices and the route chart (§19, question 5).
-6. Continue M6: genre features. Inline text tags and CGs are done; character renames come next.
+6. Continue M6: genre features. Inline text tags, CGs, and character renames are done; character animations and per-character data come next.
