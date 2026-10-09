@@ -34,6 +34,11 @@ static func build_default() -> Theme:
 	theme.set_color("default_color", "RichTextLabel", TEXT)
 	theme.set_stylebox("normal", "LineEdit", _box(Color(0.12, 0.13, 0.17, 1.0), 6, 8))
 	theme.set_stylebox("focus", "LineEdit", focus)
+	# [code] in dialogue, for tales that show script or other code.
+	var mono := SystemFont.new()
+	mono.font_names = PackedStringArray(["Cascadia Mono", "Consolas", "Menlo", "DejaVu Sans Mono", "Liberation Mono", "monospace"])
+	theme.set_font("mono_font", "RichTextLabel", mono)
+	theme.set_font_size("mono_font_size", "RichTextLabel", 18)
 	return theme
 
 

@@ -24,16 +24,19 @@ beat topics:
 		@once "How do I write dialogue?":
 			topics_seen.append("dialogue")
 			curiosity += 1
-			ada (smile): "Put a speaker, a colon, and a quoted line. Narration is just the quoted line."
+			ada (smile): "Put a speaker, a colon, and a quoted line: [code]ada: \"Hello!\"[/code] Narration is just the quoted line: [code]\"The lamps hum.\"[/code]"
+			ada (curious): "A mood in parentheses changes my face. This line is [code]ada (curious): \"...\"[/code]"
 			ada: "Tags change how a line types: [speed=0.3]slowly[/speed], [speed=3]very quickly indeed[/speed], or [instant]all at once[/instant]."
+			ada: "The fast part was written [code][lb]speed=3[rb]very quickly indeed[lb]/speed[rb][/code]."
 			ada (curious): "A line can also make things happen as it types.[pause=0.3][act=shake(0.3)] Like that.[sound=page_turn]"
+			ada (smile): "That was [code][lb]act=shake(0.3)[rb][/code] and [code][lb]sound=page_turn[rb][/code] inside the line."
 			collect("talescript")
 			jump topics
 		@once "What about choices?":
 			topics_seen.append("choices")
 			curiosity += 1
-			ada (curious): "You're using one right now. Each option is a string with its own block."
-			ada: "Options marked @once disappear after you pick them."
+			ada (curious): "You're using one right now. A [code]choose:[/code] block lists options, each a quoted string with its own indented block."
+			ada: "This option starts with [code]@once \"What about choices?\":[/code] and @once makes it disappear after you pick it."
 			jump topics
 		@once "Can the stage change?":
 			topics_seen.append("stage")
@@ -43,34 +46,35 @@ beat topics:
 			ambience("rain", volume = 0.5)
 			weather("rain", strength = 0.6)
 			collect("library_night")
-			ada (smile): "Backdrops, music, and rain each take one line."
+			ada (smile): "Backdrops, music, and rain each take one line, such as [code]weather(\"rain\", strength = 0.6)[/code]."
 			await ada.move_to(Vector2(0.32, 0.0), time = 0.6)
 			prop("book", at = Vector2(0.66, 0.4))
 			sound("page_turn")
-			ada: "Characters move, and props appear wherever you put them."
+			ada: "Characters move, and props appear wherever you put them: [code]prop(\"book\", at = Vector2(0.66, 0.4))[/code]"
 			await camera.zoom(1.15, time = 0.8)
-			ada (curious): "Even the camera can zoom."
+			ada (curious): "Even the camera can zoom: [code]camera.zoom(1.15)[/code]"
 			camera.reset(time = 0.8)
 			jump topics
 		@once "Can tales remember things?":
 			topics_seen.append("variables")
 			curiosity += 1
 			ada: "Yes. Questions you have asked so far: {curiosity}."
+			ada (smile): "This tale declares [code]var curiosity := 0[/code], adds [code]curiosity += 1[/code] for each topic, and shows it with [code]{{curiosity}}[/code]."
 			jump topics
 		@once "What about saving and menus?":
 			topics_seen.append("menus")
 			curiosity += 1
 			ada: "Press Escape or right-click for the pause menu. Saving, loading, and settings live there."
 			ada (curious): "Roll the mouse wheel up or press Page Up to rewind. Press H to read the history."
-			ada: "Pictures, music, and notes you unlock show up under Extras on the title screen."
-			ada (smile): "Some stories read better as pages. Let me show you."
+			ada: "Pictures, music, and notes you unlock show up under Extras on the title screen. [code]collect(\"library\")[/code] unlocks one."
+			ada (smile): "Some stories read better as pages. [code]dialogue_style(\"page\")[/code] switches to them."
 			dialogue_style("page")
 			"In the page style, lines stack on the screen like a book."
 			"Each new line goes under the last one."
 			clear_page()
-			"A call to clear_page() starts a fresh page."
+			"A call to [code]clear_page()[/code] starts a fresh page."
 			dialogue_style("classic")
-			ada: "And now we're back to the classic box."
+			ada: "And [code]dialogue_style(\"classic\")[/code] brings back the classic box."
 			jump topics
 		"Show me a sample scene." if curiosity > 0:
 			ada (smile): "Here is one from the StoryTeller plan."
