@@ -89,7 +89,7 @@ This walkthrough builds a short scene with a choice and a condition. It uses cha
 4. Add a **Narration** card and type the opening line.
 5. Add a **Dialogue** card. Pick a speaker and a mood from the two lists, then type the line.
 6. Add a **Choice** card. It starts with two lanes. Type the text of each option in its lane.
-7. In the first lane, click **+ Add card** inside the lane and add a **Set variable** card. Type `trust` in the variable field, pick `+=`, and type `1` as the value. Then add a **Dialogue** card to the same lane for the reply.
+7. In the first lane, click **+ Add card** inside the lane and add a **Set variable** card. Pick `trust` from the **▾** list next to the variable field (it also lists other tales' variables and character fields such as `mira.friendship`), pick `+=`, and type `1` as the value. Then add a **Dialogue** card to the same lane for the reply.
 8. In the second lane, add a **Dialogue** card for a different reply.
 9. Under the choice, add a **Condition** card. Type `trust > 0` in the **If** field and add a Dialogue card in that lane. Click **+ Otherwise** and add a Dialogue card in the new lane.
 10. Add a **Jump** card and pick a beat from its list. Create the target with **+ Beat** first if it does not exist yet.

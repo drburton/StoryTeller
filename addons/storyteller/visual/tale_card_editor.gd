@@ -615,7 +615,11 @@ func _action_fields(card: TaleCard, path: String) -> Control:
 
 func _set_fields(card: TaleCard, path: String) -> Control:
 	var row := HBoxContainer.new()
-	var target := _line_field(path + ":target", card.node.target.to_source(), "variable", func(_text: String) -> void: pass)
+	var parts := {}
+	var target := _choice_field(path + ":target", card.node.target.to_source(), assignable_names(), func(_text: String) -> void:
+		parts["write"].call())
+	target.size_flags_horizontal = Control.SIZE_FILL
+	target.get_meta("line_edit").placeholder_text = "variable"
 	row.add_child(target)
 	var op := _option_button(path + ":op", PackedStringArray(OPERATORS), card.node.op)
 	row.add_child(op)
@@ -623,9 +627,8 @@ func _set_fields(card: TaleCard, path: String) -> Control:
 	row.add_child(value)
 	var write := func() -> void:
 		_set_line(card.node, TaleWriter.assign(target.get_meta("line_edit").text.strip_edges(), op.get_item_text(op.selected), value.get_meta("line_edit").text.strip_edges()))
-	target.set_meta("commit", write)
+	parts["write"] = write
 	value.set_meta("commit", write)
-	_bind_commit(target)
 	_bind_commit(value)
 	op.item_selected.connect(func(_index: int) -> void: write.call())
 	return row
@@ -1041,6 +1044,27 @@ func _variables() -> PackedStringArray:
 	for statement in doc.statements:
 		if statement.kind == TaleNode.Kind.VAR:
 			names.append(statement.name)
+	return names
+
+
+## Everything a Set variable card can change: this tale's variables, then
+## other tales' as [code]tale.variable[/code], then cast fields as
+## [code]id.field[/code].
+func assignable_names() -> PackedStringArray:
+	var names := _variables()
+	if context != null:
+		var tale_names := context.tales.keys()
+		tale_names.sort()
+		for tale_name in tale_names:
+			if tale_name == context.tale_name:
+				continue
+			for variable in context.tales[tale_name].get("vars", []):
+				names.append("%s.%s" % [tale_name, variable])
+		var ids := context.cast_fields.keys()
+		ids.sort()
+		for id in ids:
+			for field in context.cast_fields[id]:
+				names.append("%s.%s" % [id, field])
 	return names
 
 
