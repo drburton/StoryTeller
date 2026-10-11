@@ -278,6 +278,34 @@ func get_cast(id: String) -> CastMember:
 	return member
 
 
+## The portrait to show beside a line by [param id] in [param mood]: as
+## [method get_portrait], but null while the character is on stage when
+## [member CastProfile.portrait_off_stage_only] is set.
+func get_line_portrait(id: String, mood := "") -> Texture2D:
+	var profile: CastProfile = _profiles.get(id)
+	if profile != null and profile.portrait_off_stage_only and _cast.has(id) and _cast[id].on_stage:
+		return null
+	return get_portrait(id, mood)
+
+
+## The dialogue box portrait of cast member [param id] in [param mood]
+## (their current mood when empty), from [member CastProfile.portrait_folder].
+## Falls back to the default mood's portrait, then "default". Null when the
+## character has no portraits.
+func get_portrait(id: String, mood := "") -> Texture2D:
+	var profile: CastProfile = _profiles.get(id)
+	if profile == null or profile.portrait_folder.is_empty():
+		return null
+	if mood.is_empty() and _cast.has(id):
+		mood = _cast[id].mood
+	for portrait_name in [mood, profile.default_mood, "default"]:
+		if not portrait_name.is_empty():
+			var texture := StoryAssets.load_asset(profile.portrait_folder, portrait_name, StoryAssets.IMAGE_EXTENSIONS) as Texture2D
+			if texture != null:
+				return texture
+	return null
+
+
 ## Cast ids and their moods, for the checker.
 ## The profile of cast member [param id], or null.
 func get_profile(id: String) -> CastProfile:

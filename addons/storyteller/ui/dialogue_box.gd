@@ -79,6 +79,8 @@ const SLIDE_DISTANCE := 40.0
 
 
 ## Shows [param line] (see [method TalePresenter.show_line]). Awaitable.
+## [StoryDialogue] adds [code]"portrait"[/code]: the speaker's portrait
+## texture for this mood, or null.
 func show_line(_line: Dictionary) -> void:
 	pass
 

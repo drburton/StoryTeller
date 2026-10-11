@@ -371,11 +371,22 @@ MIRA = {"skin": (242, 210, 185), "hair": (150, 70, 40), "eyes": (90, 70, 50), "o
         "hair_style": "long", "collar": "uniform"}
 
 
-def write_profile(cast_id, display_name, color, default_mood, fields=None):
-    """Writes a CastProfile. fields maps field names to whole-number starting values."""
+def portrait(sprite, size=256):
+    """A dialogue box portrait: the head and shoulders of a character sprite."""
+    left, top, right, _ = sprite.getbbox()
+    side = int((right - left) * 1.25)
+    x = (left + right - side) // 2
+    return sprite.crop((x, top, x + side, top + side)).resize((size, size), Image.LANCZOS)
+
+
+def write_profile(cast_id, display_name, color, default_mood, fields=None, portraits=False):
+    """Writes a CastProfile. fields maps field names to whole-number starting values.
+    portraits adds the portraits folder, shown while the character is off stage."""
     field_lines = ""
     if fields:
         field_lines = "fields = {\n" + ",\n".join(f'"{name}": {value}' for name, value in fields.items()) + "\n}\n"
+    if portraits:
+        field_lines += f'portrait_folder = "res://demo/story/portraits/{cast_id}"\nportrait_off_stage_only = true\n'
     with open(path("cast", f"{cast_id}.tres"), "w") as f:
         f.write(f"""[gd_resource type="Resource" script_class="CastProfile" load_steps=4 format=3]
 
@@ -561,10 +572,12 @@ def main():
     window_table("afternoon")
     window_table("rain")
     for mood in ("neutral", "smile", "curious", "thinking"):
-        character(ADA, mood).save(path("cast", "ada", f"{mood}.png"))
+        sprite = character(ADA, mood)
+        sprite.save(path("cast", "ada", f"{mood}.png"))
+        portrait(sprite).save(path("portraits", "ada", f"{mood}.png"))
     for mood in ("neutral", "smile", "curious", "soft", "smirk"):
         character(MIRA, mood).save(path("cast", "mira", f"{mood}.png"))
-    write_profile("ada", "Ada", (0.55, 0.85, 0.65), "neutral")
+    write_profile("ada", "Ada", (0.55, 0.85, 0.65), "neutral", portraits=True)
     write_profile("mira", "Mira", (0.95, 0.6, 0.45), "neutral", {"friendship": 0})
     props()
     choice_pictures()

@@ -135,8 +135,8 @@ welcome:topics_0f8fd2,Can the stage change?,¿Puede cambiar el escenario?,welcom
 welcome:topics_fa4fb7,Can tales remember things?,¿Los cuentos pueden recordar cosas?,welcome.tale:70 (choice),
 welcome:topics_da7486,What about saving and menus?,¿Y guardar la partida y los menús?,welcome.tale:78 (choice),
 welcome:topics_8c0912,Show me a sample scene.,Muéstrame una escena de ejemplo.,welcome.tale:94 (choice),
-welcome:topics_ca5847,I'm ready to start writing.,Estoy listo para empezar a escribir.,welcome.tale:101 (choice),
-welcome:topics_c6a7cb,Leave already,Irse ya,welcome.tale:103 (choice),
+welcome:topics_ca5847,I'm ready to start writing.,Estoy listo para empezar a escribir.,welcome.tale:102 (choice),
+welcome:topics_c6a7cb,Leave already,Irse ya,welcome.tale:104 (choice),
 welcome:topics_bec809,"Put a speaker, a colon, and a quoted line:
 [code]ada: ""Hello!""[/code]","Pon quién habla, dos puntos y una frase entre comillas:
 [code]ada: ""¡Hola!""[/code]",welcome.tale:32 (ada),
@@ -223,10 +223,11 @@ welcome:topics_0b0580,"And this brings back the classic box:
 [code]dialogue_style(""classic"")[/code]","Y esto trae de vuelta el cuadro clásico:
 [code]dialogue_style(""classic"")[/code]",welcome.tale:92 (ada),
 welcome:topics_36d940,Here is one from the StoryTeller plan.,Aquí tienes una del plan de StoryTeller.,welcome.tale:95 (ada),
-welcome:farewell_d2f003,"You asked about everything, {visitor}. I like that.","Preguntaste por todo, {visitor}. Eso me gusta.",welcome.tale:110 (ada),
-welcome:farewell_99a5b9,"You asked about {len(topics_seen)} topic{""s"" if len(topics_seen) != 1 else """"}.","Preguntaste por {len(topics_seen)} tema{""s"" if len(topics_seen) != 1 else """"}.",welcome.tale:112 (ada),
-welcome:farewell_4ac008,"The lamps dim. Somewhere, a page turns.","Las lámparas se atenúan. En algún lugar, pasa una página.",welcome.tale:114,
-welcome:farewell_6890cd,Open demo/tales/welcome.tale to see how this scene was made.,Abre demo/tales/welcome.tale para ver cómo se hizo esta escena.,welcome.tale:115 (ada),
+welcome:topics_015c66,"Off stage, my portrait still shows beside my lines. My cast profile names a portrait folder and sets portrait_off_stage_only.","Fuera del escenario, mi retrato sigue apareciendo junto a mis frases. Mi perfil de personaje indica una carpeta de retratos y activa portrait_off_stage_only.",welcome.tale:97 (ada),
+welcome:farewell_d2f003,"You asked about everything, {visitor}. I like that.","Preguntaste por todo, {visitor}. Eso me gusta.",welcome.tale:111 (ada),
+welcome:farewell_99a5b9,"You asked about {len(topics_seen)} topic{""s"" if len(topics_seen) != 1 else """"}.","Preguntaste por {len(topics_seen)} tema{""s"" if len(topics_seen) != 1 else """"}.",welcome.tale:113 (ada),
+welcome:farewell_4ac008,"The lamps dim. Somewhere, a page turns.","Las lámparas se atenúan. En algún lugar, pasa una página.",welcome.tale:115,
+welcome:farewell_6890cd,Open demo/tales/welcome.tale to see how this scene was made.,Abre demo/tales/welcome.tale para ver cómo se hizo esta escena.,welcome.tale:116 (ada),
 Ada,Ada,Ada,name of cast member 'ada',
 Mira,Mira,Mira,name of cast member 'mira',
 The librarian who shows visitors around. She knows every shelf and every command.,The librarian who shows visitors around. She knows every shelf and every command.,La bibliotecaria que guía a las visitas. Conoce cada estante y cada comando.,text of collection item 'ada',

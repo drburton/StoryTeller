@@ -94,6 +94,7 @@ beat topics:
 		"Show me a sample scene." if curiosity > 0:
 			ada (smile): "Here is one from the StoryTeller plan."
 			ada.exit()
+			ada (smile): "Off stage, my portrait still shows beside my lines. My cast profile names a portrait folder and sets portrait_off_stage_only."
 			clear_props()
 			weather("none")
 			stop_audio(fade = 1.0)

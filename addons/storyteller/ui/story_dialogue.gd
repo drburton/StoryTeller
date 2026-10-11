@@ -157,6 +157,10 @@ func show_line(line: Dictionary) -> void:
 	_line_read = line.get("read", false)
 	_typing_sound_now = _typing_sound_for(line)
 	_typed_since_sound = typing_sound_every
+	var stage := _crew(&"Stage")
+	if stage != null and stage.has_method("get_line_portrait") and not line.has("portrait"):
+		line = line.duplicate()
+		line["portrait"] = stage.get_line_portrait(str(line.get("speaker_id", "")), str(line.get("mood", "")))
 	await dialogue_box.show_line(line)
 
 
