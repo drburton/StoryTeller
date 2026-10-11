@@ -58,6 +58,10 @@ var _focus_key := ""
 ## The last cards copied, used when the system clipboard is empty or not
 ## available (as in headless runs).
 static var _copied := ""
+## Selected cards: consecutive cards of one list, by the list's path
+## ("b", "b/3/o0") and the first and last card index. "anchor" is the card
+## a Shift+click extends from.
+var _selection := {"list": "", "from": -1, "to": -1, "anchor": -1}
 ## Choice and Condition cards folded to their header, as
 ## "beat:path" keys.
 var _collapsed := {}
@@ -119,6 +123,8 @@ func _init() -> void:
 ## Shows [param new_source]. Keeps the selected beat and, when possible,
 ## the focused field.
 func set_source(new_source: String, new_context: TaleCheckContext = null, new_diagnostics: Array[TaleDiagnostic] = []) -> void:
+	if new_source != source:
+		clear_selection()
 	source = new_source
 	if new_context != null:
 		context = new_context
@@ -140,6 +146,7 @@ func set_source(new_source: String, new_context: TaleCheckContext = null, new_di
 
 func select_beat(beat_name: String) -> void:
 	current_beat = beat_name
+	clear_selection()
 	rebuild()
 
 
@@ -265,6 +272,9 @@ func _shortcut_input(event: InputEvent) -> void:
 			get_viewport().set_input_as_handled()
 			return
 		if focused == null or not is_ancestor_of(focused) or not (focused is LineEdit or focused is TextEdit):
+			if _handle_selection_keys(event):
+				get_viewport().set_input_as_handled()
+				return
 			_handle_shortcut(event)
 
 
@@ -398,10 +408,145 @@ func _fill_add_menu(popup: PopupMenu, on_pick: Callable) -> void:
 		on_pick.call(_new_action_text(actions.get_item_text(actions.get_item_index(id)))))
 
 
+# --- Selection ----------------------------------------------------------------
+
+## Selects the card at [param path], or with [param extend] the cards from
+## the last selected one to it when both are in the same list.
+func select_card(path: String, extend := false) -> void:
+	var cut := path.rfind("/")
+	var list := path.substr(0, cut)
+	var index := int(path.substr(cut + 1))
+	if extend and _selection["list"] == list and _selection["anchor"] >= 0:
+		_selection["from"] = mini(_selection["anchor"], index)
+		_selection["to"] = maxi(_selection["anchor"], index)
+	else:
+		_selection = {"list": list, "from": index, "to": index, "anchor": index}
+	_show_selection()
+
+
+func clear_selection() -> void:
+	_selection = {"list": "", "from": -1, "to": -1, "anchor": -1}
+	if is_inside_tree():
+		_show_selection()
+
+
+## Paths of the selected cards, in order.
+func get_selected_paths() -> PackedStringArray:
+	var paths := PackedStringArray()
+	for index in range(_selection["from"], _selection["to"] + 1):
+		if index >= 0:
+			paths.append("%s/%d" % [_selection["list"], index])
+	return paths
+
+
+func is_selected(path: String) -> bool:
+	return path in get_selected_paths()
+
+
+func _selection_count() -> int:
+	return get_selected_paths().size()
+
+
+## The statements of the selected cards, and the block that holds them.
+func _selected_nodes() -> Array:
+	var nodes := []
+	var parent: TaleNode = null
+	for panel in get_card_panels():
+		if is_selected(panel.get_meta("card_path")):
+			nodes.append_array((panel.get_meta("card") as TaleCard).nodes)
+			parent = TaleEdit.find_parent(doc, nodes[0])
+	return [nodes, parent]
+
+
+## Copies the selected cards, like [method copy_cards].
+func copy_selection() -> void:
+	var nodes: Array = _selected_nodes()[0]
+	if not nodes.is_empty():
+		_copy_nodes(nodes)
+
+
+func delete_selection() -> void:
+	var nodes: Array = _selected_nodes()[0]
+	if not nodes.is_empty():
+		commit(TaleEdit.delete_group(source, doc, nodes))
+
+
+## Moves the selected cards up ([param step] -1) or down (1) past the card
+## next to them.
+func move_selection(step: int) -> void:
+	var found := _selected_nodes()
+	var nodes: Array = found[0]
+	var parent: TaleNode = found[1]
+	if nodes.is_empty() or parent == null:
+		return
+	var cards := TaleCard.build(parent, _beats)
+	var first: int = _selection["from"]
+	var last: int = _selection["to"]
+	if (step < 0 and first == 0) or (step > 0 and last >= cards.size() - 1):
+		return
+	var siblings := TaleEdit.content_children(parent)
+	for node in nodes:
+		siblings.erase(node)
+	var index := siblings.size()
+	if step < 0:
+		index = siblings.find(cards[first - 1].nodes[0])
+	elif last + 2 < cards.size():
+		index = siblings.find(cards[last + 2].nodes[0])
+	var list: String = _selection["list"]
+	var moved := commit_and_keep(TaleEdit.move_group(source, doc, nodes, parent, index))
+	if moved:
+		_selection = {"list": list, "from": first + step, "to": last + step, "anchor": first + step}
+		_show_selection()
+
+
+## Commits [param new_source]; returns true when it changed the tale.
+func commit_and_keep(new_source: String) -> bool:
+	if new_source == source:
+		return false
+	commit(new_source)
+	return true
+
+
+## Delete removes the selected cards, Ctrl+C copies them, and Escape
+## clears the selection. Returns true when handled.
+func _handle_selection_keys(event: InputEvent) -> bool:
+	if not (event is InputEventKey and event.pressed and not event.echo) or _selection_count() == 0:
+		return false
+	if event.keycode == KEY_DELETE:
+		delete_selection()
+		return true
+	if event.keycode == KEY_C and (event.ctrl_pressed or event.meta_pressed):
+		copy_selection()
+		return true
+	if event.keycode == KEY_ESCAPE:
+		clear_selection()
+		return true
+	return false
+
+
+## Marks the selected cards with an outline.
+func _show_selection() -> void:
+	for panel in get_card_panels():
+		var style: StyleBoxFlat = panel.get_meta("style")
+		panel.add_theme_stylebox_override("panel", _selected_style(style) if is_selected(panel.get_meta("card_path")) else style)
+
+
+func _selected_style(style: StyleBoxFlat) -> StyleBoxFlat:
+	var selected := style.duplicate() as StyleBoxFlat
+	selected.set_border_width_all(2)
+	selected.border_width_left = 4
+	selected.border_color = Color(0.55, 0.75, 1.0)
+	return selected
+
+
 ## Copies the TaleScript of [param card] (with its nested cards) to the
 ## clipboard, indented with tabs.
 func copy_cards(card: TaleCard) -> void:
-	var text := TaleEdit.group_text(source, card.nodes)
+	_copy_nodes(card.nodes)
+
+
+func _copy_nodes(nodes: Array) -> void:
+	var text := TaleEdit.group_text(source, nodes)
 	var unit := TaleEdit.indent_unit(doc)
 	if unit != "\t":
 		var lines := PackedStringArray()
@@ -500,7 +645,8 @@ func _make_card(card: TaleCard, parent: TaleNode, path: String) -> Control:
 		style.border_width_bottom = 1
 		style.border_color = Color(0.95, 0.35, 0.3) if problems[0].is_error() else Color(0.95, 0.8, 0.3)
 		panel.tooltip_text = "\n".join(problems.map(func(d: TaleDiagnostic) -> String: return "Line %d: %s" % [d.line, d.message]))
-	panel.add_theme_stylebox_override("panel", style)
+	panel.set_meta("style", style)
+	panel.add_theme_stylebox_override("panel", _selected_style(style) if is_selected(path) else style)
 	var column := VBoxContainer.new()
 	panel.add_child(column)
 	column.add_child(_card_header(card, parent, path, panel))
@@ -577,7 +723,10 @@ func _card_header(card: TaleCard, parent: TaleNode, path: String, panel: Control
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.mouse_filter = Control.MOUSE_FILTER_PASS
 	title.mouse_default_cursor_shape = Control.CURSOR_DRAG
-	title.tooltip_text = "Drag to move"
+	title.tooltip_text = "Drag to move. Click to select, Shift+click to select a range."
+	title.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+			select_card(path, event.shift_pressed))
 	row.add_child(title)
 	if card.kind == TaleCard.Kind.CHOICE or card.kind == TaleCard.Kind.CONDITION:
 		var folded := is_folded(path)
@@ -593,10 +742,14 @@ func _card_header(card: TaleCard, parent: TaleNode, path: String, panel: Control
 	title.set_drag_forwarding(_drag.bind(card, panel), _can_drop.bind(parent, index), _drop.bind(parent, index))
 	panel.set_drag_forwarding(Callable(), _can_drop.bind(parent, index), _drop.bind(parent, index))
 	row.add_child(_small_button("▲", path + ":up", "Move up", func() -> void:
-		if index > 0:
+		if _selection_count() > 1 and is_selected(path):
+			move_selection(-1)
+		elif index > 0:
 			commit(TaleEdit.move_group(source, doc, card.nodes, parent, index - 1))))
 	row.add_child(_small_button("▼", path + ":down", "Move down", func() -> void:
-		if index < siblings.size() - 1:
+		if _selection_count() > 1 and is_selected(path):
+			move_selection(1)
+		elif index < siblings.size() - 1:
 			commit(TaleEdit.move_group(source, doc, card.nodes, parent, index + 1))))
 	var insert := MenuButton.new()
 	insert.text = "+"
@@ -605,10 +758,16 @@ func _card_header(card: TaleCard, parent: TaleNode, path: String, panel: Control
 	_fill_add_menu(insert.get_popup(), func(text: String) -> void:
 		commit(TaleEdit.insert_after(source, card.nodes.back(), _unit_text(text))))
 	row.add_child(insert)
-	row.add_child(_small_button("⧉", path + ":copy", "Copy this card, to paste in this or another tale", func() -> void:
-		copy_cards(card)))
-	row.add_child(_small_button("✕", path + ":delete", "Delete", func() -> void:
-		commit(TaleEdit.delete_group(source, doc, card.nodes))))
+	row.add_child(_small_button("⧉", path + ":copy", "Copy this card (or the selected cards), to paste in this or another tale", func() -> void:
+		if _selection_count() > 1 and is_selected(path):
+			copy_selection()
+		else:
+			copy_cards(card)))
+	row.add_child(_small_button("✕", path + ":delete", "Delete this card (or the selected cards)", func() -> void:
+		if _selection_count() > 1 and is_selected(path):
+			delete_selection()
+		else:
+			commit(TaleEdit.delete_group(source, doc, card.nodes))))
 	return row
 
 
