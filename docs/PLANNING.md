@@ -2,9 +2,9 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.21** (M0 to M6 complete; M7 under way)
+Status: **Draft v0.22** (M0 to M6 complete; M7 under way)
 
-### Where things stand (2026-10-09)
+### Where things stand (2026-10-11)
 
 - **Built and merged to `main`:** milestones M0 to M6. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
@@ -13,6 +13,12 @@ Status: **Draft v0.21** (M0 to M6 complete; M7 under way)
 - **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding cards, keys to move and add cards, and selecting several cards (§9.3), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), and `@no_wait` (§5.1).
 - **Not done yet:** the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.22:
+- The card editor fills the §9.3 gaps that need no usability test: a markup toolbar on narration and dialogue, copy and paste between tales, selecting several cards, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding Choice and Condition cards, and keys to move and add cards.
+- Characters can have dialogue box portraits, optionally only while off stage, and their own text color (§5.5). Ada has portraits in the demo.
+- Players get word-at-a-time and fade-in typing, high contrast, a readable font, reading lines aloud with the system's text-to-speech, and typing sounds per character (§7).
+- Writers get warnings for asset names that match no file, an action folder for custom actions, `@no_wait`, and blur and vignette filters (§4, §5.4, §5.6). Saves can be encrypted (§7).
 
 Changes in v0.21:
 - M7 progress: the setup wizard is built (§8). While a project has no StoryConfig, the Story tab offers **Set Up Project**, which makes the story folders, a config, a first tale, and a main scene that opens the title screen.
