@@ -234,7 +234,7 @@ A value returned from `run()` reaches the tale when it awaits the action, as wit
 
 ### Registering an action
 
-List the action's script in `StoryConfig.actions` (the **Actions** property of your config resource). The director registers one instance of each when the story starts, and the Story tab knows them too, so tales that call them check cleanly, get autocomplete, and get an Action card with a form.
+Save the script in the action folder, `res://story/actions` unless the config's **Action Folder** says otherwise, or list it in `StoryConfig.actions` (the **Actions** property of your config resource). Every script in the folder that extends `TaleAction` counts. The director registers one instance of each when the story starts, and the Story tab knows them too, so tales that call them check cleanly, get autocomplete, and get an Action card with a form.
 
 You can also register an instance in code after `Story.start()`:
 

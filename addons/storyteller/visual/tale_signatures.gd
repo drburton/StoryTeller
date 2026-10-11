@@ -35,7 +35,7 @@ static func action_scripts() -> Dictionary:
 			var action: TaleAction = script.new()
 			_actions[action.get_action_name()] = script
 	var result := _actions.duplicate()
-	for action in StoryConfig.make_actions(preload("res://addons/storyteller/core/story.gd").load_config().actions):
+	for action in StoryConfig.make_actions(preload("res://addons/storyteller/core/story.gd").load_config().get_action_scripts()):
 		result[action.get_action_name()] = action.get_script()
 	return result
 

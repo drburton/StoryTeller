@@ -150,7 +150,7 @@ func _init() -> void:
 
 
 func setup(config: StoryConfig) -> void:
-	for action in StoryConfig.make_actions(config.actions):
+	for action in StoryConfig.make_actions(config.get_action_scripts()):
 		add_action(action)
 	tales_folder = config.tales_folder
 	source_language = config.source_language

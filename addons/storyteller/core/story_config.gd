@@ -40,8 +40,30 @@ static func make_actions(scripts: Array[Script]) -> Array[TaleAction]:
 		if action is TaleAction and not action.get_action_name().is_empty():
 			made.append(action)
 		else:
-			push_warning("StoryTeller: %s in StoryConfig.actions is not a TaleAction with a name." % (script.resource_path if script != null else "an empty entry"))
+			push_warning("StoryTeller: %s is not a TaleAction with a name." % (script.resource_path if script != null else "An empty entry in StoryConfig.actions"))
 	return made
+
+
+## The scripts in [member actions], then every script in
+## [member action_folder] that extends [TaleAction] and is not listed.
+func get_action_scripts() -> Array[Script]:
+	var scripts: Array[Script] = actions.duplicate()
+	if action_folder.is_empty() or not DirAccess.dir_exists_absolute(action_folder):
+		return scripts
+	var names := Array(ResourceLoader.list_directory(action_folder))
+	names.sort()
+	for file_name in names:
+		if file_name.get_extension() != "gd":
+			continue
+		var script := load(action_folder.path_join(file_name)) as Script
+		if script == null or script in scripts or not script.can_instantiate():
+			continue
+		var base := script
+		while base != null and base != TaleAction:
+			base = base.get_base_script()
+		if base == TaleAction:
+			scripts.append(script)
+	return scripts
 
 
 ## Default location of the project's config resource.
@@ -51,6 +73,10 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## call, in addition to the built-in ones. The Story tab knows them too, so
 ## tales that use them check cleanly and get card forms.
 @export var actions: Array[Script] = []
+## Folder of custom action scripts. Each script in it that extends
+## [TaleAction] is added like those in [member actions], so new actions
+## only need to be saved there.
+@export_dir var action_folder := "res://story/actions"
 ## Crew member scripts to create when the story starts, in order.
 ## Each script must extend [StoryCrew].
 @export var crew: Array[Script] = [
