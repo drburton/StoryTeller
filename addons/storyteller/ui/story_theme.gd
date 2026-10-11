@@ -47,6 +47,28 @@ static func build_default() -> Theme:
 	return theme
 
 
+## System fonts tried, in order, for the "Readable font" setting: fonts
+## designed for legibility first, then common clear sans-serif fonts.
+const READABLE_FONTS := [
+	"Atkinson Hyperlegible", "Atkinson Hyperlegible Next", "Lexend", "Verdana",
+	"Tahoma", "Segoe UI", "Arial", "Helvetica", "DejaVu Sans", "Noto Sans", "sans-serif",
+]
+
+
+## [param base] adjusted for the player's display settings:
+## [code]high_contrast[/code] and [code]readable_font[/code] (both bool).
+## Returns [param base] itself when neither is on.
+static func for_settings(base: Theme, high_contrast_on: bool, readable_font: bool) -> Theme:
+	if not high_contrast_on and not readable_font:
+		return base
+	var theme := high_contrast(base) if high_contrast_on else base.duplicate(true) as Theme
+	if readable_font:
+		var font := SystemFont.new()
+		font.font_names = PackedStringArray(READABLE_FONTS)
+		theme.default_font = font
+	return theme
+
+
 ## A copy of [param base] with opaque black panels, white borders and text,
 ## and yellow focus, for the player's "High contrast" setting.
 static func high_contrast(base: Theme) -> Theme:

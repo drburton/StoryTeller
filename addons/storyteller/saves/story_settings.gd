@@ -20,6 +20,7 @@ const DEFAULTS := {
 	"typing_sounds": true,
 	"high_contrast": false,
 	"read_aloud": false,
+	"readable_font": false,
 	"language": "",
 }
 
@@ -91,7 +92,7 @@ func apply(key: String) -> void:
 			var dialogue := _crew(&"Dialogue")
 			if dialogue != null and dialogue.has_method("apply_setting"):
 				dialogue.apply_setting(key, value)
-		"high_contrast":
+		"high_contrast", "readable_font":
 			for crew_name in [&"Dialogue", &"Menus"]:
 				var member := _crew(crew_name)
 				if member != null and member.has_method("apply_setting"):
