@@ -159,6 +159,29 @@ func test_set_variable_card_picks_from_known_variables() -> void:
 	assert_true(panel.code_edit.text.contains("\t\t\tmira.friendship += 1\n"), panel.code_edit.text)
 
 
+## The list beside the field [param key], and the index of [param item].
+func _list_item(key: String, item: String) -> Array:
+	var line: LineEdit = _field(key)
+	var popup := (line.get_parent().get_child(1) as MenuButton).get_popup()
+	for i in popup.item_count:
+		if popup.get_item_text(i) == item:
+			return [popup, i]
+	return [popup, -1]
+
+
+func test_asset_lists_show_pictures() -> void:
+	panel.code_edit.text = SOURCE.replace("wait(1.0)  # a pause", "backdrop(\"library\")")
+	panel.check_now()
+	panel.show_view("cards")
+	var found := _list_item("b/2:name", "library")
+	assert_true(found[1] >= 0, "library is listed")
+	var icon: Texture2D = found[0].get_item_icon(found[1])
+	assert_not_null(icon, "backdrops have pictures")
+	assert_eq(icon.get_height(), TaleCardEditor.THUMBNAIL_SIZE)
+	found = _list_item("b/2:transition", "fade")
+	assert_null(found[0].get_item_icon(found[1]), "transitions have none")
+
+
 func test_typed_action_form_writes_named_arguments() -> void:
 	panel.code_edit.text = SOURCE.replace("wait(1.0)  # a pause", "backdrop(\"library\")")
 	panel.check_now()
@@ -194,6 +217,8 @@ func test_picture_fields_for_picture_choices() -> void:
 	panel.show_view("cards")
 	await tree.process_frame
 	assert_eq(_field("b/0/o1:picture").get_meta("line_edit").text, "blue_door")
+	var found := _list_item("b/0/o1:picture", "umbrella")
+	assert_not_null(found[0].get_item_icon(found[1]), "choice pictures are shown in the list")
 	_set_text("b/0/o0:picture", "red_door")
 	assert_true(panel.code_edit.text.contains("\t\t@picture(\"red_door\") @once \"Red\":\n"), panel.code_edit.text)
 	_set_text("b/0/o1:picture", "")

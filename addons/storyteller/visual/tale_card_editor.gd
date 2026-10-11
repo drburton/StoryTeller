@@ -602,7 +602,7 @@ func _action_fields(card: TaleCard, path: String) -> Control:
 		else:
 			var string_like: bool = param["type"] == TYPE_STRING or param["type"] == TYPE_NIL
 			var shown := _display_value(current) if string_like else current
-			var field := _choice_field(key, shown, options, func(_text: String) -> void: write.call())
+			var field := _choice_field(key, shown, options, func(_text: String) -> void: write.call(), _picture_finder(callee, param["name"]))
 			field.get_meta("line_edit").placeholder_text = _default_text(param)
 			var line: LineEdit = field.get_meta("line_edit")
 			editors[param["name"]] = func() -> String:
@@ -662,8 +662,14 @@ func _choice_lanes(column: VBoxContainer, card: TaleCard, path: String) -> void:
 			var disabled := _check(lane_path + ":show_disabled", "Show when unavailable", _has_annotation(node, "show_disabled"))
 			row.add_child(disabled)
 			var picture: Control = null
+			var parts := {}
 			if with_pictures:
-				picture = _line_field(lane_path + ":picture", _annotation_text(node, "picture"), "picture", func(_text: String) -> void: pass)
+				var pictures := StoryAssets.list_names(config.choice_picture_folder, StoryAssets.IMAGE_EXTENSIONS) if config != null else PackedStringArray()
+				picture = _choice_field(lane_path + ":picture", _annotation_text(node, "picture"), pictures, func(_text: String) -> void:
+					parts["write"].call(), func(picture_name: String) -> Texture2D:
+						return asset_thumbnail(StoryAssets.find(config.choice_picture_folder, picture_name, StoryAssets.IMAGE_EXTENSIONS)))
+				picture.size_flags_horizontal = Control.SIZE_FILL
+				picture.get_meta("line_edit").placeholder_text = "picture"
 				row.add_child(picture)
 			var write := func() -> void:
 				var keep: Array[TaleExpr] = []
@@ -680,9 +686,7 @@ func _choice_lanes(column: VBoxContainer, card: TaleCard, path: String) -> void:
 			condition.set_meta("commit", write)
 			_bind_commit(text)
 			_bind_commit(condition)
-			if picture != null:
-				picture.set_meta("commit", write)
-				_bind_commit(picture)
+			parts["write"] = write
 			once.toggled.connect(func(_on: bool) -> void: write.call())
 			disabled.toggled.connect(func(_on: bool) -> void: write.call())
 		if card.lanes.size() > 1:
@@ -860,7 +864,9 @@ func _line_field(key: String, text: String, placeholder: String, on_commit: Call
 
 
 ## A one-line field with a ▾ menu of suggested values.
-func _choice_field(key: String, text: String, options: PackedStringArray, on_commit: Callable) -> Control:
+## A one-line field with a list of [param options] beside it. When given,
+## [param icon_for] returns a picture for an option name, or null.
+func _choice_field(key: String, text: String, options: PackedStringArray, on_commit: Callable, icon_for := Callable()) -> Control:
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var line := LineEdit.new()
@@ -872,12 +878,17 @@ func _choice_field(key: String, text: String, options: PackedStringArray, on_com
 	_bind_commit(line)
 	row.add_child(line)
 	row.set_meta("line_edit", line)
+	line.set_meta("line_edit", line)
 	if not options.is_empty():
 		var menu := MenuButton.new()
 		menu.text = "▾"
 		menu.flat = false
 		for option in options:
 			menu.get_popup().add_item(option)
+			if icon_for.is_valid():
+				var icon: Texture2D = icon_for.call(option)
+				if icon != null:
+					menu.get_popup().set_item_icon(menu.get_popup().item_count - 1, icon)
 		menu.get_popup().id_pressed.connect(func(id: int) -> void:
 			line.text = menu.get_popup().get_item_text(menu.get_popup().get_item_index(id))
 			on_commit.call(line.text))
@@ -940,6 +951,53 @@ func get_thumbnail(id: String, mood: String) -> Texture2D:
 	if not _thumbnails.has(key):
 		_thumbnails[key] = _make_thumbnail(profile.look.get_preview(mood))
 	return _thumbnails[key]
+
+
+## Returns pictures for the list of [param param] of [param callee]: the
+## backdrop, CG, or prop images, or the cast member's moods. An invalid
+## Callable when the values have no pictures.
+func _picture_finder(callee: String, param: String) -> Callable:
+	if config == null:
+		return Callable()
+	var method := callee.get_slice(".", 1) if "." in callee else callee
+	match [method, param]:
+		["backdrop", "name"]:
+			return func(value: String) -> Texture2D:
+				return asset_thumbnail(StoryAssets.find(config.backdrop_folder, value, StoryAssets.IMAGE_EXTENSIONS))
+		["cg", "name"]:
+			var cgs := StoryAssets.scan_cgs(config.cg_folder)
+			return func(value: String) -> Texture2D:
+				var variants: PackedStringArray = cgs.get(value, PackedStringArray())
+				return asset_thumbnail(StoryAssets.find_cg(config.cg_folder, value, StoryAssets.default_cg_variant(variants)))
+		["prop", "name"], ["hide_prop", "name"]:
+			return func(value: String) -> Texture2D:
+				return asset_thumbnail(StoryAssets.find(config.prop_folder, value, StoryAssets.IMAGE_EXTENSIONS))
+		["enter", "mood_name"]:
+			var owner := callee.get_slice(".", 0)
+			return func(value: String) -> Texture2D:
+				return get_thumbnail(owner, value)
+	return Callable()
+
+
+## A small copy of the image at [param path], at most [constant
+## THUMBNAIL_SIZE] pixels high, or null when there is no image.
+func asset_thumbnail(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	if not _thumbnails.has(path):
+		var texture := load(path) as Texture2D
+		var image := texture.get_image() if texture != null else null
+		if image == null:
+			_thumbnails[path] = null
+		else:
+			image = image.duplicate()
+			if image.is_compressed():
+				image.decompress()
+			var height := THUMBNAIL_SIZE
+			var width := maxi(1, roundi(float(image.get_width()) * height / image.get_height()))
+			image.resize(width, height, Image.INTERPOLATE_BILINEAR)
+			_thumbnails[path] = ImageTexture.create_from_image(image)
+	return _thumbnails[path]
 
 
 static func _make_thumbnail(texture: Texture2D) -> Texture2D:
