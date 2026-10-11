@@ -343,6 +343,10 @@ func _check_annotations(annotations: Array[TaleExpr], node: TaleNode, top_level:
 				if top_level:
 					_error_expr(annotation, "@no_rewind only applies to lines inside a beat.")
 				_expect_no_arguments(annotation)
+			"no_wait":
+				if node.kind != K.DIALOGUE and node.kind != K.NARRATION and node.kind != K.CHOOSE:
+					_error_expr(annotation, "@no_wait only applies to dialogue, narration, and choose.")
+				_expect_no_arguments(annotation)
 			"skip_safe":
 				if node.kind != K.BEAT:
 					_error_expr(annotation, "@skip_safe only applies to beats.")

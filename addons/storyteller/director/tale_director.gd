@@ -102,6 +102,10 @@ var source_language := "en"
 ## Named text styles from [member StoryConfig.text_styles], expanded in
 ## every line before it is shown.
 var text_styles: Dictionary = {}
+## When true, lines and choices wait for running actions to finish before
+## they appear. A line marked [code]@no_wait[/code] never waits. From
+## [member StoryConfig.wait_for_actions].
+var wait_for_actions := true
 
 var _tales: Dictionary = {}
 var _story_vars: Dictionary = {}
@@ -155,6 +159,7 @@ func setup(config: StoryConfig) -> void:
 	tales_folder = config.tales_folder
 	source_language = config.source_language
 	text_styles = config.text_styles
+	wait_for_actions = config.wait_for_actions
 	_declared_names = config.exposed_names
 
 
@@ -662,7 +667,8 @@ func _execute(instruction: Dictionary, frame: TaleFrame) -> void:
 
 func _say(instruction: Dictionary, frame: TaleFrame) -> void:
 	var generation := _generation
-	await _finish_pending()
+	if wait_for_actions and not instruction.get("no_wait", false):
+		await _finish_pending()
 	var acts: Array = []
 	var text: String = await _render(_localize(instruction["text"], instruction["id"], frame.tale, instruction["line"]), frame, acts)
 	text = TaleText.expand_styles(text, text_styles)
@@ -719,7 +725,8 @@ func _match(instruction: Dictionary, frame: TaleFrame) -> void:
 
 func _choose(instruction: Dictionary, frame: TaleFrame) -> void:
 	var generation := _generation
-	await _finish_pending()
+	if wait_for_actions and not instruction.get("no_wait", false):
+		await _finish_pending()
 	var settings := {}
 	for key in instruction["args"]:
 		settings[key] = await _evaluator.evaluate(instruction["args"][key], frame)

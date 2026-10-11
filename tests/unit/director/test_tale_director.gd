@@ -184,3 +184,30 @@ func test_check_context_lists_actions() -> void:
 	var context := director.make_check_context()
 	assert_eq(context.actions["wait"], {"params": PackedStringArray(["seconds"]), "required": 1})
 	assert_eq(context.actions["emit"], {"params": PackedStringArray(["signal_name", "value"]), "required": 1})
+
+
+func test_no_wait_lines_show_while_actions_run() -> void:
+	var clock: EngineClock = track(EngineClock.new())
+	tree.root.add_child(clock)
+	var started := {"at": await clock.start()}
+	var shown := {}
+	presenter.on_line = func(line: Dictionary) -> void: shown[line["text"]] = clock.seconds - started["at"]
+	await _play("beat start:\n\twait(0.2)\n\t@no_wait \"at once\"\n\t\"after the wait\"\n")
+	assert_true(shown["at once"] < 0.15, "@no_wait shows the line at once: %s" % shown)
+	assert_true(shown["after the wait"] >= 0.19, "the next line still waits: %s" % shown)
+	director.wait_for_actions = false
+	presenter.lines.clear()
+	shown.clear()
+	started["at"] = clock.seconds
+	await _play("beat start:\n\twait(0.2)\n\t\"no waiting\"\n")
+	assert_true(shown["no waiting"] < 0.15, "the project switch turns waiting off: %s" % shown)
+
+
+func test_no_wait_is_checked() -> void:
+	var result := TaleCompiler.build("@no_wait\nbeat start:\n\t@no_wait(1) \"x\"\n\t@no_wait choose:\n\t\t\"a\":\n\t\t\tpass\n", "main", director.make_check_context("main"))
+	var messages: Array = result["diagnostics"].map(func(d: TaleDiagnostic) -> String: return d.message)
+	assert_has(messages, "@no_wait only applies to dialogue, narration, and choose.")
+	assert_has(messages, "@no_wait takes no arguments.")
+	assert_eq(messages.size(), 2, str(messages))
+	var tale: Tale = TaleCompiler.build("beat start:\n\t@no_wait choose:\n\t\t\"a\":\n\t\t\tpass\n", "main", director.make_check_context("main"))["tale"]
+	assert_true(tale.instructions.any(func(i: Dictionary) -> bool: return i["op"] == "choose" and i.get("no_wait", false)), "choose carries the flag")

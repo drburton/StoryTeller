@@ -50,7 +50,7 @@ func test_top_level_offers_declarations() -> void:
 
 
 func test_annotations() -> void:
-	assert_eq(_texts("\t@"), ["global", "heading", "id", "no_rewind", "once", "picture", "show_disabled", "skip_safe", "title", "voice"])
+	assert_eq(_texts("\t@"), ["global", "heading", "id", "no_rewind", "no_wait", "once", "picture", "show_disabled", "skip_safe", "title", "voice"])
 	assert_eq(_texts("\t@s"), ["show_disabled", "skip_safe"])
 
 

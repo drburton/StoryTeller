@@ -26,7 +26,9 @@ extends Resource
 ##              {text, cond, once, show_disabled, picture, id, target, line}.
 ## end                                              End of a beat.
 ## [/codeblock]
-## Any instruction may carry [code]"no_rewind": true[/code]. Say instructions in
+## Any instruction may carry [code]"no_rewind": true[/code]; say and choose
+## instructions may carry [code]"no_wait": true[/code] (from
+## [code]@no_wait[/code]). Say instructions in
 ## [code]@skip_safe[/code] beats carry [code]"skip_safe": true[/code].
 ##
 ## [b]Expressions[/b] are arrays whose first element names the kind:

@@ -182,6 +182,8 @@ func _statement(node: TaleNode, pending: Array[TaleExpr]) -> void:
 			_emit({"op": "goto", "target": _loops.back()["continue"]}, node.line_start)
 	if _has_annotation(annotations, null, "no_rewind") and index < _tale.instructions.size():
 		_tale.instructions[index]["no_rewind"] = true
+	if _has_annotation(annotations, null, "no_wait") and index < _tale.instructions.size():
+		_tale.instructions[index]["no_wait"] = true
 
 
 func _if_chain(chain: Array[TaleNode], pending: Array[TaleExpr]) -> void:
