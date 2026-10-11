@@ -18,6 +18,7 @@ const DEFAULTS := {
 	"fullscreen": false,
 	"skip_unread": false,
 	"typing_sounds": true,
+	"high_contrast": false,
 	"language": "",
 }
 
@@ -89,6 +90,11 @@ func apply(key: String) -> void:
 			var dialogue := _crew(&"Dialogue")
 			if dialogue != null and dialogue.has_method("apply_setting"):
 				dialogue.apply_setting(key, value)
+		"high_contrast":
+			for crew_name in [&"Dialogue", &"Menus"]:
+				var member := _crew(crew_name)
+				if member != null and member.has_method("apply_setting"):
+					member.apply_setting(key, value)
 		"master_volume":
 			AudioServer.set_bus_volume_db(0, linear_to_db(maxf(float(value), 0.0001)))
 		"music_volume", "sounds_volume", "ambience_volume", "voice_volume":

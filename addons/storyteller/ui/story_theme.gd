@@ -8,6 +8,8 @@ const ACCENT := Color(0.55, 0.75, 1.0)
 const TEXT := Color(0.92, 0.93, 0.96)
 ## Color of [code][code][/code] text in dialogue boxes.
 const CODE := Color(0.98, 0.80, 0.45)
+## Focus and highlight color of the high-contrast theme.
+const HIGH_CONTRAST_FOCUS := Color(1.0, 0.9, 0.2)
 
 
 static func build_default() -> Theme:
@@ -42,6 +44,33 @@ static func build_default() -> Theme:
 	theme.set_font("mono_font", "RichTextLabel", mono)
 	theme.set_font_size("mono_font_size", "RichTextLabel", 18)
 	theme.set_color("code_color", "DialogueBox", CODE)
+	return theme
+
+
+## A copy of [param base] with opaque black panels, white borders and text,
+## and yellow focus, for the player's "High contrast" setting.
+static func high_contrast(base: Theme) -> Theme:
+	var theme := base.duplicate(true) as Theme
+	var panel := _box(Color.BLACK, 6, 14)
+	panel.border_color = Color.WHITE
+	panel.set_border_width_all(2)
+	for type in ["PanelContainer", "Panel"]:
+		theme.set_stylebox("panel", type, panel)
+	for state in ["normal", "hover", "pressed", "focus", "disabled"]:
+		var button := _box(Color.BLACK if state != "pressed" else Color(0.2, 0.2, 0.2), 6, 10)
+		button.border_color = HIGH_CONTRAST_FOCUS if state in ["hover", "focus", "pressed"] else Color.WHITE
+		button.set_border_width_all(3 if state in ["hover", "focus"] else 2)
+		theme.set_stylebox(state, "Button", button)
+	var field := _box(Color.BLACK, 4, 8)
+	field.border_color = Color.WHITE
+	field.set_border_width_all(2)
+	theme.set_stylebox("normal", "LineEdit", field)
+	for color_name in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		theme.set_color(color_name, "Button", Color.WHITE)
+	theme.set_color("font_disabled_color", "Button", Color(0.75, 0.75, 0.75))
+	theme.set_color("font_color", "Label", Color.WHITE)
+	theme.set_color("default_color", "RichTextLabel", Color.WHITE)
+	theme.set_color("code_color", "DialogueBox", HIGH_CONTRAST_FOCUS)
 	return theme
 
 
