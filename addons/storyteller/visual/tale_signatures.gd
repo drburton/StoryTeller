@@ -27,13 +27,17 @@ static func for_callee(callee: String, context: TaleCheckContext) -> Array[Dicti
 	return TaleCalls.parameters(script, "run", 1) if script != null else []
 
 
-## Built-in action scripts by action name.
+## Action scripts by action name: the built-in ones and those in the
+## project's [member StoryConfig.actions].
 static func action_scripts() -> Dictionary:
 	if _actions.is_empty():
 		for script in TaleDirector.BUILTIN_ACTIONS:
 			var action: TaleAction = script.new()
 			_actions[action.get_action_name()] = script
-	return _actions
+	var result := _actions.duplicate()
+	for action in StoryConfig.make_actions(preload("res://addons/storyteller/core/story.gd").load_config().actions):
+		result[action.get_action_name()] = action.get_script()
+	return result
 
 
 ## Values that fit [param param] of [param callee], such as backdrop names

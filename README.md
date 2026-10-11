@@ -6,6 +6,14 @@ Writers create stories in TaleScript, a small language that looks and feels like
 
 > **Status:** early development (M6 complete, M7 next). The language, runtime, Story tab (text, cards, and Story Map), characters with renames, animations, drawing order, and their own data, backdrops, CGs, inline text tags, transitions, camera, audio, effects, movies, saves with pages, renaming, and timed autosave, rewind, history, settings, menus, the Extras screen with a route chart for players, picture choices, title art and music, an animated dialogue box, named text styles, translation, the debug console, and live reload work. Yarn Spinner scripts can be imported. Next: usability testing with writers and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
 
+## Screenshots
+
+| | |
+|---|---|
+| ![Title screen of the demo](docs/images/title.png) | ![Mira speaking in the library](docs/images/dialogue.png) |
+| ![A picture choice with three options](docs/images/picture_choice.png) | ![The route chart in Extras](docs/images/route_chart.png) |
+| ![The Story tab's Cards view](docs/images/story_tab_cards.png) | ![The Story tab's Map view](docs/images/story_tab_map.png) |
+
 ## Requirements
 
 - Godot **4.7.2** (standard build; .NET is not required)
@@ -168,6 +176,13 @@ CI runs this check on every pull request.
 
 ## Documentation
 
+- [Getting started](docs/guides/getting-started.md): install, set up, and play a first scene
+- [The visual editor](docs/guides/visual-editor.md): Text, Cards, and Map views
+- [TaleScript for writers](docs/guides/talescript-for-writers.md): a cheat sheet with examples
+- [TaleScript for GDScript users](docs/guides/talescript-for-gdscript-users.md): only the differences
+- [Developer guide](docs/guides/developer-guide.md): crew members, actions, looks, styles, transitions, embedding, editor add-ons
+- [Recipes](docs/guides/recipes.md): relationship meters, inventories, mini-games, timed and picture choices
+- [Action reference](docs/action-reference.md), generated from the built-in actions
 - [TaleScript specification](docs/talescript-spec.md)
 - [Project plan](docs/PLANNING.md)
 - [Decision records](docs/decisions/README.md)

@@ -30,9 +30,27 @@ static func dialogue_only() -> StoryConfig:
 	return config
 
 
+## One instance of each script in [param scripts] that extends
+## [TaleAction], as listed in [member actions]. Others are skipped with a
+## warning.
+static func make_actions(scripts: Array[Script]) -> Array[TaleAction]:
+	var made: Array[TaleAction] = []
+	for script in scripts:
+		var action: Variant = script.new() if script != null and script.can_instantiate() else null
+		if action is TaleAction and not action.get_action_name().is_empty():
+			made.append(action)
+		else:
+			push_warning("StoryTeller: %s in StoryConfig.actions is not a TaleAction with a name." % (script.resource_path if script != null else "an empty entry"))
+	return made
+
+
 ## Default location of the project's config resource.
 const DEFAULT_PATH := "res://story/story_config.tres"
 
+## Scripts of custom actions (each extends [TaleAction]) that tales can
+## call, in addition to the built-in ones. The Story tab knows them too, so
+## tales that use them check cleanly and get card forms.
+@export var actions: Array[Script] = []
 ## Crew member scripts to create when the story starts, in order.
 ## Each script must extend [StoryCrew].
 @export var crew: Array[Script] = [

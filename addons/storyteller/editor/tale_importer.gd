@@ -81,10 +81,11 @@ func _import(source_file: String, save_path: String, _options: Dictionary, _plat
 ## Builds a check context with the built-in actions and the beats and
 ## variables of the other tales in the same folder.
 static func _make_context(source_file: String, tale_name: String) -> TaleCheckContext:
+	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").load_config()
 	var director := TaleDirector.new()
+	director.setup(config)
 	var context := director.make_check_context(tale_name)
 	director.free()
-	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").load_config()
 	var profiles := StoryStage.scan_cast(config.cast_folder)
 	for id in profiles:
 		var profile: CastProfile = profiles[id]

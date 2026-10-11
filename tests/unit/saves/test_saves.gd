@@ -6,7 +6,8 @@ const ScriptedPresenter := preload("res://tests/fixtures/scripted_presenter.gd")
 const SAVE_FOLDER := "user://test_saves"
 const SETTINGS_PATH := "user://test_settings.cfg"
 
-const SOURCE := """var count := 0
+const SOURCE := """@title("The Test Tale")
+var count := 0
 @global var endings := 0
 
 beat start:
@@ -68,6 +69,7 @@ func test_save_and_load_slot_shows_the_saved_line_again() -> void:
 	assert_true(saves.has_slot("1"))
 	var info := saves.get_slot_info("1")
 	assert_eq(info["text"], "Second 1.")
+	assert_eq(info["title"], "The Test Tale", "the slot names the tale it was saved in")
 	assert_eq(info["format"], StorySaves.FORMAT)
 
 	var second := await _make_story()

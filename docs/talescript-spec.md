@@ -250,7 +250,7 @@ for item in inventory_items:
 	"You have {item}."
 ```
 
-`break` and `continue` work as in GDScript. Loops stop with an error after a configurable number of iterations (default 10,000) to prevent runaway scripts.
+`break` and `continue` work as in GDScript. A loop that runs 100,000 steps without showing a line or choice is stopped with an error (§9.1), to prevent runaway scripts. The limit is `TaleDirector.max_steps_without_pause`.
 
 ### 5.9 Choices
 
@@ -335,7 +335,8 @@ backdrop("forest", transition = "fade", time = 1.5)
 - `camera`, with the methods and properties listed in §13.
 - Stage positions: `LEFT`, `CENTER`, `RIGHT` (`Vector2(0.25, 0)`, `Vector2(0.5, 0)`, `Vector2(0.75, 0)`), or any `Vector2`. The x value runs from 0 (left edge) to 1 (right edge); the y value lifts a character's feet above the bottom of the screen, as a fraction of the screen height.
 - Constants of value types, such as `Color.RED`, `Color.TRANSPARENT`, `Vector2.ZERO`, and `Vector2.LEFT`.
-- Built-in functions: `randi_range`, `randf`, `min`, `max`, `clamp`, `round`, `len`, `str`, `visited("tale.beat")`, `collected("id")`, `tr("key")`.
+- Built-in functions: `abs`, `ceil`, `clamp`, `float`, `floor`, `int`, `len`, `max`, `min`, `randf`, `randf_range`, `randi`, `randi_range`, `round`, `str`, `visited("tale.beat")`, `collected("id")`, `tr("key")`.
+- Built-in constants: `PI`, `TAU`, `INF`, `NAN`.
 - Objects and functions that game code exposes with `Story.expose()`. Nothing else in the engine is reachable. List their names in `StoryConfig.exposed_names` so tales that use them import without errors and the Story editor suggests them.
 
 ---
@@ -391,7 +392,7 @@ player_name = await ask_text(tr("What's your name?"), tr("Sam"))
 
 | Annotation | Applies to | Meaning |
 |---|---|---|
-| `@title("...")` | Tale (top level) | Display name for save slots and the Story Map. |
+| `@title("...")` | Tale (top level) | Display name shown on save slots and in the route chart. |
 | `@global` | `var` at top level | Variable shared across playthroughs. |
 | `@once` | Choice option | Option disappears after it is chosen once in a playthrough. |
 | `@show_disabled` | Choice option | Show the option greyed out when its condition is false. |
