@@ -58,6 +58,9 @@ var _focus_key := ""
 ## The last cards copied, used when the system clipboard is empty or not
 ## available (as in headless runs).
 static var _copied := ""
+## Choice and Condition cards folded to their header, as
+## "beat:path" keys.
+var _collapsed := {}
 ## Size of the speaker and mood thumbnails in pixels.
 const THUMBNAIL_SIZE := 40
 ## Cast profiles by id, scanned the first time a thumbnail is needed.
@@ -458,7 +461,41 @@ func _make_card(card: TaleCard, parent: TaleNode, path: String) -> Control:
 				_set_line(card.node, TaleWriter.comment(text))))
 		TaleCard.Kind.SCRIPT:
 			column.add_child(_script_field(card, path))
+	if is_folded(path):
+		for i in range(1, column.get_child_count()):
+			column.get_child(i).hide()
+		var summary := Label.new()
+		summary.text = _collapsed_summary(card)
+		summary.add_theme_color_override("font_color", Color(0.65, 0.68, 0.75))
+		column.add_child(summary)
 	return panel
+
+
+## True when the card at [param path] in the current beat is folded.
+func is_folded(path: String) -> bool:
+	return _collapsed.has("%s:%s" % [current_beat, path])
+
+
+## Folds or unfolds the card at [param path] in the current beat.
+func set_folded(path: String, collapsed: bool) -> void:
+	var key := "%s:%s" % [current_beat, path]
+	if collapsed:
+		_collapsed[key] = true
+	else:
+		_collapsed.erase(key)
+	rebuild()
+
+
+func _collapsed_summary(card: TaleCard) -> String:
+	var count := 0
+	var names := PackedStringArray()
+	for lane in card.lanes:
+		count += 1
+		if card.kind == TaleCard.Kind.CHOICE and lane["node"].kind == TaleNode.Kind.OPTION:
+			names.append("\"%s\"" % TaleCard.text_of(lane["node"]))
+	if card.kind == TaleCard.Kind.CHOICE:
+		return "%d options: %s" % [count, ", ".join(names)]
+	return "%d branches" % count if count != 1 else "1 branch"
 
 
 func _card_header(card: TaleCard, parent: TaleNode, path: String, panel: Control) -> Control:
@@ -471,6 +508,12 @@ func _card_header(card: TaleCard, parent: TaleNode, path: String, panel: Control
 	title.mouse_default_cursor_shape = Control.CURSOR_DRAG
 	title.tooltip_text = "Drag to move"
 	row.add_child(title)
+	if card.kind == TaleCard.Kind.CHOICE or card.kind == TaleCard.Kind.CONDITION:
+		var folded := is_folded(path)
+		var fold := _small_button("▸" if folded else "▾", path + ":collapse", "Show the lanes" if folded else "Fold the lanes away", func() -> void:
+			set_folded(path, not folded))
+		row.add_child(fold)
+		row.move_child(fold, 0)
 	var siblings := TaleCard.build(parent, _beats)
 	var index := -1
 	for i in siblings.size():
