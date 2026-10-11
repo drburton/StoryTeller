@@ -196,6 +196,39 @@ func test_add_move_and_delete_cards() -> void:
 	assert_false(panel.code_edit.text.contains("Sunlight"))
 
 
+func _paste(menu_key: String) -> void:
+	var popup := (_field(menu_key) as MenuButton).get_popup()
+	popup.about_to_popup.emit()
+	var paste := popup.item_count - 1
+	assert_eq(popup.get_item_text(paste), "Paste")
+	assert_false(popup.is_item_disabled(paste), "Paste is enabled")
+	popup.id_pressed.emit(popup.get_item_id(paste))
+
+
+func test_copied_cards_paste_into_another_tale() -> void:
+	_field("b/3:copy").pressed.emit()
+	assert_eq(TaleCardEditor.paste_text(), "choose:\n\t\"Wave\":\n\t\ttrust += 1\n\t\"Leave\":\n\t\tjump other")
+	var other_path := "user://card_editor_other.tale"
+	var file := FileAccess.open(other_path, FileAccess.WRITE)
+	file.store_string("beat other:\n    \"Hello.\"\n")
+	file.close()
+	panel.open_file(other_path)
+	panel.show_view("cards")
+	await tree.process_frame
+	# The other tale indents with spaces; the pasted lines follow it.
+	_paste("b/0:insert")
+	assert_eq(panel.code_edit.text, "beat other:\n    \"Hello.\"\n    choose:\n        \"Wave\":\n            trust += 1\n        \"Leave\":\n            jump other\n")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(other_path))
+
+
+func test_paste_takes_only_tale_lines() -> void:
+	assert_true(TaleCardEditor.can_paste_text("\"Hi.\"\nada: \"Hello.\""))
+	assert_true(TaleCardEditor.can_paste_text("if trust > 0:\n\t\"Friends.\""))
+	assert_false(TaleCardEditor.can_paste_text(""))
+	assert_false(TaleCardEditor.can_paste_text("beat start:\n\tpass"), "a whole beat")
+	assert_false(TaleCardEditor.can_paste_text("Dear diary, (today"), "plain prose")
+
+
 func NEW_INDEX(kind: String) -> int:
 	return TaleCardEditor.NEW_CARDS.find(kind)
 

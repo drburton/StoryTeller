@@ -55,6 +55,9 @@ var _beat_name: LineEdit
 var _scroll: ScrollContainer
 var _beats := PackedStringArray()
 var _focus_key := ""
+## The last cards copied, used when the system clipboard is empty or not
+## available (as in headless runs).
+static var _copied := ""
 ## Caret to put back in the refocused field after a rebuild, or (-1, -1).
 var _focus_caret := Vector2i(-1, -1)
 
@@ -295,12 +298,61 @@ func _fill_add_menu(popup: PopupMenu, on_pick: Callable) -> void:
 		actions.add_item(action_name)
 	popup.add_child(actions)
 	popup.add_submenu_node_item("Action", actions)
+	popup.add_separator()
+	popup.add_item("Paste")
+	var paste_index := popup.item_count - 1
+	popup.about_to_popup.connect(func() -> void:
+		var can_paste := can_paste_text(paste_text())
+		popup.set_item_disabled(paste_index, not can_paste)
+		popup.set_item_tooltip(paste_index, "" if can_paste else "Copy a card first. Text from the clipboard is pasted when it is TaleScript lines."))
 	popup.id_pressed.connect(func(id: int) -> void:
-		var text := _new_card_text(popup.get_item_text(popup.get_item_index(id)))
+		var index := popup.get_item_index(id)
+		if index == paste_index:
+			var pasted := paste_text()
+			if can_paste_text(pasted):
+				on_pick.call(pasted)
+			return
+		var text := _new_card_text(popup.get_item_text(index))
 		if not text.is_empty():
 			on_pick.call(text))
 	actions.id_pressed.connect(func(id: int) -> void:
 		on_pick.call(_new_action_text(actions.get_item_text(actions.get_item_index(id)))))
+
+
+## Copies the TaleScript of [param card] (with its nested cards) to the
+## clipboard, indented with tabs.
+func copy_cards(card: TaleCard) -> void:
+	var text := TaleEdit.group_text(source, card.nodes)
+	var unit := TaleEdit.indent_unit(doc)
+	if unit != "\t":
+		var lines := PackedStringArray()
+		for line in text.split("\n"):
+			var depth := 0
+			while line.substr(depth * unit.length()).begins_with(unit):
+				depth += 1
+			lines.append("\t".repeat(depth) + line.substr(depth * unit.length()))
+		text = "\n".join(lines)
+	_copied = text
+	DisplayServer.clipboard_set(text)
+
+
+## What Paste would insert: the system clipboard, or the last copied cards
+## when the clipboard is empty.
+static func paste_text() -> String:
+	var text := DisplayServer.clipboard_get() if DisplayServer.has_feature(DisplayServer.FEATURE_CLIPBOARD) else ""
+	return (text if not text.strip_edges().is_empty() else _copied).replace("\r\n", "\n").strip_edges(false, true)
+
+
+## True when [param text] is one or more TaleScript statements that can go
+## inside a beat.
+static func can_paste_text(text: String) -> bool:
+	if text.strip_edges().is_empty():
+		return false
+	var lines := PackedStringArray()
+	for line in text.split("\n"):
+		lines.append("\t" + line)
+	var pasted := TaleParser.parse("beat pasted:\n" + "\n".join(lines) + "\n")
+	return not pasted.has_errors() and pasted.statements.size() == 1
 
 
 func _new_card_text(kind: String) -> String:
@@ -433,6 +485,8 @@ func _card_header(card: TaleCard, parent: TaleNode, path: String, panel: Control
 	_fill_add_menu(insert.get_popup(), func(text: String) -> void:
 		commit(TaleEdit.insert_after(source, card.nodes.back(), _unit_text(text))))
 	row.add_child(insert)
+	row.add_child(_small_button("⧉", path + ":copy", "Copy this card, to paste in this or another tale", func() -> void:
+		copy_cards(card)))
 	row.add_child(_small_button("✕", path + ":delete", "Delete", func() -> void:
 		commit(TaleEdit.delete_group(source, doc, card.nodes))))
 	return row

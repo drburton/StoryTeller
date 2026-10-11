@@ -68,10 +68,12 @@ A card whose line has a problem gets a red border (errors) or a yellow one (warn
 
 ### Working with cards
 
-- Every card has a header with its kind, the buttons **▲** and **▼** (move up and down), **+** (add a card below this one), and **✕** (delete).
+- Every card has a header with its kind, the buttons **▲** and **▼** (move up and down), **+** (add a card below this one), **⧉** (copy), and **✕** (delete).
 - **+ Add card** at the end of a beat or lane opens the menu: Narration, Dialogue, Choice, Condition, Jump, Run beat, Set variable, Comment, Script, and an **Action** submenu that lists every built-in action.
+- **⧉** copies a card, with any cards nested inside it. Choose **Paste** at the bottom of a **+** or **+ Add card** menu to put the copy there, in the same tale or another one. Paste also takes TaleScript lines you copied from the Text view, and it is greyed out when the clipboard holds something else.
 - Drag a card by its header to reorder it, or to move it into another lane or beat block. Drop it on another card to place it before that card, or on **+ Add card** to place it at the end.
 - Text fields apply their change when you press Enter or move to another field. Narration and dialogue text boxes apply when you click away.
+- Narration and dialogue cards have a row of markup buttons above the text. Select some words and click **B** (bold), **I** (italic), **Slow** or **Fast** (typing speed), or pick one of the project's text styles from **Style**. **Pause** makes the line wait for a click at the cursor, **Wait** waits half a second, and **Sound** plays a sound when typing reaches the cursor. With nothing selected, the tags go in at the cursor and you type between them.
 - New cards start with placeholder content: a Dialogue card takes the first character of the cast and the text "New line.", a Choice card has two options, and a Condition card starts as `if true:`. Edit them in place.
 - The Action submenu lists the built-in actions. Calls on a character, such as `mira.enter("smile")`, have no menu entry. Add a **Script** card, type the call, and click away. The card turns into an Action card with fields.
 - Top-level lines such as `var trust := 0` and `@title(...)` have no card. Edit them in the Text view.
