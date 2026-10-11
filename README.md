@@ -48,7 +48,7 @@ Press **Play** in the Godot editor. The demo opens on its title screen; **New Ga
 | F5 / F9 | Quick save / quick load |
 | F3 or ` | Debug console (debug builds only) |
 
-The buttons along the dialogue box do the same things. Bindings are Godot input actions named `story_*`; change them in **Project Settings > Input Map**.
+The buttons along the dialogue box do the same things. Lines can play a short typing sound as they type: set `StoryConfig.typing_sound` to a sound in your sounds folder, or give a character their own with `CastProfile.typing_sound`. Bindings are Godot input actions named `story_*`; change them in **Project Settings > Input Map**.
 
 ## Writing a tale
 

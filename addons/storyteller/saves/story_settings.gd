@@ -17,6 +17,7 @@ const DEFAULTS := {
 	"voice_volume": 1.0,
 	"fullscreen": false,
 	"skip_unread": false,
+	"typing_sounds": true,
 	"language": "",
 }
 

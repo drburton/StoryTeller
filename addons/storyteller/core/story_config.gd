@@ -173,6 +173,12 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_dir var choice_picture_folder := "res://story/choices"
 ## Typing speed in characters per second. 0 shows text instantly.
 @export_range(0, 200, 1) var text_speed := 40.0
+## Sound from the sounds folder played as lines type, by name, or "" for
+## none. A cast profile's [member CastProfile.typing_sound] overrides it for
+## that character. Lines with a voice clip stay silent.
+@export var typing_sound := ""
+## Characters typed between two typing sounds.
+@export_range(1, 10, 1) var typing_sound_every := 3
 ## Extra dialogue styles by name, or replacements for "classic" and "page".
 ## Each scene's root must extend [DialogueBox].
 @export var dialogue_styles: Dictionary[String, PackedScene] = {}

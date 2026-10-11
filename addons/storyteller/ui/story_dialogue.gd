@@ -49,6 +49,13 @@ var input_blocked := func() -> bool: return false:
 ## (V, the middle mouse button, or the quick menu's Hide). The next key,
 ## click, or button brings it back without continuing the story.
 var ui_hidden := false
+## Default typing sound, from [member StoryConfig.typing_sound].
+var typing_sound := ""
+## Characters between two typing sounds.
+var typing_sound_every := 3
+
+var _typing_sound_now := ""
+var _typed_since_sound := 0
 
 var _styles: Dictionary = {}
 ## Choice style name to its menu: a [ChoiceMenu] or any object with
@@ -81,10 +88,13 @@ func setup(config: StoryConfig) -> void:
 		box.box_transition = config.dialogue_box_transition
 		box.box_transition_time = config.dialogue_box_transition_time
 		box.input_blocked = _box_blocked
+		box.characters_typed.connect(_on_characters_typed)
 		layer.add_child(box)
 		_styles[style_name] = box
 	dialogue_box = _styles["classic"]
 	choice_picture_folder = config.choice_picture_folder
+	typing_sound = config.typing_sound
+	typing_sound_every = config.typing_sound_every
 	var choice_scenes := {"list": config.choice_menu_scene, "pictures": null}
 	for style_name in config.choice_styles:
 		choice_scenes[style_name] = config.choice_styles[style_name]
@@ -145,6 +155,8 @@ func set_ui_hidden(hidden: bool) -> void:
 ## Presenter method: shows one line. Awaitable.
 func show_line(line: Dictionary) -> void:
 	_line_read = line.get("read", false)
+	_typing_sound_now = _typing_sound_for(line)
+	_typed_since_sound = typing_sound_every
 	await dialogue_box.show_line(line)
 
 
@@ -260,6 +272,37 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("story_hide_ui") and is_showing():
 		set_ui_hidden(true)
 		get_viewport().set_input_as_handled()
+
+
+## The typing sound for [param line]: none for voiced lines, else the
+## speaker's own, else the default.
+func _typing_sound_for(line: Dictionary) -> String:
+	if not str(line.get("voice", "")).is_empty():
+		return ""
+	var stage := _crew(&"Stage")
+	if stage != null and stage.has_method("get_profile") and not str(line.get("speaker_id", "")).is_empty():
+		var profile: CastProfile = stage.get_profile(line["speaker_id"])
+		if profile != null and not profile.typing_sound.is_empty():
+			return profile.typing_sound
+	return typing_sound
+
+
+func _on_characters_typed(count: int) -> void:
+	if _typing_sound_now.is_empty():
+		return
+	var settings := _crew(&"Settings")
+	if settings != null and not settings.get_value("typing_sounds"):
+		return
+	_typed_since_sound += count
+	if _typed_since_sound < typing_sound_every:
+		return
+	_typed_since_sound = 0
+	var audio := _crew(&"Audio") as StoryAudio
+	if audio != null:
+		var problem := audio.play_blip(_typing_sound_now, 0.6)
+		if not problem.is_empty():
+			_report(problem)
+			_typing_sound_now = ""
 
 
 func _box_blocked() -> bool:

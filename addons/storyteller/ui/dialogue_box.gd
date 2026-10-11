@@ -19,6 +19,9 @@ extends Control
 signal continue_pressed
 ## Emitted when a line has been fully revealed.
 signal line_revealed
+## Emitted while typing, with how many more characters became visible.
+## Not emitted while skipping or for text shown at once.
+signal characters_typed(count: int)
 
 func _init() -> void:
 	# Lines arrive translated already (see TaleDirector), so a line that
@@ -325,8 +328,11 @@ func _reveal_to(label: RichTextLabel, count: int) -> void:
 			label.visible_characters = int(shown)
 			continue
 		await get_tree().process_frame
+		var before := label.visible_characters
 		shown += characters_per_second * factor * get_process_delta_time()
 		label.visible_characters = mini(int(shown), count)
+		if label.visible_characters > before and not skipping:
+			characters_typed.emit(label.visible_characters - before)
 	label.visible_characters = count
 	_typing = false
 

@@ -19,6 +19,9 @@ extends Resource
 @export var default_mood := ""
 ## Size multiplier applied to the look.
 @export var scale := 1.0
+## Sound from the sounds folder played as this character's lines type, by
+## name, or "" for [member StoryConfig.typing_sound].
+@export var typing_sound := ""
 ## Data the character keeps during a story, with starting values, such as
 ## [code]{"affection": 0, "met": false}[/code]. Tales read and change it
 ## like properties ([code]ada.affection += 1[/code]); it is saved with the

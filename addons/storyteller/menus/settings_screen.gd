@@ -17,6 +17,7 @@ const SLIDERS := [
 const TOGGLES := [
 	["Full screen", "fullscreen"],
 	["Skip unread lines", "skip_unread"],
+	["Typing sounds", "typing_sounds"],
 ]
 
 ## Language names in their own language, so players can find theirs.
