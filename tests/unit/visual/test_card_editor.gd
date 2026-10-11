@@ -99,6 +99,40 @@ func test_dialogue_and_action_fields() -> void:
 	assert_true(panel.code_edit.text.contains("\twait(2.5)  # a pause") or panel.code_edit.text.contains("\twait(2.5) # a pause"), panel.code_edit.text)
 
 
+func test_markup_buttons_wrap_the_selection_or_insert_at_the_caret() -> void:
+	var text: TextEdit = _field("b/0:text")
+	text.select(0, 0, 0, 8)
+	_field("b/0:markup:bold").pressed.emit()
+	assert_eq(_changed_lines(panel.code_edit.text), ["\t\"[b]Sunlight[/b].\""])
+	text = _field("b/0:text")
+	text.set_caret_column(text.text.length())
+	_field("b/0:markup:pause").pressed.emit()
+	assert_eq(_changed_lines(panel.code_edit.text), ["\t\"[b]Sunlight[/b].[pause]\""])
+	# Dialogue cards have the bar too; with no selection the caret ends up
+	# between the tags.
+	text = _field("b/1:text")
+	text.set_caret_column(0)
+	_field("b/1:markup:slow").pressed.emit()
+	assert_true(panel.code_edit.text.contains("\tnarrator: \"[speed=0.5][/speed]Morning.\""), panel.code_edit.text)
+	await tree.process_frame
+	text = _field("b/1:text")
+	assert_eq(text.get_caret_column(), "[speed=0.5]".length(), "caret between the tags")
+
+
+func test_style_menu_lists_the_projects_text_styles() -> void:
+	var menu: MenuButton = _field("b/0:markup:style")
+	var popup := menu.get_popup()
+	var index := -1
+	for i in popup.item_count:
+		if popup.get_item_text(i) == "whisper":
+			index = i
+	assert_true(index >= 0, "whisper is listed")
+	var text: TextEdit = _field("b/0:text")
+	text.select(0, 0, 0, 8)
+	popup.index_pressed.emit(index)
+	assert_eq(_changed_lines(panel.code_edit.text), ["\t\"[whisper]Sunlight[/whisper].\""])
+
+
 func test_typed_action_form_writes_named_arguments() -> void:
 	panel.code_edit.text = SOURCE.replace("wait(1.0)  # a pause", "backdrop(\"library\")")
 	panel.check_now()
