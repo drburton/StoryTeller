@@ -19,6 +19,7 @@ const DEFAULTS := {
 	"skip_unread": false,
 	"typing_sounds": true,
 	"high_contrast": false,
+	"read_aloud": false,
 	"language": "",
 }
 
@@ -86,7 +87,7 @@ func apply_all() -> void:
 func apply(key: String) -> void:
 	var value: Variant = values[key]
 	match key:
-		"text_speed", "auto_delay", "text_size":
+		"text_speed", "auto_delay", "text_size", "read_aloud":
 			var dialogue := _crew(&"Dialogue")
 			if dialogue != null and dialogue.has_method("apply_setting"):
 				dialogue.apply_setting(key, value)

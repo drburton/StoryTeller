@@ -57,6 +57,15 @@ var typing_sound_every := 3
 var _typing_sound_now := ""
 var _typed_since_sound := 0
 
+## When true, lines and choice options are read aloud with the system's
+## text-to-speech, from the player's "Read lines aloud" setting. Lines with
+## a voice clip and skipped lines stay quiet.
+var read_aloud := false
+## Says one piece of text. The default uses [method DisplayServer.tts_speak]
+## with a voice for the current language; games can replace it, for example
+## to send text to a screen reader of their own.
+var speak := func(text: String) -> void:
+	StoryDialogue.speak_with_system_voice(text)
 ## The theme from the config, and its high-contrast copy once needed.
 var _theme: Theme
 var _contrast_theme: Theme
@@ -161,6 +170,10 @@ func set_ui_hidden(hidden: bool) -> void:
 func show_line(line: Dictionary) -> void:
 	_line_read = line.get("read", false)
 	_typing_sound_now = _typing_sound_for(line)
+	if read_aloud and str(line.get("voice", "")).is_empty() and not dialogue_box.skipping:
+		var spoken := DialogueBox.plain_text(line["text"])
+		var speaker := str(line.get("speaker_name", ""))
+		speak.call(spoken if speaker.is_empty() else "%s: %s" % [speaker, spoken])
 	_typed_since_sound = typing_sound_every
 	var stage := _crew(&"Stage")
 	if stage != null and stage.has_method("get_line_portrait") and not line.has("portrait"):
@@ -182,6 +195,12 @@ func choose(options: Array[Dictionary], settings: Dictionary) -> int:
 	if menu == null or not is_instance_valid(menu):
 		_report("There is no choice style '%s'. Styles: %s." % [style_name, ", ".join(get_choice_style_names())])
 		menu = choice_menu
+	if read_aloud:
+		var texts := PackedStringArray()
+		for option in options:
+			if option.get("enabled", true):
+				texts.append(DialogueBox.plain_text(str(option.get("text", ""))))
+		speak.call(tr("Choices") + ": " + ". ".join(texts) + ".")
 	var shown: Array[Dictionary] = []
 	for option in options:
 		var copy := option.duplicate()
@@ -235,8 +254,31 @@ func cancel() -> void:
 			menu.cancel()
 
 
+## True when the system has text-to-speech voices. Godot only offers them
+## when the project setting [code]audio/general/text_to_speech[/code] is on.
+static func can_read_aloud() -> bool:
+	return DisplayServer.has_feature(DisplayServer.FEATURE_TEXT_TO_SPEECH) and not DisplayServer.tts_get_voices().is_empty()
+
+
+## Speaks [param text] with a system voice for the current language,
+## interrupting anything still being read.
+static func speak_with_system_voice(text: String) -> void:
+	if not can_read_aloud():
+		return
+	var voices := DisplayServer.tts_get_voices_for_language(TranslationServer.get_locale().get_slice("_", 0))
+	if voices.is_empty():
+		voices = PackedStringArray([DisplayServer.tts_get_voices()[0]["id"]])
+	DisplayServer.tts_stop()
+	DisplayServer.tts_speak(text, voices[0])
+
+
 ## Called by the Settings crew member.
 func apply_setting(key: String, value: Variant) -> void:
+	if key == "read_aloud":
+		read_aloud = bool(value)
+		if not read_aloud and can_read_aloud():
+			DisplayServer.tts_stop()
+		return
 	if key == "high_contrast":
 		if value and _contrast_theme == null:
 			_contrast_theme = StoryTheme.high_contrast(_theme)

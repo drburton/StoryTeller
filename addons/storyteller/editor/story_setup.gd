@@ -95,10 +95,12 @@ static func run(options := {}) -> Dictionary:
 	return result
 
 
-## Points the project at [param config_path], and makes [param scene_path]
-## the main scene when the project has none. Saves the project settings.
+## Points the project at [param config_path], makes [param scene_path]
+## the main scene when the project has none, and turns on text-to-speech for
+## the "Read lines aloud" setting. Saves the project settings.
 static func register(config_path: String, scene_path := "") -> void:
 	ProjectSettings.set_setting("storyteller/config_path", config_path)
+	ProjectSettings.set_setting("audio/general/text_to_speech", true)
 	if not scene_path.is_empty() and str(ProjectSettings.get_setting("application/run/main_scene", "")).is_empty():
 		ProjectSettings.set_setting("application/run/main_scene", scene_path)
 	ProjectSettings.save()
