@@ -997,17 +997,37 @@ func _choice_field(key: String, text: String, options: PackedStringArray, on_com
 		var menu := MenuButton.new()
 		menu.text = "▾"
 		menu.flat = false
-		for option in options:
-			menu.get_popup().add_item(option)
-			if icon_for.is_valid():
-				var icon: Texture2D = icon_for.call(option)
-				if icon != null:
-					menu.get_popup().set_item_icon(menu.get_popup().item_count - 1, icon)
+		menu.tooltip_text = "Pick from the list. Type part of a name first to narrow it."
+		_fill_choices(menu.get_popup(), options, icon_for, "")
+		menu.about_to_popup.connect(func() -> void:
+			_fill_choices(menu.get_popup(), options, icon_for, line.text))
 		menu.get_popup().id_pressed.connect(func(id: int) -> void:
 			line.text = menu.get_popup().get_item_text(menu.get_popup().get_item_index(id))
 			on_commit.call(line.text))
 		row.add_child(menu)
 	return row
+
+
+## Lists [param options] in [param popup]. When [param typed] is part of
+## a name but not a whole one, only the names containing it are listed
+## (all of them when none do).
+func _fill_choices(popup: PopupMenu, options: PackedStringArray, icon_for: Callable, typed: String) -> void:
+	popup.clear()
+	var search := typed.strip_edges().to_lower()
+	var shown := options
+	if not search.is_empty() and typed.strip_edges() not in options:
+		var matching := PackedStringArray()
+		for option in options:
+			if search in option.to_lower():
+				matching.append(option)
+		if not matching.is_empty():
+			shown = matching
+	for option in shown:
+		popup.add_item(option)
+		if icon_for.is_valid():
+			var icon: Texture2D = icon_for.call(option)
+			if icon != null:
+				popup.set_item_icon(popup.item_count - 1, icon)
 
 
 func _color_field(key: String, current: String, default: Variant, write: Callable, editors: Dictionary, param_name: String) -> Control:

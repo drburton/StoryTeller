@@ -233,6 +233,27 @@ func test_alt_arrows_move_the_focused_card() -> void:
 	assert_eq(focused.get_meta("field_key") if focused != null else "", "b/1:text", "the new card has focus")
 
 
+func test_typing_narrows_a_list() -> void:
+	var line: LineEdit = _field("b/3/o1/0:target")
+	var menu: MenuButton = line.get_parent().get_child(1)
+	var popup := menu.get_popup()
+	var all := popup.item_count
+	assert_true(all > 2, "beats of this and other tales are listed")
+	line.text = "OTH"
+	menu.about_to_popup.emit()
+	var names := []
+	for i in popup.item_count:
+		names.append(popup.get_item_text(i))
+	assert_has(names, "other")
+	assert_true(names.size() < all and names.all(func(n: String) -> bool: return "oth" in n), "only names containing the typed text, in any case: %s" % [names])
+	line.text = "zzz"
+	menu.about_to_popup.emit()
+	assert_eq(popup.item_count, all, "everything when nothing matches")
+	line.text = "start"
+	menu.about_to_popup.emit()
+	assert_eq(popup.item_count, all, "a whole name lists everything, to pick another")
+
+
 func test_typed_action_form_writes_named_arguments() -> void:
 	panel.code_edit.text = SOURCE.replace("wait(1.0)  # a pause", "backdrop(\"library\")")
 	panel.check_now()
