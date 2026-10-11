@@ -32,7 +32,7 @@ The tale list on the left holds every `.tale` file in the project. Click one to 
 
 The title at the left of the toolbar shows the open file, with "(unsaved)" after it while it has changes. An asterisk marks unsaved tales in the list. Switching tales keeps unsaved edits in memory.
 
-Problems appear in a list at the bottom, with the line number. In the Text view, lines with errors are tinted red and warnings yellow. In the Text view, click a problem to jump to its line. The list reads "No problems found." when the tale is clean.
+Problems appear in a list at the bottom, with the line number. In the Text view, lines with errors are tinted red and warnings yellow. In the Text view, click a problem to jump to its line. The list reads "No problems found." when the tale is clean. Warnings include names of backdrops, CGs, props, sounds, music, and collection items that match no file in the story folders, so a typo such as `backdrop("libary")` shows up before you play.
 
 The **Text** view is a TaleScript editor with highlighting. It suggests actions, characters, moods, beats, and variables as you type. Press **Ctrl+S** in the Text view to save. In the other views, click **Save**.
 

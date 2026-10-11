@@ -201,3 +201,29 @@ func test_text_tags_are_checked() -> void:
 	assert_eq(_beat("\t\"Hm[act=wait()]\"\n"), PackedStringArray(["2: 'wait' needs the argument 'seconds'."]))
 	assert_eq(_beat("\tchoose:\n\t\t\"Ring[sound=bell]\":\n\t\t\tpass\n"), PackedStringArray(["3: Unknown action or beat 'sound'."]), "sound tags check the sound action")
 	assert_eq(_beat("\t\"Too [speed=x]fast\"\n"), PackedStringArray(["2: [speed=x] needs a number above 0, e.g. [speed=2] types twice as fast."]))
+
+
+func test_asset_names_are_checked_when_the_context_knows_them() -> void:
+	var context := _context()
+	context.add_asset_check("backdrop", "name", func(asset_name: String) -> String:
+		return "" if asset_name == "library" else "There is no backdrop '%s'." % asset_name)
+	var source := "beat main:\n\tbackdrop(\"library\")\n\tbackdrop(\"libary\")\n\tbackdrop(name = \"attic\")\n\tbackdrop(Color.BLACK)\n\tbackdrop(\"{place}\")\n"
+	var messages := PackedStringArray()
+	for diagnostic in TaleChecker.check(TaleParser.parse(source), context):
+		messages.append("%d: %s %s" % [diagnostic.line, "error" if diagnostic.is_error() else "warning", diagnostic.message])
+	assert_eq(messages, PackedStringArray([
+		"3: warning There is no backdrop 'libary'.",
+		"4: warning There is no backdrop 'attic'.",
+	]), "colors and names with braces are not checked")
+
+
+func test_project_asset_checks_use_the_story_folders() -> void:
+	var context := TaleCheckContext.new()
+	var config := load("res://demo/story_config.tres") as StoryConfig
+	TaleSignatures.add_asset_checks(context, config)
+	assert_eq(context.asset_checks["backdrop.name"].call("library"), "")
+	assert_eq(context.asset_checks["backdrop.name"].call("libary"), "There is no backdrop 'libary' in res://demo/story/backdrops.")
+	assert_eq(context.asset_checks["cg.name"].call("window_table"), "")
+	assert_eq(context.asset_checks["sound.name"].call("chime"), "")
+	assert_eq(context.asset_checks["collect.id"].call("ada"), "")
+	assert_ne(context.asset_checks["music.track"].call("silence"), "")
