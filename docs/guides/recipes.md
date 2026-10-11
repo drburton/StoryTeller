@@ -307,3 +307,5 @@ beat phone_call:
 ```
 
 Turn on **Portrait Off Stage Only** to show the portrait only while the character is off stage, as for a phone call, so it never repeats the sprite. In the demo, Ada works this way: her portrait appears after she leaves the stage in the tour. The classic dialogue box shows portraits; a custom box gets the texture as `line["portrait"]`.
+
+The cast profile's **Text Color** colors a character's lines the same way. Leave it fully transparent to keep the dialogue box's own color.

@@ -161,6 +161,9 @@ func show_line(line: Dictionary) -> void:
 	if stage != null and stage.has_method("get_line_portrait") and not line.has("portrait"):
 		line = line.duplicate()
 		line["portrait"] = stage.get_line_portrait(str(line.get("speaker_id", "")), str(line.get("mood", "")))
+		var profile: CastProfile = stage.get_profile(str(line.get("speaker_id", "")))
+		if profile != null and profile.text_color.a > 0.0:
+			line["text_color"] = profile.text_color
 	await dialogue_box.show_line(line)
 
 

@@ -97,6 +97,10 @@ func show_line(line: Dictionary) -> void:
 	_name_label.add_theme_color_override("font_color", line.get("speaker_color", Color.WHITE))
 	_name_label.visible = not line["speaker_name"].is_empty()
 	_portrait.texture = line.get("portrait")
+	if line.has("text_color"):
+		_text_label.add_theme_color_override("default_color", line["text_color"])
+	else:
+		_text_label.remove_theme_color_override("default_color")
 	_portrait.visible = _portrait.texture != null
 	_text_label.text = ""
 	if not await begin_line():

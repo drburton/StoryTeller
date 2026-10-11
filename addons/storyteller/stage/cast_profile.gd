@@ -13,6 +13,9 @@ extends Resource
 @export var display_name := ""
 ## Color of the name in the dialogue box.
 @export var name_color := Color.WHITE
+## Color of this character's lines. Fully transparent (the default) keeps
+## the dialogue box's own text color.
+@export var text_color := Color(1, 1, 1, 0)
 ## How the character is drawn.
 @export var look: CastLook
 ## Mood used when the character first appears without one.

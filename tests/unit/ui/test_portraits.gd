@@ -1,6 +1,6 @@
 extends "res://tests/framework/story_test.gd"
-## Tests for dialogue box portraits: which picture a line gets, and the
-## classic box showing it.
+## Tests for dialogue box portraits (which picture a line gets, and the
+## classic box showing it) and character text colors.
 
 const StoryScript := preload("res://addons/storyteller/core/story.gd")
 
@@ -66,6 +66,17 @@ func test_the_classic_box_shows_the_speakers_portrait() -> void:
 	director.stop()
 	portrait = await _portrait_shown("\"Narration.\"")
 	assert_false(portrait.visible, "hidden for narration")
+	director.stop()
+
+
+func test_a_character_can_have_a_text_color() -> void:
+	var label: RichTextLabel = dialogue.dialogue_box.get_node("Panel").find_child("Text", true, false)
+	stage.get_profile("robin").text_color = Color.ORANGE
+	await _portrait_shown("robin: \"Hello.\"")
+	assert_eq(label.get_theme_color("default_color"), Color.ORANGE)
+	director.stop()
+	await _portrait_shown("\"Narration.\"")
+	assert_false(label.has_theme_color_override("default_color"), "other lines keep the box's color")
 	director.stop()
 
 
