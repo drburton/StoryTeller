@@ -5,8 +5,11 @@ extends HBoxContainer
 ## [method DialogueBox.get_quick_menu_corner].
 
 var menus: StoryMenus
+## The usual [member backing].
+const BACKING := Color(0.0, 0.0, 0.0, 0.45)
+
 ## Drawn behind the buttons so they stay readable over busy backdrops.
-var backing := Color(0.0, 0.0, 0.0, 0.45)
+var backing := BACKING
 var _skip: Button
 var _auto: Button
 

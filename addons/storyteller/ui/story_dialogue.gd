@@ -57,6 +57,9 @@ var typing_sound_every := 3
 var _typing_sound_now := ""
 var _typed_since_sound := 0
 
+## The theme from the config, and its high-contrast copy once needed.
+var _theme: Theme
+var _contrast_theme: Theme
 var _styles: Dictionary = {}
 ## Choice style name to its menu: a [ChoiceMenu] or any object with
 ## [method ChoiceMenu.choose].
@@ -75,6 +78,7 @@ func setup(config: StoryConfig) -> void:
 	layer.layer = 10
 	add_child(layer)
 	var theme := config.theme if config.theme != null else StoryTheme.build_default()
+	_theme = theme
 	var scenes := {"classic": config.dialogue_box_scene, "page": null}
 	for style_name in config.dialogue_styles:
 		scenes[style_name] = config.dialogue_styles[style_name]
@@ -233,6 +237,14 @@ func cancel() -> void:
 
 ## Called by the Settings crew member.
 func apply_setting(key: String, value: Variant) -> void:
+	if key == "high_contrast":
+		if value and _contrast_theme == null:
+			_contrast_theme = StoryTheme.high_contrast(_theme)
+		var theme: Theme = _contrast_theme if value else _theme
+		for control in _styles.values() + _choice_styles.values():
+			if control is Control and is_instance_valid(control) and control.get_parent() == layer:
+				control.theme = theme
+		return
 	for box in _styles.values():
 		match key:
 			"text_speed":
