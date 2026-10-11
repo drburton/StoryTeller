@@ -182,6 +182,25 @@ func test_asset_lists_show_pictures() -> void:
 	assert_null(found[0].get_item_icon(found[1]), "transitions have none")
 
 
+func test_choice_and_condition_cards_fold() -> void:
+	assert_false(editor.get_fields().has("b/1:collapse"), "only cards with lanes fold")
+	_field("b/3:collapse").pressed.emit()
+	assert_true(editor.is_folded("b/3"))
+	assert_false(_field("b/3/o0:text").is_visible_in_tree(), "the lanes are hidden")
+	var choice: Control = editor.get_card_panels()[3]
+	var labels := choice.find_children("*", "Label", true, false).filter(func(label: Label) -> bool: return label.visible and label.text.begins_with("2 options"))
+	assert_eq(labels.size(), 1, "a summary shows instead")
+	assert_eq(labels[0].text, "2 options: \"Wave\", \"Leave\"")
+	# Folding survives edits elsewhere and stays with the beat.
+	_set_text("b/0:text", "Moonlight.")
+	assert_true(editor.is_folded("b/3"))
+	editor.select_beat("other")
+	assert_false(editor.is_folded("b/3"))
+	editor.select_beat("start")
+	_field("b/3:collapse").pressed.emit()
+	assert_true(_field("b/3/o0:text").is_visible_in_tree())
+
+
 func test_typed_action_form_writes_named_arguments() -> void:
 	panel.code_edit.text = SOURCE.replace("wait(1.0)  # a pause", "backdrop(\"library\")")
 	panel.check_now()
