@@ -29,7 +29,8 @@ GODOT_BIN=/path/to/godot tools/check_addon_install.sh    # builds the zip and in
      git push origin v0.1.0
      ```
 3. The **Release** workflow runs the tests, builds the zip, checks that it installs, and opens a **draft** release named `v<version>` with the zip attached and generated notes.
-4. Read the draft on the Releases page, edit the notes, and publish it. When the release was started from GitHub, publishing also creates the `v<version>` tag on the commit it was built from.
+4. Test the draft's zip by hand with the checklist in `docs/release-testing.md`. If something needs fixing, merge the fix and run the workflow again: it replaces the unpublished draft.
+5. Read the draft on the Releases page, edit the notes, and publish it. When the release was started from GitHub, publishing also creates the `v<version>` tag on the commit it was built from.
 
 Running the workflow by hand with the box left empty builds and checks the zip without releasing. The zip is kept as a workflow artifact.
 

@@ -194,6 +194,7 @@ CI runs this check on every pull request.
 - [TaleScript specification](docs/talescript-spec.md)
 - [Project plan](docs/PLANNING.md)
 - [Publishing the plugin](docs/publishing.md): building the zip, releases, and the Asset Library
+- [Testing a release](docs/release-testing.md): the checklist to run by hand before publishing
 - [Decision records](docs/decisions/README.md)
 - [Contributing guide](CONTRIBUTING.md), including the sign-off rule for commits
 - [Code of conduct](CODE_OF_CONDUCT.md)

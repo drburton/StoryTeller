@@ -41,7 +41,7 @@ Lifting the couch together and cleaning Biscuit together each add one point of t
 2. In the FileSystem dock, open `examples/wheres_biscuit/main.tscn`.
 3. Press **Run Current Scene** (F6). The title screen opens; press **New Game**.
 
-The example has its own `story_config.tres`, so its saves stay separate from the main demo. The Story tab checks `wheres_biscuit.tale` against this config, so it knows Theo, Leo, Cleo and Biscuit.
+The example has its own `story_config.tres`. It keeps its saves and settings apart from the main demo's (`save_folder` and `settings_path`). The Story tab checks `wheres_biscuit.tale` against this config, so it knows Theo, Leo, Cleo and Biscuit.
 
 ## The TaleScript in this story
 

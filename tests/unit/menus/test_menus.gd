@@ -115,6 +115,24 @@ func test_pause_menu_blocks_dialogue_input() -> void:
 	assert_eq(shown, ["One.", "Two."])
 
 
+func test_closing_the_menus_drops_the_thumbnail_they_took() -> void:
+	var saves: StorySaves = story.get_crew(&"Saves")
+	_add("beat start:\n\t\"Hello.\"\n")
+	director.play("menu_tale")
+	await tree.process_frame
+	saves._thumbnail = Image.create(4, 4, false, Image.FORMAT_RGB8)
+	menus.open("pause")
+	menus.open("settings")
+	menus.close_top()
+	assert_not_null(saves._thumbnail, "kept while a menu is still open, for a save from the pause menu")
+	menus.close_top()
+	assert_null(saves._thumbnail, "a later quick save or autosave takes a new picture")
+	saves._thumbnail = Image.create(4, 4, false, Image.FORMAT_RGB8)
+	menus.open("pause")
+	menus.close_all()
+	assert_null(saves._thumbnail)
+
+
 func test_save_and_load_through_screens() -> void:
 	_add("var n := 0\nbeat start:\n\tn += 1\n\t\"Line {n}.\"\n\tn += 1\n\t\"Line {n}.\"\n\t\"End.\"\n")
 	await _press_new_game()
