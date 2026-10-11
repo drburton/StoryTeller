@@ -9,6 +9,7 @@ Short worked examples for common story mechanics. Each one shows the TaleScript,
 - [Picture choice](#picture-choice)
 - [Flashback](#flashback)
 - [Branching on a visited beat](#branching-on-a-visited-beat)
+- [Portraits in the dialogue box](#portraits-in-the-dialogue-box)
 
 ## Relationship meter
 
@@ -291,3 +292,20 @@ beat library_again:
 ```
 
 Save slots keep the visited beats, and a new game clears them. Entering a beat marks it visited before its first line runs, so `visited()` on the beat you are in always returns true. For a first-visit greeting, test a different beat or keep a story variable.
+
+## Portraits in the dialogue box
+
+A portrait is a picture of the speaker shown in the dialogue box beside their line. Put one image per mood in a folder, such as `res://story/portraits/mira/smile.png`, and set **Portrait Folder** in the character's cast profile. Keep portraits out of the cast folder, where a folder of images counts as a character. A mood without its own image uses the default mood's portrait, then `default.png`.
+
+Lines take the portrait of the mood they name, or of the mood the character has now:
+
+```gdscript
+beat phone_call:
+	"Your phone buzzes. It's Mira."
+	mira (smile): "Are you still at the library?"
+	mira: "Don't move. I'm bringing snacks."
+```
+
+Turn on **Portrait Off Stage Only** to show the portrait only while the character is off stage, as for a phone call, so it never repeats the sprite. In the demo, Ada works this way: her portrait appears after she leaves the stage in the tour. The classic dialogue box shows portraits; a custom box gets the texture as `line["portrait"]`.
+
+The cast profile's **Text Color** colors a character's lines the same way. Leave it fully transparent to keep the dialogue box's own color.

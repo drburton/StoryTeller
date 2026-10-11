@@ -5,11 +5,14 @@ extends DialogueBox
 
 const NAME_SIZE := 22
 const TEXT_SIZE := 20
+## Width and height of the speaker's portrait, when they have one.
+const PORTRAIT_SIZE := 150
 
 var _panel: PanelContainer
 var _name_label: Label
 var _text_label: RichTextLabel
 var _indicator: Label
+var _portrait: TextureRect
 
 
 func _ready() -> void:
@@ -34,8 +37,22 @@ func _ready() -> void:
 		margin.add_theme_constant_override("margin_" + side, 16)
 	_panel.add_child(margin)
 
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 16)
+	margin.add_child(row)
+
+	_portrait = TextureRect.new()
+	_portrait.name = "Portrait"
+	_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	_portrait.custom_minimum_size = Vector2(PORTRAIT_SIZE, PORTRAIT_SIZE)
+	_portrait.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_portrait.visible = false
+	row.add_child(_portrait)
+
 	var column := VBoxContainer.new()
-	margin.add_child(column)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(column)
 
 	_name_label = Label.new()
 	_name_label.name = "Name"
@@ -79,6 +96,12 @@ func show_line(line: Dictionary) -> void:
 	_name_label.text = line["speaker_name"]
 	_name_label.add_theme_color_override("font_color", line.get("speaker_color", Color.WHITE))
 	_name_label.visible = not line["speaker_name"].is_empty()
+	_portrait.texture = line.get("portrait")
+	if line.has("text_color"):
+		_text_label.add_theme_color_override("default_color", line["text_color"])
+	else:
+		_text_label.remove_theme_color_override("default_color")
+	_portrait.visible = _portrait.texture != null
 	_text_label.text = ""
 	if not await begin_line():
 		return

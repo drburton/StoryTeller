@@ -13,6 +13,9 @@ extends Resource
 @export var display_name := ""
 ## Color of the name in the dialogue box.
 @export var name_color := Color.WHITE
+## Color of this character's lines. Fully transparent (the default) keeps
+## the dialogue box's own text color.
+@export var text_color := Color(1, 1, 1, 0)
 ## How the character is drawn.
 @export var look: CastLook
 ## Mood used when the character first appears without one.
@@ -22,6 +25,14 @@ extends Resource
 ## Sound from the sounds folder played as this character's lines type, by
 ## name, or "" for [member StoryConfig.typing_sound].
 @export var typing_sound := ""
+## Folder of portraits shown in the dialogue box beside this character's
+## lines, one image per mood ([code]smile.png[/code]), with
+## [code]default.png[/code] or the default mood's image for the rest.
+## Empty shows no portrait.
+@export_dir var portrait_folder := ""
+## Show the portrait only while the character is off stage, so it never
+## doubles the sprite.
+@export var portrait_off_stage_only := false
 ## Data the character keeps during a story, with starting values, such as
 ## [code]{"affection": 0, "met": false}[/code]. Tales read and change it
 ## like properties ([code]ada.affection += 1[/code]); it is saved with the

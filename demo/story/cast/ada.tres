@@ -14,3 +14,5 @@ display_name = "Ada"
 name_color = Color(0.55, 0.85, 0.65, 1)
 look = SubResource("Resource_look")
 default_mood = "neutral"
+portrait_folder = "res://demo/story/portraits/ada"
+portrait_off_stage_only = true

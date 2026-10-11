@@ -68,7 +68,10 @@ func show_line(line: Dictionary) -> void:
 	if not line["speaker_name"].is_empty():
 		var color: Color = line.get("speaker_color", Color.WHITE)
 		prefix = "[b][color=#%s]%s[/color][/b]  " % [color.to_html(false), line["speaker_name"]]
-	var paragraph: String = ("\n" if _line_count > 0 else "") + prefix + line["text"]
+	var text: String = line["text"]
+	if line.has("text_color"):
+		text = "[color=#%s]%s[/color]" % [(line["text_color"] as Color).to_html(), text]
+	var paragraph: String = ("\n" if _line_count > 0 else "") + prefix + text
 	_line_count += 1
 	await reveal(_text_label, paragraph, _indicator)
 
