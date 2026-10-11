@@ -55,6 +55,8 @@ var _beat_name: LineEdit
 var _scroll: ScrollContainer
 var _beats := PackedStringArray()
 var _focus_key := ""
+## Caret to put back in the refocused field after a rebuild, or (-1, -1).
+var _focus_caret := Vector2i(-1, -1)
 
 
 func _init() -> void:
@@ -134,6 +136,8 @@ func rebuild() -> void:
 	var focused := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
 	if focused != null and is_ancestor_of(focused) and focused.has_meta("field_key"):
 		_focus_key = focused.get_meta("field_key")
+		if focused is TextEdit and _focus_caret.x < 0:
+			_focus_caret = Vector2i(focused.get_caret_line(), focused.get_caret_column())
 	for child in cards_box.get_children():
 		cards_box.remove_child(child)
 		child.queue_free()
@@ -159,7 +163,8 @@ func rebuild() -> void:
 		if line >= 0:
 			field.focus_entered.connect(func() -> void: card_focused.emit(line))
 	if not _focus_key.is_empty():
-		_restore_focus.call_deferred(_focus_key)
+		_restore_focus.call_deferred(_focus_key, _focus_caret)
+	_focus_caret = Vector2i(-1, -1)
 
 
 ## First source line of the card that holds [param control], or -1.
@@ -369,8 +374,10 @@ func _make_card(card: TaleCard, parent: TaleNode, path: String) -> Control:
 	column.add_child(_card_header(card, parent, path, panel))
 	match card.kind:
 		TaleCard.Kind.NARRATION:
-			column.add_child(_text_field(path + ":text", TaleCard.text_of(card.node), func(text: String) -> void:
-				_set_line(card.node, TaleWriter.narration(text))))
+			var text := _text_field(path + ":text", TaleCard.text_of(card.node), func(text: String) -> void:
+				_set_line(card.node, TaleWriter.narration(text)))
+			column.add_child(_markup_bar(text, path))
+			column.add_child(text)
 		TaleCard.Kind.DIALOGUE:
 			column.add_child(_dialogue_fields(card, path))
 		TaleCard.Kind.ACTION:
@@ -451,6 +458,7 @@ func _dialogue_fields(card: TaleCard, path: String) -> Control:
 	var mood := _option_button(path + ":mood", moods, card.node.mood if not card.node.mood.is_empty() else "(no mood)")
 	row.add_child(mood)
 	var text := _text_field(path + ":text", TaleCard.text_of(card.node), func(_text: String) -> void: pass)
+	column.add_child(_markup_bar(text, path))
 	column.add_child(text)
 	var write := func() -> void:
 		var picked_mood := mood.get_item_text(mood.selected)
@@ -708,6 +716,68 @@ func _text_field(key: String, text: String, on_commit: Callable) -> TextEdit:
 	return edit
 
 
+## Buttons above a text field that write text tags, so writers need not
+## type them: bold and italic, pauses, slower and faster typing, sounds,
+## and the project's named text styles. Selected text is wrapped; with no
+## selection the tags go in at the caret.
+func _markup_bar(edit: TextEdit, path: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 2)
+	for entry in [
+		["bold", "B", "Bold", "[b]", "[/b]"],
+		["italic", "I", "Italic", "[i]", "[/i]"],
+		["pause", "Pause", "Wait for the player, then keep typing", "[pause]", ""],
+		["wait", "Wait", "Wait half a second", "[pause=0.5]", ""],
+		["slow", "Slow", "Type the selected text at half speed", "[speed=0.5]", "[/speed]"],
+		["fast", "Fast", "Type the selected text twice as fast", "[speed=2.0]", "[/speed]"],
+	]:
+		var button := _small_button(entry[1], path + ":markup:" + entry[0], entry[2], func() -> void:
+			apply_markup(edit, entry[3], entry[4]))
+		button.focus_mode = Control.FOCUS_NONE
+		row.add_child(button)
+	var sounds := TaleSignatures.choices("sound", "name", config, context) if config != null else PackedStringArray()
+	if not sounds.is_empty():
+		row.add_child(_markup_menu(edit, path + ":markup:sound", "Sound", "Play a sound when typing reaches the caret", sounds, func(sound_name: String) -> Array:
+			return ["[sound=%s]" % sound_name, ""]))
+	var styles := PackedStringArray(config.text_styles.keys()) if config != null else PackedStringArray()
+	if not styles.is_empty():
+		styles.sort()
+		row.add_child(_markup_menu(edit, path + ":markup:style", "Style", "Show the selected text in one of the project's text styles", styles, func(style_name: String) -> Array:
+			return ["[%s]" % style_name, "[/%s]" % style_name]))
+	return row
+
+
+func _markup_menu(edit: TextEdit, key: String, text: String, tooltip: String, items: PackedStringArray, tags_for: Callable) -> MenuButton:
+	var menu := MenuButton.new()
+	menu.text = text + " ▾"
+	menu.tooltip_text = tooltip
+	menu.flat = true
+	menu.focus_mode = Control.FOCUS_NONE
+	menu.set_meta("field_key", key)
+	for item in items:
+		menu.get_popup().add_item(item)
+	menu.get_popup().index_pressed.connect(func(index: int) -> void:
+		var tags: Array = tags_for.call(items[index])
+		apply_markup(edit, tags[0], tags[1]))
+	return menu
+
+
+## Wraps the selection in [param edit] with [param open] and [param close],
+## or inserts them at the caret, then commits the field. With no selection
+## the caret ends up between the two tags, ready for typing.
+func apply_markup(edit: TextEdit, open: String, close: String) -> void:
+	var selected := ""
+	if edit.has_selection():
+		selected = edit.get_selected_text()
+		edit.delete_selection()
+	edit.insert_text_at_caret(open + selected + close)
+	if selected.is_empty() and not close.is_empty():
+		edit.set_caret_column(edit.get_caret_column() - close.length())
+	_focus_key = edit.get_meta("field_key")
+	_focus_caret = Vector2i(edit.get_caret_line(), edit.get_caret_column())
+	edit.get_meta("commit").call()
+
+
 ## A one-line field. Commits on Enter and when focus leaves it. The returned
 ## control holds the LineEdit in meta "line_edit".
 func _line_field(key: String, text: String, placeholder: String, on_commit: Callable) -> Control:
@@ -941,11 +1011,14 @@ static func _evaluate_color(value_source: String) -> Color:
 	return Color.WHITE
 
 
-func _restore_focus(key: String) -> void:
+func _restore_focus(key: String, caret: Vector2i) -> void:
 	_focus_key = ""
 	var fields := get_fields()
 	if fields.has(key) and fields[key].is_visible_in_tree():
 		fields[key].grab_focus()
+		if fields[key] is TextEdit and caret.x >= 0:
+			fields[key].set_caret_line(caret.x)
+			fields[key].set_caret_column(caret.y)
 
 
 # --- Drag and drop -------------------------------------------------------------
