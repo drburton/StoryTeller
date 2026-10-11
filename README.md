@@ -202,6 +202,10 @@ CI runs this check on every pull request.
 - [Privacy statement](PRIVACY.md): what StoryTeller stores on the player's device (it collects nothing)
 - [Trademark policy](TRADEMARKS.md): using the StoryTeller name and logo
 
+## Support StoryTeller
+
+StoryTeller is free and open source. If it helps you or your students, you can support its development through [GitHub Sponsors](https://github.com/sponsors/drburton), or with the **Sponsor** button at the top of the repository page. Bug reports, ideas, and stories made with StoryTeller help too.
+
 ## License
 
 StoryTeller is released under the [MIT license](LICENSE).
