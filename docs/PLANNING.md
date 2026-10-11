@@ -2,17 +2,23 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.21** (M0 to M6 complete; M7 under way)
+Status: **Draft v0.22** (M0 to M6 complete; M7 under way)
 
-### Where things stand (2026-10-09)
+### Where things stand (2026-10-11)
 
 - **Built and merged to `main`:** milestones M0 to M6. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
-- **Tests:** 409 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
+- **Tests:** 411 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
 - **Demo:** `demo/` plays a tour, a prologue, chapter 1, and chapter 2 with two endings (about 12 to 15 minutes by estimate; not yet timed with a player) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
-- **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, folding cards, and keys to move and add cards (§9.3), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), and `@no_wait` (§5.1).
+- **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding cards, keys to move and add cards, and selecting several cards (§9.3), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), and `@no_wait` (§5.1).
 - **Not done yet:** the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.22:
+- The card editor fills the §9.3 gaps that need no usability test: a markup toolbar on narration and dialogue, copy and paste between tales, selecting several cards, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding Choice and Condition cards, and keys to move and add cards.
+- Characters can have dialogue box portraits, optionally only while off stage, and their own text color (§5.5). Ada has portraits in the demo.
+- Players get word-at-a-time and fade-in typing, high contrast, a readable font, reading lines aloud with the system's text-to-speech, and typing sounds per character (§7).
+- Writers get warnings for asset names that match no file, an action folder for custom actions, `@no_wait`, and blur and vignette filters (§4, §5.4, §5.6). Saves can be encrypted (§7).
 
 Changes in v0.21:
 - M7 progress: the setup wizard is built (§8). While a project has no StoryConfig, the Story tab offers **Set Up Project**, which makes the story folders, a config, a first tale, and a main scene that opens the title screen.
@@ -638,12 +644,12 @@ Cards are edited in place, so there is no separate inspector. The stage preview 
 | Choice | One lane per option with text, condition, `@once`, show-disabled, and nested cards | |
 | Condition | If, else if, and otherwise lanes with a free-text condition | Expression builder |
 | Action | Form from the action's signature: typed fields, color picker, lists of matching assets, transitions, and moods, with pictures of backdrops, CGs, props, and moods, a "wait until it finishes" switch | |
-| Jump / run beat | Field with a list of beats in this and other tales | Search |
+| Jump / run beat | Field with a list of beats in this and other tales; typing part of a name narrows the list | |
 | Set variable | Variable with a list of this tale's variables, other tales' (`tale.variable`), and cast fields (`mira.friendship`); operator; value | |
 | Comment | Text field | |
 | Script | Raw TaleScript for anything else (loops, `match`, local variables, one-line `if`) | |
 
-Interaction built: add from a menu, move up and down, drag to reorder or into another lane, delete, copy a card (with its nested cards) and paste it in this or another tale, add, rename, and delete beats, problems shown on the card, and undo shared with the text view. Paste also takes TaleScript lines copied from the text view. Choice and Condition cards fold to a one-line summary. From the keyboard, Tab moves between fields, Alt+Up and Alt+Down move the card being edited, and Alt+Insert adds a narration card below it. Not built: multi-select.
+Interaction built: add from a menu, move up and down, drag to reorder or into another lane, delete, copy a card (with its nested cards) and paste it in this or another tale, add, rename, and delete beats, problems shown on the card, and undo shared with the text view. Paste also takes TaleScript lines copied from the text view. Choice and Condition cards fold to a one-line summary. From the keyboard, Tab moves between fields, Alt+Up and Alt+Down move the card being edited, and Alt+Insert adds a narration card below it. Clicking card titles selects one card, and Shift+click a range in the same list; copy, delete, the move buttons, the Delete key, and Ctrl+C then act on the whole selection.
 
 ### 9.4 Story Map
 
@@ -918,7 +924,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-Built (409 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+Built (411 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
 
 - **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, route chart, console and live reload, editor panel, completion, card editor, and Story Map.
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.
@@ -982,7 +988,7 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 1. Run the M5 usability test: three writers who do not program each build a short branching scene with cards and the map, and note where they get stuck.
 2. Run a quick trademark and name search for "StoryTeller" and "Visual Novel StoryTeller", then settle the name (§19, question 2).
 3. Choose the platforms (§14), then build and try Windows and web exports of the demo.
-4. Fill the §9.3 gaps the usability test shows matter most (multi-select).
+4. Fix what the usability test shows writers need most in the card editor.
 5. The extension points in §12.4 are all built. Pro work can start once the free tier ships (decision 0009).
 6. Continue M7: time the demo with a real player (it should run about 15 minutes), then trailer, screenshots, and publishing. The setup wizard and the guides are built.
 7. Play the demo to judge what tests can't: typing speeds in the tour, the chapter 1 CG and its timing, the size and speed of the hop, nod, and shake, and how the route chart reads after two or three playthroughs.
