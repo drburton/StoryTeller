@@ -148,6 +148,17 @@ func test_speaker_and_mood_pickers_show_thumbnails() -> void:
 	assert_not_null(speaker.get_item_icon(speaker.selected))
 
 
+func test_set_variable_card_picks_from_known_variables() -> void:
+	var names := editor.assignable_names()
+	assert_eq(names[0], "trust", "this tale's variables first")
+	assert_has(names, "mira.friendship", "cast fields")
+	var line: LineEdit = _field("b/3/o0/0:target")
+	var menu: MenuButton = line.get_parent().get_child(1)
+	var popup := menu.get_popup()
+	popup.id_pressed.emit(popup.get_item_id(names.find("mira.friendship")))
+	assert_true(panel.code_edit.text.contains("\t\t\tmira.friendship += 1\n"), panel.code_edit.text)
+
+
 func test_typed_action_form_writes_named_arguments() -> void:
 	panel.code_edit.text = SOURCE.replace("wait(1.0)  # a pause", "backdrop(\"library\")")
 	panel.check_now()
