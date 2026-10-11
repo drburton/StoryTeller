@@ -201,7 +201,7 @@ mira.enter("smile", at = LEFT)
 await mira.move_to(CENTER, time = 0.6)
 ```
 
-An action starts its effect and returns immediately. `await` waits for it to finish. Before showing any dialogue or narration, the director waits for running stage effects to finish (configurable).
+An action starts its effect and returns immediately. `await` waits for it to finish. Before showing any dialogue or narration, the director waits for running stage effects to finish. `@no_wait` on a line, or `StoryConfig.wait_for_actions = false` for the whole project, shows it at once instead (§8).
 
 ### 5.5 Assignment
 
@@ -399,6 +399,7 @@ player_name = await ask_text(tr("What's your name?"), tr("Sam"))
 | `@id("...")` | Dialogue, narration, or choice option | Pins the id used for translation (§7.3), read tracking, and `@once`. |
 | `@voice("...")` | Dialogue or narration | Assigns a voice clip. |
 | `@no_rewind` | Any statement | The player cannot rewind past this point. |
+| `@no_wait` | Dialogue, narration, or `choose` | Show it at once, while earlier actions are still running. `StoryConfig.wait_for_actions = false` does this for every line. |
 | `@skip_safe` | Beat | Treat the beat's lines as already read, so skip passes them even when the player only skips read lines. Useful for recaps. |
 | `@picture("...")` | Choice option | Picture shown for the option by the `"pictures"` choice style (§5.9). |
 | `@heading("...")` | Beat | Name shown for the beat in the players' route chart. Translated like tale titles, keyed by its text. Without it, the chart shows the beat's name. |
@@ -493,7 +494,7 @@ TaleScript is GDScript plus the following. Anything not listed here behaves as i
 4. `jump` for one-way transfer between beats.
 5. `choose:` blocks with string options and `timeout:`.
 6. Named arguments in calls: `f(x, time = 1.0)`.
-7. Story annotations: `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@skip_safe`, `@heading`, `@picture`.
+7. Story annotations: `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@no_wait`, `@skip_safe`, `@heading`, `@picture`.
 
 **Restrictions**
 

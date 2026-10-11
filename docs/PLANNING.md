@@ -8,9 +8,9 @@ Status: **Draft v0.21** (M0 to M6 complete; M7 under way)
 
 - **Built and merged to `main`:** milestones M0 to M6. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
-- **Tests:** 407 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
+- **Tests:** 409 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
 - **Demo:** `demo/` plays a tour, a prologue, chapter 1, and chapter 2 with two endings (about 12 to 15 minutes by estimate; not yet timed with a player) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
-- **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, folding cards, and keys to move and add cards (§9.3), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, and save encryption (§7).
+- **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, folding cards, and keys to move and add cards (§9.3), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), and `@no_wait` (§5.1).
 - **Not done yet:** the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
 
@@ -300,7 +300,7 @@ Actions mirror Godot's async model:
 
 - An action call **starts** its effect and returns immediately, so several effects can run at the same time.
 - `await` before an action blocks the tale until that action completes, exactly as `await` works with tweens and signals in GDScript.
-- Before any dialogue, narration, or choice appears, the director waits for running actions to finish. This keeps simple tales in order with no `await` at all. (A switch to turn this off per project or per line is not built.)
+- Before any dialogue, narration, or choice appears, the director waits for running actions to finish. This keeps simple tales in order with no `await` at all. `@no_wait` shows one line or choice at once, and `StoryConfig.wait_for_actions = false` turns waiting off for the project (M7).
 
 ```gdscript
 mira.enter("smile", at = LEFT)          # starts sliding in
@@ -918,7 +918,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-Built (407 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+Built (409 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
 
 - **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, route chart, console and live reload, editor panel, completion, card editor, and Story Map.
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.

@@ -172,6 +172,10 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## passphrase ships inside the game, so this keeps out casual editing, not
 ## a determined player. Saves written before it was set still load.
 @export var save_key := ""
+## Lines and choices wait for running actions, such as a backdrop fading in,
+## before they appear. Turn this off to show them at once; a single line
+## can opt out with [code]@no_wait[/code] either way.
+@export var wait_for_actions := true
 ## File for player settings.
 @export var settings_path := "user://settings.cfg"
 ## Save to the "auto" slot before every choice.
