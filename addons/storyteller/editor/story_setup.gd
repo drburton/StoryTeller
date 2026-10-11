@@ -22,6 +22,7 @@ const FOLDERS := {
 	"choice_picture_folder": "choices",
 	"transition_folder": "transitions",
 	"collection_folder": "collection",
+	"action_folder": "actions",
 	"audio_folder": "audio",
 }
 const AUDIO_SUBFOLDERS: Array[String] = ["music", "sounds", "ambience", "voice"]

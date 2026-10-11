@@ -1,5 +1,6 @@
 extends "res://tests/framework/story_test.gd"
-## Tests for custom actions listed in StoryConfig.actions.
+## Tests for custom actions listed in StoryConfig.actions or saved in
+## StoryConfig.action_folder.
 
 const StoryScript := preload("res://addons/storyteller/core/story.gd")
 const RING_BELL := preload("res://tests/fixtures/actions/action_ring_bell.gd")
@@ -32,3 +33,13 @@ func test_entries_that_are_not_actions_are_skipped() -> void:
 	var made := StoryConfig.make_actions(scripts)
 	assert_eq(made.size(), 1)
 	assert_eq(made[0].get_action_name(), "ring_bell")
+
+
+func test_actions_in_the_action_folder_are_found() -> void:
+	var config := StoryConfig.new()
+	config.action_folder = "res://tests/fixtures/actions"
+	assert_eq(config.get_action_scripts(), [RING_BELL] as Array[Script], "actions only")
+	config.actions = [RING_BELL]
+	assert_eq(config.get_action_scripts().size(), 1, "listed scripts are not added twice")
+	config.action_folder = "res://no_such_folder"
+	assert_eq(config.get_action_scripts(), [RING_BELL] as Array[Script])
