@@ -31,6 +31,10 @@ func _init() -> void:
 
 ## Characters revealed per second. 0 shows text instantly.
 var characters_per_second := 40.0
+## How typed text appears: "type" (letter by letter), "word" (a whole word
+## at a time), or "fade" (letters fade in as they type). Set from
+## [member StoryConfig.text_reveal].
+var text_reveal := "type"
 ## When true, lines continue on their own after [member auto_delay] plus
 ## time proportional to the text length.
 var auto_advance := false
@@ -56,7 +60,31 @@ var box_transition_time := 0.2
 ## The Dialogue crew member runs the tag through the director.
 var on_text_tag := Callable()
 
+## Letters fade in over this many characters of typing with "fade".
+const FADE_CHARACTERS := 5.0
+
+## Fades letters in behind the typing point, for [member text_reveal]
+## "fade". Text inside [code][st_fade][/code] uses it.
+class FadeEffect extends RichTextEffect:
+	var bbcode := "st_fade"
+	## Letters before this index are fully shown.
+	var full_before := INF
+	## How far typing has reached, in letters, with a fraction.
+	var shown := INF
+
+	func alpha_at(index: int) -> float:
+		if index < full_before:
+			return 1.0
+		return clampf((shown - index) / FADE_CHARACTERS, 0.0, 1.0)
+
+	func _process_custom_fx(char_fx: CharFXTransform) -> bool:
+		char_fx.color.a *= alpha_at(char_fx.range.x)
+		return true
+
 var _typing := false
+var _fade := FadeEffect.new()
+## The text being revealed, without BBCode, for finding word ends.
+var _plain := ""
 var _cancelled := false
 var _waiting := false
 ## True from the start of [method reveal] until it returns.
@@ -193,11 +221,19 @@ func reveal(label: RichTextLabel, text: String, indicator: CanvasItem = null) ->
 		text = tint_code(text, get_theme_color("code_color", "DialogueBox"))
 	var parsed := extract_tags(text)
 	var start := label.get_parsed_text().length()
+	var shown_text: String = parsed["text"]
+	if text_reveal == "fade":
+		if not label.custom_effects.has(_fade):
+			label.install_effect(_fade)
+		shown_text = "[st_fade]%s[/st_fade]" % shown_text
 	if label.get_parsed_text().is_empty():
-		label.text = parsed["text"]
+		label.text = shown_text
 	else:
-		label.append_text(parsed["text"])
+		label.append_text(shown_text)
 	var total := label.get_parsed_text().length()
+	_plain = label.get_parsed_text()
+	_fade.full_before = start
+	_fade.shown = start
 	label.visible_characters = start
 	_spans.clear()
 	for span in parsed["spans"]:
@@ -229,6 +265,7 @@ func reveal(label: RichTextLabel, text: String, indicator: CanvasItem = null) ->
 				indicator.visible = false
 			_rushing = false
 	_revealing = false
+	_fade.full_before = INF
 	if _cancelled:
 		return
 	label.visible_characters = -1
@@ -320,7 +357,7 @@ static func extract_pauses(text: String) -> Dictionary:
 
 func _reveal_to(label: RichTextLabel, count: int) -> void:
 	if skipping or characters_per_second <= 0.0 or _rushing:
-		label.visible_characters = count
+		_show_all_to(label, count)
 		return
 	_typing = true
 	var shown := float(maxi(label.visible_characters, 0))
@@ -328,16 +365,35 @@ func _reveal_to(label: RichTextLabel, count: int) -> void:
 		var factor := _speed_at(int(shown))
 		if factor == 0.0:
 			shown = float(mini(_instant_end(int(shown)), count))
-			label.visible_characters = int(shown)
+			_show_all_to(label, int(shown))
 			continue
 		await get_tree().process_frame
 		var before := label.visible_characters
 		shown += characters_per_second * factor * get_process_delta_time()
-		label.visible_characters = mini(int(shown), count)
+		_fade.shown = minf(shown, count)
+		label.visible_characters = mini(visible_count(int(shown)), count)
 		if label.visible_characters > before and not skipping:
 			characters_typed.emit(label.visible_characters - before)
-	label.visible_characters = count
+	_show_all_to(label, count)
 	_typing = false
+
+
+## How many letters show when typing has reached [param typed]: the same,
+## or with "word" the end of the word being typed.
+func visible_count(typed: int) -> int:
+	if text_reveal != "word" or typed <= 0:
+		return typed
+	var end := typed
+	while end < _plain.length() and not _plain[end - 1] in [" ", "\n", "\t"]:
+		end += 1
+	return end
+
+
+## Shows every letter up to [param count] at once, fully faded in.
+func _show_all_to(label: RichTextLabel, count: int) -> void:
+	label.visible_characters = count
+	_fade.full_before = maxf(_fade.full_before, count)
+	_fade.shown = maxf(_fade.shown, count)
 
 
 ## Typing speed factor at label character [param index]: the product of
