@@ -1,11 +1,13 @@
 class_name SettingsScreen
 extends MenuScreen
-## Player preferences: text speed, auto mode delay, volumes, full screen,
-## skipping unread lines, and the language when the game has translations.
+## Player preferences: text speed, auto mode delay, text size, volumes, full
+## screen, skipping unread lines, and the language when the game has
+## translations.
 
 const SLIDERS := [
 	["Text speed", "text_speed", 0.0, 120.0, 1.0],
 	["Auto mode delay", "auto_delay", 0.2, 5.0, 0.1],
+	["Text size", "text_size", 0.8, 1.6, 0.1],
 	["Master volume", "master_volume", 0.0, 1.0, 0.05],
 	["Music volume", "music_volume", 0.0, 1.0, 0.05],
 	["Sound volume", "sounds_volume", 0.0, 1.0, 0.05],

@@ -43,7 +43,7 @@ const UI_TEXT: Array[String] = [
 	"Sound volume", "Ambience volume", "Voice volume", "Full screen",
 	"Skip unread lines", "Extras", "Gallery", "Music", "Codex", "Locked",
 	"Unlocked: %s", "Previous", "Next", "Page %d of %d", "Rename", "Delete",
-	"Delete %s?", "Name this save", "Routes",
+	"Delete %s?", "Name this save", "Routes", "Hide", "Text size",
 ]
 
 var layer: CanvasLayer
@@ -253,6 +253,14 @@ func toggle_skip() -> void:
 	var dialogue := _dialogue()
 	if dialogue != null:
 		dialogue.skip_toggled = not dialogue.skip_toggled
+
+
+## Hides the dialogue box and quick menu until the player presses any
+## key or button, to see the scene behind them.
+func hide_ui() -> void:
+	var dialogue := _dialogue()
+	if dialogue != null:
+		dialogue.set_ui_hidden(true)
 
 
 func toggle_auto() -> void:

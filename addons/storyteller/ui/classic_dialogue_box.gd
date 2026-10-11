@@ -3,6 +3,9 @@ extends DialogueBox
 ## The default dialogue style: a box along the bottom of the screen with a
 ## name plate and typewriter text. Restyle it with a Godot [Theme].
 
+const NAME_SIZE := 22
+const TEXT_SIZE := 20
+
 var _panel: PanelContainer
 var _name_label: Label
 var _text_label: RichTextLabel
@@ -36,7 +39,7 @@ func _ready() -> void:
 
 	_name_label = Label.new()
 	_name_label.name = "Name"
-	_name_label.add_theme_font_size_override("font_size", 22)
+	_name_label.add_theme_font_size_override("font_size", NAME_SIZE)
 	column.add_child(_name_label)
 
 	_text_label = RichTextLabel.new()
@@ -45,7 +48,7 @@ func _ready() -> void:
 	_text_label.fit_content = true
 	_text_label.scroll_active = false
 	_text_label.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_text_label.add_theme_font_size_override("normal_font_size", 20)
+	_text_label.add_theme_font_size_override("normal_font_size", TEXT_SIZE)
 	_text_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(_text_label)
 
@@ -55,7 +58,16 @@ func _ready() -> void:
 	_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_indicator.visible = false
 	column.add_child(_indicator)
+	_apply_text_scale()
 	hide()
+
+
+func _apply_text_scale() -> void:
+	if _text_label == null:
+		return
+	_name_label.add_theme_font_size_override("font_size", roundi(NAME_SIZE * text_scale))
+	for font in ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]:
+		_text_label.add_theme_font_size_override(font, roundi(TEXT_SIZE * text_scale))
 
 
 func get_quick_menu_corner() -> Vector2:

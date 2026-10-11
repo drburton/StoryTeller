@@ -8,7 +8,7 @@ Status: **Draft v0.21** (M0 to M6 complete; M7 under way)
 
 - **Built and merged to `main`:** milestones M0 to M6. The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
-- **Tests:** 376 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
+- **Tests:** 380 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck`.
 - **Demo:** `demo/` plays a tour, a prologue, chapter 1, and chapter 2 with two endings (about 12 to 15 minutes by estimate; not yet timed with a player) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
 - **M7 so far:** the last extension points Pro needs, named transitions and Story tab hooks (§12.4), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), and demo chapter 2.
 - **Not done yet:** the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing), the M5 usability test with writers, Windows and web export builds, the platform choice, and a trademark search.
@@ -671,13 +671,13 @@ Built:
 - **Title screen:** optional artwork and music (`StoryConfig.title_background`, `title_music`); the music stops when a game starts and comes back after the Extras music room.
 - **Extras:** gallery, music room, codex, and route chart. Every CG has a gallery entry that unlocks when the CG is shown; the viewer steps through the variants the player has seen.
 - **Route chart:** the Routes tab in Extras draws the beats the player has entered in any playthrough, one band per tale in the order they were reached, with a line for each way they went from one beat to another. Each beat lists the choices met there: picked options with a filled dot, options seen but never picked with an empty one, and options never shown left out, so the chart gives nothing away. Beats show their `@heading`, or their name without one. The director records it in a `RouteLog` saved with the global data. `StoryConfig.show_route_chart` turns it off.
-- **Playback controls:** continue (click, tap, Space, Enter), auto (delay scales with line length), skip (read lines only, or all with the setting), rewind (mouse wheel, Page Up), history (H), pause menu (Escape, right click), quick save and load (F5, F9). All are `InputMap` actions (`story_*`) that games can rebind. A quick menu sits beside the dialogue box.
+- **Playback controls:** continue (click, tap, Space, Enter), auto (delay scales with line length), skip (read lines only, or all with the setting), rewind (mouse wheel, Page Up), history (H), pause menu (Escape, right click), hide the interface (V, middle click; any press brings it back without continuing), quick save and load (F5, F9). Gamepads work by default (A, shoulders, Start, Y, X, Back). All are `InputMap` actions (`story_*`) that games can rebind. A quick menu sits beside the dialogue box. Settings include a text size that scales every dialogue style.
 - **Saves:** JSON in `user://saves/` with a format number and migration hooks, PNG thumbnails, numbered slots in pages (six per page by default, `StoryConfig.save_slot_count`; as many pages as players fill unless `save_pages` sets a limit) plus quick and auto slots, renaming and deleting saves from the screen, autosave before choices and optionally every few minutes (`autosave_minutes`), and a global file for `@global` variables, read lines, collection unlocks, and the CG variants seen.
 - **Rewind:** a snapshot of every crew member's `capture()` at each line and choice, up to `StoryConfig.rewind_depth`, with `@no_rewind` barriers.
 - **Read tracking:** read line ids kept in global data and used by skip; each line passed to dialogue boxes says whether it was read.
 - **Settings:** text speed, auto delay, five volumes, full screen, skipping unread lines, and language.
 
-Not built yet: per-word and fade-in typing, typing sounds, gamepad bindings by default, a hide-UI button, delta-compressed rewind snapshots, save encryption, a "new line" indicator, and accessibility options (text size and font, high-contrast theme, screen reader hook).
+Not built yet: per-word and fade-in typing, typing sounds, delta-compressed rewind snapshots, save encryption, and further accessibility options (a font choice, high-contrast theme, screen reader hook).
 
 ---
 
@@ -917,7 +917,7 @@ StoryTellerPro/                  # private repository (Pro tier)
 
 ## 16. Testing Strategy
 
-Built (376 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+Built (380 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
 
 - **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, route chart, console and live reload, editor panel, completion, card editor, and Story Map.
 - **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.

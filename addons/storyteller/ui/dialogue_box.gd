@@ -37,6 +37,12 @@ var skipping := false
 ## Returns true while something (such as a menu) should take the player's
 ## input instead of the dialogue box.
 var input_blocked := func() -> bool: return false
+## Size of the text relative to the style's own, from the player's "Text
+## size" setting. Styles apply it in [method _apply_text_scale].
+var text_scale := 1.0:
+	set(value):
+		text_scale = value
+		_apply_text_scale()
 ## How the box appears and hides: "fade", "slide" (rises from below while
 ## fading), or "none". Set from [member StoryConfig.dialogue_box_transition].
 var box_transition := "none"
@@ -346,6 +352,11 @@ func _instant_end(index: int) -> int:
 	return end
 
 
+## Resizes the style's text for [member text_scale]. Styles override it.
+func _apply_text_scale() -> void:
+	pass
+
+
 func _wait_for_continue(length: int) -> void:
 	if skipping:
 		await get_tree().process_frame
@@ -353,7 +364,8 @@ func _wait_for_continue(length: int) -> void:
 	_waiting = true
 	if auto_advance:
 		var timer := get_tree().create_timer(auto_delay + length * 0.03)
-		while timer.time_left > 0.0 and auto_advance and not skipping and not _cancelled:
+		# Auto mode holds while a menu is open or the box is hidden.
+		while (timer.time_left > 0.0 or input_blocked.call()) and auto_advance and not skipping and not _cancelled:
 			if await _next_input_or_frame():
 				break
 	else:

@@ -44,6 +44,7 @@ Press **Play** in the Godot editor. The demo opens on its title screen; **New Ga
 | Escape or right click | Pause menu (save, load, history, settings) |
 | H | History |
 | Page Up or mouse wheel up | Rewind |
+| V or middle click | Hide the dialogue box to see the scene; any key brings it back |
 | F5 / F9 | Quick save / quick load |
 | F3 or ` | Debug console (debug builds only) |
 

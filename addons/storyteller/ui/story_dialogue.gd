@@ -14,16 +14,18 @@ extends StoryCrew
 ## [method add_choice_style] lets game code take over choices, for example
 ## to let players choose by clicking objects in a 2D or 3D scene.
 
-## Input actions registered at runtime when the project doesn't define them.
+## Input actions registered at runtime when the project doesn't define
+## them: keys, mouse buttons, and gamepad buttons.
 const INPUT_ACTIONS := {
-	"story_continue": [KEY_SPACE, KEY_ENTER, KEY_KP_ENTER],
-	"story_skip": [KEY_CTRL],
-	"story_auto": [KEY_A],
-	"story_rewind": [KEY_PAGEUP, MOUSE_BUTTON_WHEEL_UP],
-	"story_menu": [KEY_ESCAPE, MOUSE_BUTTON_RIGHT],
-	"story_history": [KEY_H],
-	"story_quick_save": [KEY_F5],
-	"story_quick_load": [KEY_F9],
+	"story_continue": [{"key": KEY_SPACE}, {"key": KEY_ENTER}, {"key": KEY_KP_ENTER}, {"joy": JOY_BUTTON_A}],
+	"story_skip": [{"key": KEY_CTRL}, {"joy": JOY_BUTTON_RIGHT_SHOULDER}],
+	"story_auto": [{"key": KEY_A}, {"joy": JOY_BUTTON_Y}],
+	"story_rewind": [{"key": KEY_PAGEUP}, {"mouse": MOUSE_BUTTON_WHEEL_UP}, {"joy": JOY_BUTTON_LEFT_SHOULDER}],
+	"story_menu": [{"key": KEY_ESCAPE}, {"mouse": MOUSE_BUTTON_RIGHT}, {"joy": JOY_BUTTON_START}],
+	"story_history": [{"key": KEY_H}, {"joy": JOY_BUTTON_BACK}],
+	"story_hide_ui": [{"key": KEY_V}, {"mouse": MOUSE_BUTTON_MIDDLE}, {"joy": JOY_BUTTON_X}],
+	"story_quick_save": [{"key": KEY_F5}],
+	"story_quick_load": [{"key": KEY_F9}],
 }
 
 var layer: CanvasLayer
@@ -42,7 +44,11 @@ var input_blocked := func() -> bool: return false:
 	set(value):
 		input_blocked = value
 		for box in _styles.values():
-			box.input_blocked = value
+			box.input_blocked = _box_blocked
+## True while the player has hidden the dialogue box to look at the scene
+## (V, the middle mouse button, or the quick menu's Hide). The next key,
+## click, or button brings it back without continuing the story.
+var ui_hidden := false
 
 var _styles: Dictionary = {}
 ## Choice style name to its menu: a [ChoiceMenu] or any object with
@@ -74,6 +80,7 @@ func setup(config: StoryConfig) -> void:
 		box.on_text_tag = _run_text_tag
 		box.box_transition = config.dialogue_box_transition
 		box.box_transition_time = config.dialogue_box_transition_time
+		box.input_blocked = _box_blocked
 		layer.add_child(box)
 		_styles[style_name] = box
 	dialogue_box = _styles["classic"]
@@ -93,6 +100,7 @@ func setup(config: StoryConfig) -> void:
 
 func clear() -> void:
 	set_style("classic")
+	set_ui_hidden(false)
 	hide_all()
 
 
@@ -123,7 +131,15 @@ func hide_all() -> void:
 
 ## True while a dialogue box is on screen.
 func is_showing() -> bool:
-	return dialogue_box != null and dialogue_box.visible
+	return dialogue_box != null and dialogue_box.visible and not ui_hidden
+
+
+## Hides or shows the dialogue box and choices so the player can see the
+## scene. The story waits while they are hidden.
+func set_ui_hidden(hidden: bool) -> void:
+	ui_hidden = hidden
+	if layer != null:
+		layer.visible = not hidden
 
 
 ## Presenter method: shows one line. Awaitable.
@@ -203,6 +219,8 @@ func apply_setting(key: String, value: Variant) -> void:
 				box.characters_per_second = float(value)
 			"auto_delay":
 				box.auto_delay = float(value)
+			"text_size":
+				box.text_scale = float(value)
 
 
 func capture() -> Dictionary:
@@ -219,7 +237,7 @@ func _process(_delta: float) -> void:
 	# Skipping stops at unread lines unless the player allows skipping them.
 	var settings := _crew(&"Settings")
 	var skip_unread: bool = settings != null and settings.get_value("skip_unread")
-	var wants_skip: bool = (Input.is_action_pressed("story_skip") or skip_toggled) and not input_blocked.call()
+	var wants_skip: bool = (Input.is_action_pressed("story_skip") or skip_toggled) and not _box_blocked.call()
 	var skip: bool = wants_skip and (skip_unread or _line_read)
 	dialogue_box.skipping = skip
 	var director := _director()
@@ -227,9 +245,33 @@ func _process(_delta: float) -> void:
 		director.skipping = skip
 
 
+func _input(event: InputEvent) -> void:
+	# While hidden, any press only brings the dialogue back.
+	if ui_hidden and _is_press(event):
+		set_ui_hidden(false)
+		get_viewport().set_input_as_handled()
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if dialogue_box != null and not input_blocked.call() and event.is_action_pressed("story_auto"):
+	if dialogue_box == null or input_blocked.call():
+		return
+	if event.is_action_pressed("story_auto"):
 		dialogue_box.auto_advance = not dialogue_box.auto_advance
+	elif event.is_action_pressed("story_hide_ui") and is_showing():
+		set_ui_hidden(true)
+		get_viewport().set_input_as_handled()
+
+
+func _box_blocked() -> bool:
+	return ui_hidden or input_blocked.call()
+
+
+static func _is_press(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		return event.pressed and not event.echo
+	if event is InputEventMouseButton or event is InputEventJoypadButton:
+		return event.pressed
+	return false
 
 
 ## Runs an [code][act][/code] or [code][sound][/code] tag that typing reached.
@@ -269,12 +311,15 @@ static func _register_input_actions() -> void:
 		if InputMap.has_action(action):
 			continue
 		InputMap.add_action(action)
-		for code in INPUT_ACTIONS[action]:
+		for binding: Dictionary in INPUT_ACTIONS[action]:
 			var event: InputEvent
-			if code in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_RIGHT]:
+			if binding.has("mouse"):
 				event = InputEventMouseButton.new()
-				event.button_index = code
+				event.button_index = binding["mouse"]
+			elif binding.has("joy"):
+				event = InputEventJoypadButton.new()
+				event.button_index = binding["joy"]
 			else:
 				event = InputEventKey.new()
-				event.keycode = code
+				event.keycode = binding["key"]
 			InputMap.action_add_event(action, event)
