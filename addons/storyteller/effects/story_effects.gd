@@ -18,7 +18,7 @@ const FILTER_LAYER := 6
 ## Above the dialogue box (10), below the menus (20).
 const SCREEN_LAYER := 15
 const WEATHER_KINDS := ["none", "rain", "snow"]
-const FILTERS := ["none", "grayscale", "sepia", "night", "warm", "cold"]
+const FILTERS := ["none", "grayscale", "sepia", "night", "warm", "cold", "blur", "vignette"]
 
 ## Folder with movies (Ogg Theora .ogv files), used by play_movie().
 var movie_folder := "res://story/movies"
@@ -89,8 +89,9 @@ func set_weather(kind: String, strength := 1.0, fade := 1.0) -> String:
 	return ""
 
 
-## Recolors the stage: "grayscale", "sepia", "night", "warm", "cold", or
-## "none". Awaitable. Returns an error message or "".
+## Recolors the stage: "grayscale", "sepia", "night", "warm", "cold",
+## "blur" (softens everything below the dialogue), "vignette" (darkens the
+## edges), or "none". Strength sets how much. Awaitable. Returns an error message or "".
 func set_filter(filter_name: String, strength := 1.0, time := 0.5) -> String:
 	if filter_name not in FILTERS:
 		return "Unknown filter '%s'. Filters: %s." % [filter_name, ", ".join(FILTERS)]

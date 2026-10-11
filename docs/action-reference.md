@@ -192,7 +192,7 @@ Fades the whole screen, dialogue box included, to a color. fade_in() brings it b
 filter(name, strength = 1.0, time = 0.5)
 ```
 
-Recolors the stage with "grayscale", "sepia", "night", "warm", or "cold". filter("none") removes it. The dialogue box and menus keep their colors.
+Recolors the stage with "grayscale", "sepia", "night", "warm", or "cold", softens it with "blur", or darkens its edges with "vignette". filter("none") removes it. The dialogue box and menus keep their colors.
 
 | Parameter | Type | Default |
 |---|---|---|

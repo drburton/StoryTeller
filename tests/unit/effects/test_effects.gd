@@ -84,11 +84,20 @@ func test_filter_changes_strength_over_time() -> void:
 	assert_eq(presenter.lines, ["Old photo."])
 
 
+func test_blur_and_vignette_are_filters() -> void:
+	var material: ShaderMaterial = effects.filter_layer.get_child(0).material
+	for filter_name in ["blur", "vignette"]:
+		assert_eq(await effects.set_filter(filter_name, 0.5, 0.0), "")
+		assert_eq(material.get_shader_parameter("mode"), StoryEffects.FILTERS.find(filter_name))
+		assert_eq(material.get_shader_parameter("strength"), 0.5)
+	await effects.set_filter("none", 1.0, 0.0)
+
+
 func test_unknown_names_are_reported() -> void:
 	await _play("beat start:\n\tweather(\"hail\")\n\tfilter(\"neon\")\n\t\"x\"\n")
 	assert_eq(errors, [
 		"2: Unknown weather 'hail'. Kinds: none, rain, snow.",
-		"3: Unknown filter 'neon'. Filters: none, grayscale, sepia, night, warm, cold.",
+		"3: Unknown filter 'neon'. Filters: none, grayscale, sepia, night, warm, cold, blur, vignette.",
 	])
 
 

@@ -1,7 +1,8 @@
 extends TaleAction
 ## filter(name, strength = 1.0, time = 0.5): recolors the stage with
-## "grayscale", "sepia", "night", "warm", or "cold". filter("none") removes
-## it. The dialogue box and menus keep their colors.
+## "grayscale", "sepia", "night", "warm", or "cold", softens it with "blur",
+## or darkens its edges with "vignette". filter("none") removes it. The
+## dialogue box and menus keep their colors.
 
 
 func get_action_name() -> String:
