@@ -146,7 +146,7 @@ func select_beat(beat_name: String) -> void:
 ## Rebuilds the cards of the current beat from [member doc].
 func rebuild() -> void:
 	var focused := get_viewport().gui_get_focus_owner() if is_inside_tree() else null
-	if focused != null and is_ancestor_of(focused) and focused.has_meta("field_key"):
+	if focused != null and is_ancestor_of(focused) and focused.has_meta("field_key") and _focus_key.is_empty():
 		_focus_key = focused.get_meta("field_key")
 		if focused is TextEdit and _focus_caret.x < 0:
 			_focus_caret = Vector2i(focused.get_caret_line(), focused.get_caret_column())
@@ -261,6 +261,9 @@ func _gui_input(event: InputEvent) -> void:
 func _shortcut_input(event: InputEvent) -> void:
 	if is_visible_in_tree():
 		var focused := get_viewport().gui_get_focus_owner()
+		if _handle_card_keys(event, focused):
+			get_viewport().set_input_as_handled()
+			return
 		if focused == null or not is_ancestor_of(focused) or not (focused is LineEdit or focused is TextEdit):
 			_handle_shortcut(event)
 
@@ -276,6 +279,73 @@ func _handle_shortcut(event: InputEvent) -> void:
 	elif event.keycode == KEY_Y or (event.keycode == KEY_Z and event.shift_pressed):
 		redo_requested.emit()
 		accept_event()
+
+
+## Alt+Up and Alt+Down move the card that holds [param focused], and
+## Alt+Insert adds a narration card below it. Returns true when handled.
+func _handle_card_keys(event: InputEvent, focused: Control) -> bool:
+	if not (event is InputEventKey and event.pressed and event.alt_pressed) or event.ctrl_pressed or event.meta_pressed:
+		return false
+	if focused == null or not is_ancestor_of(focused):
+		return false
+	var path := card_path_of(focused)
+	if path.is_empty() or not event.keycode in [KEY_UP, KEY_DOWN, KEY_INSERT]:
+		return false
+	# Leaving the field commits what was typed (which may rebuild the
+	# cards) before the card moves.
+	var key: String = focused.get_meta("field_key", "")
+	focused.release_focus()
+	match event.keycode:
+		KEY_UP, KEY_DOWN:
+			var step := -1 if event.keycode == KEY_UP else 1
+			if move_card(path, step, key):
+				return true
+			_restore_focus(key, Vector2i(-1, -1))
+			return true
+		KEY_INSERT:
+			var insert: MenuButton = get_fields().get(path + ":insert")
+			if insert == null:
+				_restore_focus(key, Vector2i(-1, -1))
+				return true
+			_focus_key = _card_key(path, 1) + ":text"
+			insert.get_popup().id_pressed.emit(insert.get_popup().get_item_id(NEW_CARDS.find("Narration")))
+			return true
+	return false
+
+
+## The path of the card that holds [param control], such as "b/3/o0/1",
+## or "" when it is not in a card.
+func card_path_of(control: Node) -> String:
+	var node := control
+	while node != null and node != self:
+		if node.has_meta("card_path"):
+			return node.get_meta("card_path")
+		node = node.get_parent()
+	return ""
+
+
+## Moves the card at [param path] up ([param step] -1) or down (1) within
+## its list. Focus follows the card when [param focus_key] names one of its
+## fields. Returns false when the card is already at that end.
+func move_card(path: String, step: int, focus_key := "") -> bool:
+	var button: Button = get_fields().get(path + (":up" if step < 0 else ":down"))
+	var index := int(path.get_slice("/", path.get_slice_count("/") - 1))
+	var count := 0
+	if button != null:
+		var panel := button.get_parent().get_parent().get_parent()
+		count = panel.get_parent().get_children().filter(func(child: Node) -> bool: return child.has_meta("card")).size()
+	if button == null or index + step < 0 or index + step >= count:
+		return false
+	if focus_key.begins_with(path + ":") or focus_key.begins_with(path + "/"):
+		_focus_key = _card_key(path, step) + focus_key.substr(path.length())
+	button.pressed.emit()
+	return true
+
+
+## [param path] with its last index moved by [param step].
+func _card_key(path: String, step: int) -> String:
+	var cut := path.rfind("/")
+	return path.substr(0, cut + 1) + str(int(path.substr(cut + 1)) + step)
 
 
 # --- Card lists -----------------------------------------------------------
@@ -414,6 +484,7 @@ func _placeholder(type: int) -> String:
 func _make_card(card: TaleCard, parent: TaleNode, path: String) -> Control:
 	var panel := PanelContainer.new()
 	panel.set_meta("card", card)
+	panel.set_meta("card_path", path)
 	panel.set_meta("card_kind", TaleCard.Kind.keys()[card.kind])
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.13, 0.14, 0.17)
