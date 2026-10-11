@@ -134,9 +134,9 @@ welcome:topics_67bdc0,What about choices?,¿Y las elecciones?,welcome.tale:43 (c
 welcome:topics_0f8fd2,Can the stage change?,¿Puede cambiar el escenario?,welcome.tale:50 (choice),
 welcome:topics_fa4fb7,Can tales remember things?,¿Los cuentos pueden recordar cosas?,welcome.tale:70 (choice),
 welcome:topics_da7486,What about saving and menus?,¿Y guardar la partida y los menús?,welcome.tale:78 (choice),
-welcome:topics_8c0912,Show me a sample scene.,Muéstrame una escena de ejemplo.,welcome.tale:94 (choice),
-welcome:topics_ca5847,I'm ready to start writing.,Estoy listo para empezar a escribir.,welcome.tale:102 (choice),
-welcome:topics_c6a7cb,Leave already,Irse ya,welcome.tale:104 (choice),
+welcome:topics_8c0912,Show me a sample scene.,Muéstrame una escena de ejemplo.,welcome.tale:95 (choice),
+welcome:topics_ca5847,I'm ready to start writing.,Estoy listo para empezar a escribir.,welcome.tale:103 (choice),
+welcome:topics_c6a7cb,Leave already,Irse ya,welcome.tale:105 (choice),
 welcome:topics_bec809,"Put a speaker, a colon, and a quoted line:
 [code]ada: ""Hello!""[/code]","Pon quién habla, dos puntos y una frase entre comillas:
 [code]ada: ""¡Hola!""[/code]",welcome.tale:32 (ada),
@@ -204,30 +204,31 @@ welcome:topics_fc9b7d,"Characters can keep data of their own, listed in their ca
 [code]mira.friendship += 1[/code]","Los personajes pueden guardar datos propios, listados en los campos de su perfil. La amistad de Mira crece en el capítulo 1:
 [code]mira.friendship += 1[/code]",welcome.tale:76 (ada),
 welcome:topics_fc17f2,"Press Escape or right-click for the pause menu. Saving, loading, and settings live there.","Pulsa Escape o haz clic derecho para abrir el menú de pausa. Ahí están guardar, cargar y los ajustes.",welcome.tale:81 (ada),
-welcome:topics_336e0b,Roll the mouse wheel up or press Page Up to rewind. Press H to read the history.,Gira la rueda del ratón hacia arriba o pulsa Re Pág para retroceder. Pulsa H para leer el historial.,welcome.tale:82 (ada),
+welcome:topics_c950c6,"Settings can also make reading easier: bigger text, a clearer font, high contrast, and lines read aloud.","Los ajustes también facilitan la lectura: texto más grande, una letra más clara, alto contraste y frases leídas en voz alta.",welcome.tale:82 (ada),
+welcome:topics_336e0b,Roll the mouse wheel up or press Page Up to rewind. Press H to read the history.,Gira la rueda del ratón hacia arriba o pulsa Re Pág para retroceder. Pulsa H para leer el historial.,welcome.tale:83 (ada),
 welcome:topics_a6a3c9,"Pictures, music, and notes you unlock show up under Extras on the title screen. One line unlocks each:
 [code]collect(""library"")[/code]","Las imágenes, la música y las notas que desbloquees aparecen en Extras, en la pantalla de título. Una línea desbloquea cada una:
-[code]collect(""library"")[/code]",welcome.tale:83 (ada),
+[code]collect(""library"")[/code]",welcome.tale:84 (ada),
 welcome:topics_9804bf,"Extras also keeps a route chart of the scenes you have reached and the choices you made there. A heading above a beat names it on the chart:
 [code]@heading(""Questions for Ada"")[/code]","Extras también guarda un mapa de rutas con las escenas que alcanzaste y las elecciones que hiciste en ellas. Un encabezado sobre un beat le da nombre en el mapa:
-[code]@heading(""Questions for Ada"")[/code]",welcome.tale:84 (ada),
+[code]@heading(""Questions for Ada"")[/code]",welcome.tale:85 (ada),
 welcome:topics_af3825,"Some stories read better as pages. This line switches to them:
 [code]dialogue_style(""page"")[/code]","Algunas historias se leen mejor como páginas. Esta línea cambia a ese estilo:
-[code]dialogue_style(""page"")[/code]",welcome.tale:85 (ada),
-welcome:topics_d7ad15,"In the page style, lines stack on the screen like a book.","En el estilo de página, las líneas se acumulan en la pantalla como en un libro.",welcome.tale:87,
-welcome:topics_f45e08,Each new line goes under the last one.,Cada línea nueva va debajo de la anterior.,welcome.tale:88,
+[code]dialogue_style(""page"")[/code]",welcome.tale:86 (ada),
+welcome:topics_d7ad15,"In the page style, lines stack on the screen like a book.","En el estilo de página, las líneas se acumulan en la pantalla como en un libro.",welcome.tale:88,
+welcome:topics_f45e08,Each new line goes under the last one.,Cada línea nueva va debajo de la anterior.,welcome.tale:89,
 welcome:topics_4d6e22,"A fresh page starts with:
 [code]clear_page()[/code]","Una página nueva empieza con:
-[code]clear_page()[/code]",welcome.tale:90,
+[code]clear_page()[/code]",welcome.tale:91,
 welcome:topics_0b0580,"And this brings back the classic box:
 [code]dialogue_style(""classic"")[/code]","Y esto trae de vuelta el cuadro clásico:
-[code]dialogue_style(""classic"")[/code]",welcome.tale:92 (ada),
-welcome:topics_36d940,Here is one from the StoryTeller plan.,Aquí tienes una del plan de StoryTeller.,welcome.tale:95 (ada),
-welcome:topics_015c66,"Off stage, my portrait still shows beside my lines. My cast profile names a portrait folder and sets portrait_off_stage_only.","Fuera del escenario, mi retrato sigue apareciendo junto a mis frases. Mi perfil de personaje indica una carpeta de retratos y activa portrait_off_stage_only.",welcome.tale:97 (ada),
-welcome:farewell_d2f003,"You asked about everything, {visitor}. I like that.","Preguntaste por todo, {visitor}. Eso me gusta.",welcome.tale:111 (ada),
-welcome:farewell_99a5b9,"You asked about {len(topics_seen)} topic{""s"" if len(topics_seen) != 1 else """"}.","Preguntaste por {len(topics_seen)} tema{""s"" if len(topics_seen) != 1 else """"}.",welcome.tale:113 (ada),
-welcome:farewell_4ac008,"The lamps dim. Somewhere, a page turns.","Las lámparas se atenúan. En algún lugar, pasa una página.",welcome.tale:115,
-welcome:farewell_6890cd,Open demo/tales/welcome.tale to see how this scene was made.,Abre demo/tales/welcome.tale para ver cómo se hizo esta escena.,welcome.tale:116 (ada),
+[code]dialogue_style(""classic"")[/code]",welcome.tale:93 (ada),
+welcome:topics_36d940,Here is one from the StoryTeller plan.,Aquí tienes una del plan de StoryTeller.,welcome.tale:96 (ada),
+welcome:topics_015c66,"Off stage, my portrait still shows beside my lines. My cast profile names a portrait folder and sets portrait_off_stage_only.","Fuera del escenario, mi retrato sigue apareciendo junto a mis frases. Mi perfil de personaje indica una carpeta de retratos y activa portrait_off_stage_only.",welcome.tale:98 (ada),
+welcome:farewell_d2f003,"You asked about everything, {visitor}. I like that.","Preguntaste por todo, {visitor}. Eso me gusta.",welcome.tale:112 (ada),
+welcome:farewell_99a5b9,"You asked about {len(topics_seen)} topic{""s"" if len(topics_seen) != 1 else """"}.","Preguntaste por {len(topics_seen)} tema{""s"" if len(topics_seen) != 1 else """"}.",welcome.tale:114 (ada),
+welcome:farewell_4ac008,"The lamps dim. Somewhere, a page turns.","Las lámparas se atenúan. En algún lugar, pasa una página.",welcome.tale:116,
+welcome:farewell_6890cd,Open demo/tales/welcome.tale to see how this scene was made.,Abre demo/tales/welcome.tale para ver cómo se hizo esta escena.,welcome.tale:117 (ada),
 Ada,Ada,Ada,name of cast member 'ada',
 Mira,Mira,Mira,name of cast member 'mira',
 The librarian who shows visitors around. She knows every shelf and every command.,The librarian who shows visitors around. She knows every shelf and every command.,La bibliotecaria que guía a las visitas. Conoce cada estante y cada comando.,text of collection item 'ada',

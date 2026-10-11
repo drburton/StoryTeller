@@ -176,6 +176,11 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## before they appear. Turn this off to show them at once; a single line
 ## can opt out with [code]@no_wait[/code] either way.
 @export var wait_for_actions := true
+## A folder of extra tales loaded when the story starts, such as
+## [code]user://mods[/code] for player-made stories. They are compiled at
+## start, can refer to each other and to the project's tales, and replace
+## project tales with the same name. Empty loads none.
+@export var mod_folder := ""
 ## File for player settings.
 @export var settings_path := "user://settings.cfg"
 ## Save to the "auto" slot before every choice.
