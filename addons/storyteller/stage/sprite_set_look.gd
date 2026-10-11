@@ -42,6 +42,10 @@ func get_texture(mood: String) -> Texture2D:
 	return null
 
 
+func get_preview(mood: String) -> Texture2D:
+	return get_texture(mood)
+
+
 func get_moods() -> PackedStringArray:
 	var names := PackedStringArray(moods.keys())
 	if not folder.is_empty() and DirAccess.dir_exists_absolute(folder):

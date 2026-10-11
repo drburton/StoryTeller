@@ -49,6 +49,35 @@ func get_moods() -> PackedStringArray:
 	return names
 
 
+## The default layers with [param mood] applied, drawn into one image.
+## Layers line up at the bottom center, as on stage.
+func get_preview(mood: String) -> Texture2D:
+	var choices := defaults.duplicate()
+	choices.merge(parse_choices(presets.get(mood, mood)), true)
+	var images: Array[Image] = []
+	var size := Vector2i.ZERO
+	for group in _group_order():
+		var texture: Texture2D = groups.get(group, {}).get(choices.get(group, ""))
+		if texture == null:
+			continue
+		var image := texture.get_image()
+		if image == null:
+			continue
+		image = image.duplicate()
+		if image.is_compressed():
+			image.decompress()
+		image.convert(Image.FORMAT_RGBA8)
+		images.append(image)
+		size = size.max(image.get_size())
+	if images.is_empty():
+		return null
+	var canvas := Image.create_empty(size.x, size.y, false, Image.FORMAT_RGBA8)
+	for image in images:
+		var at := Vector2i((size.x - image.get_width()) / 2, size.y - image.get_height())
+		canvas.blend_rect(image, Rect2i(Vector2i.ZERO, image.get_size()), at)
+	return ImageTexture.create_from_image(canvas)
+
+
 ## Parses "a=b, c=d" into {"a": "b", "c": "d"}. Returns {} if malformed.
 static func parse_choices(text: String) -> Dictionary:
 	var choices := {}
