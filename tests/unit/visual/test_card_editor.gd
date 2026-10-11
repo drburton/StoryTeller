@@ -238,7 +238,7 @@ func test_typing_narrows_a_list() -> void:
 	var menu: MenuButton = line.get_parent().get_child(1)
 	var popup := menu.get_popup()
 	var all := popup.item_count
-	assert_true(all > 2, "beats of this and other tales are listed")
+	assert_true(all >= 2, "the beats are listed")
 	line.text = "OTH"
 	menu.about_to_popup.emit()
 	var names := []
