@@ -14,6 +14,7 @@ All class and method names below come from `addons/storyteller/`. Doc comments (
 - [Menus and theme](#menus-and-theme)
 - [Embedding in your own game](#embedding-in-your-own-game)
 - [Saving custom state](#saving-custom-state)
+- [Player-made tales](#player-made-tales)
 - [Story tab hooks for editor add-ons](#story-tab-hooks-for-editor-add-ons)
 
 ## The Story autoload and StoryConfig
@@ -709,6 +710,20 @@ func restore_globals(data: Dictionary) -> void:
 ```
 
 `StorySaves` finds such members by those two method names. It loads the file when the crew starts, and writes it when a slot is saved, when a story finishes, when the player quits from the menu or closes the window, and a few seconds after lines are shown. A member with a `globals_changed` signal marks the file as changed when it emits, which covers changes made between lines.
+
+## Player-made tales
+
+Set `StoryConfig.mod_folder`, for example to `user://mods`, and every `.tale` file there is compiled when the story starts. Players can drop in new stories without exporting anything. Mod tales can jump to and read each other and the project's tales, and one named like a project tale replaces it. Tales that don't compile are skipped with a warning naming the file and line.
+
+To load a folder at another time, such as from a "Mods" menu, call the director yourself. It returns one message per tale that failed:
+
+```gdscript
+var problems := Story.get_crew(&"TaleDirector").load_tale_folder("user://mods")
+for problem in problems:
+	print(problem)
+```
+
+Mod tales use the project's actions, cast, and assets. Because they are compiled from text at run time, live reload works on them too.
 
 ## Story tab hooks for editor add-ons
 

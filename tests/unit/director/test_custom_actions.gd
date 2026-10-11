@@ -1,6 +1,7 @@
 extends "res://tests/framework/story_test.gd"
-## Tests for custom actions listed in StoryConfig.actions or saved in
-## StoryConfig.action_folder.
+## Tests for project extensions loaded from the config: custom actions
+## listed in StoryConfig.actions or saved in StoryConfig.action_folder, and
+## tales in StoryConfig.mod_folder.
 
 const StoryScript := preload("res://addons/storyteller/core/story.gd")
 const RING_BELL := preload("res://tests/fixtures/actions/action_ring_bell.gd")
@@ -43,3 +44,21 @@ func test_actions_in_the_action_folder_are_found() -> void:
 	assert_eq(config.get_action_scripts().size(), 1, "listed scripts are not added twice")
 	config.action_folder = "res://no_such_folder"
 	assert_eq(config.get_action_scripts(), [RING_BELL] as Array[Script])
+
+
+func test_the_mod_folder_loads_when_the_story_starts() -> void:
+	var folder := "user://test_mod_start"
+	DirAccess.make_dir_recursive_absolute(folder)
+	var file := FileAccess.open(folder.path_join("visitor.tale"), FileAccess.WRITE)
+	file.store_string("beat start:\n\t\"A visiting story.\"\n")
+	file.close()
+	var story: Node = track(StoryScript.new())
+	var config := StoryConfig.new()
+	config.crew = [TaleDirector]
+	config.mod_folder = folder
+	story.start(config)
+	tree.root.add_child(story)
+	await tree.process_frame
+	var director: TaleDirector = story.get_crew(&"TaleDirector")
+	assert_not_null(director.get_tale("visitor"))
+	DirAccess.remove_absolute(folder.path_join("visitor.tale"))

@@ -160,6 +160,8 @@ func setup(config: StoryConfig) -> void:
 	source_language = config.source_language
 	text_styles = config.text_styles
 	wait_for_actions = config.wait_for_actions
+	if not config.mod_folder.is_empty():
+		_load_mods.call_deferred(config.mod_folder)
 	_declared_names = config.exposed_names
 
 
@@ -328,6 +330,53 @@ func _halt() -> void:
 
 func is_playing() -> bool:
 	return _playing
+
+
+## Compiles every [code].tale[/code] file in [param folder], such as
+## [code]user://mods[/code], and adds them, replacing project tales with
+## the same name. Tales in the folder can jump to and read each other.
+## Returns one message per tale that could not be compiled.
+func load_tale_folder(folder: String) -> PackedStringArray:
+	var problems := PackedStringArray()
+	if not DirAccess.dir_exists_absolute(folder):
+		return problems
+	var sources := {}
+	for file_name in DirAccess.get_files_at(folder):
+		if file_name.get_extension() == "tale":
+			sources[file_name.get_basename()] = FileAccess.get_file_as_string(folder.path_join(file_name))
+	# Each tale's beats and variables first, so the others can refer to them.
+	var outlines := {}
+	for tale_name in sources:
+		var beats := PackedStringArray()
+		var vars := PackedStringArray()
+		for statement in TaleParser.parse(sources[tale_name]).statements:
+			if statement.kind == TaleNode.Kind.BEAT:
+				beats.append(statement.name)
+			elif statement.kind == TaleNode.Kind.VAR or statement.kind == TaleNode.Kind.CONST:
+				vars.append(statement.name)
+		outlines[tale_name] = [beats, vars]
+	for tale_name in sources:
+		var context := make_check_context(tale_name)
+		for other in outlines:
+			if other != tale_name:
+				context.add_tale(other, outlines[other][0], outlines[other][1])
+		var path := folder.path_join(tale_name + ".tale")
+		var result := TaleCompiler.build(sources[tale_name], tale_name, context, path)
+		if result["tale"] == null:
+			var message := "%s could not be compiled." % path
+			for diagnostic in result["diagnostics"]:
+				if diagnostic.is_error():
+					message = "%s:%d: %s" % [path, diagnostic.line, diagnostic.message]
+					break
+			problems.append(message)
+		else:
+			add_tale(result["tale"])
+	return problems
+
+
+func _load_mods(folder: String) -> void:
+	for problem in load_tale_folder(folder):
+		push_warning("StoryTeller: " + problem)
 
 
 ## Registers a compiled tale, replacing one with the same name.

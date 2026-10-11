@@ -211,3 +211,26 @@ func test_no_wait_is_checked() -> void:
 	assert_eq(messages.size(), 2, str(messages))
 	var tale: Tale = TaleCompiler.build("beat start:\n\t@no_wait choose:\n\t\t\"a\":\n\t\t\tpass\n", "main", director.make_check_context("main"))["tale"]
 	assert_true(tale.instructions.any(func(i: Dictionary) -> bool: return i["op"] == "choose" and i.get("no_wait", false)), "choose carries the flag")
+
+
+func test_tales_load_from_a_folder_outside_the_project() -> void:
+	var folder := "user://test_mods"
+	DirAccess.make_dir_recursive_absolute(folder)
+	var files := {
+		"mod_a.tale": "var visits := 1\n\nbeat start:\n\t\"A mod line, visit {visits}.\"\n\tmod_b.greet()\n\tjump mod_b.finish\n",
+		"mod_b.tale": "beat greet:\n\t\"Hello from b, after {mod_a.visits} visit.\"\n\nbeat finish:\n\t\"The end.\"\n",
+		"broken.tale": "beat start:\n\tjump nowhere\n",
+	}
+	for file_name in files:
+		var file := FileAccess.open(folder.path_join(file_name), FileAccess.WRITE)
+		file.store_string(files[file_name])
+		file.close()
+	var problems := director.load_tale_folder(folder)
+	assert_eq(problems.size(), 1, str(problems))
+	assert_true(problems[0].begins_with("user://test_mods/broken.tale:2:"), problems[0])
+	await director.play("mod_a")
+	assert_eq(presenter.lines, ["A mod line, visit 1.", "Hello from b, after 1 visit.", "The end."])
+	assert_eq(director.get_tale("mod_a").source_path, "user://test_mods/mod_a.tale", "live reload can find the file")
+	for file_name in files:
+		DirAccess.remove_absolute(folder.path_join(file_name))
+	assert_eq(director.load_tale_folder("user://no_such_mods"), PackedStringArray())
