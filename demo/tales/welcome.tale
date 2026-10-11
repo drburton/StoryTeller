@@ -79,6 +79,7 @@ beat topics:
 			topics_seen.append("menus")
 			curiosity += 1
 			ada: "Press Escape or right-click for the pause menu. Saving, loading, and settings live there."
+			ada (smile): "Settings can also make reading easier: bigger text, a clearer font, high contrast, and lines read aloud."
 			ada (curious): "Roll the mouse wheel up or press Page Up to rewind. Press H to read the history."
 			ada: "Pictures, music, and notes you unlock show up under Extras on the title screen. One line unlocks each:\n[code]collect(\"library\")[/code]"
 			ada (curious): "Extras also keeps a route chart of the scenes you have reached and the choices you made there. A heading above a beat names it on the chart:\n[code]@heading(\"Questions for Ada\")[/code]"
