@@ -248,13 +248,14 @@ An action registered under the name of a built-in replaces it. A new `Story.star
 
 ## Cast looks
 
-A look (`stage/cast_look.gd`) draws a character. It extends `Resource` and has three methods:
+A look (`stage/cast_look.gd`) draws a character. It extends `Resource` and has these methods:
 
 | Method | Returns |
 |---|---|
 | `create_visual()` | A `Node2D` whose origin is the bottom center of the character. |
 | `apply_mood(visual, mood)` | `true` when the mood is known, `false` otherwise. |
 | `get_moods()` | The mood names, for the checker. An empty list accepts any name. |
+| `get_preview(mood)` | Optional. A `Texture2D` of the character in that mood, for the thumbnails in the card editor, or `null`. |
 
 The built-in looks are `SpriteSetLook` (one image per mood, from a `moods` dictionary or a `folder`), `LayeredLook` (layer groups with moods such as `"face=smile, outfit=coat"`), and `SceneLook`.
 

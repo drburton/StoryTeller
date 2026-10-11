@@ -19,3 +19,9 @@ func apply_mood(_visual: Node2D, _mood: String) -> bool:
 ## Mood names this look supports, or an empty list when any name may work.
 func get_moods() -> PackedStringArray:
 	return PackedStringArray()
+
+
+## A picture of the cast member in [param mood] for editor pickers, or null
+## when the look can't make one without running.
+func get_preview(_mood: String) -> Texture2D:
+	return null

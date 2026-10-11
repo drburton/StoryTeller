@@ -58,6 +58,12 @@ var _focus_key := ""
 ## The last cards copied, used when the system clipboard is empty or not
 ## available (as in headless runs).
 static var _copied := ""
+## Size of the speaker and mood thumbnails in pixels.
+const THUMBNAIL_SIZE := 40
+## Cast profiles by id, scanned the first time a thumbnail is needed.
+var _profiles = null
+## "id:mood" to thumbnail texture, or null when there is none.
+var _thumbnails := {}
 ## Caret to put back in the refocused field after a rebuild, or (-1, -1).
 var _focus_caret := Vector2i(-1, -1)
 
@@ -511,6 +517,10 @@ func _dialogue_fields(card: TaleCard, path: String) -> Control:
 		moods.append(card.node.mood)
 	var mood := _option_button(path + ":mood", moods, card.node.mood if not card.node.mood.is_empty() else "(no mood)")
 	row.add_child(mood)
+	for i in speaker.item_count:
+		speaker.set_item_icon(i, get_thumbnail(speaker.get_item_text(i), ""))
+	for i in mood.item_count:
+		mood.set_item_icon(i, get_thumbnail(card.node.name, "" if i == 0 else mood.get_item_text(i)))
 	var text := _text_field(path + ":text", TaleCard.text_of(card.node), func(_text: String) -> void: pass)
 	column.add_child(_markup_bar(text, path))
 	column.add_child(text)
@@ -907,6 +917,45 @@ func _option_button(key: String, items: PackedStringArray, selected: String) -> 
 	button.select(maxi(items.find(selected), 0))
 	button.set_meta("field_key", key)
 	return button
+
+
+## A small picture of cast member [param id] in [param mood] (their default
+## mood when empty): the top of the drawn figure, where the face usually
+## is. Null when the id is not a cast member or the look has no picture.
+func get_thumbnail(id: String, mood: String) -> Texture2D:
+	if _profiles == null:
+		_profiles = StoryStage.scan_cast(config.cast_folder) if config != null else {}
+	var profile: CastProfile = _profiles.get(id)
+	if profile == null or profile.look == null:
+		return null
+	if mood.is_empty():
+		mood = profile.default_mood
+		if mood.is_empty():
+			var moods := profile.look.get_moods()
+			mood = moods[0] if not moods.is_empty() else ""
+	var key := "%s:%s" % [id, mood]
+	if not _thumbnails.has(key):
+		_thumbnails[key] = _make_thumbnail(profile.look.get_preview(mood))
+	return _thumbnails[key]
+
+
+static func _make_thumbnail(texture: Texture2D) -> Texture2D:
+	if texture == null:
+		return null
+	var image := texture.get_image()
+	if image == null:
+		return null
+	image = image.duplicate()
+	if image.is_compressed():
+		image.decompress()
+	image.convert(Image.FORMAT_RGBA8)
+	var used := image.get_used_rect()
+	if used.size.x <= 0 or used.size.y <= 0:
+		return null
+	var side := mini(used.size.x, used.size.y)
+	var crop := image.get_region(Rect2i(used.position.x + (used.size.x - side) / 2, used.position.y, side, side))
+	crop.resize(THUMBNAIL_SIZE, THUMBNAIL_SIZE, Image.INTERPOLATE_BILINEAR)
+	return ImageTexture.create_from_image(crop)
 
 
 func _check(key: String, text: String, pressed: bool) -> CheckBox:

@@ -136,6 +136,11 @@ func test_layered_look() -> void:
 	assert_eq(LayeredLook.parse_choices("a=b, c = d"), {"a": "b", "c": "d"})
 	assert_has(look.get_moods(), "upset")
 	assert_has(look.get_moods(), "face=frown")
+	# The editor preview draws the defaults with the mood's choices on top.
+	var preview := look.get_preview("upset").get_image()
+	var size := preview.get_size()
+	assert_eq(preview.get_pixel(size.x / 2, size.y - 1), Color.BLUE, "the frown is drawn over the body")
+	assert_null(LayeredLook.new().get_preview("upset"))
 
 
 func test_interrupted_animations_do_not_block() -> void:

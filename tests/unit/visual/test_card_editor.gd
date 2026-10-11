@@ -133,6 +133,21 @@ func test_style_menu_lists_the_projects_text_styles() -> void:
 	assert_eq(_changed_lines(panel.code_edit.text), ["\t\"[whisper]Sunlight[/whisper].\""])
 
 
+func test_speaker_and_mood_pickers_show_thumbnails() -> void:
+	panel.code_edit.text = SOURCE.replace("narrator: \"Morning.\"", "mira (smile): \"Morning.\"")
+	panel.check_now()
+	panel.show_view("cards")
+	var thumbnail := editor.get_thumbnail("mira", "smile")
+	assert_not_null(thumbnail)
+	assert_eq(thumbnail.get_size(), Vector2(TaleCardEditor.THUMBNAIL_SIZE, TaleCardEditor.THUMBNAIL_SIZE))
+	assert_null(editor.get_thumbnail("narrator", ""), "not a cast member")
+	var mood: OptionButton = _field("b/1:mood")
+	assert_eq(mood.get_item_text(mood.selected), "smile")
+	assert_eq(mood.get_item_icon(mood.selected), thumbnail)
+	var speaker: OptionButton = _field("b/1:speaker")
+	assert_not_null(speaker.get_item_icon(speaker.selected))
+
+
 func test_typed_action_form_writes_named_arguments() -> void:
 	panel.code_edit.text = SOURCE.replace("wait(1.0)  # a pause", "backdrop(\"library\")")
 	panel.check_now()
