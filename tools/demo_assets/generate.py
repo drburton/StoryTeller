@@ -521,6 +521,13 @@ def chime():
     save_wav("sounds/chime.wav", sound * np.minimum(1.0, t * 400))
 
 
+def type_blip():
+    """A soft, short tick for typing sounds (StoryConfig.typing_sound)."""
+    t = np.arange(int(RATE * 0.045)) / RATE
+    env = np.exp(-70 * t) * np.minimum(1.0, t * 2000)
+    save_wav("sounds/type_blip.wav", 0.25 * env * np.sin(2 * math.pi * 1500 * t))
+
+
 def page_turn():
     rng = np.random.default_rng(3)
     t = np.arange(int(RATE * 0.35)) / RATE
@@ -565,6 +572,7 @@ def main():
     music("quiet_morning", [[62, 66, 69, 73], [59, 62, 66, 69], [55, 59, 62, 66], [57, 61, 64, 67]], beat=0.36)
     chime()
     page_turn()
+    type_blip()
     rain()
     print("Demo assets written to", ROOT)
 

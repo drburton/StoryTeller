@@ -17,6 +17,7 @@ var audio_folder := "res://story/audio"
 ## Player-controlled volume per kind, from 0 to 1.
 var volumes := {"music": 1.0, "sounds": 1.0, "ambience": 1.0, "voice": 1.0}
 
+var _blip: AudioStreamPlayer
 var _music: Array[AudioStreamPlayer] = []
 var _music_index := 0
 var _music_state := {"track": "", "volume": 1.0, "loop": true}
@@ -96,6 +97,27 @@ func play_sound(sound_name: String, volume := 1.0) -> String:
 	player.play()
 	await _wait_until_done(player)
 	return ""
+
+
+## Plays a short sound from the sounds folder on its own player, cutting
+## off the one before, for typing sounds. Returns an error message or "".
+func play_blip(sound_name: String, volume := 1.0) -> String:
+	var stream := find_stream("sounds", sound_name)
+	if stream == null:
+		return "Sound '%s' was not found in %s." % [sound_name, audio_folder.path_join("sounds")]
+	if _is_skipping():
+		return ""
+	if _blip == null:
+		_blip = _make_player("Blip", "sounds")
+	_blip.stream = stream
+	_set_level(_blip, volume)
+	_blip.play()
+	return ""
+
+
+## The sound [method play_blip] played last, or "", for tests.
+func get_blip_stream() -> AudioStream:
+	return _blip.stream if _blip != null else null
 
 
 ## Plays a looping background sound, fading from the current one.

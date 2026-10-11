@@ -279,6 +279,11 @@ func get_cast(id: String) -> CastMember:
 
 
 ## Cast ids and their moods, for the checker.
+## The profile of cast member [param id], or null.
+func get_profile(id: String) -> CastProfile:
+	return _profiles.get(id)
+
+
 func get_cast_moods() -> Dictionary:
 	var result := {}
 	for id in _profiles:

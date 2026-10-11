@@ -21,3 +21,4 @@ collection_folder = "res://demo/story/collection"
 translation_file = "res://demo/translations/demo.csv"
 languages = PackedStringArray("es")
 autosave_minutes = 5.0
+typing_sound = "type_blip"
