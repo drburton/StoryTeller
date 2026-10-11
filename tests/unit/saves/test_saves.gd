@@ -41,10 +41,11 @@ func _clean() -> void:
 
 
 ## Makes a Story with director, saves, settings, and a scripted presenter.
-func _make_story() -> Dictionary:
+func _make_story(save_key := "") -> Dictionary:
 	var config := StoryConfig.new()
 	config.crew = [TaleDirector, StorySaves, StorySettings]
 	config.save_folder = SAVE_FOLDER
+	config.save_key = save_key
 	config.settings_path = SETTINGS_PATH
 	var story: Node = track(StoryScript.new())
 	story.start(config)
@@ -147,6 +148,34 @@ func test_skip_safe_beats_count_as_read() -> void:
 	await director.play("recap", "recap")
 	var reads: Array = game["presenter"].line_data.map(func(line: Dictionary) -> bool: return line["read"])
 	assert_eq(reads, [true, false])
+
+
+func test_saves_can_be_encrypted() -> void:
+	var first := await _make_story("secret")
+	var saves: StorySaves = first["saves"]
+	first["presenter"].on_line = func(line: Dictionary) -> void:
+		if line["text"] == "Second 1.":
+			saves.save_slot("1")
+	first["presenter"].picks = ["Left"]
+	await first["director"].play("main")
+	saves.save_globals()
+	assert_false(FileAccess.get_file_as_string(SAVE_FOLDER.path_join("1.json")).contains("Second 1."), "the slot can't be read as text")
+	assert_false(FileAccess.get_file_as_string(SAVE_FOLDER.path_join(StorySaves.GLOBAL_FILE)).contains("endings"), "nor can the global file")
+	assert_eq(saves.get_slot_info("1")["text"], "Second 1.")
+	assert_eq(saves.set_slot_label("1", "Before the choice"), OK)
+	var second := await _make_story("secret")
+	assert_eq(JSON.to_native(second["director"].capture_globals()["vars"]), {"endings": 1})
+	second["presenter"].picks = ["Right"]
+	assert_eq(second["saves"].get_slot_info("1")["label"], "Before the choice")
+	assert_eq(second["saves"].load_slot("1"), OK)
+	while second["director"].is_playing():
+		await tree.process_frame
+	assert_eq(second["presenter"].lines, ["Second 1.", "Went right.", "The end."])
+	# A plain save from before the key was set still loads.
+	var file := FileAccess.open(SAVE_FOLDER.path_join("plain.json"), FileAccess.WRITE)
+	file.store_string(JSON.stringify({"format": StorySaves.FORMAT, "text": "plain"}))
+	file.close()
+	assert_eq(second["saves"].read_slot("plain")["text"], "plain")
 
 
 func test_old_formats_are_migrated() -> void:

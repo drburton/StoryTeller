@@ -167,6 +167,11 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 @export_group("Saves")
 ## Folder for save slots and the global data file.
 @export var save_folder := "user://saves"
+## When set, save slots and the global file are encrypted with this
+## passphrase, so players can't read or edit them with a text editor. The
+## passphrase ships inside the game, so this keeps out casual editing, not
+## a determined player. Saves written before it was set still load.
+@export var save_key := ""
 ## File for player settings.
 @export var settings_path := "user://settings.cfg"
 ## Save to the "auto" slot before every choice.

@@ -23,6 +23,9 @@ const GLOBAL_FILE := "global.json"
 const GLOBAL_SAVE_DELAY := 5.0
 
 var folder := "user://saves"
+## Passphrase that encrypts the save files, or "" for plain JSON. From
+## [member StoryConfig.save_key].
+var save_key := ""
 var thumbnail_size := Vector2i(320, 180)
 ## Save to the "auto" slot before every choice.
 var autosave_on_choice := true
@@ -49,6 +52,7 @@ func get_crew_name() -> StringName:
 
 func setup(config: StoryConfig) -> void:
 	folder = config.save_folder
+	save_key = config.save_key
 	autosave_on_choice = config.autosave_on_choice
 	autosave_minutes = config.autosave_minutes
 	DirAccess.make_dir_recursive_absolute(folder)
@@ -91,11 +95,9 @@ func save_slot(slot: String) -> Error:
 		"title": _current_title(),
 		"state": story.capture(),
 	}
-	var file := FileAccess.open(_slot_path(slot), FileAccess.WRITE)
-	if file == null:
-		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify(data, "\t"))
-	file.close()
+	var error := _write_json(_slot_path(slot), data)
+	if error != OK:
+		return error
 	if _thumbnail != null:
 		_thumbnail.save_png(_thumbnail_path(slot))
 	elif FileAccess.file_exists(_thumbnail_path(slot)):
@@ -129,7 +131,7 @@ func load_slot(slot: String) -> Error:
 func read_slot(slot: String) -> Dictionary:
 	if not has_slot(slot):
 		return {}
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_slot_path(slot)))
+	var parsed: Variant = _read_json(_slot_path(slot))
 	if not parsed is Dictionary:
 		push_error("StoryTeller: save slot '%s' is damaged." % slot)
 		return {}
@@ -151,7 +153,7 @@ func read_slot(slot: String) -> Dictionary:
 func set_slot_label(slot: String, label: String) -> Error:
 	if not has_slot(slot):
 		return ERR_FILE_NOT_FOUND
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(_slot_path(slot)))
+	var parsed: Variant = _read_json(_slot_path(slot))
 	if not parsed is Dictionary:
 		return ERR_FILE_CORRUPT
 	var data: Dictionary = parsed
@@ -159,12 +161,7 @@ func set_slot_label(slot: String, label: String) -> Error:
 		data.erase("label")
 	else:
 		data["label"] = label.strip_edges()
-	var file := FileAccess.open(_slot_path(slot), FileAccess.WRITE)
-	if file == null:
-		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify(data, "\t"))
-	file.close()
-	return OK
+	return _write_json(_slot_path(slot), data)
 
 
 ## The highest numbered slot that holds a save, or 0 when there is none.
@@ -234,14 +231,11 @@ func save_globals() -> void:
 	var director := _director()
 	if director == null:
 		return
-	var file := FileAccess.open(folder.path_join(GLOBAL_FILE), FileAccess.WRITE)
-	if file == null:
-		return
 	var crew := {}
 	for member in _global_keepers():
 		crew[str(member.get_crew_name())] = member.capture_globals()
-	file.store_string(JSON.stringify({"format": FORMAT, "director": director.capture_globals(), "crew": crew}))
-	file.close()
+	if _write_json(folder.path_join(GLOBAL_FILE), {"format": FORMAT, "director": director.capture_globals(), "crew": crew}, "") != OK:
+		return
 	_globals_dirty = false
 	_since_global_save = 0.0
 
@@ -251,7 +245,7 @@ func load_globals() -> void:
 	var path := folder.path_join(GLOBAL_FILE)
 	if director == null or not FileAccess.file_exists(path):
 		return
-	var parsed: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	var parsed: Variant = _read_json(path)
 	if parsed is Dictionary:
 		director.restore_globals(parsed.get("director", {}))
 		var crew: Dictionary = parsed.get("crew", {})
@@ -340,3 +334,28 @@ func _director() -> TaleDirector:
 	if story != null and story.has_method("get_crew"):
 		return story.get_crew(&"TaleDirector") as TaleDirector
 	return null
+
+
+## Writes [param data] as JSON to [param path], encrypted with
+## [member save_key] when it is set.
+func _write_json(path: String, data: Dictionary, indent := "\t") -> Error:
+	var file := FileAccess.open_encrypted_with_pass(path, FileAccess.WRITE, save_key) if not save_key.is_empty() else FileAccess.open(path, FileAccess.WRITE)
+	if file == null:
+		return FileAccess.get_open_error()
+	file.store_string(JSON.stringify(data, indent))
+	file.close()
+	return OK
+
+
+## Reads JSON from [param path]: encrypted with [member save_key] when it
+## is set, or plain, so saves made before the key was set still load.
+## Returns null when the file can't be read.
+func _read_json(path: String) -> Variant:
+	if not save_key.is_empty():
+		var file := FileAccess.open_encrypted_with_pass(path, FileAccess.READ, save_key)
+		if file != null:
+			var text := file.get_as_text()
+			file.close()
+			return JSON.parse_string(text)
+	var plain := FileAccess.get_file_as_string(path)
+	return JSON.parse_string(plain) if not plain.is_empty() else null
