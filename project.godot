@@ -1,0 +1,36 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="StoryTeller"
+config/description="Visual novel and interactive story framework for Godot."
+run/main_scene="res://demo/demo.tscn"
+config/features=PackedStringArray("4.7")
+
+[audio]
+
+general/text_to_speech=true
+
+[autoload]
+
+Story="*res://addons/storyteller/core/story.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/storyteller/plugin.cfg")
+
+[internationalization]
+
+locale/translations=PackedStringArray("res://demo/translations/demo.en.translation", "res://demo/translations/demo.es.translation")
+
+[storyteller]
+
+config_path="res://demo/story_config.tres"

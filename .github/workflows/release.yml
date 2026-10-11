@@ -1,0 +1,86 @@
+name: Release
+
+# Builds the plugin zip, checks that it installs, and opens a draft GitHub
+# release with the zip attached. Two ways to start it:
+# - Push a tag such as v0.1.0. It must match the version in
+#   addons/storyteller/plugin.cfg.
+# - Run it by hand (Actions > Release > Run workflow) on main with "Open a
+#   draft release" ticked. The draft names the tag v<version>, and GitHub
+#   creates the tag on that commit when the draft is published.
+# Run by hand without the box ticked to build and check the zip only; it is
+# kept as a workflow artifact either way.
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Open a draft release (tag v<version> is made when it is published)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+env:
+  # Supported Godot version. Keep in step with ci.yml.
+  GODOT_VERSION: 4.7.2-stable
+
+jobs:
+  release:
+    name: Build and release the plugin
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Read the plugin version
+        run: |
+          version="$(sed -n 's/^version="\(.*\)"$/\1/p' addons/storyteller/plugin.cfg)"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" != "v$version" ]]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match version $version in addons/storyteller/plugin.cfg."
+            exit 1
+          fi
+
+      - name: Cache Godot
+        uses: actions/cache@v4
+        with:
+          path: ~/godot
+          key: godot-linux-${{ env.GODOT_VERSION }}
+
+      - name: Install Godot
+        run: echo "GODOT_BIN=$(tools/ci_install_godot.sh "$GODOT_VERSION" ~/godot)" >> "$GITHUB_ENV"
+
+      - name: Run tests
+        run: tools/run_tests.sh
+
+      - name: Build the plugin zip
+        run: echo "ZIP=$(tools/package_addon.sh)" >> "$GITHUB_ENV"
+
+      - name: Check the zip installs in an empty project
+        run: tools/check_addon_install.sh "$ZIP"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: storyteller-${{ env.VERSION }}
+          path: ${{ env.ZIP }}
+
+      - name: Open a draft release
+        if: github.ref_type == 'tag' || inputs.release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v$VERSION"
+          if [[ "$GITHUB_REF_TYPE" != "tag" && "$GITHUB_REF_NAME" != "main" ]]; then
+            echo "::error::Releases are made from main, not $GITHUB_REF_NAME."
+            exit 1
+          fi
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::error::A release named $tag already exists. Raise the version in plugin.cfg first."
+            exit 1
+          fi
+          prerelease=""
+          if [[ "$VERSION" == *-* ]]; then prerelease="--prerelease"; fi
+          gh release create "$tag" "$ZIP" --draft $prerelease --target "$GITHUB_SHA" \
+            --title "StoryTeller $VERSION" --generate-notes

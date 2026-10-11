@@ -1,0 +1,41 @@
+ERROR "Only \'var\', \'const\', and \'beat\' are allowed here. Put story lines inside a beat." [1]
+ERROR "Expected a variable name, found \':=\'." [2]
+BLANK [3]
+BEAT broken [4]
+  ERROR "Expected \':\' after the condition, found \'y\'." [5]
+    NARRATION "Inside a broken header." [6]
+  ERROR "Dialogue text must be a quoted string, e.g. mira: \"Hello\"." [7]
+  ERROR "Choice options belong inside a \'choose:\' block." [8]
+    PASS [9]
+  ERROR "\'(\' is never closed." [10]
+  EXPRESSION 2 [11]
+  ERROR "Can\'t assign to this expression." [12]
+  ERROR "Positional arguments must come before named arguments." [13]
+  ERROR "TaleScript does not use \';\'. Put each statement on its own line." [14]
+  ERROR "Expected a beat name after \'jump\', found the end of the line." [15]
+  ERROR "Unterminated string." [16]
+  ERROR "Beats can\'t be nested. Declare \'beat nested\' at the top level of the file." [17]
+    PASS [18]
+    NARRATION "bad indent" [19]
+  CHOOSE [20]
+    ERROR "Expected a choice option, e.g. \"Open the door\":" [21]
+  ERROR "Start a new line after \'match:\'." [22]
+  WHILE true [23]
+--- diagnostics ---
+1:1: error: Only 'var', 'const', and 'beat' are allowed here. Put story lines inside a beat.
+2:5: error: Expected a variable name, found ':='.
+5:7: error: Expected ':' after the condition, found 'y'.
+7:8: error: Dialogue text must be a quoted string, e.g. mira: "Hello".
+8:2: error: Choice options belong inside a 'choose:' block.
+10:6: error: '(' is never closed.
+12:4: error: Can't assign to this expression.
+13:11: error: Positional arguments must come before named arguments.
+14:5: error: TaleScript does not use ';'. Put each statement on its own line.
+15:6: error: Expected a beat name after 'jump', found the end of the line.
+16:2: error: Unterminated string.
+17:2: error: Beats can't be nested. Declare 'beat nested' at the top level of the file.
+19:1: error: Mixed tabs and spaces in indentation.
+19:1: error: Unexpected indentation.
+21:3: error: Expected a choice option, e.g. "Open the door":
+22:11: error: Start a new line after 'match:'.
+23:1: error: Expected an indented block after 'while'.

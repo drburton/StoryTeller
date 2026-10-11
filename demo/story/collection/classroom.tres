@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CollectionItem" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://addons/storyteller/collection/collection_item.gd" id="1_item"]
+[ext_resource type="Texture2D" path="res://demo/story/backdrops/classroom_morning.png" id="2_image"]
+
+[resource]
+script = ExtResource("1_item")
+kind = "image"
+title = "Morning Classroom"
+text = "The first scene of the sample story."
+image = ExtResource("2_image")
+order = 3

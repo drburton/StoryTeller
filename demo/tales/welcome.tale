@@ -1,0 +1,123 @@
+## welcome.tale
+## A short tour of TaleScript, used by the StoryTeller demo scene.
+@title("Welcome to StoryTeller")
+
+var curiosity := 0
+var topics_seen := []
+var visitor := ""
+
+@heading("A visitor in the library")
+beat start:
+	backdrop("library", transition = "fade", time = 1.5)
+	music("library_theme", volume = 0.6, fade = 2.0)
+	collect("library")
+	collect("library_theme")
+	"A quiet library. Lamps hum above long wooden tables."
+	ada.display_name = "???"
+	ada.enter("smile", at = CENTER)
+	ada: "Oh! A visitor.[pause] Welcome to StoryTeller."
+	ada.display_name = ""
+	ada (smile): "I'm Ada. I look after this library."
+	visitor = await ask_text(tr("What should Ada call you?"), tr("Reader"))
+	ada (smile): "Nice to meet you, {visitor}."
+	ada (neutral): "Everything you see is written in a .tale file. Press Space or click to continue."
+	jump topics
+
+@heading("Questions for Ada")
+beat topics:
+	choose:
+		@once "How do I write dialogue?":
+			topics_seen.append("dialogue")
+			curiosity += 1
+			ada (smile): "Put a speaker, a colon, and a quoted line:\n[code]ada: \"Hello!\"[/code]"
+			ada: "Narration is just the quoted line:\n[code]\"The lamps hum.\"[/code]"
+			ada (curious): "A mood in parentheses changes my face. This line starts with:\n[code]ada (curious):[/code]"
+			ada: "Before I introduced myself, the box called me ???. One line hides a name, and an empty one brings it back:\n[code]ada.display_name = \"???\"[/code]"
+			ada: "Tags change how a line types: [speed=0.3]slowly[/speed], [speed=3]very quickly indeed[/speed], or [instant]all at once[/instant]."
+			ada: "The fast part was written like this:\n[code][lb]speed=3[rb]very quickly indeed[lb]/speed[rb][/code]"
+			ada (curious): "A line can also make things happen as it types.[pause=0.3][act=shake(0.3)] Like that.[sound=page_turn]"
+			ada (smile): "That line held these two tags:\n[code][lb]act=shake(0.3)[rb][/code]\n[code][lb]sound=page_turn[rb][/code]"
+			ada: "[whisper]And named styles format a line for you, like this whisper.[/whisper] The story's config defines them:\n[code][lb]whisper[rb]...[lb]/whisper[rb][/code]"
+			collect("talescript")
+			jump topics
+		@once "What about choices?":
+			topics_seen.append("choices")
+			curiosity += 1
+			ada (curious): "You're using one right now. A choose block lists the options:\n[code]choose:\n    \"Stay\": jump start[/code]"
+			ada: "Options marked @once disappear after you pick them, like this one:\n[code]@once \"What about choices?\":[/code]"
+			ada (smile): "Choices can be pictures too. Chapter 1 has one, written like this:\n[code]choose(style = \"pictures\"):\n    @picture(\"umbrella\") \"Share mine.\":[/code]"
+			jump topics
+		@once "Can the stage change?":
+			topics_seen.append("stage")
+			curiosity += 1
+			ada (thinking): "Watch the window."
+			backdrop("library_night", transition = "dissolve", time = 2.0)
+			ambience("rain", volume = 0.5)
+			weather("rain", strength = 0.6)
+			collect("library_night")
+			ada (smile): "Backdrops, music, and rain each take one line:\n[code]weather(\"rain\", strength = 0.6)[/code]"
+			await ada.move_to(Vector2(0.32, 0.0), time = 0.6)
+			prop("book", at = Vector2(0.66, 0.4))
+			sound("page_turn")
+			ada: "Characters move, and props appear wherever you put them:\n[code]prop(\"book\", at = Vector2(0.66, 0.4))[/code]"
+			ada.hop()
+			ada (smile): "Characters can hop, nod, and shake, and step in front of each other:\n[code]ada.hop()[/code]"
+			await camera.zoom(1.15, time = 0.8)
+			ada (curious): "Even the camera can zoom:\n[code]camera.zoom(1.15)[/code]"
+			camera.reset(time = 0.8)
+			ada: "Big moments can cover the stage with a full-screen picture, a CG, which then appears under Extras:\n[code]cg(\"window_table\", \"rain\")[/code]"
+			jump topics
+		@once "Can tales remember things?":
+			topics_seen.append("variables")
+			curiosity += 1
+			ada: "Yes. Questions you have asked so far: {curiosity}."
+			ada (smile): "This tale declares a variable and adds one for each topic:\n[code]var curiosity := 0\ncuriosity += 1[/code]"
+			ada: "Braces show a value inside a line:\n[code]\"Questions so far: {{curiosity}}.\"[/code]"
+			ada (smile): "Characters can keep data of their own, listed in their cast profile's fields. Mira's friendship grows in chapter 1:\n[code]mira.friendship += 1[/code]"
+			jump topics
+		@once "What about saving and menus?":
+			topics_seen.append("menus")
+			curiosity += 1
+			ada: "Press Escape or right-click for the pause menu. Saving, loading, and settings live there."
+			ada (smile): "Settings can also make reading easier: bigger text, a clearer font, high contrast, and lines read aloud."
+			ada (curious): "Roll the mouse wheel up or press Page Up to rewind. Press H to read the history."
+			ada: "Pictures, music, and notes you unlock show up under Extras on the title screen. One line unlocks each:\n[code]collect(\"library\")[/code]"
+			ada (curious): "Extras also keeps a route chart of the scenes you have reached and the choices you made there. A heading above a beat names it on the chart:\n[code]@heading(\"Questions for Ada\")[/code]"
+			ada (smile): "Some stories read better as pages. This line switches to them:\n[code]dialogue_style(\"page\")[/code]"
+			dialogue_style("page")
+			"In the page style, lines stack on the screen like a book."
+			"Each new line goes under the last one."
+			clear_page()
+			"A fresh page starts with:\n[code]clear_page()[/code]"
+			dialogue_style("classic")
+			ada: "And this brings back the classic box:\n[code]dialogue_style(\"classic\")[/code]"
+			jump topics
+		"Show me a sample scene." if curiosity > 0:
+			ada (smile): "Here is one from the StoryTeller plan."
+			ada.exit()
+			ada (smile): "Off stage, my portrait still shows beside my lines. My cast profile names a portrait folder and sets portrait_off_stage_only."
+			clear_props()
+			weather("none")
+			stop_audio(fade = 1.0)
+			jump prologue.start
+		"I'm ready to start writing." if curiosity > 0:
+			jump farewell
+		@show_disabled "Leave already" if curiosity == 0:
+			pass
+
+@heading("The lamps dim")
+beat farewell:
+	match curiosity:
+		5:
+			ada (smile): "You asked about everything, {visitor}. I like that."
+		_:
+			ada: "You asked about {len(topics_seen)} topic{\"s\" if len(topics_seen) != 1 else \"\"}."
+	sound("chime")
+	"The lamps dim. Somewhere, a page turns."
+	ada (smile): "Open demo/tales/welcome.tale to see how this scene was made."
+	collect("ada")
+	ada.exit(time = 0.8)
+	clear_props()
+	weather("none")
+	stop_audio(fade = 1.5)
+	await backdrop(Color.BLACK, time = 1.5)

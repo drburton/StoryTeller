@@ -1,0 +1,15 @@
+[remap]
+
+importer="storyteller.tale"
+importer_version=4
+type="Resource"
+uid="uid://dxm2f27vt7byy"
+path="res://.godot/imported/wheres_biscuit.tale-a4516987ffe7179aa90506d575ad543a.res"
+
+[deps]
+
+source_file="res://examples/wheres_biscuit/tales/wheres_biscuit.tale"
+dest_files=["res://.godot/imported/wheres_biscuit.tale-a4516987ffe7179aa90506d575ad543a.res"]
+
+[params]
+

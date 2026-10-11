@@ -1,0 +1,14 @@
+## Small tale used to test the import plugin.
+@title("Import Sample")
+
+const GUIDE := "Guide"
+var visits := 0
+
+beat start:
+	visits += 1
+	GUIDE: "Welcome back. Visit number {visits}."
+	choose:
+		"Stay":
+			jump start
+		"Leave":
+			"Goodbye."

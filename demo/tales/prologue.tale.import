@@ -1,0 +1,14 @@
+[remap]
+
+importer="storyteller.tale"
+type="Resource"
+uid="uid://cf64a0pix5llt"
+path="res://.godot/imported/prologue.tale-ab81ce2927358afd3b859dc76db432f6.res"
+
+[deps]
+
+source_file="res://demo/tales/prologue.tale"
+dest_files=["res://.godot/imported/prologue.tale-ab81ce2927358afd3b859dc76db432f6.res"]
+
+[params]
+

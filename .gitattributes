@@ -1,0 +1,36 @@
+* text=auto eol=lf
+
+*.gd text eol=lf
+*.tale text eol=lf
+*.tscn text eol=lf
+*.tres text eol=lf
+*.cfg text eol=lf
+*.godot text eol=lf
+*.ps1 text eol=crlf
+
+*.png binary
+*.jpg binary
+*.webp binary
+*.ogg binary
+*.wav binary
+*.mp3 binary
+*.ogv binary
+*.ttf binary
+*.otf binary
+
+# Downloads of this repository from GitHub and the Godot Asset Library hold
+# only the plugin, so installing it adds nothing but addons/storyteller/.
+# Clone the repository to get the demo, examples, tests, and tools.
+/.editorconfig export-ignore
+/.gitattributes export-ignore
+/.github export-ignore
+/.gitignore export-ignore
+/CONTRIBUTING.md export-ignore
+/LICENSE export-ignore
+/README.md export-ignore
+/demo export-ignore
+/docs export-ignore
+/examples export-ignore
+/project.godot export-ignore
+/tests export-ignore
+/tools export-ignore

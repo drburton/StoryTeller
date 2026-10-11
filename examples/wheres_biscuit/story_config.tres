@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="StoryConfig" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://addons/storyteller/core/story_config.gd" id="1_config"]
+[ext_resource type="Texture2D" path="res://examples/wheres_biscuit/backdrops/living_room.png" id="2_title"]
+
+[resource]
+script = ExtResource("1_config")
+tales_folder = "res://examples/wheres_biscuit/tales"
+game_title = "Where's Biscuit?"
+start_tale = "wheres_biscuit"
+title_background = ExtResource("2_title")
+cast_folder = "res://examples/wheres_biscuit/cast"
+backdrop_folder = "res://examples/wheres_biscuit/backdrops"
+save_key = "wheres_biscuit"

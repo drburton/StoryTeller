@@ -1,0 +1,114 @@
+## wheres_biscuit.tale
+## A short story with Theo, Leo and baby Cleo. Cleo's teddy bear is missing,
+## and the player helps Theo and Leo find Biscuit.
+## Three choices, two endings.
+@title("Where's Biscuit?")
+
+var teamwork := 0
+
+@heading("A missing bear")
+beat start:
+	backdrop("living_room")
+	"It is a sunny Saturday morning."
+	cleo.enter("sad", at = Vector2(0.5, 0.25))
+	cleo.shake()
+	cleo: "Waaah!"
+	theo.enter("surprised", at = LEFT)
+	theo: "Cleo is crying! What's wrong?"
+	leo.enter("surprised", at = RIGHT)
+	leo: "Look, her hands are empty. Where is Biscuit?"
+	"Biscuit is Cleo's teddy bear. Cleo takes Biscuit everywhere."
+	cleo (sad): "Bi-bi?"
+	theo (thinking): "Don't worry, Cleo. We will find Biscuit."
+	leo (happy): "Who should look first?"
+	choose:
+		"Theo checks the blue toy box.":
+			jump toy_box
+		"Leo checks the red wagon.":
+			jump wagon
+
+@heading("The blue toy box")
+beat toy_box:
+	theo (happy): "Blue is my favorite color. I know this toy box best!"
+	"Theo digs through blocks, cars and a squeaky duck."
+	theo (thinking): "No Biscuit. But look, cracker crumbs!"
+	leo (surprised): "The crumbs go all the way to the back door."
+	jump next_place
+
+@heading("The red wagon")
+beat wagon:
+	leo (happy): "Red is the fastest color. I'll be quick!"
+	"Leo peeks into the wagon and finds a ball, a shovel and one cracker."
+	leo (thinking): "No Biscuit. Who left a cracker in here?"
+	theo (surprised): "There are more crumbs. They go to the back door!"
+	jump next_place
+
+@heading("Where next?")
+beat next_place:
+	cleo (neutral): "Bi-bi?"
+	theo (neutral): "Where should we look now?"
+	choose:
+		"Look under the couch.":
+			jump couch
+		"Follow the crumbs outside.":
+			jump backyard
+
+@heading("Under the couch")
+beat couch:
+	teamwork += 1
+	"Theo and Leo lift the couch together. It is heavy!"
+	leo (happy): "My red race car! I lost it last week."
+	theo (happy): "And my blue crayon!"
+	cleo (sad): "Bi-bi..."
+	theo (thinking): "Biscuit isn't here. Let's follow the crumbs."
+	jump backyard
+
+@heading("The backyard")
+beat backyard:
+	exit_all()
+	backdrop("backyard")
+	theo.enter("neutral", at = LEFT)
+	leo.enter("neutral", at = RIGHT)
+	"The crumb trail crosses the grass and stops at the sandbox."
+	biscuit.enter("neutral", at = Vector2(0.5, 0.3))
+	leo (surprised): "Look! A fuzzy brown ear!"
+	theo (happy): "It's Biscuit!"
+	leo (thinking): "Cleo had crackers in the sandbox this morning."
+	theo (thinking): "So Biscuit had a snack and a nap out here."
+	leo (neutral): "Biscuit is all sandy. What should we do?"
+	choose:
+		"Theo brushes off the sand.":
+			theo (happy): "Brush, brush. All clean!"
+		"Leo shakes out the sand.":
+			leo (happy): "Shake, shake! Oops, sand in my hair."
+		"Theo and Leo clean Biscuit together.":
+			teamwork += 1
+			theo (happy): "You hold Biscuit, Leo. I'll brush."
+			leo (happy): "Done in two seconds!"
+	biscuit.exit()
+	cleo.enter("surprised", at = Vector2(0.5, 0.25))
+	cleo: "Bi-bi!"
+	cleo (hug): "Bi-bi! Bi-bi!"
+	"Cleo hugs Biscuit tight."
+	if teamwork >= 2:
+		jump super_helpers
+	jump happy_again
+
+@heading("Super helpers")
+beat super_helpers:
+	cleo (hug): "Teo! Eo!"
+	theo (surprised): "She said our names!"
+	leo (happy): "We found Biscuit together. High five!"
+	"Theo and Leo share a high five. Cleo giggles and claps."
+	jump the_end
+
+@heading("Happy again")
+beat happy_again:
+	"Cleo giggles and wiggles her toes."
+	theo (happy): "Next time, let's keep Biscuit inside."
+	leo (happy): "And the crackers too."
+	jump the_end
+
+@heading("The end")
+beat the_end:
+	"The end."
