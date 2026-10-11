@@ -201,6 +201,38 @@ func test_choice_and_condition_cards_fold() -> void:
 	assert_true(_field("b/3/o0:text").is_visible_in_tree())
 
 
+func _alt_key(keycode: Key) -> InputEventKey:
+	var event := InputEventKey.new()
+	event.keycode = keycode
+	event.alt_pressed = true
+	event.pressed = true
+	return event
+
+
+func test_alt_arrows_move_the_focused_card() -> void:
+	var text: TextEdit = _field("b/0:text")
+	text.grab_focus()
+	assert_true(editor._handle_card_keys(_alt_key(KEY_DOWN), text))
+	var lines := panel.code_edit.text.split("\n")
+	assert_eq([lines[4], lines[5]], ["\tnarrator: \"Morning.\"", "\t\"Sunlight.\""])
+	await tree.process_frame
+	var focused := tree.root.gui_get_focus_owner()
+	assert_eq(focused.get_meta("field_key") if focused != null else "", "b/1:text", "focus follows the card")
+	assert_true(editor._handle_card_keys(_alt_key(KEY_UP), focused))
+	assert_eq(panel.code_edit.text, SOURCE)
+	await tree.process_frame
+	focused = tree.root.gui_get_focus_owner()
+	editor._handle_card_keys(_alt_key(KEY_UP), focused)
+	assert_eq(panel.code_edit.text, SOURCE, "the first card stays first")
+	await tree.process_frame
+	focused = tree.root.gui_get_focus_owner()
+	assert_true(editor._handle_card_keys(_alt_key(KEY_INSERT), focused))
+	assert_true(panel.code_edit.text.contains("\t\"Sunlight.\"\n\t\"New line.\"\n"), panel.code_edit.text)
+	await tree.process_frame
+	focused = tree.root.gui_get_focus_owner()
+	assert_eq(focused.get_meta("field_key") if focused != null else "", "b/1:text", "the new card has focus")
+
+
 func test_typed_action_form_writes_named_arguments() -> void:
 	panel.code_edit.text = SOURCE.replace("wait(1.0)  # a pause", "backdrop(\"library\")")
 	panel.check_now()
