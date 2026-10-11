@@ -554,7 +554,7 @@ Actions are called like functions. Named arguments may be given in any order aft
 | `clear_page` | | Start a new page in the `"page"` style. |
 | `hide_dialogue` | | Hide the dialogue box until the next line, for example while the scene changes. |
 | `weather` | `kind`, `strength = 1.0`, `fade = 1.0` | Start `"rain"` or `"snow"` over the stage, or stop it with `"none"`. |
-| `filter` | `name`, `strength = 1.0`, `time = 0.5` | Recolor the stage: `"grayscale"`, `"sepia"`, `"night"`, `"warm"`, `"cold"`, or `"none"`. The dialogue box and menus keep their colors. |
+| `filter` | `name`, `strength = 1.0`, `time = 0.5` | Recolor the stage: `"grayscale"`, `"sepia"`, `"night"`, `"warm"`, `"cold"`, `"blur"`, `"vignette"` (darker edges), or `"none"`. The dialogue box and menus keep their colors. |
 | `flash` | `color = Color.WHITE`, `time = 0.3` | Flash the whole screen. |
 | `fade_out` | `color = Color.BLACK`, `time = 0.5` | Fade the whole screen, dialogue box included, to a color. |
 | `fade_in` | `time = 0.5` | Fade the screen back in. |
