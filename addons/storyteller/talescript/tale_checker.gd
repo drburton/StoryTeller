@@ -477,6 +477,13 @@ func _check_action_arguments(expr: TaleExpr, action: String, anchor: TaleExpr) -
 	for i in range(expr.args.size(), mini(required, params.size())):
 		if not expr.named_args.has(params[i]):
 			_error_expr(expr, "'%s' needs the argument '%s'." % [action, params[i]], anchor)
+	for i in params.size():
+		var check: Callable = _context.asset_checks.get("%s.%s" % [action, params[i]], Callable())
+		var argument: TaleExpr = expr.args[i] if i < expr.args.size() else expr.named_args.get(params[i])
+		if check.is_valid() and argument != null and argument.kind == E.LITERAL and argument.value is String and not "{" in argument.value:
+			var problem: String = check.call(argument.value)
+			if not problem.is_empty():
+				_warn_expr(argument, problem, anchor)
 
 
 func _check_tale_member(tale: String, member: String, is_call: bool, expr: TaleExpr, anchor: TaleExpr) -> void:
@@ -558,6 +565,11 @@ func _error_node(node: TaleNode, message: String) -> void:
 
 func _warn_node(node: TaleNode, message: String) -> void:
 	_add(TaleDiagnostic.Severity.WARNING, message, node.line_start, node.indent.length() + 1)
+
+
+func _warn_expr(expr: TaleExpr, message: String, anchor: TaleExpr = null) -> void:
+	var at := anchor if anchor != null else expr
+	_add(TaleDiagnostic.Severity.WARNING, message, at.line, at.column)
 
 
 func _error_expr(expr: TaleExpr, message: String, anchor: TaleExpr = null) -> void:

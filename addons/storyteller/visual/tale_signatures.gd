@@ -95,5 +95,37 @@ static func choices(callee: String, param: String, config: StoryConfig, context:
 	return PackedStringArray()
 
 
+## Adds to [param context] checks that warn about asset names in tales that
+## match no file, such as [code]backdrop("libary")[/code].
+static func add_asset_checks(context: TaleCheckContext, config: StoryConfig) -> void:
+	var folder_check := func(kind: String, folder: String, extensions: Array) -> Callable:
+		var typed: Array[String] = []
+		typed.assign(extensions)
+		return func(asset_name: String) -> String:
+			if StoryAssets.find(folder, asset_name, typed).is_empty():
+				return "There is no %s '%s' in %s." % [kind, asset_name, folder]
+			return ""
+	var images := StoryAssets.IMAGE_EXTENSIONS
+	var audio := StoryAssets.AUDIO_EXTENSIONS
+	context.add_asset_check("backdrop", "name", folder_check.call("backdrop", config.backdrop_folder, images))
+	var props := folder_check.call("prop", config.prop_folder, images + StoryAssets.SCENE_EXTENSIONS)
+	context.add_asset_check("prop", "name", props)
+	context.add_asset_check("music", "track", folder_check.call("music track", config.audio_folder.path_join("music"), audio))
+	context.add_asset_check("sound", "name", folder_check.call("sound", config.audio_folder.path_join("sounds"), audio))
+	context.add_asset_check("ambience", "name", folder_check.call("ambience", config.audio_folder.path_join("ambience"), audio))
+	context.add_asset_check("voice", "clip", folder_check.call("voice clip", config.audio_folder.path_join("voice"), audio))
+	context.add_asset_check("play_movie", "name", folder_check.call("movie", config.movie_folder, ["ogv"]))
+	var cg_folder := config.cg_folder
+	context.add_asset_check("cg", "name", func(cg_name: String) -> String:
+		if not StoryAssets.scan_cgs(cg_folder).has(cg_name):
+			return "There is no CG '%s' in %s." % [cg_name, cg_folder]
+		return "")
+	var collection_folder := config.collection_folder
+	context.add_asset_check("collect", "id", func(id: String) -> String:
+		if not StoryCollection.scan(collection_folder).has(id):
+			return "There is no collection item '%s' in %s." % [id, collection_folder]
+		return "")
+
+
 static func _assets(folder: String, extensions: Array) -> PackedStringArray:
 	return StoryAssets.list_names(folder, extensions)

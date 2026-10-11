@@ -90,6 +90,7 @@ static func _make_context(source_file: String, tale_name: String) -> TaleCheckCo
 	for id in profiles:
 		var profile: CastProfile = profiles[id]
 		context.add_cast(id, profile.look.get_moods() if profile.look else PackedStringArray(), profile.get_field_names())
+	TaleSignatures.add_asset_checks(context, config)
 	context.add_exposed("camera")
 	for exposed_name in config.exposed_names:
 		context.add_exposed(exposed_name)

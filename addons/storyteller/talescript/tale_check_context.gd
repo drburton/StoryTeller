@@ -31,6 +31,10 @@ var cast: Dictionary = {}
 var cast_fields: Dictionary = {}
 ## Names of objects and functions exposed by game code.
 var exposed: Dictionary = {}
+## Asset checks by "action.param", such as "backdrop.name": a Callable
+## that takes a name written in a tale and returns "" when the asset
+## exists, or a message saying what is missing.
+var asset_checks: Dictionary = {}
 ## Other tales by name: [code]{"beats": PackedStringArray, "vars": PackedStringArray}[/code].
 var tales: Dictionary = {}
 
@@ -60,6 +64,13 @@ func get_cast_members(id: String) -> PackedStringArray:
 	var members := PackedStringArray(TaleCompletion.CAST_METHODS + TaleCompletion.CAST_PROPERTIES)
 	members.append_array(cast_fields.get(id, PackedStringArray()))
 	return members
+
+
+## Registers a check for the asset names given as [param param] of
+## [param action] (see [member asset_checks]).
+func add_asset_check(action: String, param: String, check: Callable) -> TaleCheckContext:
+	asset_checks["%s.%s" % [action, param]] = check
+	return self
 
 
 func add_exposed(exposed_name: String) -> TaleCheckContext:
