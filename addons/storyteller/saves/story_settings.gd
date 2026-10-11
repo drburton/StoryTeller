@@ -9,6 +9,7 @@ signal changed(key: String, value: Variant)
 const DEFAULTS := {
 	"text_speed": 40.0,
 	"auto_delay": 1.0,
+	"text_size": 1.0,
 	"master_volume": 1.0,
 	"music_volume": 1.0,
 	"sounds_volume": 1.0,
@@ -83,7 +84,7 @@ func apply_all() -> void:
 func apply(key: String) -> void:
 	var value: Variant = values[key]
 	match key:
-		"text_speed", "auto_delay":
+		"text_speed", "auto_delay", "text_size":
 			var dialogue := _crew(&"Dialogue")
 			if dialogue != null and dialogue.has_method("apply_setting"):
 				dialogue.apply_setting(key, value)

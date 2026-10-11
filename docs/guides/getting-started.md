@@ -125,6 +125,9 @@ Press **Play**. On the title screen, click **New Game**.
 | Hold Ctrl | Skip |
 | Escape or right click | Pause menu (save, load, history, settings) |
 | Page Up or mouse wheel up | Rewind |
+| V or middle click | Hide the dialogue box; any key brings it back |
+
+A gamepad works too: A continues, the right shoulder skips, the left shoulder rewinds, Start opens the menu, Y toggles auto, X hides the dialogue box, and Back opens the history.
 
 While the game runs from the editor, saving a tale reloads it in the running game and continues at the same line. Keep the game window open, change a line, press Ctrl+S, and watch the change.
 

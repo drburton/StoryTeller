@@ -3,6 +3,8 @@ extends DialogueBox
 ## Full-screen dialogue style for prose-heavy scenes: lines collect on a page
 ## like a book until the page fills up or [method clear_page] is called.
 
+const TEXT_SIZE := 20
+
 ## Lines kept on a page before it is cleared automatically.
 var lines_per_page := 8
 
@@ -46,7 +48,15 @@ func _ready() -> void:
 	_indicator.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	_indicator.visible = false
 	column.add_child(_indicator)
+	_apply_text_scale()
 	hide()
+
+
+func _apply_text_scale() -> void:
+	if _text_label == null:
+		return
+	for font in ["normal_font_size", "bold_font_size", "italics_font_size", "bold_italics_font_size", "mono_font_size"]:
+		_text_label.add_theme_font_size_override(font, roundi(TEXT_SIZE * text_scale))
 
 
 func show_line(line: Dictionary) -> void:

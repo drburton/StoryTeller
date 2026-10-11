@@ -1,7 +1,7 @@
 class_name QuickMenu
 extends HBoxContainer
 ## A row of small buttons beside the dialogue box: History, Skip, Auto,
-## Save, Load, Settings, and Menu. [StoryMenus] places it at
+## Hide, Save, Load, Settings, and Menu. [StoryMenus] places it at
 ## [method DialogueBox.get_quick_menu_corner].
 
 var menus: StoryMenus
@@ -18,6 +18,7 @@ func _ready() -> void:
 	_skip.toggle_mode = true
 	_auto = _add("Auto", func() -> void: menus.toggle_auto())
 	_auto.toggle_mode = true
+	_add("Hide", func() -> void: menus.hide_ui())
 	_add("Save", func() -> void: menus.open("save"))
 	_add("Load", func() -> void: menus.open("load"))
 	_add("Settings", func() -> void: menus.open("settings"))
