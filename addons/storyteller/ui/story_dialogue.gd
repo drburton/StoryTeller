@@ -66,9 +66,11 @@ var read_aloud := false
 ## to send text to a screen reader of their own.
 var speak := func(text: String) -> void:
 	StoryDialogue.speak_with_system_voice(text)
-## The theme from the config, and its high-contrast copy once needed.
+## The theme from the config, and the copies made for display settings,
+## by [code]"<high contrast>:<readable font>"[/code].
 var _theme: Theme
-var _contrast_theme: Theme
+var _themes := {}
+var _display := {"high_contrast": false, "readable_font": false}
 var _styles: Dictionary = {}
 ## Choice style name to its menu: a [ChoiceMenu] or any object with
 ## [method ChoiceMenu.choose].
@@ -254,6 +256,15 @@ func cancel() -> void:
 			menu.cancel()
 
 
+## [param base] adjusted for the display settings in [param display],
+## cached in [param cache].
+static func themed_for(base: Theme, cache: Dictionary, display: Dictionary) -> Theme:
+	var key := "%s:%s" % [display["high_contrast"], display["readable_font"]]
+	if not cache.has(key):
+		cache[key] = StoryTheme.for_settings(base, display["high_contrast"], display["readable_font"])
+	return cache[key]
+
+
 ## True when the system has text-to-speech voices. Godot only offers them
 ## when the project setting [code]audio/general/text_to_speech[/code] is on.
 static func can_read_aloud() -> bool:
@@ -279,10 +290,9 @@ func apply_setting(key: String, value: Variant) -> void:
 		if not read_aloud and can_read_aloud():
 			DisplayServer.tts_stop()
 		return
-	if key == "high_contrast":
-		if value and _contrast_theme == null:
-			_contrast_theme = StoryTheme.high_contrast(_theme)
-		var theme: Theme = _contrast_theme if value else _theme
+	if key in _display:
+		_display[key] = bool(value)
+		var theme := StoryDialogue.themed_for(_theme, _themes, _display)
 		for control in _styles.values() + _choice_styles.values():
 			if control is Control and is_instance_valid(control) and control.get_parent() == layer:
 				control.theme = theme

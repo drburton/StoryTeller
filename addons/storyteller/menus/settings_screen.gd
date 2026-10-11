@@ -19,6 +19,7 @@ const TOGGLES := [
 	["Skip unread lines", "skip_unread"],
 	["Typing sounds", "typing_sounds"],
 	["High contrast", "high_contrast"],
+	["Readable font", "readable_font"],
 ]
 
 ## Language names in their own language, so players can find theirs.

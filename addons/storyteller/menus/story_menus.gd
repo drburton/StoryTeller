@@ -43,7 +43,7 @@ const UI_TEXT: Array[String] = [
 	"Sound volume", "Ambience volume", "Voice volume", "Full screen",
 	"Skip unread lines", "Extras", "Gallery", "Music", "Codex", "Locked",
 	"Unlocked: %s", "Previous", "Next", "Page %d of %d", "Rename", "Delete",
-	"Delete %s?", "Name this save", "Routes", "Hide", "Text size", "Typing sounds", "High contrast", "Read lines aloud", "Choices",
+	"Delete %s?", "Name this save", "Routes", "Hide", "Text size", "Typing sounds", "High contrast", "Readable font", "Read lines aloud", "Choices",
 ]
 
 var layer: CanvasLayer
@@ -74,20 +74,20 @@ func get_crew_name() -> StringName:
 	return &"Menus"
 
 
-## The theme from the config, and its high-contrast copy once needed.
+## The theme from the config, and the copies made for display settings.
 var _theme: Theme
-var _contrast_theme: Theme
+var _themes := {}
+var _display := {"high_contrast": false, "readable_font": false}
 
 
 ## Called by the Settings crew member.
 func apply_setting(key: String, value: Variant) -> void:
-	if key == "high_contrast" and root != null:
-		if value and _contrast_theme == null:
-			_contrast_theme = StoryTheme.high_contrast(_theme)
-		root.theme = _contrast_theme if value else _theme
+	if key in _display and root != null:
+		_display[key] = bool(value)
+		root.theme = StoryDialogue.themed_for(_theme, _themes, _display)
 		_notices.theme = root.theme
 		if quick_menu != null:
-			quick_menu.backing = Color.BLACK if value else QuickMenu.BACKING
+			quick_menu.backing = Color.BLACK if _display["high_contrast"] else QuickMenu.BACKING
 			quick_menu.queue_redraw()
 
 func setup(config: StoryConfig) -> void:
