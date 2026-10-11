@@ -176,6 +176,8 @@ func test_saves_can_be_encrypted() -> void:
 	file.store_string(JSON.stringify({"format": StorySaves.FORMAT, "text": "plain"}))
 	file.close()
 	assert_eq(second["saves"].read_slot("plain")["text"], "plain")
+	assert_false(StorySaves._is_encrypted(SAVE_FOLDER.path_join("plain.json")), "plain files are read without trying to decrypt them")
+	assert_true(StorySaves._is_encrypted(SAVE_FOLDER.path_join("1.json")))
 
 
 func test_old_formats_are_migrated() -> void:

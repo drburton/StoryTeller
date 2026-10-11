@@ -11,4 +11,5 @@ start_tale = "wheres_biscuit"
 title_background = ExtResource("2_title")
 cast_folder = "res://examples/wheres_biscuit/cast"
 backdrop_folder = "res://examples/wheres_biscuit/backdrops"
-save_key = "wheres_biscuit"
+save_folder = "user://wheres_biscuit_saves"
+settings_path = "user://wheres_biscuit_settings.cfg"

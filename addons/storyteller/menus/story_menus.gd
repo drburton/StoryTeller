@@ -159,6 +159,8 @@ func close_top() -> void:
 	screen.hide()
 	if not _stack.is_empty():
 		_stack.back().open()
+	else:
+		_back_to_story()
 
 
 func close_all() -> void:
@@ -166,6 +168,7 @@ func close_all() -> void:
 		screen.hide()
 	_stack.clear()
 	_title_active = false
+	_back_to_story()
 
 
 ## True while any menu screen is open.
@@ -399,6 +402,15 @@ func _close(screen: MenuScreen) -> void:
 	screen.hide()
 	if not _stack.is_empty():
 		_stack.back().open()
+	else:
+		_back_to_story()
+
+
+## All menus are closed. A thumbnail taken when they opened is now out of
+## date, so the next save takes a fresh one.
+func _back_to_story() -> void:
+	if saves() != null:
+		saves().discard_thumbnail()
 
 
 func _connect() -> void:

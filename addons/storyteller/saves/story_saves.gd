@@ -19,6 +19,8 @@ const FORMAT := 1
 const QUICK_SLOT := "quick"
 const AUTO_SLOT := "auto"
 const GLOBAL_FILE := "global.json"
+## First four bytes of a file written by FileAccess.open_encrypted_with_pass.
+const ENCRYPTED_MAGIC := 0x43454447
 ## Seconds between automatic writes of the global file while it has changes.
 const GLOBAL_SAVE_DELAY := 5.0
 
@@ -75,6 +77,12 @@ func capture_thumbnail() -> void:
 		return
 	image.resize(thumbnail_size.x, thumbnail_size.y, Image.INTERPOLATE_BILINEAR)
 	_thumbnail = image
+
+
+## Forgets the screenshot taken by [method capture_thumbnail]. Menus call
+## this when they close without saving, so a later save takes a new one.
+func discard_thumbnail() -> void:
+	_thumbnail = null
 
 
 ## Saves the current story to [param slot]. Returns OK or an error code.
@@ -336,6 +344,15 @@ func _director() -> TaleDirector:
 	return null
 
 
+## True when [param path] starts with the header Godot writes on encrypted
+## files, so plain files are read without trying to decrypt them.
+static func _is_encrypted(path: String) -> bool:
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null or file.get_length() < 4:
+		return false
+	return file.get_32() == ENCRYPTED_MAGIC
+
+
 ## Writes [param data] as JSON to [param path], encrypted with
 ## [member save_key] when it is set.
 func _write_json(path: String, data: Dictionary, indent := "\t") -> Error:
@@ -351,7 +368,7 @@ func _write_json(path: String, data: Dictionary, indent := "\t") -> Error:
 ## is set, or plain, so saves made before the key was set still load.
 ## Returns null when the file can't be read.
 func _read_json(path: String) -> Variant:
-	if not save_key.is_empty():
+	if not save_key.is_empty() and _is_encrypted(path):
 		var file := FileAccess.open_encrypted_with_pass(path, FileAccess.READ, save_key)
 		if file != null:
 			var text := file.get_as_text()

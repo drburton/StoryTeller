@@ -8,7 +8,8 @@ name: Release
 #   draft release" ticked. The draft names the tag v<version>, and GitHub
 #   creates the tag on that commit when the draft is published.
 # Run by hand without the box ticked to build and check the zip only; it is
-# kept as a workflow artifact either way.
+# kept as a workflow artifact either way. Running it again before the draft
+# is published replaces the draft; a published release is never changed.
 
 on:
   push:
@@ -77,8 +78,13 @@ jobs:
             exit 1
           fi
           if gh release view "$tag" >/dev/null 2>&1; then
-            echo "::error::A release named $tag already exists. Raise the version in plugin.cfg first."
-            exit 1
+            if [[ "$(gh release view "$tag" --json isDraft --jq .isDraft)" == "true" ]]; then
+              echo "Replacing the unpublished draft $tag with this build."
+              gh release delete "$tag" --yes
+            else
+              echo "::error::Release $tag is already published. Raise the version in plugin.cfg first."
+              exit 1
+            fi
           fi
           prerelease=""
           if [[ "$VERSION" == *-* ]]; then prerelease="--prerelease"; fi
