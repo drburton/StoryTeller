@@ -83,6 +83,7 @@ func setup(config: StoryConfig) -> void:
 		var box := _instantiate(scenes[style_name], fallback) as DialogueBox
 		box.name = style_name.capitalize() + "Box"
 		box.characters_per_second = config.text_speed
+		box.text_reveal = config.text_reveal
 		box.theme = theme
 		box.on_text_tag = _run_text_tag
 		box.box_transition = config.dialogue_box_transition
