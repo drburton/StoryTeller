@@ -60,6 +60,13 @@ func _ready() -> void:
 		toggle.toggled.connect(func(on: bool) -> void: _apply_setting(row[1], on))
 		grid.add_child(toggle)
 		_controls[row[1]] = toggle
+	if StoryDialogue.can_read_aloud():
+		grid.add_child(_label("Read lines aloud"))
+		var read := CheckButton.new()
+		read.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		read.toggled.connect(func(on: bool) -> void: _apply_setting("read_aloud", on))
+		grid.add_child(read)
+		_controls["read_aloud"] = read
 	_locales = _available_locales()
 	if _locales.size() > 1:
 		grid.add_child(_label("Language"))

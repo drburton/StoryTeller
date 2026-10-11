@@ -43,7 +43,7 @@ const UI_TEXT: Array[String] = [
 	"Sound volume", "Ambience volume", "Voice volume", "Full screen",
 	"Skip unread lines", "Extras", "Gallery", "Music", "Codex", "Locked",
 	"Unlocked: %s", "Previous", "Next", "Page %d of %d", "Rename", "Delete",
-	"Delete %s?", "Name this save", "Routes", "Hide", "Text size", "Typing sounds", "High contrast",
+	"Delete %s?", "Name this save", "Routes", "Hide", "Text size", "Typing sounds", "High contrast", "Read lines aloud", "Choices",
 ]
 
 var layer: CanvasLayer
