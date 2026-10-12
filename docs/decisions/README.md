@@ -28,3 +28,4 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0020](0020-studio-for-students.md) | Visual Novel StoryTeller Studio: a block-based story builder for students | Accepted (hosting replaced by 0021) |
 | [0021](0021-studio-as-mobile-apps.md) | The Studio ships as apps for iOS and Android | Accepted |
 | [0022](0022-publishing-through-adults.md) | Students share; adults publish in Godot | Accepted |
+| [0023](0023-raw-pictures-and-sounds.md) | Raw pictures and sounds outside the import system | Accepted |

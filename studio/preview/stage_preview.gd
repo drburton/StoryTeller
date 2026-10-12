@@ -47,7 +47,7 @@ func _init() -> void:
 
 
 ## Starts the preview's story with the characters, backgrounds, and dialogue
-## box of [param config].
+## box of [param config], again for each story opened.
 func setup(config: StoryConfig) -> void:
 	var preview_config := config.duplicate() as StoryConfig
 	preview_config.crew = CREW
@@ -55,11 +55,12 @@ func setup(config: StoryConfig) -> void:
 	# The block's line shows at once while the setup's fades finish.
 	preview_config.wait_for_actions = false
 	preview_config.mod_folder = ""
-	story = preload("res://addons/storyteller/core/story.gd").new()
-	story.name = "PreviewStory"
-	# Its own _ready would start the project's config; this one is started here.
-	story.is_ready = true
-	viewport.add_child(story)
+	if story == null:
+		story = preload("res://addons/storyteller/core/story.gd").new()
+		story.name = "PreviewStory"
+		# Its own _ready would start the project's config; this one is started here.
+		story.is_ready = true
+		viewport.add_child(story)
 	story.start(preview_config)
 
 

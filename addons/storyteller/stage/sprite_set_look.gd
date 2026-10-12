@@ -35,9 +35,11 @@ func get_texture(mood: String) -> Texture2D:
 		return null
 	for extension in IMAGE_EXTENSIONS:
 		var path := folder.path_join("%s.%s" % [mood, extension])
-		if ResourceLoader.exists(path):
-			var texture := load(path) as Texture2D
-			moods[mood] = texture
+		if StoryAssets.exists(path):
+			var texture := StoryAssets.load_path(path) as Texture2D
+			# Raw pictures are read again when they change, so they are not kept.
+			if not StoryAssets.is_raw(path):
+				moods[mood] = texture
 			return texture
 	return null
 
@@ -51,7 +53,7 @@ func get_moods() -> PackedStringArray:
 	if not folder.is_empty() and DirAccess.dir_exists_absolute(folder):
 		# list_directory sees imported files in exported games, where the
 		# folder only holds .import files.
-		for file_name in ResourceLoader.list_directory(folder):
+		for file_name in StoryAssets.list_directory(folder):
 			var extension := file_name.get_extension().to_lower()
 			var mood := file_name.get_basename()
 			# "<mood>_talk" images are mouth frames for lip-flap, not moods.

@@ -112,7 +112,7 @@ func get_pictures(item: CollectionItem) -> Array[Texture2D]:
 	var seen: Array = _seen_variants.get(item.id, [])
 	for variant in _cgs.get(item.cg, PackedStringArray()):
 		if seen.is_empty() or variant in seen:
-			var texture := load(StoryAssets.find_cg(cg_folder, item.cg, variant)) as Texture2D
+			var texture := StoryAssets.load_path(StoryAssets.find_cg(cg_folder, item.cg, variant)) as Texture2D
 			if texture != null:
 				pictures.append(texture)
 	return pictures

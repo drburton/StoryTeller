@@ -71,6 +71,9 @@ var config: StoryConfig
 var tale_path := ""
 ## Names, characters, pictures, and sounds the story knows, for hints.
 var check_context: TaleCheckContext
+## Also offers the Studio's starter library ([StudioStarter]) in pickers.
+## The Studio copies a starter item into the story once the story uses it.
+var use_starter := false
 
 ## One button per scene, in a row that wraps.
 var scene_tabs: HFlowContainer
@@ -166,6 +169,16 @@ func open_tale(path: String, story_config: StoryConfig = null, text = null) -> v
 	_cast = null
 	_pictures.clear()
 	set_source(text if text is String else FileAccess.get_file_as_string(path))
+
+
+## Reads the story's characters, pictures, and sounds again, after some
+## were added, and shows the hints that follow.
+func reload_assets() -> void:
+	if not tale_path.is_empty():
+		check_context = TaleSignatures.make_context(tale_path, tale_name(), config)
+	_cast = null
+	_pictures.clear()
+	_apply(source)
 
 
 ## The name of the tale shown, from [member tale_path].
@@ -625,6 +638,8 @@ func _words_row(words: String, fields: Dictionary, key_prefix: String, target: C
 		var chip := _chip(field, str(fields.get(field, "")), key_prefix + field, target)
 		if target != null and chip is Button:
 			chip.icon = _chip_picture(field, fields, target.get_meta("block")["type"])
+			if field == "character" and not str(fields.get(field, "")).is_empty():
+				chip.text = character_name(fields[field])
 		row.add_child(chip)
 		at = found.get_end()
 	_add_words(row, words.substr(at))
@@ -691,6 +706,8 @@ func _chip_picture(field: String, fields: Dictionary, type: String) -> Texture2D
 					picture = _picture(StoryAssets.find_cg(config.cg_folder, value, StoryAssets.default_cg_variant(cgs[value])))
 			else:
 				picture = _picture(StoryAssets.find(config.backdrop_folder, value, StoryAssets.IMAGE_EXTENSIONS))
+				if picture == null and use_starter and StudioStarter.has("backdrops", value):
+					picture = _starter_picture(value)
 	return _small(picture)
 
 
@@ -947,7 +964,9 @@ func suggest(field: String) -> String:
 			if not used.is_empty():
 				return used[0]
 			var cast := cast_ids()
-			return cast[0] if not cast.is_empty() else "someone"
+			if not cast.is_empty():
+				return cast[0]
+			return StudioStarter.names("cast")[0] if use_starter else "someone"
 		"number":
 			for statement in doc.statements:
 				if statement.kind == TaleNode.Kind.VAR and statement.expr != null and statement.expr.kind == TaleExpr.Kind.LITERAL \
@@ -1461,9 +1480,12 @@ func character_items() -> Array:
 	for id in _characters_in_tale():
 		if id not in ids:
 			ids.append(id)
-	var profiles := _profiles()
+	if use_starter:
+		for id in StudioStarter.names("cast"):
+			if id not in ids:
+				ids.append(id)
 	return ids.map(func(id: String) -> Dictionary:
-		var profile: CastProfile = profiles.get(id)
+		var profile := _profile_of(id)
 		return {"value": id, "label": profile.get_display_name() if profile != null else id.capitalize(),
 			"picture": _face_picture(id, "")})
 
@@ -1471,7 +1493,7 @@ func character_items() -> Array:
 ## The faces of [param character], with pictures, after "Any face".
 func face_items(character: String) -> Array:
 	var items := [{"value": "", "label": "Any face", "picture": null}]
-	var profile: CastProfile = _profiles().get(character)
+	var profile := _profile_of(character)
 	if profile != null and profile.look != null:
 		for mood in profile.look.get_moods():
 			items.append({"value": mood, "label": mood.capitalize(), "picture": _face_picture(character, mood)})
@@ -1490,9 +1512,14 @@ func picture_items(kind: String) -> Array:
 			var path := StoryAssets.find_cg(config.cg_folder, cg_name, StoryAssets.default_cg_variant(cgs[cg_name]))
 			items.append({"value": cg_name, "label": scene_title(cg_name), "picture": _picture(path)})
 	else:
-		for picture_name in StoryAssets.list_names(config.backdrop_folder, StoryAssets.IMAGE_EXTENSIONS):
+		var own := StoryAssets.list_names(config.backdrop_folder, StoryAssets.IMAGE_EXTENSIONS)
+		for picture_name in own:
 			var path := StoryAssets.find(config.backdrop_folder, picture_name, StoryAssets.IMAGE_EXTENSIONS)
 			items.append({"value": picture_name, "label": scene_title(picture_name), "picture": _picture(path)})
+		if use_starter:
+			for picture_name in StudioStarter.names("backdrops"):
+				if picture_name not in own:
+					items.append({"value": picture_name, "label": scene_title(picture_name), "picture": _starter_picture(picture_name)})
 	return items
 
 
@@ -1500,8 +1527,12 @@ func picture_items(kind: String) -> Array:
 func sound_items(folder: String) -> Array:
 	if config == null:
 		return []
-	return Array(StoryAssets.list_names(config.audio_folder.path_join(folder), StoryAssets.AUDIO_EXTENSIONS)).map(
-		func(sound_name: String) -> Dictionary: return {"value": sound_name, "label": scene_title(sound_name), "picture": null})
+	var names := Array(StoryAssets.list_names(config.audio_folder.path_join(folder), StoryAssets.AUDIO_EXTENSIONS))
+	if use_starter:
+		for sound_name in StudioStarter.names(folder):
+			if sound_name not in names:
+				names.append(sound_name)
+	return names.map(func(sound_name: String) -> Dictionary: return {"value": sound_name, "label": scene_title(sound_name), "picture": null})
 
 
 ## The story's scenes; with [param qualified] their full names, as
@@ -1558,12 +1589,36 @@ func _profiles() -> Dictionary:
 	return _pictures["profiles"]
 
 
+## The name students see for [param character]: its display name, such as
+## "Captain Zed", or else its id written as words.
+func character_name(character: String) -> String:
+	var profile := _profile_of(character)
+	return profile.get_display_name() if profile != null else scene_title(character)
+
+
+## The profile of [param character]: the story's own, or else the starter
+## library's when [member use_starter] is on.
+func _profile_of(character: String) -> CastProfile:
+	var profile: CastProfile = _profiles().get(character)
+	if profile == null and use_starter:
+		profile = StudioStarter.profile(character)
+	return profile
+
+
+## A small copy of the starter background [param picture_name].
+func _starter_picture(picture_name: String) -> Texture2D:
+	var key := "starter:" + picture_name
+	if not _pictures.has(key):
+		_pictures[key] = _thumbnail(StudioStarter.picture("backdrops", picture_name), false)
+	return _pictures[key]
+
+
 ## A square picture of [param character] with [param mood] (its usual face
 ## when empty), or null.
 func _face_picture(character: String, mood: String) -> Texture2D:
 	var key := "face:%s:%s" % [character, mood]
 	if not _pictures.has(key):
-		var profile: CastProfile = _profiles().get(character)
+		var profile := _profile_of(character)
 		var texture: Texture2D = null
 		if profile != null and profile.look != null:
 			var moods := profile.look.get_moods()
@@ -1579,7 +1634,7 @@ func _picture(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
 	if not _pictures.has(path):
-		_pictures[path] = _thumbnail(load(path) as Texture2D, false)
+		_pictures[path] = _thumbnail(StoryAssets.load_path(path) as Texture2D, false)
 	return _pictures[path]
 
 

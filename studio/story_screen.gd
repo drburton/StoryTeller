@@ -8,13 +8,19 @@ extends Control
 signal home_requested
 
 var library: StudioLibrary
+## The app's config: the dialogue box, theme, and settings every story shares.
 var config: StoryConfig
+## [member config] with the open story's own folders (see
+## [method StudioLibrary.story_config]).
+var story_config: StoryConfig
 var story_id := ""
 ## Width of the stage preview, in pixels.
 const PREVIEW_WIDTH := 360
 var editor: StudioBlockEditor
 ## The stage at the chosen block, beside the blocks.
 var preview: StudioStagePreview
+## The story's characters, backgrounds, and sounds, under the preview.
+var library_panel: StudioLibraryPanel
 var _title_button: Button
 var _undo_button: Button
 var _redo_button: Button
@@ -73,18 +79,37 @@ func _init() -> void:
 	var hint := StudioUI.label("Tap a block to see the stage there.", StudioUI.FONT_SIZE - 4, Color(0.75, 0.78, 0.85))
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(hint)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	side.add_child(scroll)
+	library_panel = StudioLibraryPanel.new()
+	library_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	library_panel.assets_changed.connect(reload_assets)
+	scroll.add_child(library_panel)
 
 
 ## Opens the story [param id] from [member library].
 func open(id: String) -> void:
 	story_id = id
 	library.mark_opened(id)
+	library.add_starter_items(id)
+	story_config = library.story_config(id, config)
+	editor.use_starter = true
 	editor.current_scene = ""
-	editor.open_tale(library.tale_path(id), config)
+	editor.open_tale(library.tale_path(id), story_config)
 	_show_title()
 	_update_buttons()
-	if preview.story == null:
-		preview.setup(config)
+	preview.setup(story_config)
+	library_panel.show_story(library, id)
+	refresh_preview()
+
+
+## Reads the story's characters, pictures, and sounds again after some were
+## added, in the blocks, the hints, and the preview.
+func reload_assets() -> void:
+	editor.reload_assets()
+	preview.setup(story_config)
 	refresh_preview()
 
 
@@ -138,6 +163,12 @@ func _show_title() -> void:
 
 func _on_source_changed(source: String) -> void:
 	library.save_tale(story_id, source)
+	# A starter character, background, or sound the blocks now use comes into
+	# the story's folder.
+	if not library.add_starter_items(story_id).is_empty():
+		editor.reload_assets()
+		preview.setup(story_config)
+		library_panel.refresh()
 	_update_buttons()
 	refresh_preview()
 
@@ -170,7 +201,7 @@ func play(scene: String, source := "") -> void:
 	preview.set_paused(true)
 	var app := get_parent() as Control
 	(app if app != null else self).visible = false
-	Story.start(config)
+	Story.start(story_config)
 	var director := Story.get_crew(&"TaleDirector") as TaleDirector
 	director.add_tale(tale)
 	_play_layer = CanvasLayer.new()

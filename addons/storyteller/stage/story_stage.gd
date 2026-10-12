@@ -179,7 +179,7 @@ func _find_cg(cg_name: String, variant: String) -> Array:
 		if variants[0].is_empty():
 			return [variant, "CG '%s' is a single picture and has no variant '%s'." % [cg_name, variant]]
 		return [variant, "CG '%s' has no variant '%s'. Its variants are: %s." % [cg_name, variant, ", ".join(variants)]]
-	var texture := load(StoryAssets.find_cg(cg_folder, cg_name, variant)) as Texture2D
+	var texture := StoryAssets.load_path(StoryAssets.find_cg(cg_folder, cg_name, variant)) as Texture2D
 	if texture == null:
 		return [variant, "CG '%s' could not be loaded." % cg_name]
 	return [variant, texture]
@@ -195,7 +195,7 @@ func show_prop(prop_name: String, at := Vector2(0.5, 0.5), time := 0.3) -> Strin
 		var path := StoryAssets.find(prop_folder, prop_name, StoryAssets.IMAGE_EXTENSIONS + StoryAssets.SCENE_EXTENSIONS)
 		if path.is_empty():
 			return "Prop '%s' was not found in %s." % [prop_name, prop_folder]
-		var resource := load(path)
+		var resource := StoryAssets.load_path(path)
 		if resource is PackedScene:
 			node = resource.instantiate() as Node2D
 		else:
@@ -407,14 +407,17 @@ func restore(data: Dictionary) -> void:
 
 
 ## Finds cast profiles in [param folder]: "<id>.tres" files holding a
-## [CastProfile], and "<id>/" folders of mood images.
+## [CastProfile], and "<id>/" folders of mood images. A folder may hold a
+## "profile.json" with plain settings: [code]display_name[/code],
+## [code]name_color[/code] (as "#rrggbb"), and [code]default_mood[/code].
 static func scan_cast(folder: String) -> Dictionary:
 	var profiles := {}
 	if not DirAccess.dir_exists_absolute(folder):
 		return profiles
-	# list_directory (not DirAccess) so exported games, whose folders hold
-	# .remap and .import files, find the same entries.
-	var entries := ResourceLoader.list_directory(folder)
+	# StoryAssets.list_directory, not DirAccess, so exported games, whose
+	# folders hold .remap and .import files, find the same entries, and raw
+	# pictures in user:// are found too.
+	var entries := StoryAssets.list_directory(folder)
 	for file_name in entries:
 		if file_name.get_extension() in ["tres", "res"]:
 			var profile := load(folder.path_join(file_name)) as CastProfile
@@ -436,12 +439,30 @@ static func scan_cast(folder: String) -> Dictionary:
 		var moods := look.get_moods()
 		if not moods.is_empty():
 			profile.default_mood = "neutral" if "neutral" in moods else moods[0]
+		_apply_profile_json(profile, folder.path_join(sub).path_join("profile.json"))
 		profiles[sub] = profile
 	for id in profiles:
 		var profile: CastProfile = profiles[id]
 		if profile.look is SpriteSetLook and profile.look.folder.is_empty() and profile.look.moods.is_empty():
 			profile.look.folder = folder.path_join(id)
 	return profiles
+
+
+## Reads the plain settings of a folder character from [param path], when
+## there is one. Only data is read, so a shared folder can't run code.
+static func _apply_profile_json(profile: CastProfile, path: String) -> void:
+	if not FileAccess.file_exists(path):
+		return
+	var data = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not data is Dictionary:
+		push_warning("StoryTeller: %s is not a JSON object." % path)
+		return
+	if data.get("display_name") is String:
+		profile.display_name = data["display_name"]
+	if data.get("name_color") is String and Color.html_is_valid(data["name_color"]):
+		profile.name_color = Color.html(data["name_color"])
+	if data.get("default_mood") is String and data["default_mood"] in profile.look.get_moods():
+		profile.default_mood = data["default_mood"]
 
 
 func _make_layer(layer_name: String, index: int) -> CanvasLayer:

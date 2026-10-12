@@ -38,6 +38,10 @@ func _ready() -> void:
 	add_child(story)
 	_add_menu()
 	show_home()
+	# "-- --studio-open=<id>" opens a story at once, for screenshots and checks.
+	for arg in OS.get_cmdline_user_args():
+		if arg.begins_with("--studio-open=") and not library.get_story(arg.get_slice("=", 1)).is_empty():
+			open_story(arg.get_slice("=", 1))
 
 
 ## Opens the story [param id] in the blocks.
