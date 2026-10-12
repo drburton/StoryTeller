@@ -10,7 +10,11 @@ signal home_requested
 var library: StudioLibrary
 var config: StoryConfig
 var story_id := ""
+## Width of the stage preview, in pixels.
+const PREVIEW_WIDTH := 360
 var editor: StudioBlockEditor
+## The stage at the chosen block, beside the blocks.
+var preview: StudioStagePreview
 var _title_button: Button
 var _undo_button: Button
 var _redo_button: Button
@@ -47,12 +51,28 @@ func _init() -> void:
 	_redo_button = StudioUI.button("↷ Redo", func() -> void: editor.redo())
 	bar.add_child(_redo_button)
 	bar.add_child(StudioUI.button("▶ Play", func() -> void: play("start")))
-	bar.add_child(StudioUI.button("▶ This scene", func() -> void: play(editor.current_scene)))
 	bar.add_child(StudioUI.button("⇪ Share", share))
+	var row := HBoxContainer.new()
+	row.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 12)
+	column.add_child(row)
 	editor = StudioBlockEditor.new()
-	editor.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	editor.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	editor.source_changed.connect(_on_source_changed)
-	column.add_child(editor)
+	editor.block_selected.connect(func(_line: int) -> void: refresh_preview())
+	editor.scene_selected.connect(func(_beat_name: String) -> void: refresh_preview())
+	row.add_child(editor)
+	var side := VBoxContainer.new()
+	side.custom_minimum_size.x = PREVIEW_WIDTH
+	side.add_theme_constant_override("separation", 10)
+	row.add_child(side)
+	preview = StudioStagePreview.new()
+	preview.custom_minimum_size = Vector2(PREVIEW_WIDTH, PREVIEW_WIDTH * 9.0 / 16.0)
+	side.add_child(preview)
+	side.add_child(StudioUI.button("▶ Play from here", play_from_here))
+	var hint := StudioUI.label("Tap a block to see the stage there.", StudioUI.FONT_SIZE - 4, Color(0.75, 0.78, 0.85))
+	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	side.add_child(hint)
 
 
 ## Opens the story [param id] from [member library].
@@ -63,6 +83,37 @@ func open(id: String) -> void:
 	editor.open_tale(library.tale_path(id), config)
 	_show_title()
 	_update_buttons()
+	if preview.story == null:
+		preview.setup(config)
+	refresh_preview()
+
+
+## The block the preview and Play from here start at: the chosen block, or
+## else the first block of the scene shown. Null when the scene is empty.
+func chosen_block() -> TaleNode:
+	var line := editor.get_selected_line()
+	var node := TaleEdit.find_at_line(editor.doc, line) if line > 0 else null
+	if node != null:
+		return node
+	var beat := editor.doc.find_beat(editor.current_scene)
+	var children := TaleEdit.content_children(beat) if beat != null else ([] as Array[TaleNode])
+	return children[0] if not children.is_empty() else null
+
+
+## Shows the stage at the chosen block.
+func refresh_preview() -> void:
+	if preview.story != null and is_visible_in_tree():
+		preview.show_at(editor.source, editor.doc, editor.tale_name(), chosen_block(), editor.check_context)
+
+
+## Plays the story from the chosen block, with the stage, music, and numbers
+## as they would be there (see [StudioFromHere]).
+func play_from_here() -> void:
+	var target := chosen_block()
+	if target == null:
+		editor.show_message("Add a block to this scene first.")
+		return
+	await play(StudioFromHere.FROM_HERE_BEAT, StudioFromHere.from_here_source(editor.source, editor.doc, target))
 
 
 func get_title() -> String:
@@ -88,6 +139,7 @@ func _show_title() -> void:
 func _on_source_changed(source: String) -> void:
 	library.save_tale(story_id, source)
 	_update_buttons()
+	refresh_preview()
 
 
 func _update_buttons() -> void:
@@ -99,24 +151,23 @@ func _update_buttons() -> void:
 ## has a mistake. Problems the checker finds don't stop it: they show as
 ## hints on the blocks (docs/studio-design.md §2).
 static func compile_story(source: String, tale_name: String, context: TaleCheckContext) -> Tale:
-	var doc := TaleParser.parse(source)
-	if doc.has_errors():
-		return null
-	var checker := TaleChecker.new()
-	checker.run(doc, context if context != null else TaleCheckContext.new())
-	return TaleCompiler.compile(doc, tale_name, checker.call_kinds)
+	return StudioFromHere.compile_story(source, tale_name, context)
 
 
 ## Plays the story from the start of [param scene], full screen with a ✕
-## to come back. Returns when the story ends or ✕ is pressed.
-func play(scene: String) -> void:
-	var tale := compile_story(editor.source, editor.tale_name(), editor.check_context)
+## to come back. [param source] replaces the story's text, for Play from
+## here. Returns when the story ends or ✕ is pressed.
+func play(scene: String, source := "") -> void:
+	if source.is_empty():
+		source = editor.source
+	var tale := compile_story(source, editor.tale_name(), editor.check_context)
 	if tale == null:
 		editor.show_message("Part of this story has a mistake, so it can't play yet.")
 		return
-	if editor.doc.find_beat(scene) == null:
+	if TaleParser.parse(source).find_beat(scene) == null:
 		editor.show_message("This story has no scene called “%s”." % StudioBlockEditor.scene_title(scene))
 		return
+	preview.set_paused(true)
 	var app := get_parent() as Control
 	(app if app != null else self).visible = false
 	Story.start(config)
@@ -147,3 +198,5 @@ func stop_playing() -> void:
 	Story.shut_down()
 	var app := get_parent() as Control
 	(app if app != null else self).visible = true
+	preview.set_paused(false)
+	refresh_preview()

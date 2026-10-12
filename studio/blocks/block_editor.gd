@@ -12,6 +12,8 @@ extends HBoxContainer
 signal source_changed(new_source: String)
 ## Emitted when a block is tapped, with its first source line (from 1).
 signal block_selected(line: int)
+## Emitted when another scene is shown.
+signal scene_selected(beat_name: String)
 
 const FONT_SIZE := 20
 ## Smallest height of anything a finger taps (docs/studio-design.md §2).
@@ -266,6 +268,7 @@ func select_scene(beat_name: String) -> void:
 	_selected_line = -1
 	_update_tabs()
 	rebuild()
+	scene_selected.emit(beat_name)
 
 
 ## Adds an empty scene at the end of the story and shows it.
