@@ -121,3 +121,34 @@ func test_a_character_added_in_the_panel_reaches_the_blocks() -> void:
 		DirAccess.remove_absolute("user://test_panel_settings.json")
 	var story: Node = tree.root.get_node("Story")
 	story.start(story.load_config())
+
+
+func test_the_studios_own_starter_art() -> void:
+	var maya := StudioStarter.profile("maya")
+	assert_eq(maya.get_display_name(), "Maya", "folder characters read their profile.json")
+	assert_eq(maya.default_mood, "neutral")
+	assert_eq(Array(maya.look.get_moods()), ["happy", "neutral", "sad", "surprised", "thinking"])
+	assert_true(StudioStarter.picture("cast", "robo", "happy") is Texture2D)
+	assert_true(StudioStarter.picture("backdrops", "space") is Texture2D)
+	var id := library.create("Space Trip")
+	var panel := await _open(id)
+	assert_true(panel.add_starter("cast", "whiskers"))
+	assert_true(panel.add_starter("backdrops", "castle"))
+	assert_true(panel.add_starter("music", "adventure"))
+	assert_true(panel.add_starter("sounds", "pop"))
+	assert_eq(panel.get_tiles("cast")["whiskers"].text, "Whiskers")
+	assert_eq(panel.get_tiles("cast")["whiskers"].get_meta("item"), "whiskers")
+	var copied: CastProfile = StoryStage.scan_cast(library.asset_folder(id, "cast"))["whiskers"]
+	assert_eq(copied.name_color.to_html(false), "f09646", "the copy keeps the name color")
+	assert_eq(copied.look.get_moods().size(), 5)
+	assert_eq(panel.get_tiles("backdrops").keys(), ["castle"])
+	assert_eq(panel.get_tiles("sounds").keys(), ["adventure", "pop"])
+
+
+func test_sound_tiles_show_their_whole_name() -> void:
+	var id := library.create("Space Trip")
+	library.add_starter_item(id, "music", "adventure")
+	var panel := await _open(id)
+	var tile: Button = panel.get_tiles("sounds")["adventure"]
+	assert_false(tile.clip_text)
+	assert_true(tile.get_combined_minimum_size().x >= tile.get_theme_font("font").get_string_size(tile.text, HORIZONTAL_ALIGNMENT_LEFT, -1, tile.get_theme_font_size("font_size")).x)

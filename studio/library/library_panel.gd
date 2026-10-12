@@ -104,8 +104,9 @@ func _tile(item: String, words: String, picture: Texture2D, on_press: Callable) 
 	var tile := StudioUI.button(words, on_press)
 	tile.set_meta("item", item)
 	tile.add_theme_font_size_override("font_size", StudioUI.FONT_SIZE - 6)
-	tile.clip_text = true
 	if picture != null:
+		# A tile with a picture keeps the picture's width; a long name is cut.
+		tile.clip_text = true
 		tile.icon = picture
 		tile.expand_icon = true
 		tile.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
