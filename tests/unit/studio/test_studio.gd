@@ -1,9 +1,10 @@
 extends "res://tests/framework/story_test.gd"
-## Tests for the Studio app (studio/studio.tscn): it opens the sample story
-## in the blocks, saves every change, and plays the story as it is.
+## Tests for the Studio app (studio/studio.tscn): the home screen with the
+## student's stories, a story open in the blocks, saving, and playing.
 
 const StudioScene := preload("res://studio/studio.tscn")
-const Studio := preload("res://studio/studio.gd")
+const ROOT := "user://test_studio_stories"
+const SETTINGS := "user://test_studio_settings.json"
 
 
 func before_each() -> void:
@@ -19,61 +20,156 @@ func after_each() -> void:
 
 
 func _clean() -> void:
-	if FileAccess.file_exists(Studio.SAVED_TALE):
-		DirAccess.remove_absolute(Studio.SAVED_TALE)
+	StudioLibrary._remove_folder(ROOT)
+	if FileAccess.file_exists(SETTINGS):
+		DirAccess.remove_absolute(SETTINGS)
 
 
 func _open() -> Control:
 	var studio: Control = track(StudioScene.instantiate())
+	studio.library_root = ROOT
+	studio.settings_path = SETTINGS
 	tree.root.add_child(studio)
 	await tree.process_frame
 	return studio
 
 
-func test_the_sample_opens_and_every_change_is_saved() -> void:
+func _press(root: Node, label: String) -> void:
+	for button in root.find_children("*", "Button", true, false):
+		if button.get_meta("dialog_button", "") == label:
+			button.pressed.emit()
+			return
+	fail("no button " + label)
+
+
+## The name field of the dialog open over [param root].
+func _name_field(root: Node) -> LineEdit:
+	for field in root.find_children("*", "LineEdit", true, false):
+		if field.get_meta("field_key", "") == "dialog:name":
+			return field
+	return null
+
+
+func _titles(studio: Control) -> Array:
+	return studio.home.get_cards().map(func(card: Control) -> String:
+		return studio.library.get_story(card.get_meta("story_id"))["title"])
+
+
+func test_home_shows_the_sample_with_its_picture() -> void:
 	var studio := await _open()
-	var editor: StudioBlockEditor = studio.editor
-	assert_eq(editor.get_scenes().size(), 9)
-	assert_eq(editor.tale_name(), "wheres_biscuit")
-	assert_true(studio._undo_button.disabled)
-	assert_true(editor.add_block("narrate", 0, 0, {"text": "Saved at once."}))
-	assert_true(FileAccess.file_exists(Studio.SAVED_TALE))
-	assert_eq(FileAccess.get_file_as_string(Studio.SAVED_TALE), editor.source)
-	assert_false(studio._undo_button.disabled)
-	studio.queue_free()
+	assert_true(studio.home.visible)
+	assert_false(studio.story.visible)
+	assert_eq(_titles(studio), ["Where's Biscuit?"])
+	assert_true(studio.home.story_picture("wheres_biscuit") is Texture2D, "the card shows the first background")
+	assert_eq(StudioHome.changed_words(0.0, 86400.0 * 3.5), "Changed 3 days ago")
+	assert_eq(StudioHome.changed_words(100.0, 200.0), "Changed today")
+
+
+func test_a_new_story_opens_in_the_blocks_and_saves_every_change() -> void:
+	var studio := await _open()
+	studio.home.new_story()
+	var field := _name_field(studio.home)
+	field.text = "Space Trip"
+	_press(studio.home, "A blank story")
 	await tree.process_frame
-	var again := await _open()
-	assert_eq(again.editor.get_blocks()[0].get_meta("block")["fields"]["text"], "Saved at once.", "the saved copy opens next time")
-	again._on_menu(1)
-	assert_eq(again.editor.source, FileAccess.get_file_as_string(Studio.SAMPLE_TALE), "the sample can start over")
-	assert_true(again.editor.can_undo(), "and starting over can be undone")
+	assert_true(studio.story.visible)
+	assert_eq(studio.story.story_id, "space_trip")
+	assert_eq(studio.story.editor.tale_name(), "space_trip")
+	assert_eq(studio.story._title_button.text, "Space Trip  ✎")
+	assert_true(studio.story.editor.add_block("narrate", 0, 1, {"text": "Blast off!"}))
+	assert_true(studio.library.read_tale("space_trip").contains("\"Blast off!\""), "saved at once")
+	assert_false(studio.story._undo_button.disabled)
+	studio.story.home_requested.emit()
+	assert_true(studio.home.visible)
+	assert_eq(_titles(studio), ["Space Trip", "Where's Biscuit?"], "the latest change comes first")
+
+
+func test_a_copy_of_the_sample() -> void:
+	var studio := await _open()
+	studio.home.new_story()
+	_press(studio.home, "A copy of Where's Biscuit?")
+	await tree.process_frame
+	assert_eq(studio.story.story_id, "my_story")
+	assert_eq(studio.story.editor.get_scenes().size(), 9)
+
+
+func test_stories_are_renamed_shared_and_deleted() -> void:
+	var studio := await _open()
+	var id: String = studio.library.create("Old name")
+	studio.home.refresh()
+	studio.home.rename_story(id)
+	var field := _name_field(studio.home)
+	field.text = "New name"
+	_press(studio.home, "OK")
+	assert_eq(studio.library.get_story(id)["title"], "New name")
+	var messages := []
+	StudioFiles.share(studio.library, id, func(text: String) -> void: messages.append(text))
+	assert_true(FileAccess.file_exists(StudioFiles.OUTBOX.path_join(id + ".zip")))
+	assert_true(studio.library.get_story(id)["shared"] > 0.0)
+	assert_eq(messages.size(), 1)
+	var opened := []
+	StudioFiles.open_path(studio.library, StudioFiles.OUTBOX.path_join(id + ".zip"), func(new_id: String) -> void: opened.append(new_id), fail)
+	assert_eq(opened, ["old_name_2"], "opening a story file adds it")
+	studio.home.confirm_delete(id)
+	_press(studio.home, "Keep it")
+	assert_false(studio.library.get_story(id).is_empty())
+	studio.home.confirm_delete(id)
+	_press(studio.home, "Delete")
+	assert_true(studio.library.get_story(id).is_empty())
+	assert_eq(_titles(studio), ["New name", "Where's Biscuit?"])
+	DirAccess.remove_absolute(StudioFiles.OUTBOX.path_join(id + ".zip"))
+
+
+func test_cards_remind_to_share_old_changes() -> void:
+	var studio := await _open()
+	var id: String = studio.library.create("Old story")
+	studio.library._update(id, {"created": 0.0, "changed": 100.0})
+	studio.home.refresh()
+	var reminders: Array = studio.home.find_children("*", "Label", true, false).filter(func(label: Node) -> bool: return label.has_meta("reminder"))
+	assert_eq(reminders.size(), 1)
+
+
+func test_renaming_from_the_story_screen() -> void:
+	var studio := await _open()
+	studio.open_story("wheres_biscuit")
+	studio.story.rename()
+	var field: LineEdit = studio.story.editor.get_dialog().find_children("*", "LineEdit", true, false)[0]
+	field.text = "Biscuit Hunt"
+	field.text_submitted.emit(field.text)
+	assert_eq(studio.story._title_button.text, "Biscuit Hunt  ✎")
+	assert_eq(studio.library.get_story("wheres_biscuit")["title"], "Biscuit Hunt")
 
 
 func test_problems_do_not_stop_a_story_from_playing() -> void:
-	assert_not_null(Studio.compile_story("beat start:\n\tmira: \"Hi\"\n", "t", null), "an unknown speaker is only a hint")
-	assert_null(Studio.compile_story("beat start:\n\tif:\n", "t", null), "a mistake in the text stops it")
+	assert_not_null(StudioStoryScreen.compile_story("beat start:\n\tmira: \"Hi\"\n", "t", null), "an unknown speaker is only a hint")
+	assert_null(StudioStoryScreen.compile_story("beat start:\n\tif:\n", "t", null), "a mistake in the text stops it")
 
 
 func test_play_shows_the_story_and_comes_back() -> void:
 	var studio := await _open()
-	studio.play("couch")
+	studio.open_story("wheres_biscuit")
+	studio.story.play("couch")
 	await tree.process_frame
-	assert_true(studio.is_playing())
+	assert_true(studio.story.is_playing())
 	assert_false(studio.visible, "the story plays full screen")
 	var story: Node = tree.root.get_node("Story")
 	var director: TaleDirector = story.get_crew(&"TaleDirector")
-	assert_not_null(director)
 	assert_true(director.is_playing())
-	studio.stop_playing()
+	studio.story.stop_playing()
 	await tree.process_frame
-	assert_false(studio.is_playing())
+	assert_false(studio.story.is_playing())
 	assert_true(studio.visible)
 	assert_false(story.has_crew(&"TaleDirector"))
 
 
-func test_code_blocks_are_a_setting() -> void:
+func test_code_blocks_are_a_saved_setting() -> void:
 	var studio := await _open()
-	studio.editor.show_group("code")
-	assert_eq(studio.editor.get_palette_blocks().size(), 1, "only Note")
-	studio._on_menu(0)
-	assert_eq(studio.editor.get_palette_blocks().size(), 2, "Note and Code")
+	studio.open_story("wheres_biscuit")
+	studio.story.editor.show_group("code")
+	assert_eq(studio.story.editor.get_palette_blocks().size(), 1, "only Note")
+	studio.set_show_code_blocks(true)
+	assert_eq(studio.story.editor.get_palette_blocks().size(), 2, "Note and Code")
+	studio.queue_free()
+	await tree.process_frame
+	var again := await _open()
+	assert_true(again.settings["show_code_blocks"], "remembered")

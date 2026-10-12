@@ -995,6 +995,13 @@ func _fill_new_block(block: Dictionary) -> void:
 	for field in block["fields"]:
 		if str(block["fields"][field]).is_empty() and field in ["character", "number", "scene"]:
 			block["fields"][field] = suggest(field)
+	# Pictures and sounds start as the story's first one, so a new block
+	# shows or plays something at once.
+	var first := {"picture": picture_items("cg" if block["type"] == "big_picture" else "backdrop"),
+		"track": sound_items("music"), "sound": sound_items("sounds")}
+	for field in first:
+		if block["fields"].has(field) and str(block["fields"][field]).is_empty() and not first[field].is_empty():
+			block["fields"][field] = first[field][0]["value"]
 	if block["type"] == "if":
 		var arm: Dictionary = block["arms"][0]
 		if arm["test"] == "visited":

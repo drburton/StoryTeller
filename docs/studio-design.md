@@ -117,8 +117,8 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 - **Home screen.** The student's stories as cards with a picture, plus **New story**, which offers a blank story or a starter template (a mystery, an adventure, a "choose your path" lesson).
 - **Saving.** Every change saves in the app's own storage on the device (Godot's `user://`), which stays until the app is removed.
-- **Share.** **Share** packs the story into one `.zip` file (its tales, pictures, sounds, and config) and opens the system's share sheet: AirDrop, Files, Google Drive, Google Classroom, or email. **Open a story file** on the home screen loads a `.zip` from Files, so a teacher can open a student's story, and a student can move a story between devices.
-- **Keeping stories safe.** Removing the app removes its stories, so the Studio reminds students to Share a copy of a story they haven't shared in a while.
+- **Share.** **Share** packs the story into one `.zip` file (its tales, pictures, sounds, and config) and opens the system's share sheet: AirDrop, Files, Google Drive, Google Classroom, or email. The first version saves the `.zip` through the system's file picker (Files and iCloud on an iPad, Files and Google Drive on Android); the share sheet needs a small native plugin and follows. **Open a story file** on the home screen loads a `.zip` from Files, so a teacher can open a student's story, and a student can move a story between devices.
+- **Keeping stories safe.** Removing the app removes its stories, so the Studio reminds students to Share a copy of a story they changed and haven't shared for a week.
 - **Into Godot.** The `.zip` unpacks into a Godot project that has the StoryTeller plugin, where the story opens in the Story tab and can be exported as a game.
 
 ## 9. How it is built
