@@ -1,6 +1,6 @@
 # 0014. Where the free tier ends and Pro begins
 
-- **Status:** Accepted
+- **Status:** Superseded by 0019
 - **Date:** 2026-10-09
 
 ## Context

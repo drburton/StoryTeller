@@ -1,6 +1,6 @@
 # 0006. Free base tier and paid Pro tier
 
-- **Status:** Accepted; timing amended by 0009 (Pro deferred), license set by 0008
+- **Status:** Superseded by 0019
 - **Date:** 2026-10-08
 
 ## Context

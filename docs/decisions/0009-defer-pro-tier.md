@@ -1,6 +1,6 @@
 # 0009. Defer the Pro tier until the free tier works
 
-- **Status:** Accepted
+- **Status:** Superseded by 0019
 - **Date:** 2026-10-08
 
 ## Context
