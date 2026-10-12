@@ -117,7 +117,7 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 ## 8. Stories, saving, and sharing
 
-- **Home screen.** The student's stories as cards with a picture, plus **New story**, which offers a blank story or a starter template (a mystery, an adventure, a "choose your path" lesson).
+- **Home screen.** The student's stories as cards with a picture, plus **New story**, which offers a blank story or a starter template (a mystery, an adventure, a "choose your path" lesson; `studio/templates/`).
 - **Saving.** Every change saves in the app's own storage on the device (Godot's `user://`), which stays until the app is removed.
 - **Share.** **Share** packs the story into one `.zip` file (its tales, pictures, sounds, and config) and opens the system's share sheet: AirDrop, Files, Google Drive, Google Classroom, or email. The first version saves the `.zip` through the system's file picker (Files and iCloud on an iPad, Files and Google Drive on Android); the share sheet needs a small native plugin and follows. **Open a story file** on the home screen loads a `.zip` from Files, so a teacher can open a student's story, and a student can move a story between devices.
 - **Keeping stories safe.** Removing the app removes its stories, so the Studio reminds students to Share a copy of a story they changed and haven't shared for a week.
@@ -179,7 +179,7 @@ The maintainer is writing a textbook that teachers use to run a class with the S
 
 - **A stable interface for each edition.** Before the first edition is written, the Studio's block names, colors, groups, screen layout, and words for students (§3) are frozen. Changes that would make the book wrong wait for the next major version.
 - **Every edition keeps working.** App stores offer only an app's newest version, so the interface stays as the book shows for the life of an edition. A major version with interface changes ships as its own app listing (for example "Visual Novel StoryTeller Studio 2"), and classes using the older edition keep installing the app their book shows.
-- **Lesson projects.** Each chapter's starting and finished stories live in the repository (`studio/lessons/`) and open from the Studio's home screen under **Lessons**, so students start a chapter with one tap.
+- **Lesson projects.** Each chapter's starting and finished stories live in the repository (`studio/lessons/`, as `<id>_start.txt` and `<id>_finished.txt` listed in `lessons.json`) and open from the Studio's home screen under **Lessons**, so students start a chapter with one tap. Five draft lessons, one for each idea in the table below, hold the place until the book's chapters are written.
 - **A stable starter library.** Characters, backgrounds, and sounds used in the book keep their names and pictures within a major version.
 - **Screenshots from a script.** A script opens each lesson project in the Studio and saves the screenshots the book uses, so they can be made again for a new edition or language. It builds on the play-through harness used in release testing.
 - **Concepts each chapter can teach.** The blocks cover the main ideas of a first programming course alongside story writing:

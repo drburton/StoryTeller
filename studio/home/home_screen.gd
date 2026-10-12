@@ -1,8 +1,9 @@
 class_name StudioHome
 extends Control
 ## The Studio's home screen (docs/studio-design.md §8): the student's stories
-## as cards with a picture, a card to start a new story, and a way to open a
-## story file. Each card's ⋯ renames, shares, or deletes its story.
+## as cards with a picture, a card to start a new story from a template, the
+## lessons (§13), and a way to open a story file. Each card's ⋯ renames,
+## shares, or deletes its story.
 
 ## Emitted when the student opens the story [param id].
 signal story_chosen(id: String)
@@ -38,6 +39,7 @@ func _init() -> void:
 	var title := StudioUI.label("Your stories", StudioUI.FONT_SIZE + 10)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	bar.add_child(title)
+	bar.add_child(StudioUI.button("Lessons", open_lessons))
 	bar.add_child(StudioUI.button("Open a story file", func() -> void:
 		StudioFiles.open(library, _on_opened, show_message)))
 	_message = StudioUI.label("", StudioUI.FONT_SIZE - 2, Color(1, 0.85, 0.5))
@@ -79,10 +81,11 @@ func show_message(text: String) -> void:
 	_message.visible = not text.is_empty()
 
 
-## Asks for a name, then makes a blank story or a copy of the sample, and
-## opens it.
+## Asks for a name, then makes a blank story, a story from a template, or a
+## copy of the sample, and opens it.
 func new_story() -> void:
 	var column := StudioUI.open_dialog(self, "Name your new story")
+	column.custom_minimum_size.x = 760
 	var name_field := LineEdit.new()
 	name_field.text = "My story"
 	name_field.select_all_on_focus = true
@@ -94,14 +97,83 @@ func new_story() -> void:
 	var make := func(text: String, copied_id: String) -> void:
 		var title := name_field.text.strip_edges()
 		story_chosen.emit(library.create(title if not title.is_empty() else "My story", text, copied_id))
-	StudioUI.add_buttons(column, [
-		["Cancel", Callable()],
-		["A copy of " + StudioLibrary.SAMPLE_TITLE, make.bind(StudioLibrary.sample_text(), StudioLibrary.SAMPLE_ID)],
-		["A blank story", make.bind(StudioLibrary.BLANK_TALE, "")],
-	])
+	_choice_row(column, "A blank story", "An empty first scene, ready for your blocks.", make.bind(StudioLibrary.BLANK_TALE, ""))
+	for template in StudioTemplates.templates():
+		var text := StudioTemplates.template_text(template["id"])
+		if not text.is_empty():
+			_choice_row(column, template["title"], template.get("about", ""), make.bind(text, template["id"]))
+	_choice_row(column, "A copy of " + StudioLibrary.SAMPLE_TITLE, "The whole sample story, to change as you like.",
+		make.bind(StudioLibrary.sample_text(), StudioLibrary.SAMPLE_ID))
+	StudioUI.add_buttons(column, [["Cancel", Callable()]])
 	(func() -> void:
 		if name_field.is_inside_tree():
 			name_field.grab_focus()).call_deferred()
+
+
+## Shows the lessons (docs/studio-design.md §13). Each starts a new story
+## from the lesson's start, or from its finished version to compare.
+func open_lessons() -> VBoxContainer:
+	var column := StudioUI.open_dialog(self, "Lessons")
+	column.custom_minimum_size.x = 760
+	var lessons := StudioTemplates.lessons()
+	if lessons.is_empty():
+		column.add_child(StudioUI.label("There are no lessons yet.", StudioUI.FONT_SIZE - 2))
+	for lesson in lessons:
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
+		var words := VBoxContainer.new()
+		words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		words.add_child(StudioUI.label(lesson["title"], StudioUI.FONT_SIZE))
+		var about := StudioUI.label("%s. %s" % [lesson.get("idea", ""), lesson.get("about", "")] if lesson.has("idea") else lesson.get("about", ""),
+			StudioUI.FONT_SIZE - 6, Color(0.75, 0.78, 0.85))
+		about.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		words.add_child(about)
+		row.add_child(words)
+		for finished in [false, true]:
+			var label := "See it finished" if finished else "Start"
+			var button := StudioUI.button(label, func() -> void:
+				column.get_meta("dialog").queue_free()
+				start_lesson(lesson["id"], finished))
+			button.set_meta("lesson", lesson["id"])
+			button.set_meta("lesson_button", label)
+			row.add_child(button)
+		column.add_child(row)
+	StudioUI.add_buttons(column, [["Close", Callable()]])
+	return column
+
+
+## Makes a new story from the lesson [param id] and opens it. Returns the
+## story's id, or "" when there is no such lesson.
+func start_lesson(id: String, finished := false) -> String:
+	var text := StudioTemplates.lesson_text(id, finished)
+	var found := StudioTemplates.lessons().filter(func(lesson: Dictionary) -> bool: return lesson["id"] == id)
+	if text.is_empty() or found.is_empty():
+		show_message("That lesson could not be opened.")
+		return ""
+	var title: String = found[0]["title"] + (" (finished)" if finished else "")
+	var story_id := library.create(title, text, id)
+	story_chosen.emit(story_id)
+	return story_id
+
+
+# A choice in a dialog: a button with what it does beside it. Pressing it
+# closes the dialog and runs [param action].
+func _choice_row(column: VBoxContainer, title: String, about: String, action: Callable) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	var button := StudioUI.button(title, func() -> void:
+		column.get_meta("dialog").queue_free()
+		action.call())
+	button.custom_minimum_size.x = 280
+	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.set_meta("dialog_button", title)
+	row.add_child(button)
+	var words := StudioUI.label(about, StudioUI.FONT_SIZE - 6, Color(0.75, 0.78, 0.85))
+	words.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	words.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	words.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(words)
+	column.add_child(row)
 
 
 ## The ⋯ menu of a story card: Rename, Share, and Delete, under

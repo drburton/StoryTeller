@@ -1,0 +1,13 @@
+beat start:
+	backdrop("living_room")
+	whiskers.enter("sad", at = LEFT)
+	whiskers: "Meow! Where is my ball?"
+	maya.enter("happy", at = RIGHT)
+	maya: "Let's look in the yard."
+	jump backyard
+
+beat backyard:
+	backdrop("backyard")
+	sound("pop")
+	"The ball was under a bush!"
+	whiskers.hop()

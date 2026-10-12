@@ -1,0 +1,13 @@
+beat start:
+	backdrop("forest")
+	robo.enter("thinking", at = CENTER)
+	robo: "Two paths. Which way should I go?"
+	# Add a Choice with two options. Put a Go to scene block in each one.
+
+beat river:
+	backdrop("riverside")
+	"Robo finds a quiet river."
+
+beat castle:
+	backdrop("castle")
+	"Robo finds a castle on a hill."

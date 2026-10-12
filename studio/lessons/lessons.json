@@ -1,0 +1,32 @@
+[
+	{
+		"id": "lesson_1",
+		"title": "1. One thing after another",
+		"idea": "Sequence",
+		"about": "Blocks play from top to bottom. Put Maya's blocks in an order that makes sense."
+	},
+	{
+		"id": "lesson_2",
+		"title": "2. Ask the player",
+		"idea": "Events and input",
+		"about": "Ask the player for their name, then use it in what Sam says."
+	},
+	{
+		"id": "lesson_3",
+		"title": "3. Two ways to go",
+		"idea": "Branching",
+		"about": "Add a Choice so the player decides where Robo goes. Tap Map to see the paths."
+	},
+	{
+		"id": "lesson_4",
+		"title": "4. Keep count",
+		"idea": "Variables and conditions",
+		"about": "Count the stars Robo catches with a number, then use an If to change the ending."
+	},
+	{
+		"id": "lesson_5",
+		"title": "5. Fix the story",
+		"idea": "Debugging",
+		"about": "This story has three mistakes. Tap each ! to read what is wrong, then fix it."
+	}
+]

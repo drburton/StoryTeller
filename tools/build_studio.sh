@@ -51,7 +51,7 @@ platform="Linux"
 runnable=false
 custom_features="studio"
 export_filter="all_resources"
-include_filter="studio/samples/*.txt"
+include_filter="studio/samples/*.txt, studio/templates/*.txt, studio/lessons/*.txt"
 exclude_filter="tests/*, tools/*, docs/*, build/*, demo/tales/*, demo/translations/*, demo/embedded/*, demo/yarn/*, demo/demo.*, demo/story_config.tres"
 export_path=""
 
@@ -66,7 +66,7 @@ platform="Android"
 runnable=false
 custom_features="studio"
 export_filter="all_resources"
-include_filter="studio/samples/*.txt"
+include_filter="studio/samples/*.txt, studio/templates/*.txt, studio/lessons/*.txt"
 exclude_filter="tests/*, tools/*, docs/*, build/*, demo/tales/*, demo/translations/*, demo/embedded/*, demo/yarn/*, demo/demo.*, demo/story_config.tres"
 export_path=""
 
