@@ -9,6 +9,7 @@ The **Release** workflow runs all of these before it opens the draft:
 - The full test suite on Linux, and CI runs it on Windows too.
 - `tools/check_export.sh`: the demo exported as a `.pck` still finds its tales, art, and translations.
 - `tools/check_addon_install.sh`: the release zip installed in an empty project, enabled, set up with **Set Up Project**, and played to the end of the starter tale.
+- `tools/check_studio_story.sh`: a story file from the Studio opened with **Open a Studio story** in an empty project, played to its end, and exported for the web (decision 0022). The web step needs Godot's web export templates.
 
 ## By hand
 

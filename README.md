@@ -190,6 +190,7 @@ CI runs this check on every pull request.
 - [TaleScript for GDScript users](docs/guides/talescript-for-gdscript-users.md): only the differences
 - [Developer guide](docs/guides/developer-guide.md): crew members, actions, looks, styles, transitions, embedding, editor add-ons
 - [Recipes](docs/guides/recipes.md): relationship meters, inventories, mini-games, timed and picture choices
+- [Publishing a student's story](docs/guides/publishing-studio-stories.md): for teachers and parents, from a Studio story file to a web game
 - [Action reference](docs/action-reference.md), generated from the built-in actions
 - [TaleScript specification](docs/talescript-spec.md)
 - [Visual Novel StoryTeller Studio design](docs/studio-design.md): the block-based story builder for students (planned)

@@ -31,13 +31,11 @@ const BLANK_TALE := "beat start:\n\t\"Once upon a time...\"\n"
 ## Days a changed story can go unshared before the home screen reminds the
 ## student to share a copy.
 const REMIND_DAYS := 7
-## The largest tale a story file may hold, in bytes.
-const MAX_TALE_BYTES := 1 << 20
-## The largest picture or sound a story file may hold, and the most in all.
-const MAX_ASSET_BYTES := 25 << 20
-const MAX_FILE_BYTES := 250 << 20
-## Pictures, sounds, and character profiles a story file may hold, by path.
-const ASSET_PATTERN := "^(backdrops/\\w+\\.(png|jpe?g|webp)|cgs/\\w+(/\\w+)?\\.(png|jpe?g|webp)|cast/\\w+/(\\w+\\.(png|jpe?g|webp)|profile\\.json)|audio/(music|sounds)/\\w+\\.(ogg|wav|mp3))$"
+## The limits and paths of story files (see [StoryFile]).
+const MAX_TALE_BYTES := StoryFile.MAX_TALE_BYTES
+const MAX_ASSET_BYTES := StoryFile.MAX_ASSET_BYTES
+const MAX_FILE_BYTES := StoryFile.MAX_FILE_BYTES
+const ASSET_PATTERN := StoryFile.ASSET_PATTERN
 ## Where a story keeps each kind of picture and sound.
 const ASSET_FOLDERS := {"backdrops": "backdrops", "cgs": "cgs", "cast": "cast", "music": "audio/music", "sounds": "audio/sounds"}
 ## Largest added backgrounds and big pictures, and faces, in pixels.
@@ -100,7 +98,7 @@ func save_tale(id: String, text: String) -> void:
 func create(title: String, text := BLANK_TALE, copied_id := "") -> String:
 	var id := new_id(title)
 	var now := _now()
-	_write(tale_path(id), _renamed(text, copied_id, id))
+	_write(tale_path(id), StoryFile.renamed(text, copied_id, id))
 	_write_story(id, {"title": title.strip_edges(), "created": now, "changed": now, "opened": 0.0, "shared": 0.0})
 	return id
 
@@ -208,50 +206,17 @@ func pack(id: String, zip_path: String) -> bool:
 ## tale, and pictures, sounds, and character profiles in their usual places
 ## are read from the file; anything else in it is left out.
 func unpack(zip_path: String) -> String:
-	var reader := ZIPReader.new()
-	if reader.open(zip_path) != OK:
-		last_error = "That file is not a story file."
+	var file := StoryFile.read(zip_path)
+	if not file["error"].is_empty():
+		last_error = file["error"]
 		return ""
-	var files := reader.get_files()
-	var tales := Array(files).filter(func(file: String) -> bool:
-		return file.begins_with("tales/") and file.ends_with(".tale") and file.count("/") == 1)
-	if not files.has("story.json") or tales.size() != 1:
-		reader.close()
-		last_error = "That file is not a story from the Studio."
-		return ""
-	var info = JSON.parse_string(reader.read_file("story.json").get_string_from_utf8())
-	var bytes := reader.read_file(tales[0])
-	if not info is Dictionary or bytes.size() > MAX_TALE_BYTES:
-		reader.close()
-		last_error = "That story file is damaged."
-		return ""
-	var pattern := RegEx.create_from_string(ASSET_PATTERN)
-	var assets := {}
-	var total := bytes.size()
-	for file in files:
-		if pattern.search(file) == null:
-			continue
-		var data := reader.read_file(file)
-		total += data.size()
-		if data.size() > MAX_ASSET_BYTES or total > MAX_FILE_BYTES:
-			reader.close()
-			last_error = "That story file is too big."
-			return ""
-		assets[file] = data
-	reader.close()
-	var old_id: String = tales[0].get_file().get_basename()
-	var title := str(info.get("title", old_id))
-	var text := bytes.get_string_from_utf8()
-	var id := new_id(old_id if old_id.is_valid_identifier() else title)
+	var old_id: String = file["tale_name"]
+	var id := new_id(old_id if old_id.is_valid_identifier() else file["title"])
 	var now := _now()
-	_write(tale_path(id), _renamed(text, old_id, id))
-	for file in assets:
-		var path := folder(id).path_join(file)
-		DirAccess.make_dir_recursive_absolute(path.get_base_dir())
-		var out := FileAccess.open(path, FileAccess.WRITE)
-		if out != null:
-			out.store_buffer(assets[file])
-	_write_story(id, {"title": title, "created": float(info.get("created", now)), "changed": now, "opened": 0.0, "shared": now})
+	_write(tale_path(id), StoryFile.renamed(file["text"], old_id, id))
+	StoryFile.write_assets(file["assets"], folder(id))
+	var created: float = file["created"] if file["created"] > 0.0 else now
+	_write_story(id, {"title": file["title"], "created": created, "changed": now, "opened": 0.0, "shared": now})
 	return id
 
 
@@ -464,14 +429,6 @@ func _is_taken(id: String) -> bool:
 		return false
 	dir.include_hidden = true
 	return not dir.get_files().is_empty() or not dir.get_directories().is_empty()
-
-
-## [param text] with its "has been to" tests of the story [param old_id]
-## pointed at [param new_id], since tests name the story.
-static func _renamed(text: String, old_id: String, new_id: String) -> String:
-	if old_id.is_empty() or old_id == new_id:
-		return text
-	return text.replace("visited(\"%s." % old_id, "visited(\"%s." % new_id)
 
 
 static func _now() -> float:

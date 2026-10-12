@@ -1568,13 +1568,7 @@ func name_items(numbers: bool) -> Array:
 ## A TaleScript name made from what a student typed: "Team Work" is
 ## "team_work". Empty when nothing usable is left.
 static func make_name(text: String) -> String:
-	var result := ""
-	for character in text.strip_edges().to_lower().replace(" ", "_").replace("-", "_"):
-		if character == "_" or (character >= "a" and character <= "z") or (character >= "0" and character <= "9"):
-			result += character
-	if not result.is_empty() and result[0] >= "0" and result[0] <= "9":
-		result = "n_" + result
-	return result if result.is_valid_identifier() else ""
+	return StoryFile.make_name(text)
 
 
 ## The full name of the scene [param beat_name], as "has been to" tests

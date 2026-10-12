@@ -26,6 +26,7 @@ The tale list on the left holds every `.tale` file in the project. Click one to 
 | **Refresh List** | Rescans the project for `.tale` files |
 | **Export Strings** | Writes the translation CSV (see [Export Strings](#export-strings)) |
 | **Import Yarn** | Converts a Yarn Spinner script into a tale (see [Import Yarn](#import-yarn)) |
+| **Open a Studio story** | Adds a story file from Visual Novel StoryTeller Studio as its own story folder (see [Publishing a student's story](publishing-studio-stories.md)) |
 | **Pin Line IDs** | Writes `@id("...")` in front of every line and choice of the open tale that has none (see [Export Strings](#export-strings)) |
 | **Text**, **Cards**, **Map** | Switch between the three views |
 | **Save** | Saves the open tale and reimports it. Enabled while there are unsaved changes |

@@ -57,4 +57,14 @@ func _finish(problems: PackedStringArray) -> void:
 	for problem in problems:
 		print("CHECK problem: %s" % problem)
 	print("CHECK play_done")
+	# Stops the music and frees the story's nodes, as quitting a game does,
+	# so nothing is left in use at exit.
+	var story: Node = root.get_node_or_null("Story")
+	if story != null:
+		story.shut_down()
+	for child in root.get_children():
+		if child != story:
+			child.queue_free()
+	# The sound mixer lets go of a stopped stream on its own thread.
+	await create_timer(0.5).timeout
 	quit(1 if not problems.is_empty() else 0)
