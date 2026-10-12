@@ -398,3 +398,17 @@ func test_page_box_clears_after_hiding() -> void:
 	assert_eq(text_label.get_parsed_text(), "First.", "the text stays while fading out")
 	await tree.create_timer(0.2).timeout
 	assert_eq(text_label.get_parsed_text(), "", "and clears once hidden")
+
+
+func test_removing_the_box_while_typing_stops_typing() -> void:
+	var box: ClassicDialogueBox = track(ClassicDialogueBox.new())
+	tree.root.add_child(box)
+	box.characters_per_second = 5.0
+	box.show_line(_line("A long line that types for a while.", "Mira"))
+	await tree.process_frame
+	await tree.process_frame
+	assert_true(box._typing)
+	tree.root.remove_child(box)
+	await tree.process_frame
+	await tree.process_frame
+	assert_false(box._typing, "typing stops when the story is shut down")

@@ -367,7 +367,13 @@ func _reveal_to(label: RichTextLabel, count: int) -> void:
 			shown = float(mini(_instant_end(int(shown)), count))
 			_show_all_to(label, int(shown))
 			continue
+		if not is_inside_tree():
+			break
 		await get_tree().process_frame
+		# The story can be shut down while a line is typing.
+		if not is_inside_tree() or not is_instance_valid(label):
+			_typing = false
+			return
 		var before := label.visible_characters
 		shown += characters_per_second * factor * get_process_delta_time()
 		_fade.shown = minf(shown, count)

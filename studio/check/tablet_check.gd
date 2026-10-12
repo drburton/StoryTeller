@@ -93,6 +93,11 @@ func _build() -> void:
 	column.add_theme_constant_override("separation", 16)
 	scroll.add_child(column)
 
+	if Engine.has_meta("studio_return"):
+		var back := _button("← Back to the Studio", func() -> void:
+			get_tree().change_scene_to_file(Engine.get_meta("studio_return")))
+		back.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+		column.add_child(back)
 	column.add_child(_label("Visual Novel StoryTeller Studio: tablet check", 30))
 	_info_label = _label("%s\nStarted in %.1f seconds. Starts so far: %d." % [_device_text(), _startup_seconds, _starts], 18)
 	column.add_child(_info_label)

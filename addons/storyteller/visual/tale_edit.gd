@@ -198,6 +198,27 @@ static func add_beat(source: String, doc: TaleDocument, beat_name: String, first
 	return text + "beat %s:\n%s%s\n" % [beat_name, unit, first_line]
 
 
+## Adds [code]pass[/code] under every block header left with nothing but
+## comments, such as a beat whose only statement is a note, so the tale
+## stays valid. Choices and matches are left alone. Returns the new source.
+static func fill_empty_blocks(source: String) -> String:
+	var doc := TaleParser.parse(source)
+	var unit := indent_unit(doc)
+	var empty: Array[TaleNode] = []
+	var pending: Array = doc.statements.duplicate()
+	while not pending.is_empty():
+		var node: TaleNode = pending.pop_back()
+		pending.append_array(node.body)
+		if node.is_block() and node.kind not in [TaleNode.Kind.CHOOSE, TaleNode.Kind.MATCH] \
+				and node.body.all(func(child: TaleNode) -> bool: return child.is_trivia()):
+			empty.append(node)
+	empty.sort_custom(func(a: TaleNode, b: TaleNode) -> bool: return a.line_end > b.line_end)
+	var result := source
+	for node in empty:
+		result = replace_lines(result, node.line_end + 1, node.line_end, PackedStringArray([node.indent + unit + "pass"]))
+	return result
+
+
 static func _end_line(node: TaleNode) -> int:
 	var end := node.line_end
 	for i in range(node.body.size() - 1, -1, -1):

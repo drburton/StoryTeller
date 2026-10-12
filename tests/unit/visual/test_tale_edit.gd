@@ -185,3 +185,12 @@ func test_writer_builds_statements_that_parse() -> void:
 	_doc(source)
 	assert_eq(TaleWriter.condition_header("elif", "x > 1"), "elif x > 1:")
 	assert_eq(TaleWriter.condition_header("else"), "else:")
+
+
+func test_blocks_left_with_only_comments_get_pass() -> void:
+	var source := "beat start:\n\t# Remember the ending\n\nbeat next:\n\tif x:\n\t\t# later\n\t\"Hi\"\n"
+	assert_true(TaleParser.parse(source).has_errors())
+	var filled := TaleEdit.fill_empty_blocks(source)
+	assert_eq(filled, "beat start:\n\tpass\n\t# Remember the ending\n\nbeat next:\n\tif x:\n\t\tpass\n\t\t# later\n\t\"Hi\"\n")
+	assert_false(TaleParser.parse(filled).has_errors())
+	assert_eq(TaleEdit.fill_empty_blocks(filled), filled, "valid tales are unchanged")

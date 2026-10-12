@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Builds a Visual Novel StoryTeller Studio app from this project. For now
-# the app is the tablet check (studio/check/), M8 step S0.
+# Builds a Visual Novel StoryTeller Studio app from this project: the block
+# editor (studio/studio.tscn), with the tablet check (studio/check/) in its
+# ⋯ menu.
 #
 # Usage:
 #   GODOT_BIN=/path/to/godot tools/build_studio.sh <linux|android> <output-file>
@@ -77,8 +78,8 @@ architectures/x86=false
 architectures/x86_64=false
 version/code=1
 version/name="0.1.0"
-package/unique_name="org.visualnovelstoryteller.tabletcheck"
-package/name="Studio Tablet Check"
+package/unique_name="org.visualnovelstoryteller.studio"
+package/name="StoryTeller Studio"
 package/signed=true
 screen/immersive_mode=true
 PRESETS
