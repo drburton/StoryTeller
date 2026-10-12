@@ -2,25 +2,25 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.25** (M0 to M4 and M6 complete; M5 built, its usability test now part of M8's classroom test; M7 under way; M8, StoryTeller Studio, planned)
+Status: **Draft v0.25** (V1, the Godot plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. V2, StoryTeller Studio: planned as M8)
 
 ### Where things stand (2026-10-12)
 
-- **Direction (2026-10-12):** StoryTeller should be easy enough for a middle school student, and everything is open source. A new milestone, M8, builds **StoryTeller Studio**: a block-based story builder that runs in a browser on iPads, with a live stage preview (decision 0020, `docs/studio-design.md`). There is no Pro tier; the features once planned for it are free, and the ones students need ship in 1.0 (decision 0019, §12).
+- **Two products (2026-10-12):** **V1** is the Godot plugin for adults, finishing as 1.0 from the current 0.1.0 beta. **V2** is **StoryTeller Studio** for kids: a standalone, block-based story builder that runs in a browser on iPads, with a live stage preview (milestone M8, decision 0020, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with V2. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
 - **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
 - **Tests:** 427 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck` and an install check of the plugin zip in an empty project.
 - **Demo:** `demo/` plays a tour, a prologue, chapter 1, and chapter 2 with two endings (about 12 to 15 minutes by estimate; not yet timed with a player) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
 - **M7 so far:** the last extension points for add-ons, named transitions and Story tab hooks (§12.3), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding cards, keys to move and add cards, selecting several cards, and a condition builder (§9.3), lip-flap (§5.5), shared rewind snapshots, 3D characters through `ViewportLook` (§5.5), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), `@no_wait` (§5.1), and loading tales from a mod folder (§4).
-- **Not done yet:** M8 (StoryTeller Studio), the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing the 0.1.0-beta release and the Asset Library listing), Windows and web export builds, and a trademark search.
+- **Not done yet:** for V1, the M5 usability test with writers, the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing the 0.1.0-beta release and the Asset Library listing), a Windows export build, and a trademark search. For V2, all of M8.
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
 
 Changes in v0.25:
-- New direction (decisions 0019 and 0020): StoryTeller aims to be easy enough for a middle school student, and there is no Pro tier. Goal 8 is added (§1).
-- New milestone M8, **StoryTeller Studio** (§11, §9.6, `docs/studio-design.md`): a standalone story builder with Scratch-style blocks, a live stage preview, and Play, running in Safari on iPads and hosted on GitHub Pages. It starts with a one-week feasibility check on a real iPad. 1.0 moves to about 46 weeks after M0.
-- §12 now schedules the former Pro features, all free: the stage preview, "play from here", and starter templates ship in 1.0; the rest follow in 1.x. §7, §13 to §20 drop the Pro tier, its EULA, and its repository.
-- The M5 usability test with writers becomes part of M8's classroom test with middle school students.
-- Platforms (§14): iPads in Safari are the Studio's first target.
+- Two products (decisions 0019 and 0020): **V1**, the Godot plugin for adults, finishes as 1.0 from the current beta; **V2**, **StoryTeller Studio**, is a standalone product for kids in this repository's `studio/` folder. Goal 8 is added for V2 (§1).
+- New milestone M8 for V2 (§11, §9.6, `docs/studio-design.md`): a story builder with Scratch-style blocks, a live stage preview, and Play, running in Safari on iPads and hosted on GitHub Pages. It starts with a one-week feasibility check on a real iPad and runs alongside finishing V1.
+- The maintainer is writing a textbook for V2, so the Studio freezes its interface within each major version, keeps every major version online, and ships lesson projects and a screenshot script (`docs/studio-design.md` §13).
+- There is no Pro tier. §12 now schedules the former Pro features, all free: the stage preview, "play from here", and starter templates come first with V2; the rest follow in plugin 1.x releases. §7 and §13 to §20 drop the Pro tier, its EULA, and its repository.
+- Platforms (§14): iPads in Safari are V2's first target.
 
 Changes in v0.24:
 - Project policies for the open-source plugin: `PRIVACY.md` (StoryTeller collects nothing and stores saves, global data, and settings on the player's device), `TRADEMARKS.md` (the MIT license covers the code; the name and logo have their own rules), `CODE_OF_CONDUCT.md`, `SECURITY.md` (private reports through GitHub), and Developer Certificate of Origin sign-offs for contributions (`CONTRIBUTING.md`). They are drafts for the legal review (§2.8). Terms of service, billing, and arbitration terms are left for the Pro EULA (§12).
@@ -145,7 +145,7 @@ Changes in v0.2:
 5. **Extensible.** Developers add custom actions, cast types, effects, and menus by writing small GDScript classes.
 6. **Embeddable.** Works as a standalone visual novel engine and as a dialogue or cutscene system inside 2D and 3D games.
 7. **Fast iteration.** Live reload of story files while the game runs, clear errors with file and line, and an in-game debug console.
-8. **Usable by a middle schooler.** A student of 11 to 14 builds and plays a branching story with blocks in StoryTeller Studio, on an iPad in a browser, without seeing the Godot editor (decision 0020, `docs/studio-design.md`).
+8. **Usable by a middle schooler (V2).** A student of 11 to 14 builds and plays a branching story with blocks in StoryTeller Studio, on an iPad in a browser, without seeing the Godot editor (decision 0020, `docs/studio-design.md`).
 
 ### 1.1 Non-goals for 1.0
 
@@ -173,7 +173,7 @@ Changes in v0.2:
 | D11 | 2026-10-08 | Pro tier deferred until the free tier is a working system (§12). Superseded by D13. |
 | D12 | 2026-10-09 | Free and Pro split: free ships complete games, Pro saves production time (§12.2, decision 0014). Superseded by D13. |
 | D13 | 2026-10-12 | Everything is open source; no Pro tier (§12, decision 0019). Supersedes D7, D11, and D12. |
-| D14 | 2026-10-12 | StoryTeller Studio: a block-based story builder for students, in a browser on iPads (§9.6, decision 0020). |
+| D14 | 2026-10-12 | Two products: V1 is the Godot plugin for adults; V2 is StoryTeller Studio, a block-based story builder for students in a browser on iPads, with a textbook for teachers (§9.6, decision 0020). |
 
 From M0 onward, each decision has a full record in `docs/decisions/`.
 
@@ -557,7 +557,7 @@ Planned: the remaining M6 items (§11). Considered in earlier drafts and not sch
 
 ## 7. Feature Scope
 
-Standard visual novel genre features, with the milestone (§11). Everything is free and open source (decision 0019). Features once planned for a Pro tier show M8 (part of 1.0) or 1.x (§12).
+Standard visual novel genre features, with the milestone (§11). Everything is free and open source (decision 0019). Features once planned for a Pro tier show M8 (V2) or 1.x (§12).
 
 | Feature | Description | Milestone |
 |---|---|---|
@@ -580,7 +580,7 @@ Standard visual novel genre features, with the milestone (§11). Everything is f
 | Timed choices | Countdown with a `timeout:` branch | M1 |
 | Choice styles: hotspots, messenger reply | Hotspot authoring tool (clickable regions drawn over a backdrop in the editor), chat replies | 1.x |
 | Menus and default theme | Title, pause, save/load, settings, history, confirm, loading, text input | M3 |
-| Theme and template pack | Extra polished themes and genre starter projects (mystery, romance, messenger story) | M8 (templates), 1.x (themes) |
+| Theme and template pack | Extra polished themes and genre starter projects (mystery, romance, messenger story) | M8 (V2 templates), 1.x (themes) |
 | Basic effects | Flash, fade to color, rain and snow, color filters, blur, and vignette | M4 |
 | Effects pack | Fog, light rays, glitch, film grain, particle presets | 1.x |
 | Collection | Gallery, music room, codex | M4 |
@@ -593,8 +593,8 @@ Standard visual novel genre features, with the milestone (§11). Everything is f
 | Embedding preset | Dialogue-only mode for 2D and 3D games, trigger tales from game events | M4 |
 | Visual editor | Card-based editing of tales, synced with text (§9) | M5 |
 | Story Map | Graph of beats, jumps, calls, and choices (§9) | M5 |
-| StoryTeller Studio | Block-based story builder for students, in a browser on iPads, with a live stage preview (§9.6) | M8 |
-| Stage preview and play from here | Live preview of the stage at any line; launch the game from that line | M8 |
+| StoryTeller Studio (V2) | Block-based story builder for students, in a browser on iPads, with a live stage preview (§9.6) | M8 |
+| Stage preview and play from here | Live preview of the stage at any line; launch the game from that line | M8 (V2); 1.x in the Story tab |
 | Story analytics | Route coverage, word counts per character, choice statistics from playtests | 1.x |
 | Inline text tags | Typing speed, instant spans, sounds and actions at points in a line | M6 |
 | CGs | Event pictures on their own layer that unlock gallery entries, with variants | M6 |
@@ -656,7 +656,7 @@ As built in M5:
 └────────────┴───────────────────────────────────────────────────────┘
 ```
 
-Cards are edited in place, so there is no separate inspector. The stage preview (§9.5) comes with M8.
+Cards are edited in place, so there is no separate inspector. The stage preview (§9.5) comes first in the Studio (V2), then in the Story tab.
 
 ### 9.3 Cards
 
@@ -684,15 +684,15 @@ Interaction built: add from a menu, move up and down, drag to reorder or into an
 - Tales appear in horizontal bands in the order play reaches them, and beats in columns by step.
 - Analytics overlay (1.x, not built): route coverage from playtests and word counts per branch.
 
-### 9.5 Stage preview (M8)
+### 9.5 Stage preview (V2, then 1.x)
 
 Selecting any card shows the stage as it would look at that line. The director runs the tale up to that point in a fast "dry run" mode with all animations skipped, then renders the result in an editor viewport. A "Play from here" button launches the game at the same point with the computed state.
 
-The Studio shows this preview next to its blocks; the Story tab gets it as a side panel through its hooks (§12.3).
+The Studio (V2) shows this preview next to its blocks. The Story tab gets the same preview as a side panel through its hooks (§12.3) in a plugin 1.x release.
 
-### 9.6 StoryTeller Studio (M8)
+### 9.6 StoryTeller Studio (V2, M8)
 
-A standalone story builder for middle school students (decision 0020). The full design is in `docs/studio-design.md`.
+A standalone story builder for middle school students, separate from the plugin (decision 0020). A textbook for teachers goes with it. The full design is in `docs/studio-design.md`.
 
 - Runs in a web browser on iPads and laptops, hosted on GitHub Pages; students never see the Godot editor.
 - Stories are built from Scratch-style blocks in five colored groups (Talk, Act, Scene, Choose, Numbers) that snap together, next to a live stage preview, Play, and Play from here.
@@ -763,7 +763,7 @@ Rewind snapshots share every part that did not change since the one before (M7),
 ### M5: Visual editor and Story Map (6 weeks)
 - Story tab, beat editor with all card types, undo and redo. ✔ (cards are edited in place instead of through an inspector)
 - Story Map with auto layout and problem highlighting. ✔
-- Usability test with at least three writers who do not program. Now part of M8's classroom test with middle school students (decision 0020).
+- Usability test with at least three writers who do not program. Not done yet (V1). V2 has its own classroom test with students (M8).
 - **Exit criteria:** a writer builds a branching five-minute scene entirely in the visual editor; the resulting file reads naturally as text and diffs cleanly.
   - Met in an automated test (`tests/unit/visual/test_visual_scene.gd`): a branching scene built only with cards matches hand-written TaleScript and checks cleanly.
   - Still open: the same with real writers, which the usability test covers.
@@ -796,22 +796,26 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 - Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots. (Progress: chapter 2 adds an exam morning, a timed choice that recalls chapter 1's quiz, a new riverside backdrop, and two endings that follow Mira's friendship. Still to do: time a real playthrough.)
 - Publish on the Godot Asset Library or Asset Store and GitHub. (Progress: the plugin zip, an install check in CI, and a release workflow are built; see `docs/publishing.md`. Still to do: set the version, tag the first release, and submit the Asset Library listing.)
 
-### M8: StoryTeller Studio (about 12 weeks)
-A block-based story builder for middle school students, in a browser on iPads (decision 0020). Steps from `docs/studio-design.md` §11:
+### M8: V2, StoryTeller Studio (about 12 weeks)
+A block-based story builder for middle school students, in a browser on iPads (decision 0020). It runs alongside finishing V1, and the maintainer writes the textbook once the interface is frozen. Steps from `docs/studio-design.md` §11:
 - S0: feasibility check on a real iPad: load time, dragging with a finger, the on-screen keyboard, choosing a photo, browser storage, audio after a tap, and the Compatibility renderer (1 week).
 - S1: Studio shell: home screen, stories in browser storage, Share and Open as `.zip`, Home Screen prompt (2 weeks).
 - S2: blocks: palette, drag and snap, pickers, undo, hints, and a Code block (4 weeks).
 - S3: stage preview, Play, and Play from here (2 weeks).
 - S4: starter library, and adding the student's own pictures and sounds (1 week).
-- S5: map of scenes, starter templates, and a teacher's guide with three lesson plans (1 week).
+- S5: map of scenes, starter templates, and the lesson projects and screenshot script the textbook needs (1 week).
 - S6: classroom test with at least five middle school students, then fixes (1 week).
 - **Exit criteria:** at least four of five students make a story with three scenes, two characters, a background, and a choice within one 45-minute class period, without help, on iPads.
 
-### 1.0 Release (about 46 weeks after M0 starts)
-The plugin with M0 to M7, plus StoryTeller Studio (M8).
+### V1 1.0 Release (about 34 weeks after M0 starts)
+The Godot plugin with M0 to M7, for adults.
 
-### After 1.0
-- **1.x releases:** the rest of the former Pro features (§12.2), all free; a character maker and blocks in the Story tab (`docs/studio-design.md` §12).
+### V2 Release (after M8)
+StoryTeller Studio for kids, with its interface frozen for the textbook's first edition.
+
+### After the releases
+- **Plugin 1.x:** the rest of the former Pro features (§12.2), all free, and the stage preview in the Story tab.
+- **Studio:** a character maker, sharing a playable link, and blocks inside the plugin's Story tab (`docs/studio-design.md` §12).
 - Language server and VS Code extension.
 - Optional add-ons: Spine, Live2D, C# API (if demand appears), community action packs.
 
@@ -831,8 +835,8 @@ StoryTeller has no paid tier. Every feature is open source under the MIT license
 
 | Feature | When |
 |---|---|
-| Stage preview and play from here | 1.0 (M8, in the Studio; the Story tab gets the same preview as a side panel) |
-| Starter templates (mystery, adventure, a "choose your path" lesson) | 1.0 (M8) |
+| Stage preview and play from here | V2 (M8, in the Studio); plugin 1.x in the Story tab |
+| Starter templates (mystery, adventure, a "choose your path" lesson) | V2 (M8) |
 | Video cast look | 1.x |
 | Bubble, messenger, and caption dialogue styles | 1.x |
 | Hotspot and messenger choice styles, and the hotspot authoring tool | 1.x |
@@ -933,7 +937,7 @@ StoryTeller/                     # public repository
 │   └── visual/          # card editor, Story Map, and their editing layer
 ├── demo/                # original sample story, generated assets, translations, 3D scene
 ├── examples/            # small example stories, such as Where's Biscuit?
-├── studio/              # StoryTeller Studio, exported for the web (planned, M8)
+├── studio/              # V2: StoryTeller Studio, exported for the web, with lessons/ (planned, M8)
 ├── tests/               # built-in runner, unit tests, fixtures
 ├── tools/               # test and export-check scripts, CI installer, demo asset generator
 ├── docs/                # TaleScript spec, decisions, this plan
@@ -969,7 +973,7 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 - **Action Reference:** generated from action signatures and doc comments (`docs/action-reference.md`; a test keeps it current). ✔
 - **Developer Guide:** custom actions, looks, crew members, dialogue and choice styles, transitions, menus, embedding, saving custom state, Story tab hooks. ✔
 - **Recipes:** relationship meters, inventory checks, mini-game handoff, timed choices, picture choices, flashbacks, visited beats. ✔ (The phone-messenger story waits for the messenger style, 1.x.)
-- **Studio guides (M8):** a quick start for students and a teacher's guide with three lesson plans.
+- **V2 materials (M8):** a quick start for students. The textbook for teachers is written by the maintainer; the repository holds its lesson projects and the screenshot script (`docs/studio-design.md` §13).
 
 ---
 
@@ -980,14 +984,15 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 | IP or trademark concerns | Takedown or legal cost | Clean-room rules (§2), original vocabulary and language, decision log, legal review before 1.0. |
 | Product name conflicts | Forced rename after launch | "Storyteller" is a common word and is also the title of an existing commercial game; run a trademark search early and pick a distinctive product name if needed. |
 | Visual editor round trips damage hand-written files | Lost trust from programmers | Lossless parser from M1, byte-for-byte round-trip tests, script cards for anything unsupported. |
-| Studio schedule overrun | 1.0 slips | Feasibility check first (M8, S0); the Studio builds on the existing card model; templates and the teacher's guide can slip to 1.1. |
+| Studio schedule overrun | V2 and the textbook slip | Feasibility check first (M8, S0); the Studio builds on the existing card model; V1 1.0 does not wait for it. |
+| Studio changes make the textbook wrong | Teachers lose trust in the book | Interface freeze before writing; every major version stays online at its own address; screenshots made by a script (`docs/studio-design.md` §13). |
 | iPad browser limits | Lost stories, awkward typing, slow loading | Check on a real iPad first (M8, S0); Home Screen prompt and download reminders against storage clearing; small downloads cached for offline use. |
 | Blocks too hard for students | Students give up | Pictures in blocks, plain words, undo everywhere, hints that never block Play; classroom test before 1.0 (M8, S6). |
 | Godot releases break the addon | Breakage | Track latest stable with a non-blocking beta CI job (§1.3). |
 | TaleScript drifts from GDScript | Steeper learning curve | Keep the five deliberate additions only; review the "for GDScript users" page each release. |
 | Async cancellation bugs (skip, load, rewind mid-effect) | Broken stage state | The director's generation counter stops a superseded run; crew members finish effects at once while skipping; tests cover loading and rewinding mid-scene, and interruption tests save, load, and rewind at points through the whole demo. |
 | Rewind memory use | Slow on mobile | Configurable depth and `@no_rewind` today; delta snapshots if mobile testing shows a need. |
-| Visual tools not yet tried by real users | Students and writers may get stuck | M8 classroom test with middle school students (§20), then fix what it finds before 1.0. |
+| Visual tools not yet tried by real users | Writers and students may get stuck | The M5 usability test with writers (V1) and the M8 classroom test with students (V2), each followed by fixes. |
 | Overlap with Dialogic, Dialogue Manager, Escoria | Low adoption | Differentiate with the visual editor, a GDScript-style language, a full visual novel stack, and rewind. |
 | Unsafe scripts from mods | Code execution | Own evaluator; only explicitly exposed members are reachable. |
 
@@ -1002,14 +1007,18 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 5. ~~**Tier of image choices and the route chart (M6).**~~ Resolved 2026-10-09: both are free (decision 0014, since superseded: everything is free).
 6. **Studio address:** host the Studio at the repository's GitHub Pages address, or at a custom domain that is easier for students to type?
 7. **Classroom test:** which school and class, and when (M8, S6)?
+8. **V2's name and version numbers:** "StoryTeller V2", or "StoryTeller Studio" with its own numbering so plugin users don't expect a plugin 2.0?
 
 ---
 
 ## 20. Immediate Next Steps
 
+V1, the plugin:
 1. Finish testing the 0.1.0-beta release with `docs/release-testing.md` and publish it.
-2. Start M8 with the iPad feasibility check (S0): build a small Studio test page for the web, then open it on a real iPad and work through the seven checks in `docs/studio-design.md` §10.
-3. Run a quick trademark and name search for "StoryTeller" and "Visual Novel StoryTeller", then settle the name (§19, question 2). The Studio's name depends on it.
-4. Decide the Studio's address and the classroom for the test (§19, questions 6 and 7).
-5. Continue M7 alongside M8: time the demo with a real player, then trailer, screenshots, and the Asset Library listing.
-6. Play the demo to judge what tests can't: typing speeds in the tour, the chapter 1 CG and its timing, the size and speed of the hop, nod, and shake, and how the route chart reads after two or three playthroughs.
+2. Run the M5 usability test: three writers who do not program each build a short branching scene with cards and the map.
+3. Run a trademark and name search for "StoryTeller" and "Visual Novel StoryTeller", then settle the name (§19, question 2).
+4. Finish M7: time the demo with a real player, the legal review, a trailer and screenshots, the Asset Library listing, then 1.0.
+
+V2, the Studio:
+5. Start M8 with the iPad feasibility check (S0): build a small Studio test page for the web, then open it on a real iPad and work through the seven checks in `docs/studio-design.md` §10.
+6. Decide the Studio's name, address, and classroom for the test (§19, questions 6 to 8).

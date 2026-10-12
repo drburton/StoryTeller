@@ -1,10 +1,10 @@
 # StoryTeller Studio: design
 
-Status: proposed (decision 0020). This page describes what the Studio is, how a student uses it, and how it is built. It is the plan for milestone M8 (`docs/PLANNING.md` §11).
+Status: proposed (decision 0020). StoryTeller Studio is **V2** of StoryTeller: a standalone product for kids, separate from V1, the Godot plugin for adults. This page describes what the Studio is, how a student uses it, how it is built, and what it needs so a textbook can be written for it. It is the plan for milestone M8 (`docs/PLANNING.md` §11).
 
 ## 1. Who it is for
 
-StoryTeller Studio is a story builder for middle school students, ages 11 to 14, working on iPads in a web browser. Teachers use it in class, and anyone can use it on a laptop too.
+StoryTeller Studio is a story builder for middle school students, ages 11 to 14, working on iPads in a web browser. Teachers use it in class, guided by a textbook written for it (§13), and anyone can use it on a laptop too.
 
 **Success test.** A 12-year-old who has used Scratch, working alone on an iPad, makes a story with three scenes, two characters, a background, and one choice within a 45-minute class period, then plays it for a classmate.
 
@@ -103,11 +103,11 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 - **Starter library.** Original characters with several faces each, backgrounds (home, school, park, forest, castle, space), music, and sounds, all made for the project like the demo's art, so students can start at once.
 - **Their own pictures.** **+ Add** opens the iPad's picker: take a photo or choose one from Photos. A character's faces are pictures named by the student ("happy", "sad"). The Studio scales large photos down to save space.
-- **Character maker (1.x).** Build a character from parts (skin, hair, eyes, shirt colors) without drawing, using the same drawing code as the example art.
+- **Character maker (later, §12).** Build a character from parts (skin, hair, eyes, shirt colors) without drawing, using the same drawing code as the example art.
 
 ## 7. Preview and play
 
-- **Stage preview.** Choosing a block shows the stage as it looks at that point. The story runs from the start of the scene to that block in a fast mode with animations skipped, and the stage shows the result. This is the plan's former Pro "stage preview" (§9.5), now part of 1.0.
+- **Stage preview.** Choosing a block shows the stage as it looks at that point. The story runs from the start of the scene to that block in a fast mode with animations skipped, and the stage shows the result. This is the stage preview once planned for Pro (`docs/PLANNING.md` §9.5), now free.
 - **Play.** Full screen, from the beginning, with a large ✕ to go back to editing.
 - **Play from here.** Starts at the chosen block with the stage, music, and numbers as they would be there.
 
@@ -153,14 +153,37 @@ Each item gets a pass or a workaround before the Studio work goes on. The check 
 | S2 | Blocks: palette, drag and snap, pickers, undo, hints, Code block | 4 |
 | S3 | Stage preview, Play, and Play from here | 2 |
 | S4 | Starter library and adding the student's own pictures and sounds | 1 |
-| S5 | Map of scenes, starter templates, a teacher's guide with three lesson plans | 1 |
+| S5 | Map of scenes, starter templates, lesson projects and the screenshot script for the textbook (§13) | 1 |
 | S6 | Classroom test with at least five middle school students, then fixes | 1 |
 
 **Exit criteria:** at least four of five students in the classroom test pass the success test (§1) without help, on iPads.
 
-## 12. Later (1.x)
+## 12. Later
 
 - Character maker (§6).
 - Blocks inside the Godot plugin's Story tab, as a fourth view next to Text, Cards, and Map.
 - Sharing a playable link instead of a file.
 - The rest of the former Pro features (`docs/PLANNING.md` §12).
+
+## 13. Textbook support
+
+The maintainer is writing a textbook that teachers use to run a class with the Studio. A book stays in print for years and can't change when the Studio does, so the Studio makes these promises:
+
+- **A stable interface for each edition.** Before the first edition is written, the Studio's block names, colors, groups, screen layout, and words for students (§3) are frozen. Changes that would make the book wrong wait for the next major version.
+- **Every edition keeps working.** Each major version stays online at its own address (for example `…/studio/2/`), so a class using an older edition of the book always finds the Studio its pages show. The newest version is at the main address.
+- **Lesson projects.** Each chapter's starting and finished stories live in the repository (`studio/lessons/`) and open from the Studio's home screen under **Lessons**, so students start a chapter with one tap.
+- **A stable starter library.** Characters, backgrounds, and sounds used in the book keep their names and pictures within a major version.
+- **Screenshots from a script.** A script opens each lesson project in the Studio and saves the screenshots the book uses, so they can be made again for a new edition or language. It builds on the play-through harness used in release testing.
+- **Concepts each chapter can teach.** The blocks cover the main ideas of a first programming course alongside story writing:
+
+| Idea | Where it appears in the Studio |
+|---|---|
+| Sequence | Blocks run from top to bottom in a scene |
+| Events and input | The player's choices; Ask the player for a name |
+| Branching | Choice, Go to scene, the Map |
+| Variables | Numbers to remember: Set, Add |
+| Conditions | If, otherwise, and "has been to scene" |
+| Debugging | Hints on blocks, Play from here, the stage preview |
+| Story structure | Scenes, characters, beginnings and endings |
+
+The book itself, its license, and its publishing are the maintainer's, separate from the Studio's MIT license.
