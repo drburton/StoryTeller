@@ -21,7 +21,9 @@ story="${1:-}"
 web_out="${2:-$work/web}"
 if [[ -z "$story" ]]; then
 	echo "Making a story file the way the Studio does..."
-	"$godot" --headless --path "$root" -s res://tools/studio_story/make_story.gd -- "$work/stories" "$work/castle_trip.zip" >"$work/make.log" 2>&1
+	# A fresh checkout knows its class names only after an import.
+	"$godot" --headless --path "$root" --import >"$work/make.log" 2>&1
+	"$godot" --headless --path "$root" -s res://tools/studio_story/make_story.gd -- "$work/stories" "$work/castle_trip.zip" >>"$work/make.log" 2>&1
 	if ! grep -qxF "CHECK story_file=true" "$work/make.log"; then
 		tail -n 20 "$work/make.log"
 		echo "Could not make a story file."

@@ -19,6 +19,8 @@ fi
 out="$(mkdir -p "$1" && cd "$1" && pwd)"
 shift
 size="${SIZE:-1366x1024}"
+# A fresh checkout knows its class names only after an import.
+"$godot" --headless --path "$root" --import >/dev/null 2>&1
 run=("$godot" --path "$root" --rendering-driver opengl3 --resolution "$size" -s res://tools/studio_screenshots.gd -- "$out" "$@")
 if [[ -z "${DISPLAY:-}" ]] && command -v xvfb-run >/dev/null; then
 	xvfb-run -a -s "-screen 0 ${size}x24" "${run[@]}"
