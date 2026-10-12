@@ -179,7 +179,7 @@ func _find_cg(cg_name: String, variant: String) -> Array:
 		if variants[0].is_empty():
 			return [variant, "CG '%s' is a single picture and has no variant '%s'." % [cg_name, variant]]
 		return [variant, "CG '%s' has no variant '%s'. Its variants are: %s." % [cg_name, variant, ", ".join(variants)]]
-	var texture := load(StoryAssets.find_cg(cg_folder, cg_name, variant)) as Texture2D
+	var texture := StoryAssets.load_path(StoryAssets.find_cg(cg_folder, cg_name, variant)) as Texture2D
 	if texture == null:
 		return [variant, "CG '%s' could not be loaded." % cg_name]
 	return [variant, texture]
@@ -195,7 +195,7 @@ func show_prop(prop_name: String, at := Vector2(0.5, 0.5), time := 0.3) -> Strin
 		var path := StoryAssets.find(prop_folder, prop_name, StoryAssets.IMAGE_EXTENSIONS + StoryAssets.SCENE_EXTENSIONS)
 		if path.is_empty():
 			return "Prop '%s' was not found in %s." % [prop_name, prop_folder]
-		var resource := load(path)
+		var resource := StoryAssets.load_path(path)
 		if resource is PackedScene:
 			node = resource.instantiate() as Node2D
 		else:
@@ -412,9 +412,10 @@ static func scan_cast(folder: String) -> Dictionary:
 	var profiles := {}
 	if not DirAccess.dir_exists_absolute(folder):
 		return profiles
-	# list_directory (not DirAccess) so exported games, whose folders hold
-	# .remap and .import files, find the same entries.
-	var entries := ResourceLoader.list_directory(folder)
+	# StoryAssets.list_directory, not DirAccess, so exported games, whose
+	# folders hold .remap and .import files, find the same entries, and raw
+	# pictures in user:// are found too.
+	var entries := StoryAssets.list_directory(folder)
 	for file_name in entries:
 		if file_name.get_extension() in ["tres", "res"]:
 			var profile := load(folder.path_join(file_name)) as CastProfile
