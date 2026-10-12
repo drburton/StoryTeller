@@ -1,10 +1,10 @@
 name: Studio
 
-# Builds Visual Novel StoryTeller Studio for tablets. For now the app is
-# the tablet check (studio/check/, M8 step S0). The Android build is kept as
-# a workflow artifact: download it from the run's Summary page and install
-# it on an Android tablet. The iOS build follows once an Apple developer
-# account is set up (docs/studio-design.md §9).
+# Builds Visual Novel StoryTeller Studio for tablets: the block editor, with
+# the tablet check (studio/check/, M8 step S0) in its ⋯ menu. The Android
+# build is kept as a workflow artifact: download it from the run's Summary
+# page and install it on an Android tablet. The iOS build follows once an
+# Apple developer account is set up (docs/studio-design.md §9).
 
 on:
   push:
@@ -77,9 +77,9 @@ jobs:
           echo "GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD=android" >> "$GITHUB_ENV"
 
       - name: Build the Android app
-        run: tools/build_studio.sh android build/studio-tablet-check.apk
+        run: tools/build_studio.sh android build/storyteller-studio.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: studio-tablet-check-android
-          path: build/studio-tablet-check.apk
+          name: storyteller-studio-android
+          path: build/storyteller-studio.apk

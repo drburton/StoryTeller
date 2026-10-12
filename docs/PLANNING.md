@@ -2,18 +2,24 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.25** (the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: planned as M8)
+Status: **Draft v0.26** (the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its blocks built)
 
 ### Where things stand (2026-10-12)
 
 - **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder, downloaded as an app for iPads and Android tablets, with a live stage preview (milestone M8, decisions 0020 and 0021, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
 - **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
-- **Tests:** 431 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck` and an install check of the plugin zip in an empty project.
+- **Tests:** 465 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck` and an install check of the plugin zip in an empty project.
 - **Demo:** `demo/` plays a tour, a prologue, chapter 1, and chapter 2 with two endings (about 12 to 15 minutes by estimate; not yet timed with a player) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
 - **M7 so far:** the last extension points for add-ons, named transitions and Story tab hooks (§12.3), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding cards, keys to move and add cards, selecting several cards, and a condition builder (§9.3), lip-flap (§5.5), shared rewind snapshots, 3D characters through `ViewportLook` (§5.5), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), `@no_wait` (§5.1), and loading tales from a mod folder (§4).
-- **Not done yet:** for the plugin, the M5 usability test with writers, the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing the 0.1.0-beta release and the Asset Library listing), a Windows export build, and a trademark search. For the Studio, all of M8.
+- **Not done yet:** for the plugin, the M5 usability test with writers, the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing the 0.1.0-beta release and the Asset Library listing), a Windows export build, and a trademark search. For the Studio, the rest of M8: running the tablet check on real tablets (S0), the home screen and sharing (S1), the stage preview (S3), the starter library (S4), templates and lessons (S5), and the store test releases (S6).
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.26:
+- The Studio's blocks (M8, S2): `StoryBlocks` (`addons/storyteller/visual/story_blocks.gd`) maps each block of `docs/studio-design.md` §5 to one TaleScript statement and back, and turns anything the blocks can't show into a Code block holding its exact text. The block editor (`studio/blocks/block_editor.gd`) has scene buttons, the colored palette, drag and snap with a drop line, dragging back to the palette to delete, a long-press menu, pickers with pictures, − and + for amounts, "Make a number", undo and redo, and hints in plain words from the checker.
+- The Studio app (`studio/studio.tscn`) opens the Where's Biscuit sample in the blocks, saves every change in the app's storage, and plays the story with ✕ to come back. Checker problems don't stop it from playing. Exports with the `studio` tag now start here; the tablet check is in its ⋯ menu.
+- `TaleSignatures.make_context` builds a check context outside the editor (moved from the importer), and `TaleEdit.fill_empty_blocks` adds `pass` under a block left holding only comments.
+- Fixed: stopping a story while a line was typing printed a script error from the dialogue box.
 
 Changes in v0.25:
 - Two products (decisions 0019 and 0020): **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current beta; **Visual Novel StoryTeller Studio** is a standalone product for kids in this repository's `studio/` folder, with its own version numbers. Goal 8 is added for the Studio (§1).
@@ -808,6 +814,7 @@ A block-based story builder for middle school students, shipped as apps for iOS 
 - S6: store listings (privacy details, Kids category, screenshots) and the first test release on TestFlight and Google Play's testing track (1 week).
 - **Exit criteria:** every block, the stage preview, the starter library, and sharing work on an iPad and an Android tablet, and a test build is in both stores' testing tracks.
 - **Later:** a classroom test with middle school students (`docs/studio-design.md` §1), once the Studio works.
+- **Progress (S2):** the blocks are built (`studio/blocks/`, `addons/storyteller/visual/story_blocks.gd`): every block in `docs/studio-design.md` §5 plus Note, the palette, drag and snap, deleting by dragging to the palette, Duplicate and Delete on a long press, pickers with pictures, − and + for amounts, "Make a number", undo and redo, hints, and the Code block behind a setting. Every block and every line of the sample tales reads back exactly; the Where's Biscuit sample needs no Code blocks. The Studio app opens the sample in the blocks, saves every change, and plays it (`studio/studio.tscn`). Still to do: Help on the long-press menu, and trying the blocks with a finger on real tablets.
 - **Progress (S0):** the tablet check app is built (`studio/check/`, `studio/README.md`): seven panels for the seven checks, with Works and Problem buttons and a results summary to send. `tools/build_studio.sh` exports it with the `studio` feature tag, and GitHub Actions builds the Android app (`.github/workflows/studio.yml`). Still to do: run it on an Android tablet and, once the Apple account exists, an iPad.
 
 ### Plugin 1.0 Release (about 34 weeks after M0 starts)
@@ -940,7 +947,7 @@ StoryTeller/                     # public repository
 │   └── visual/          # card editor, Story Map, and their editing layer
 ├── demo/                # original sample story, generated assets, translations, 3D scene
 ├── examples/            # small example stories, such as Where's Biscuit?
-├── studio/              # Visual Novel StoryTeller Studio, exported for the web, with lessons/ (planned, M8)
+├── studio/              # Visual Novel StoryTeller Studio (M8): the app, its block editor, and the tablet check
 ├── tests/               # built-in runner, unit tests, fixtures
 ├── tools/               # test and export-check scripts, CI installer, demo asset generator
 ├── docs/                # TaleScript spec, decisions, this plan
@@ -951,10 +958,10 @@ StoryTeller/                     # public repository
 
 ## 16. Testing Strategy
 
-Built (431 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
+Built (465 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps1`):
 
-- **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, route chart, console and live reload, editor panel, completion, card editor, and Story Map.
-- **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines.
+- **Unit tests (built-in runner, decision 0007):** lexer, parser, checker messages, compiler, evaluator, director, stage, CGs, cast animations and fields, audio, effects, saves, rewind, menus, dialogue boxes and text tags, localization, collection, route chart, console and live reload, editor panel, completion, card editor, Story Map, the Studio's blocks and block editor, and the tablet check.
+- **Round-trip tests:** every fixture `.tale` is parsed and printed back unchanged; every expression in the sample tales prints and parses back the same; card edits change only the expected lines; every statement a Studio block shows is written back exactly.
 - **Golden tests:** fixture parse trees compared against stored `*.expected.txt` dumps (`-- --update-golden` rewrites them).
 - **Playthrough tests:** the whole demo plays in skip mode with scripted choices, in English and Spanish; the 3D scene's conversation opens its gate.
 - **Interruption tests:** the demo is saved at eight points spread through it; loading each save goes on exactly as the first playthrough did, and rewinding one step at the same points shows the line before and goes on the same way.

@@ -99,9 +99,11 @@ static func choices(callee: String, param: String, config: StoryConfig, context:
 ## built-in actions, the cast and assets of the tale's StoryConfig (see
 ## [method Story.config_for_tale]), and the beats and variables of the other
 ## tales in the same folder. Works outside the editor too, so the Studio can
-## check stories on a tablet.
-static func make_context(source_file: String, tale_name: String) -> TaleCheckContext:
-	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").config_for_tale(source_file)
+## check stories on a tablet. [param story_config] replaces the tale's own
+## config, for a tale kept outside the project.
+static func make_context(source_file: String, tale_name: String, story_config: StoryConfig = null) -> TaleCheckContext:
+	var config: StoryConfig = story_config if story_config != null \
+		else preload("res://addons/storyteller/core/story.gd").config_for_tale(source_file)
 	var director := TaleDirector.new()
 	director.setup(config)
 	var context := director.make_check_context(tale_name)

@@ -59,7 +59,7 @@ Landscape on a tablet (1024 x 768 points and up, about the size of the smallest 
 └──────────┴──────────────────────────────────────┴────────────────────┘
 ```
 
-- **Blocks palette (left).** Five colored groups. Tapping a group shows its blocks, and dragging a block into the scene adds it.
+- **Blocks palette (left).** Five colored groups, plus a gray one for notes. Tapping a group shows its blocks, and dragging a block into the scene adds it.
 - **Scene (middle).** The blocks of the chosen scene, top to bottom, in the order they play. Tabs above switch scenes; **+** adds one. A **Map** button shows all scenes as boxes with arrows (the Story Map, simplified).
 - **Stage preview (right, top).** The scene as it looks at the chosen block. **Play from here** starts the story at that block.
 - **Library (right, bottom).** The story's characters, backgrounds, and sounds, with **+** to add from the starter library or from the student's own pictures.
@@ -93,6 +93,8 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 | | Add [1] to [number] | `score += 1` |
 | | If [number] [is at least] [2], with an arm for "otherwise" | `if score >= 2:` / `else:` |
 | | If the player has been to [scene] | `if visited("my_story.yard"):` |
+| Code (gray) | Note: "…" | `# …` (a comment) |
+| | Code (an advanced setting) | any TaleScript, kept exactly as written |
 
 - **Shapes.** Most blocks stack. Choice and If are wrapped blocks with arms that hold other blocks. Go to scene and The end close a stack, so nothing can be placed under them.
 - **Editing a block.** Tapping a field opens a picker: faces and backgrounds as pictures, scenes as a list, numbers with − and + buttons. Text fields open the on-screen keyboard.

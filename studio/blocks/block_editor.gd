@@ -154,14 +154,16 @@ func set_source(new_source: String, keep_history := false) -> void:
 
 
 ## Opens the tale at [param path] with its story's characters, pictures,
-## and sounds.
-func open_tale(path: String) -> void:
+## and sounds, from [param story_config] or the tale's own config. Shows
+## [param text] instead of the file's text when it is given.
+func open_tale(path: String, story_config: StoryConfig = null, text = null) -> void:
 	tale_path = path
-	config = preload("res://addons/storyteller/core/story.gd").config_for_tale(path)
-	check_context = TaleSignatures.make_context(path, tale_name())
+	config = story_config if story_config != null \
+		else preload("res://addons/storyteller/core/story.gd").config_for_tale(path)
+	check_context = TaleSignatures.make_context(path, tale_name(), config)
 	_cast = null
 	_pictures.clear()
-	set_source(FileAccess.get_file_as_string(path))
+	set_source(text if text is String else FileAccess.get_file_as_string(path))
 
 
 ## The name of the tale shown, from [member tale_path].
