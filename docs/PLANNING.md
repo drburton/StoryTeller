@@ -2,7 +2,7 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.27** (the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen and blocks built)
+Status: **Draft v0.28** (the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen and blocks built)
 
 ### Where things stand (2026-10-12)
 
@@ -14,6 +14,9 @@ Status: **Draft v0.27** (the plugin: M0 to M4 and M6 complete, M5 built with its
 - **M7 so far:** the last extension points for add-ons, named transitions and Story tab hooks (§12.3), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding cards, keys to move and add cards, selecting several cards, and a condition builder (§9.3), lip-flap (§5.5), shared rewind snapshots, 3D characters through `ViewportLook` (§5.5), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), `@no_wait` (§5.1), and loading tales from a mod folder (§4).
 - **Not done yet:** for the plugin, the M5 usability test with writers, the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing the 0.1.0-beta release and the Asset Library listing), a Windows export build, and a trademark search. For the Studio, the rest of M8: running the tablet check on real tablets (S0), a share sheet (S1), the stage preview (S3), the starter library (S4), templates and lessons (S5), and the store test releases (S6).
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.28:
+- Publishing (decision 0022): students share story files and adults publish them. A teacher or parent opens a student's story in Godot with **Open a Studio story**, reviews it, and exports it as a game. The Studio itself never publishes, so the playable link is dropped from §12. Story files will carry their pictures and sounds (S4), and S5 grows to two weeks for the plugin's side, a web export check, and a teacher's guide.
 
 Changes in v0.27:
 - The Studio shell (M8, S1): a home screen with the student's stories as cards, New story (blank or a copy of the sample), Open a story file, and Rename, Share, and Delete on each card, with a reminder to share a copy of a story changed a week ago. Stories live in the app's storage (`studio/stories/`), one folder each with `story.json` and the tale. Share saves a `.zip` through the system's file picker; the share sheet needs a native plugin and comes later. The story screen adds the way home, renaming, and Share.
@@ -807,14 +810,14 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 - Full documentation, original sample project (a demo story of at least 15 minutes, carried over from M3), trailer and screenshots. (Progress: chapter 2 adds an exam morning, a timed choice that recalls chapter 1's quiz, a new riverside backdrop, and two endings that follow Mira's friendship. Still to do: time a real playthrough.)
 - Publish on the Godot Asset Library or Asset Store and GitHub. (Progress: the plugin zip, an install check in CI, and a release workflow are built; see `docs/publishing.md`. Still to do: set the version, tag the first release, and submit the Asset Library listing.)
 
-### M8: Visual Novel StoryTeller Studio (about 12 weeks)
+### M8: Visual Novel StoryTeller Studio (about 13 weeks)
 A block-based story builder for middle school students, shipped as apps for iOS and Android (decisions 0020 and 0021). It runs alongside finishing the plugin's 1.0, and the maintainer writes the textbook once the interface is frozen. Steps from `docs/studio-design.md` §11:
 - S0: feasibility check with a test app on a real iPad and Android tablet: start time, dragging with a finger, the on-screen keyboard, choosing a photo and sharing a file, storage after a restart, audio, and the Compatibility renderer; plus the developer accounts and the GitHub Actions builds (1 week).
 - S1: Studio shell: home screen, stories in the app's storage, Share and Open as `.zip` (2 weeks).
 - S2: blocks: palette, drag and snap, pickers, undo, hints, and a Code block (4 weeks).
 - S3: stage preview, Play, and Play from here (2 weeks).
-- S4: starter library, and adding the student's own pictures and sounds (1 week).
-- S5: map of scenes, starter templates, and the lesson projects and screenshot script the textbook needs (1 week).
+- S4: starter library, and adding the student's own pictures and sounds; story files carry the pictures and sounds they use (1 week).
+- S5: map of scenes, starter templates, and the lesson projects and screenshot script the textbook needs; in the plugin, **Open a Studio story**, a check that a story file opens, plays, and exports for the web, and a teacher's guide to publishing a student's story (decision 0022) (2 weeks).
 - S6: store listings (privacy details, Kids category, screenshots) and the first test release on TestFlight and Google Play's testing track (1 week).
 - **Exit criteria:** every block, the stage preview, the starter library, and sharing work on an iPad and an Android tablet, and a test build is in both stores' testing tracks.
 - **Later:** a classroom test with middle school students (`docs/studio-design.md` §1), once the Studio works.
@@ -830,7 +833,7 @@ Visual Novel StoryTeller Studio for kids, with its interface frozen for the text
 
 ### After the releases
 - **Plugin 1.x:** the rest of the former Pro features (§12.2), all free, and the stage preview in the Story tab.
-- **Studio:** a character maker, sharing a playable link, and blocks inside the plugin's Story tab (`docs/studio-design.md` §12).
+- **Studio:** a character maker and blocks inside the plugin's Story tab (`docs/studio-design.md` §12). Students share story files and adults publish them in Godot (decision 0022), so a playable link is no longer planned.
 - Language server and VS Code extension.
 - Optional add-ons: Spine, Live2D, C# API (if demand appears), community action packs.
 
