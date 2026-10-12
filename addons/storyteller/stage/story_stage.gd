@@ -407,7 +407,9 @@ func restore(data: Dictionary) -> void:
 
 
 ## Finds cast profiles in [param folder]: "<id>.tres" files holding a
-## [CastProfile], and "<id>/" folders of mood images.
+## [CastProfile], and "<id>/" folders of mood images. A folder may hold a
+## "profile.json" with plain settings: [code]display_name[/code],
+## [code]name_color[/code] (as "#rrggbb"), and [code]default_mood[/code].
 static func scan_cast(folder: String) -> Dictionary:
 	var profiles := {}
 	if not DirAccess.dir_exists_absolute(folder):
@@ -437,12 +439,30 @@ static func scan_cast(folder: String) -> Dictionary:
 		var moods := look.get_moods()
 		if not moods.is_empty():
 			profile.default_mood = "neutral" if "neutral" in moods else moods[0]
+		_apply_profile_json(profile, folder.path_join(sub).path_join("profile.json"))
 		profiles[sub] = profile
 	for id in profiles:
 		var profile: CastProfile = profiles[id]
 		if profile.look is SpriteSetLook and profile.look.folder.is_empty() and profile.look.moods.is_empty():
 			profile.look.folder = folder.path_join(id)
 	return profiles
+
+
+## Reads the plain settings of a folder character from [param path], when
+## there is one. Only data is read, so a shared folder can't run code.
+static func _apply_profile_json(profile: CastProfile, path: String) -> void:
+	if not FileAccess.file_exists(path):
+		return
+	var data = JSON.parse_string(FileAccess.get_file_as_string(path))
+	if not data is Dictionary:
+		push_warning("StoryTeller: %s is not a JSON object." % path)
+		return
+	if data.get("display_name") is String:
+		profile.display_name = data["display_name"]
+	if data.get("name_color") is String and Color.html_is_valid(data["name_color"]):
+		profile.name_color = Color.html(data["name_color"])
+	if data.get("default_mood") is String and data["default_mood"] in profile.look.get_moods():
+		profile.default_mood = data["default_mood"]
 
 
 func _make_layer(layer_name: String, index: int) -> CanvasLayer:

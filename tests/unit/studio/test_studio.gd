@@ -208,3 +208,21 @@ func test_play_from_here_starts_at_the_chosen_block() -> void:
 	studio.story.stop_playing()
 	await tree.process_frame
 	assert_eq(studio.story.preview.viewport.render_target_update_mode, SubViewport.UPDATE_ALWAYS)
+
+
+func test_starter_characters_come_into_a_story_when_used() -> void:
+	var studio := await _open()
+	var id: String = studio.library.create("Space Trip")
+	studio.open_story(id)
+	var editor: StudioBlockEditor = studio.story.editor
+	assert_true(studio.library.asset_names(id, "cast").is_empty(), "a blank story has no characters of its own")
+	var offered := editor.character_items().map(func(item: Dictionary) -> String: return item["value"])
+	assert_true(offered.has("theo") and offered.has("mira"), "the pickers offer the starter library")
+	assert_true(editor.add_block("show", 0, 0))
+	var show := editor.get_blocks()[0]
+	assert_eq(show.get_meta("block")["fields"]["character"], "theo")
+	assert_eq(studio.library.asset_names(id, "cast"), PackedStringArray(["theo"]), "copied into the story")
+	assert_true(editor.get_hints(editor.get_blocks()[0]).is_empty(), "no hint once Theo is in the story")
+	assert_true(editor.add_block("background", 0, 0))
+	assert_eq(studio.library.asset_names(id, "backdrops").size(), 1)
+	assert_true(studio.home.story_picture(id) is Texture2D)

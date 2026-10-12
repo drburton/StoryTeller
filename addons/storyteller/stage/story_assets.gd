@@ -12,7 +12,8 @@ const SCENE_EXTENSIONS: Array[String] = ["tscn", "scn"]
 const RAW_IMAGE_EXTENSIONS: Array[String] = ["png", "jpg", "jpeg", "webp"]
 const RAW_AUDIO_EXTENSIONS: Array[String] = ["ogg", "wav", "mp3"]
 
-## Raw files already read: path to [modified time, resource].
+## Raw files already read: path to [signature, resource], where the
+## signature is the file's modified time and size.
 static var _raw_cache := {}
 
 
@@ -31,15 +32,17 @@ static func find(folder: String, asset_name: String, extensions: Array[String]) 
 ## True when [param path] is an imported resource, or a picture or sound
 ## file that can be read as it is (see [constant RAW_IMAGE_EXTENSIONS]).
 static func exists(path: String) -> bool:
-	return ResourceLoader.exists(path) or is_raw(path)
+	return is_raw(path) or ResourceLoader.exists(path)
 
 
 ## True when [param path] is a picture or sound file read straight from
-## disk, not an imported resource.
+## disk, not an imported resource. Imported files have a ".import" file
+## beside them, in the editor and in exported games; ResourceLoader can't
+## tell them apart, since an exported game reports raw files as resources.
 static func is_raw(path: String) -> bool:
 	var extension := path.get_extension().to_lower()
 	return (extension in RAW_IMAGE_EXTENSIONS or extension in RAW_AUDIO_EXTENSIONS) \
-		and not ResourceLoader.exists(path) and FileAccess.file_exists(path)
+		and not FileAccess.file_exists(path + ".import") and FileAccess.file_exists(path)
 
 
 ## Loads [param asset_name] from [param folder], or returns null.
@@ -48,22 +51,34 @@ static func load_asset(folder: String, asset_name: String, extensions: Array[Str
 
 
 ## Loads the resource at [param path]: an imported resource, or a raw
-## picture (as a texture) or sound. A raw file is read again when it
-## changes. Null when there is nothing there.
+## picture (as a texture) or sound. A raw file is read again when its
+## modified time or size changes. Null when there is nothing there.
 static func load_path(path: String) -> Resource:
 	if path.is_empty():
 		return null
-	if ResourceLoader.exists(path):
-		return load(path)
 	if not is_raw(path):
-		return null
-	var modified := FileAccess.get_modified_time(path)
+		return load(path) if ResourceLoader.exists(path) else null
+	var signature := _signature(path)
 	var cached: Array = _raw_cache.get(path, [])
-	if not cached.is_empty() and cached[0] == modified:
+	if not cached.is_empty() and cached[0] == signature:
 		return cached[1]
 	var resource := _load_raw(path)
-	_raw_cache[path] = [modified, resource]
+	_raw_cache[path] = [signature, resource]
 	return resource
+
+
+## Drops the raw file at [param path] from the cache, for a program that has
+## just replaced it.
+static func forget_raw(path: String) -> void:
+	_raw_cache.erase(path)
+
+
+## The modified time and size of a raw file. Modified times count whole
+## seconds, so the size catches a file replaced within the same second.
+static func _signature(path: String) -> String:
+	var file := FileAccess.open(path, FileAccess.READ)
+	var size := file.get_length() if file != null else -1
+	return "%d:%d" % [FileAccess.get_modified_time(path), size]
 
 
 static func _load_raw(path: String) -> Resource:

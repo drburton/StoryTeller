@@ -16,7 +16,6 @@ var config: StoryConfig
 var bar: HBoxContainer
 var _cards: HFlowContainer
 var _message: Label
-var _pictures := {}
 
 
 func _init() -> void:
@@ -262,14 +261,13 @@ static func changed_words(changed: float, now := -1.0) -> String:
 	return "Changed yesterday" if days == 1 else "Changed %d days ago" % days
 
 
-## A picture for the story's card: the first background it shows, or null.
+## A picture for the story's card: the first background it shows, from the
+## story's own pictures or the starter library, or null.
 func story_picture(id: String) -> Texture2D:
 	var found := RegEx.create_from_string("backdrop\\(\"([^\"]+)\"").search(library.read_tale(id))
-	if found == null or config == null:
+	if found == null:
 		return null
-	var path := StoryAssets.find(config.backdrop_folder, found.get_string(1), StoryAssets.IMAGE_EXTENSIONS)
-	if path.is_empty():
-		return null
-	if not _pictures.has(path):
-		_pictures[path] = load(path) as Texture2D
-	return _pictures[path]
+	var path := StoryAssets.find(library.asset_folder(id, "backdrops"), found.get_string(1), StoryAssets.IMAGE_EXTENSIONS)
+	if not path.is_empty():
+		return StoryAssets.load_path(path) as Texture2D
+	return StudioStarter.picture("backdrops", found.get_string(1))

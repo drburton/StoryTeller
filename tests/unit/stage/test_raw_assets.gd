@@ -79,10 +79,11 @@ func test_a_folder_of_raw_faces_is_a_character() -> void:
 func test_a_changed_picture_is_read_again() -> void:
 	var path := ROOT.path_join("backdrops/yard.png")
 	assert_eq(StoryAssets.load_path(path).get_size(), Vector2(40, 40))
-	# Modified times count whole seconds.
-	await tree.create_timer(1.1).timeout
 	_picture(Color.RED, 60).save_png(path)
-	assert_eq(StoryAssets.load_path(path).get_size(), Vector2(60, 60))
+	assert_eq(StoryAssets.load_path(path).get_size(), Vector2(60, 60), "a new size within the same second")
+	_picture(Color.BLUE, 60).save_png(path)
+	StoryAssets.forget_raw(path)
+	assert_eq(StoryAssets.load_path(path).get_image().get_pixel(0, 0), Color.BLUE, "forgotten after a replace")
 
 
 func test_the_stage_shows_raw_pictures() -> void:
@@ -108,3 +109,13 @@ func test_the_stage_shows_raw_pictures() -> void:
 	assert_eq(state["backdrop"], "yard")
 	assert_eq(state["cast"]["sam"]["mood"], "happy")
 	assert_eq(presenter.lines, ["Sam: Hello!"])
+
+
+func test_a_folder_character_can_have_a_plain_profile() -> void:
+	var file := FileAccess.open(ROOT.path_join("cast/sam/profile.json"), FileAccess.WRITE)
+	file.store_string(JSON.stringify({"display_name": "Sam the Brave", "name_color": "#ff8800", "default_mood": "sad"}))
+	file.close()
+	var profile: CastProfile = StoryStage.scan_cast(ROOT.path_join("cast"))["sam"]
+	assert_eq(profile.get_display_name(), "Sam the Brave")
+	assert_eq(profile.name_color, Color.html("#ff8800"))
+	assert_eq(profile.default_mood, "sad")

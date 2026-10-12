@@ -1400,7 +1400,7 @@ func asset_thumbnail(path: String) -> Texture2D:
 	if path.is_empty():
 		return null
 	if not _thumbnails.has(path):
-		var texture := load(path) as Texture2D
+		var texture := StoryAssets.load_path(path) as Texture2D
 		var image := texture.get_image() if texture != null else null
 		if image == null:
 			_thumbnails[path] = null

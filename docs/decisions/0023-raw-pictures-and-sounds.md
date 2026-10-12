@@ -11,7 +11,8 @@ Godot imports a project's pictures and sounds into its own formats, and an expor
 
 - `StoryAssets` reads raw pictures (`png`, `jpg`, `jpeg`, `webp`) and sounds (`ogg`, `wav`, `mp3`) straight from their files when they are not imported resources. `StoryAssets.exists`, `load_path`, and `list_directory` cover both kinds, and `find`, `load_asset`, `list_names`, and `scan_cgs` use them.
 - Everything that finds or loads assets goes through them: backdrops, CGs, props, cast folders and `SpriteSetLook` faces, audio, choice pictures, and the collection.
-- A raw file is cached by path and read again when its modified time changes, so a replaced photo shows the new picture.
+- A raw file is cached by path and read again when its modified time or size changes, so a replaced photo shows the new picture. A program that replaces a file can also drop it from the cache with `StoryAssets.forget_raw`.
+- A character's folder may hold a `profile.json` with plain settings (display name, name color, default mood). It is data only, so a shared folder can't carry code the way a `.tres` profile could.
 - Imported resources load exactly as before; the raw path is only a fallback.
 
 ## Alternatives considered

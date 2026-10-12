@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Builds a Visual Novel StoryTeller Studio app from this project: the block
 # editor (studio/studio.tscn), with the tablet check (studio/check/) in its
-# ⋯ menu.
+# ⋯ menu. The demo's pictures and sounds ship as part of the starter library
+# (studio/library/); its scenes, tales, and translations are left out.
 #
 # Usage:
 #   GODOT_BIN=/path/to/godot tools/build_studio.sh <linux|android> <output-file>
@@ -51,7 +52,7 @@ runnable=false
 custom_features="studio"
 export_filter="all_resources"
 include_filter="studio/samples/*.txt"
-exclude_filter="tests/*, tools/*, docs/*, demo/*, build/*"
+exclude_filter="tests/*, tools/*, docs/*, build/*, demo/tales/*, demo/translations/*, demo/embedded/*, demo/yarn/*, demo/demo.*, demo/story_config.tres"
 export_path=""
 
 [preset.0.options]
@@ -66,7 +67,7 @@ runnable=false
 custom_features="studio"
 export_filter="all_resources"
 include_filter="studio/samples/*.txt"
-exclude_filter="tests/*, tools/*, docs/*, demo/*, build/*"
+exclude_filter="tests/*, tools/*, docs/*, build/*, demo/tales/*, demo/translations/*, demo/embedded/*, demo/yarn/*, demo/demo.*, demo/story_config.tres"
 export_path=""
 
 [preset.1.options]

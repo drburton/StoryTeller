@@ -8,7 +8,11 @@ extends Control
 signal home_requested
 
 var library: StudioLibrary
+## The app's config: the dialogue box, theme, and settings every story shares.
 var config: StoryConfig
+## [member config] with the open story's own folders (see
+## [method StudioLibrary.story_config]).
+var story_config: StoryConfig
 var story_id := ""
 ## Width of the stage preview, in pixels.
 const PREVIEW_WIDTH := 360
@@ -79,12 +83,22 @@ func _init() -> void:
 func open(id: String) -> void:
 	story_id = id
 	library.mark_opened(id)
+	library.add_starter_items(id)
+	story_config = library.story_config(id, config)
+	editor.use_starter = true
 	editor.current_scene = ""
-	editor.open_tale(library.tale_path(id), config)
+	editor.open_tale(library.tale_path(id), story_config)
 	_show_title()
 	_update_buttons()
-	if preview.story == null:
-		preview.setup(config)
+	preview.setup(story_config)
+	refresh_preview()
+
+
+## Reads the story's characters, pictures, and sounds again after some were
+## added, in the blocks, the hints, and the preview.
+func reload_assets() -> void:
+	editor.reload_assets()
+	preview.setup(story_config)
 	refresh_preview()
 
 
@@ -138,6 +152,11 @@ func _show_title() -> void:
 
 func _on_source_changed(source: String) -> void:
 	library.save_tale(story_id, source)
+	# A starter character, background, or sound the blocks now use comes into
+	# the story's folder.
+	if not library.add_starter_items(story_id).is_empty():
+		editor.reload_assets()
+		preview.setup(story_config)
 	_update_buttons()
 	refresh_preview()
 
@@ -170,7 +189,7 @@ func play(scene: String, source := "") -> void:
 	preview.set_paused(true)
 	var app := get_parent() as Control
 	(app if app != null else self).visible = false
-	Story.start(config)
+	Story.start(story_config)
 	var director := Story.get_crew(&"TaleDirector") as TaleDirector
 	director.add_tale(tale)
 	_play_layer = CanvasLayer.new()
