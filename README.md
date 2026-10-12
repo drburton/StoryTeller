@@ -4,7 +4,7 @@ A visual novel and interactive story framework for Godot.
 
 Writers create stories in TaleScript, a small language that looks and feels like GDScript. StoryTeller handles characters, scenery, dialogue, choices, audio, saving, localization, and menus.
 
-> **Status:** early development (M6 complete, M7 next). The language, runtime, Story tab (text, cards, and Story Map), characters with renames, animations, drawing order, and their own data, backdrops, CGs, inline text tags, transitions, camera, audio, effects, movies, saves with pages, renaming, and timed autosave, rewind, history, settings, menus, the Extras screen with a route chart for players, picture choices, title art and music, an animated dialogue box, named text styles, translation, the debug console, and live reload work. Yarn Spinner scripts can be imported. Next: usability testing with writers and launch preparation in M7. See [the plan](docs/PLANNING.md) for the current status.
+> **Status:** early development, with a 0.1.0 beta of the plugin in testing. The language, runtime, Story tab (text, cards, and Story Map), characters with renames, animations, drawing order, and their own data, backdrops, CGs, inline text tags, transitions, camera, audio, effects, movies, saves with pages, renaming, and timed autosave, rewind, history, settings, menus, the Extras screen with a route chart for players, picture choices, title art and music, an animated dialogue box, named text styles, translation, the debug console, and live reload work. Yarn Spinner scripts can be imported. Next: the 1.0 release of this plugin, for adults, and **Visual Novel StoryTeller Studio**, for kids: a standalone block-based story builder that middle school students use in a browser on an iPad, with a textbook for teachers ([design](docs/studio-design.md)). See [the plan](docs/PLANNING.md) for the current status.
 
 ## Screenshots
 
@@ -192,6 +192,7 @@ CI runs this check on every pull request.
 - [Recipes](docs/guides/recipes.md): relationship meters, inventories, mini-games, timed and picture choices
 - [Action reference](docs/action-reference.md), generated from the built-in actions
 - [TaleScript specification](docs/talescript-spec.md)
+- [Visual Novel StoryTeller Studio design](docs/studio-design.md): the block-based story builder for students (planned)
 - [Project plan](docs/PLANNING.md)
 - [Publishing the plugin](docs/publishing.md): building the zip, releases, and the Asset Library
 - [Testing a release](docs/release-testing.md): the checklist to run by hand before publishing
