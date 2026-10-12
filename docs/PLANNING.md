@@ -6,7 +6,7 @@ Status: **Draft v0.25** (the plugin: M0 to M4 and M6 complete, M5 built with its
 
 ### Where things stand (2026-10-12)
 
-- **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder that runs in a browser on iPads, with a live stage preview (milestone M8, decision 0020, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
+- **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder, downloaded as an app for iPads and Android tablets, with a live stage preview (milestone M8, decisions 0020 and 0021, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
 - **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
 - **Tests:** 427 tests in the built-in runner pass on Linux and Windows in CI, plus an export check of the demo as a `.pck` and an install check of the plugin zip in an empty project.
@@ -17,10 +17,11 @@ Status: **Draft v0.25** (the plugin: M0 to M4 and M6 complete, M5 built with its
 
 Changes in v0.25:
 - Two products (decisions 0019 and 0020): **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current beta; **Visual Novel StoryTeller Studio** is a standalone product for kids in this repository's `studio/` folder, with its own version numbers. Goal 8 is added for the Studio (§1).
-- New milestone M8 for the Studio (§11, §9.6, `docs/studio-design.md`): a story builder with Scratch-style blocks, a live stage preview, and Play, running in Safari on iPads and hosted on GitHub Pages. It starts with a one-week feasibility check on a real iPad and runs alongside finishing the plugin's 1.0.
+- New milestone M8 for the Studio (§11, §9.6, `docs/studio-design.md`): a story builder with Scratch-style blocks, a live stage preview, and Play, shipped as apps for iOS and Android (decision 0021). It starts with a one-week feasibility check on a real iPad and Android tablet and runs alongside finishing the plugin's 1.0.
 - The maintainer is writing a textbook for the Studio, so the Studio freezes its interface within each major version, keeps every major version online, and ships lesson projects and a screenshot script (`docs/studio-design.md` §13).
 - There is no Pro tier. §12 now schedules the former Pro features, all free: the stage preview, "play from here", and starter templates come first with the Studio; the rest follow in plugin 1.x releases. §7 and §13 to §20 drop the Pro tier, its EULA, and its repository.
-- Platforms (§14): iPads in Safari are the Studio's first target.
+- Platforms (§14): iPads and Android tablets are the Studio's first targets, as store apps (decision 0021).
+- The Studio ships as downloadable apps for iOS and Android (decision 0021) in place of a web page; the classroom test moves after M8.
 
 Changes in v0.24:
 - Project policies for the open-source plugin: `PRIVACY.md` (StoryTeller collects nothing and stores saves, global data, and settings on the player's device), `TRADEMARKS.md` (the MIT license covers the code; the name and logo have their own rules), `CODE_OF_CONDUCT.md`, `SECURITY.md` (private reports through GitHub), and Developer Certificate of Origin sign-offs for contributions (`CONTRIBUTING.md`). They are drafts for the legal review (§2.8). Terms of service, billing, and arbitration terms are left for the Pro EULA (§12).
@@ -145,7 +146,7 @@ Changes in v0.2:
 5. **Extensible.** Developers add custom actions, cast types, effects, and menus by writing small GDScript classes.
 6. **Embeddable.** Works as a standalone visual novel engine and as a dialogue or cutscene system inside 2D and 3D games.
 7. **Fast iteration.** Live reload of story files while the game runs, clear errors with file and line, and an in-game debug console.
-8. **Usable by a middle schooler (the Studio).** A student of 11 to 14 builds and plays a branching story with blocks in Visual Novel StoryTeller Studio, on an iPad in a browser, without seeing the Godot editor (decision 0020, `docs/studio-design.md`).
+8. **Usable by a middle schooler (the Studio).** A student of 11 to 14 builds and plays a branching story with blocks in Visual Novel StoryTeller Studio, an app on an iPad or Android tablet, without seeing the Godot editor (decision 0020, `docs/studio-design.md`).
 
 ### 1.1 Non-goals for 1.0
 
@@ -173,7 +174,7 @@ Changes in v0.2:
 | D11 | 2026-10-08 | Pro tier deferred until the free tier is a working system (§12). Superseded by D13. |
 | D12 | 2026-10-09 | Free and Pro split: free ships complete games, Pro saves production time (§12.2, decision 0014). Superseded by D13. |
 | D13 | 2026-10-12 | Everything is open source; no Pro tier (§12, decision 0019). Supersedes D7, D11, and D12. |
-| D14 | 2026-10-12 | Two products: Visual Novel StoryTeller, the Godot plugin for adults, and Visual Novel StoryTeller Studio, a block-based story builder for students in a browser on iPads, with a textbook for teachers (§9.6, decision 0020). |
+| D14 | 2026-10-12 | Two products: Visual Novel StoryTeller, the Godot plugin for adults, and Visual Novel StoryTeller Studio, a block-based story builder for students as an app for iPads and Android tablets (decision 0021), with a textbook for teachers (§9.6, decision 0020). |
 
 From M0 onward, each decision has a full record in `docs/decisions/`.
 
@@ -593,7 +594,7 @@ Standard visual novel genre features, with the milestone (§11). Everything is f
 | Embedding preset | Dialogue-only mode for 2D and 3D games, trigger tales from game events | M4 |
 | Visual editor | Card-based editing of tales, synced with text (§9) | M5 |
 | Story Map | Graph of beats, jumps, calls, and choices (§9) | M5 |
-| Visual Novel StoryTeller Studio | Block-based story builder for students, in a browser on iPads, with a live stage preview (§9.6) | M8 |
+| Visual Novel StoryTeller Studio | Block-based story builder for students, an app for iPads and Android tablets, with a live stage preview (§9.6) | M8 |
 | Stage preview and play from here | Live preview of the stage at any line; launch the game from that line | M8 (the Studio); 1.x in the Story tab |
 | Story analytics | Route coverage, word counts per character, choice statistics from playtests | 1.x |
 | Inline text tags | Typing speed, instant spans, sounds and actions at points in a line | M6 |
@@ -694,10 +695,10 @@ The Studio shows this preview next to its blocks. The Story tab gets the same pr
 
 A standalone story builder for middle school students, separate from the plugin (decision 0020). A textbook for teachers goes with it. The full design is in `docs/studio-design.md`.
 
-- Runs in a web browser on iPads and laptops, hosted on GitHub Pages; students never see the Godot editor.
+- A free app for iPads and Android tablets from the App Store and Google Play (decision 0021); students never see the Godot editor.
 - Stories are built from Scratch-style blocks in five colored groups (Talk, Act, Scene, Choose, Numbers) that snap together, next to a live stage preview, Play, and Play from here.
 - Students add characters, backgrounds, and sounds from a starter library or from their own photos.
-- The Studio reads and writes the same `.tale` files through the card model (decision 0012), so a story can move into Godot later. Stories are saved in the browser and shared as `.zip` files.
+- The Studio reads and writes the same `.tale` files through the card model (decision 0012), so a story can move into Godot later. Stories are saved in the app and shared as `.zip` files through the system's share sheet.
 
 ---
 
@@ -763,7 +764,7 @@ Rewind snapshots share every part that did not change since the one before (M7),
 ### M5: Visual editor and Story Map (6 weeks)
 - Story tab, beat editor with all card types, undo and redo. ✔ (cards are edited in place instead of through an inspector)
 - Story Map with auto layout and problem highlighting. ✔
-- Usability test with at least three writers who do not program. Not done yet. The Studio has its own classroom test with students (M8).
+- Usability test with at least three writers who do not program. Not done yet. The Studio gets its own classroom test with students later, once it works.
 - **Exit criteria:** a writer builds a branching five-minute scene entirely in the visual editor; the resulting file reads naturally as text and diffs cleanly.
   - Met in an automated test (`tests/unit/visual/test_visual_scene.gd`): a branching scene built only with cards matches hand-written TaleScript and checks cleanly.
   - Still open: the same with real writers, which the usability test covers.
@@ -797,15 +798,16 @@ Features most visual novels expect that StoryTeller lacks, found by reviewing Vi
 - Publish on the Godot Asset Library or Asset Store and GitHub. (Progress: the plugin zip, an install check in CI, and a release workflow are built; see `docs/publishing.md`. Still to do: set the version, tag the first release, and submit the Asset Library listing.)
 
 ### M8: Visual Novel StoryTeller Studio (about 12 weeks)
-A block-based story builder for middle school students, in a browser on iPads (decision 0020). It runs alongside finishing the plugin's 1.0, and the maintainer writes the textbook once the interface is frozen. Steps from `docs/studio-design.md` §11:
-- S0: feasibility check on a real iPad: load time, dragging with a finger, the on-screen keyboard, choosing a photo, browser storage, audio after a tap, and the Compatibility renderer (1 week).
-- S1: Studio shell: home screen, stories in browser storage, Share and Open as `.zip`, Home Screen prompt (2 weeks).
+A block-based story builder for middle school students, shipped as apps for iOS and Android (decisions 0020 and 0021). It runs alongside finishing the plugin's 1.0, and the maintainer writes the textbook once the interface is frozen. Steps from `docs/studio-design.md` §11:
+- S0: feasibility check with a test app on a real iPad and Android tablet: start time, dragging with a finger, the on-screen keyboard, choosing a photo and sharing a file, storage after a restart, audio, and the Compatibility renderer; plus the developer accounts and the GitHub Actions builds (1 week).
+- S1: Studio shell: home screen, stories in the app's storage, Share and Open as `.zip` (2 weeks).
 - S2: blocks: palette, drag and snap, pickers, undo, hints, and a Code block (4 weeks).
 - S3: stage preview, Play, and Play from here (2 weeks).
 - S4: starter library, and adding the student's own pictures and sounds (1 week).
 - S5: map of scenes, starter templates, and the lesson projects and screenshot script the textbook needs (1 week).
-- S6: classroom test with at least five middle school students, then fixes (1 week).
-- **Exit criteria:** at least four of five students make a story with three scenes, two characters, a background, and a choice within one 45-minute class period, without help, on iPads.
+- S6: store listings (privacy details, Kids category, screenshots) and the first test release on TestFlight and Google Play's testing track (1 week).
+- **Exit criteria:** every block, the stage preview, the starter library, and sharing work on an iPad and an Android tablet, and a test build is in both stores' testing tracks.
+- **Later:** a classroom test with middle school students (`docs/studio-design.md` §1), once the Studio works.
 
 ### Plugin 1.0 Release (about 34 weeks after M0 starts)
 The Godot plugin with M0 to M7, for adults.
@@ -896,7 +898,7 @@ All platforms below are supported by Godot's export system. The question is whic
 | Web (HTML5) | Popular for visual novels on itch.io and game jams. Watch download size, audio that must start after a click, and saves stored in browser storage. | M3 |
 | Android | Large visual novel audience. Needs touch controls, safe-area layouts, smaller textures, and app-store packaging. | M4 |
 | iOS | Same design needs as Android; exporting requires a Mac and an Apple developer account. | M4 |
-| iPad and tablets (Safari) | Visual Novel StoryTeller Studio's first target (decision 0020): a single-threaded web export with the Compatibility renderer, touch only, browser storage that Safari may clear after seven days without a visit, and the on-screen keyboard. Checked on a real iPad first (M8, S0). | M8 |
+| iPad and Android tablets (Studio apps) | Visual Novel StoryTeller Studio's first targets (decision 0021): store apps with the Compatibility renderer, touch only, the on-screen keyboard, and the system's photo pickers and share sheet. iOS builds run on GitHub's macOS runners. Checked on real tablets first (M8, S0). | M8 |
 | Consoles | Godot console exports come from third-party porting partners under platform NDAs. | Out of scope; keep code portable (no OS-specific file access, all saves under `user://`). |
 
 **Current recommendation:** design the default UI for mouse, keyboard, gamepad, and touch, test desktop and web first, then mobile. This keeps mobile-friendly layouts from becoming a costly retrofit.
@@ -958,7 +960,7 @@ Built (427 tests in `tests/`, run by `tools/run_tests.sh` or `tools/run_tests.ps
 - **Script error watcher:** any script error during a test fails it.
 - **CI:** GitHub Actions on Linux and Windows for Godot 4.7.2, a non-blocking job on a Godot beta when `GODOT_BETA` is set, and an export check of the demo as a `.pck` (`tools/check_export.sh`).
 
-Planned: interruption tests at every line rather than eight points (if CI time allows), export checks for each chosen platform, and Studio tests in a browser.
+Planned: interruption tests at every line rather than eight points (if CI time allows), export checks for each chosen platform, and Studio builds for iOS and Android in CI.
 
 ---
 
@@ -986,13 +988,13 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 | Visual editor round trips damage hand-written files | Lost trust from programmers | Lossless parser from M1, byte-for-byte round-trip tests, script cards for anything unsupported. |
 | Studio schedule overrun | The Studio and the textbook slip | Feasibility check first (M8, S0); the Studio builds on the existing card model; the plugin's 1.0 does not wait for it. |
 | Studio changes make the textbook wrong | Teachers lose trust in the book | Interface freeze before writing; every major version stays online at its own address; screenshots made by a script (`docs/studio-design.md` §13). |
-| iPad browser limits | Lost stories, awkward typing, slow loading | Check on a real iPad first (M8, S0); Home Screen prompt and download reminders against storage clearing; small downloads cached for offline use. |
-| Blocks too hard for students | Students give up | Pictures in blocks, plain words, undo everywhere, hints that never block Play; classroom test before 1.0 (M8, S6). |
+| Tablet and store limits | Awkward typing or photo picking; store review delays or rejections | Check on real tablets first (M8, S0); the system's own pickers and share sheet; nothing collected and no ads, to fit the stores' rules for children's apps; test releases through TestFlight and Google Play's testing track. |
+| Blocks too hard for students | Students give up | Pictures in blocks, plain words, undo everywhere, hints that never block Play; a classroom test once the Studio works. |
 | Godot releases break the addon | Breakage | Track latest stable with a non-blocking beta CI job (§1.3). |
 | TaleScript drifts from GDScript | Steeper learning curve | Keep the five deliberate additions only; review the "for GDScript users" page each release. |
 | Async cancellation bugs (skip, load, rewind mid-effect) | Broken stage state | The director's generation counter stops a superseded run; crew members finish effects at once while skipping; tests cover loading and rewinding mid-scene, and interruption tests save, load, and rewind at points through the whole demo. |
 | Rewind memory use | Slow on mobile | Configurable depth and `@no_rewind` today; delta snapshots if mobile testing shows a need. |
-| Visual tools not yet tried by real users | Writers and students may get stuck | The M5 usability test with writers (the plugin) and the M8 classroom test with students (the Studio), each followed by fixes. |
+| Visual tools not yet tried by real users | Writers and students may get stuck | The M5 usability test with writers (the plugin) and a classroom test with students once the Studio works, each followed by fixes. |
 | Overlap with Dialogic, Dialogue Manager, Escoria | Low adoption | Differentiate with the visual editor, a GDScript-style language, a full visual novel stack, and rewind. |
 | Unsafe scripts from mods | Code execution | Own evaluator; only explicitly exposed members are reachable. |
 
@@ -1005,8 +1007,8 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 3. **Dialogue strings:** require quotes (closest to GDScript, as planned) or also allow an unquoted shorthand for heavy prose?
 4. ~~**Pro tier details.**~~ Resolved 2026-10-12: there is no Pro tier (decision 0019).
 5. ~~**Tier of image choices and the route chart (M6).**~~ Resolved 2026-10-09: both are free (decision 0014, since superseded: everything is free).
-6. **Studio address:** host the Studio at the repository's GitHub Pages address, or at a custom domain that is easier for students to type?
-7. **Classroom test:** which school and class, and when (M8, S6)?
+6. ~~**Studio address.**~~ Resolved 2026-10-12: the Studio is a downloadable app (decision 0021); a project website at a Visual Novel StoryTeller domain links to the stores.
+7. **Classroom test:** which school and class, and when? Deferred until the Studio works.
 8. ~~**The Studio's name and version numbers.**~~ Resolved 2026-10-12: Visual Novel StoryTeller Studio, numbered separately from the plugin.
 
 ---
@@ -1020,5 +1022,5 @@ The plugin (Visual Novel StoryTeller):
 4. Finish M7: time the demo with a real player, the legal review, a trailer and screenshots, the Asset Library listing, then 1.0.
 
 The Studio (Visual Novel StoryTeller Studio):
-5. Start M8 with the iPad feasibility check (S0): build a small Studio test page for the web, then open it on a real iPad and work through the seven checks in `docs/studio-design.md` §10.
-6. Decide the Studio's address and the classroom for the test (§19, questions 6 and 7).
+5. Set up an Apple Developer Program membership and a Google Play Console account, and register the Visual Novel StoryTeller domain for the project website.
+6. Start M8 with the feasibility check (S0): a small test app built by GitHub Actions, installed on a real iPad (TestFlight) and Android tablet, and checked against `docs/studio-design.md` §10.
