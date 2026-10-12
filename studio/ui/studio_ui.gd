@@ -18,12 +18,15 @@ static func label(text: String, font_size := FONT_SIZE, color := Color.WHITE) ->
 	return result
 
 
+## A button sized for a finger. [param on_press] may be empty, to connect
+## one later.
 static func button(text: String, on_press: Callable) -> Button:
 	var result := Button.new()
 	result.text = text
 	result.custom_minimum_size = Vector2(TOUCH_SIZE, TOUCH_SIZE)
 	result.add_theme_font_size_override("font_size", FONT_SIZE)
-	result.pressed.connect(on_press)
+	if on_press.is_valid():
+		result.pressed.connect(on_press)
 	return result
 
 

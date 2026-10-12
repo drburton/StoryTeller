@@ -173,3 +173,38 @@ func test_code_blocks_are_a_saved_setting() -> void:
 	await tree.process_frame
 	var again := await _open()
 	assert_true(again.settings["show_code_blocks"], "remembered")
+
+
+func test_the_preview_follows_the_chosen_block() -> void:
+	var studio := await _open()
+	studio.open_story("wheres_biscuit")
+	var editor: StudioBlockEditor = studio.story.editor
+	assert_eq(studio.story.chosen_block().line_start, 11, "the first block of the scene until one is tapped")
+	var theo := editor.get_blocks()[6]
+	editor.select_block(theo)
+	assert_eq(studio.story.chosen_block().line_start, 17)
+	# The preview plays the setup over real time; wait for Theo, up to three seconds.
+	var stage: Node = studio.story.preview.story.get_crew(&"Stage")
+	var waited := 0.0
+	while stage.capture()["cast"].keys() != ["cleo", "theo"] and waited < 3.0:
+		await tree.create_timer(0.1).timeout
+		waited += 0.1
+	assert_eq(stage.capture()["cast"].keys(), ["cleo", "theo"])
+	editor.select_scene("couch")
+	assert_eq(studio.story.chosen_block().line_start, editor.doc.find_beat("couch").body[0].line_start)
+
+
+func test_play_from_here_starts_at_the_chosen_block() -> void:
+	var studio := await _open()
+	studio.open_story("wheres_biscuit")
+	var editor: StudioBlockEditor = studio.story.editor
+	editor.select_block(editor.get_blocks()[6])
+	studio.story.play_from_here()
+	await tree.process_frame
+	assert_true(studio.story.is_playing())
+	var director: TaleDirector = tree.root.get_node("Story").get_crew(&"TaleDirector")
+	assert_true(director.get_tale("wheres_biscuit").get_beat_start(StudioFromHere.FROM_HERE_BEAT) >= 0)
+	assert_false(studio.story.preview.get_director().is_playing(), "the preview waits")
+	studio.story.stop_playing()
+	await tree.process_frame
+	assert_eq(studio.story.preview.viewport.render_target_update_mode, SubViewport.UPDATE_ALWAYS)

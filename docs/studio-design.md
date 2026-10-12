@@ -109,9 +109,9 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 ## 7. Preview and play
 
-- **Stage preview.** Choosing a block shows the stage as it looks at that point. The story runs from the start of the scene to that block in a fast mode with animations skipped, and the stage shows the result. This is the stage preview once planned for Pro (`docs/PLANNING.md` §9.5), now free.
+- **Stage preview.** Choosing a block shows the stage as it looks at that point, with the block's line in the dialogue box. The preview runs a small story of its own: from the start of the scene, the blocks on the way that set the stage (backgrounds, big pictures, characters, faces and places, weather, numbers, and Ifs holding those), then the chosen block. Lines, choices, sounds, and waits on the way are left out; inside a Choice only the block's own option counts, and inside an If its own arm. The preview makes no sound. This is the stage preview once planned for Pro (`docs/PLANNING.md` §9.5), now free.
 - **Play.** Full screen, from the beginning, with a large ✕ to go back to editing.
-- **Play from here.** Starts at the chosen block with the stage, music, and numbers as they would be there.
+- **Play from here.** Starts at the chosen block with the stage, music, and numbers as they would be there, then goes on the way the story would, past the end of the Choice or If the block is in. Like the preview it starts from the beginning of the block's scene, so numbers changed in earlier scenes start at their first values.
 
 ## 8. Stories, saving, and sharing
 
