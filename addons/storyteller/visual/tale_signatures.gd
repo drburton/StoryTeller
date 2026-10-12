@@ -95,6 +95,41 @@ static func choices(callee: String, param: String, config: StoryConfig, context:
 	return PackedStringArray()
 
 
+## Builds a check context for the tale at [param source_file] with the
+## built-in actions, the cast and assets of the tale's StoryConfig (see
+## [method Story.config_for_tale]), and the beats and variables of the other
+## tales in the same folder. Works outside the editor too, so the Studio can
+## check stories on a tablet.
+static func make_context(source_file: String, tale_name: String) -> TaleCheckContext:
+	var config: StoryConfig = preload("res://addons/storyteller/core/story.gd").config_for_tale(source_file)
+	var director := TaleDirector.new()
+	director.setup(config)
+	var context := director.make_check_context(tale_name)
+	director.free()
+	var profiles := StoryStage.scan_cast(config.cast_folder)
+	for id in profiles:
+		var profile: CastProfile = profiles[id]
+		context.add_cast(id, profile.look.get_moods() if profile.look else PackedStringArray(), profile.get_field_names())
+	add_asset_checks(context, config)
+	context.add_exposed("camera")
+	for exposed_name in config.exposed_names:
+		context.add_exposed(exposed_name)
+	var folder := source_file.get_base_dir()
+	for file_name in DirAccess.get_files_at(folder):
+		if not file_name.ends_with(".tale") or file_name.get_basename() == tale_name:
+			continue
+		var doc := TaleParser.parse(FileAccess.get_file_as_string(folder.path_join(file_name)))
+		var beats := PackedStringArray()
+		var vars := PackedStringArray()
+		for statement in doc.statements:
+			if statement.kind == TaleNode.Kind.BEAT:
+				beats.append(statement.name)
+			elif statement.kind == TaleNode.Kind.VAR or statement.kind == TaleNode.Kind.CONST:
+				vars.append(statement.name)
+		context.add_tale(file_name.get_basename(), beats, vars)
+	return context
+
+
 ## Adds to [param context] checks that warn about asset names in tales that
 ## match no file, such as [code]backdrop("libary")[/code].
 static func add_asset_checks(context: TaleCheckContext, config: StoryConfig) -> void:

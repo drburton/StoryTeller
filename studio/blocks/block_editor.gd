@@ -22,11 +22,13 @@ const DRAG_DISTANCE := 8.0
 const UNDO_LIMIT := 200
 const PALETTE_WIDTH := 280
 ## Words shown on a field that has no value yet.
-const FIELD_HINTS := {"character": "someone", "face": "face", "picture": "picture", "track": "music", "sound": "sound",
+const FIELD_HINTS := {"character": "someone", "face": "any face", "picture": "picture", "track": "music", "sound": "sound",
 	"scene": "scene", "number": "number", "word": "name", "code": "code", "text": "…"}
-## Fields a tap moves to their next choice, with the choices in order.
-const CYCLE_FIELDS := {"position": StoryBlocks.POSITIONS, "comparison": StoryBlocks.COMPARISONS,
+## Fields picked from a short list of words, by field.
+const WORD_CHOICES := {"position": StoryBlocks.POSITIONS, "comparison": StoryBlocks.COMPARISONS,
 	"motion": StoryBlocks.MOTIONS, "weather": StoryBlocks.WEATHERS}
+## Size of the pictures in pickers, in pixels.
+const PICTURE_SIZE := 96
 ## Words of the arms of an If block, by keyword and by test.
 const ARM_WORDS := {"if": "If", "elif": "Or if", "else": "Otherwise"}
 const TEST_WORDS := {"compare": "{number} {comparison} {value}", "visited": "the player has been to {scene}", "code": "{condition}"}
@@ -34,8 +36,23 @@ const TEST_WORDS := {"compare": "{number} {comparison} {value}", "visited": "the
 const FIELD_QUESTIONS := {"text": "What is said?", "prompt": "What does the game ask?", "character": "Who?",
 	"face": "Which face?", "picture": "Which picture?", "track": "Which music?", "sound": "Which sound?",
 	"seconds": "How many seconds?", "scene": "Which scene?", "number": "Which number?", "value": "What number?",
-	"word": "Keep the name in", "code": "TaleScript", "condition": "Test"}
+	"word": "Keep the name in", "code": "TaleScript", "condition": "Test", "position": "Where?",
+	"comparison": "Which test?", "motion": "Which move?", "weather": "Which weather?"}
 const _DIALOG_TITLES := {"note": "Note"}
+## Checker messages in words for students, as [regex, words] pairs. The
+## words name the regex's groups as {1}, {2}.
+const HINT_WORDS := [
+	["^There is no backdrop '(.+)' in", "There is no background called “{1}” yet."],
+	["^There is no CG '(.+)' in", "There is no big picture called “{1}” yet."],
+	["^There is no music track '(.+)' in", "There is no music called “{1}” yet."],
+	["^There is no sound '(.+)' in", "There is no sound called “{1}” yet."],
+	["^Unknown speaker '(.+?)'", "Nobody called “{1}” is in the story yet."],
+	["^Cast member '(.+)' has no mood '(.+)'", "{1} has no “{2}” face."],
+	["^Unknown beat '(.+)'", "There is no scene called “{1}”."],
+	["^Unknown variable '(.+?)'", "There is no number called “{1}” yet."],
+	["^Unknown (?:name|action or beat) '(.+)'", "The story doesn't know “{1}”."],
+	["^This line can never run", "This block never plays, because the block above it leaves the scene."],
+]
 
 var source := ""
 var doc: TaleDocument
@@ -47,6 +64,11 @@ var show_code_blocks := false:
 		show_code_blocks = value
 		show_group(current_group)
 var config: StoryConfig
+## Path of the .tale file shown, which names the story in "has been to"
+## tests. Set by [method open_tale].
+var tale_path := ""
+## Names, characters, pictures, and sounds the story knows, for hints.
+var check_context: TaleCheckContext
 
 ## One button per scene, in a row that wraps.
 var scene_tabs: HFlowContainer
@@ -61,6 +83,10 @@ var _message: Label
 var _dialog: Control
 
 var _scenes := PackedStringArray()
+## Problems the checker found, by line.
+var _hints := {}
+## Pictures for pickers, by "kind:name".
+var _pictures := {}
 ## Every list of blocks on screen: the scene's own and one per arm, as
 ## [code]{"parent": TaleNode, "cards": Array[TaleCard], "box": VBoxContainer}[/code].
 ## Lists inside a block come after the list that holds the block.
@@ -127,11 +153,34 @@ func set_source(new_source: String, keep_history := false) -> void:
 	_apply(new_source)
 
 
+## Opens the tale at [param path] with its story's characters, pictures,
+## and sounds.
+func open_tale(path: String) -> void:
+	tale_path = path
+	config = preload("res://addons/storyteller/core/story.gd").config_for_tale(path)
+	check_context = TaleSignatures.make_context(path, tale_name())
+	_cast = null
+	_pictures.clear()
+	set_source(FileAccess.get_file_as_string(path))
+
+
+## The name of the tale shown, from [member tale_path].
+func tale_name() -> String:
+	return tale_path.get_file().get_basename()
+
+
 func _apply(new_source: String) -> void:
 	source = new_source
 	doc = TaleParser.parse(source)
 	if config == null:
 		config = preload("res://addons/storyteller/core/story.gd").load_config()
+	_hints.clear()
+	var problems: Array[TaleDiagnostic] = doc.diagnostics.duplicate()
+	problems.append_array(TaleChecker.check(doc, check_context))
+	for problem in problems:
+		if not _hints.has(problem.line):
+			_hints[problem.line] = []
+		_hints[problem.line].append(problem)
 	_scenes = PackedStringArray()
 	for statement in doc.statements:
 		if statement.kind == TaleNode.Kind.BEAT:
@@ -301,6 +350,8 @@ func show_group(group: String) -> void:
 	for type in StoryBlocks.TYPES:
 		if StoryBlocks.group_of(type) == group and (type != "code" or show_code_blocks):
 			_palette_blocks.add_child(_palette_block(type))
+			if type == "if":
+				_palette_blocks.add_child(_palette_block("if_visited"))
 	for other in _group_buttons:
 		var color: Color = StoryBlocks.GROUPS[other]["color"]
 		var style := _flat(color if other == group else color.darkened(0.45), 8)
@@ -320,9 +371,19 @@ func get_palette_blocks() -> Array[Control]:
 	return result
 
 
+## A new block for the palette entry [param type]: a block type, or
+## "if_visited" for an If that tests whether the player has seen a scene.
+static func new_block(type: String) -> Dictionary:
+	if type == "if_visited":
+		var block := StoryBlocks.new_block("if")
+		block["arms"][0] = {"keyword": "if", "test": "visited", "fields": {"scene": ""}}
+		return block
+	return StoryBlocks.new_block(type)
+
+
 func _palette_block(type: String) -> Control:
-	var block := StoryBlocks.new_block(type)
-	var panel := _block_panel(type, false)
+	var block := new_block(type)
+	var panel := _block_panel(block["type"], false)
 	panel.size_flags_horizontal = Control.SIZE_FILL
 	panel.set_meta("new_type", type)
 	panel.gui_input.connect(_on_block_input.bind(panel))
@@ -407,6 +468,23 @@ func _make_block(block: Dictionary, card: TaleCard, lane: int, index: int) -> Co
 	column.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_theme_constant_override("separation", 4)
 	panel.add_child(column)
+	var problems := _problems_of(block, card)
+	if not problems.is_empty():
+		panel.set_meta("hints", problems.map(func(problem: TaleDiagnostic) -> String: return hint_text(problem.message)))
+	_fill_block(column, block, panel)
+	if not problems.is_empty():
+		var row: Container = column.get_child(0)
+		var error: bool = problems.any(func(problem: TaleDiagnostic) -> bool: return problem.severity == TaleDiagnostic.Severity.ERROR)
+		var badge := _small_button("!", func() -> void: show_message(" ".join(panel.get_meta("hints"))))
+		badge.set_meta("hint_badge", true)
+		badge.add_theme_stylebox_override("normal", _flat(Color(0.85, 0.2, 0.2) if error else Color(0.95, 0.7, 0.1), 16))
+		badge.add_theme_color_override("font_color", Color.WHITE)
+		row.add_child(badge)
+	return panel
+
+
+func _fill_block(column: VBoxContainer, block: Dictionary, panel: Control) -> void:
+	var type: String = block["type"]
 	if type == "choice":
 		column.add_child(_words_row("Choice", {}, "", null))
 		var arms: Array = block["arms"]
@@ -440,7 +518,43 @@ func _make_block(block: Dictionary, card: TaleCard, lane: int, index: int) -> Co
 		column.add_child(buttons)
 	else:
 		column.add_child(_words_row(StoryBlocks.TYPES[type]["words"], block["fields"], "field:", panel))
-	return panel
+
+
+## Hints shown on [param control], in words for students.
+func get_hints(control: Control) -> PackedStringArray:
+	return PackedStringArray(control.get_meta("hints", []))
+
+
+## The checker's problems on the lines [param block] shows: its whole text,
+## or only the header lines of a Choice or If (their arms show their own).
+func _problems_of(block: Dictionary, card: TaleCard) -> Array[TaleDiagnostic]:
+	var lines := []
+	if block.has("arms"):
+		var headers: Array = [card.node] if block["type"] == "choice" else []
+		for arm in block["arms"]:
+			headers.append(arm["node"])
+		for node in headers:
+			lines.append_array(range(node.line_start, node.line_end + 1))
+	else:
+		var span := TaleEdit.group_span(card.nodes)
+		lines = range(span.x, span.y + 1)
+	var result: Array[TaleDiagnostic] = []
+	for line in lines:
+		for problem in _hints.get(line, []):
+			result.append(problem)
+	return result
+
+
+## [param message] from the checker in words for students.
+static func hint_text(message: String) -> String:
+	for pair in HINT_WORDS:
+		var found := RegEx.create_from_string(pair[0]).search(message)
+		if found != null:
+			var words: String = pair[1]
+			for i in range(1, found.get_group_count() + 1):
+				words = words.replace("{%d}" % i, found.get_string(i))
+			return words
+	return message
 
 
 ## The inside of one arm: an indented list of blocks.
@@ -503,7 +617,10 @@ func _words_row(words: String, fields: Dictionary, key_prefix: String, target: C
 	for found in RegEx.create_from_string("\\{(\\w+)\\}").search_all(words):
 		_add_words(row, words.substr(at, found.get_start() - at))
 		var field := found.get_string(1)
-		row.add_child(_chip(field, str(fields.get(field, "")), key_prefix + field, target))
+		var chip := _chip(field, str(fields.get(field, "")), key_prefix + field, target)
+		if target != null and chip is Button:
+			chip.icon = _chip_picture(field, fields, target.get_meta("block")["type"])
+		row.add_child(chip)
 		at = found.get_end()
 	_add_words(row, words.substr(at))
 	return row
@@ -552,6 +669,39 @@ func _chip(field: String, value: String, key: String, target: Control) -> Contro
 	return button
 
 
+## A small picture for a chip: the character's face, or the background or
+## big picture. Null for other fields.
+func _chip_picture(field: String, fields: Dictionary, type: String) -> Texture2D:
+	var value := str(fields.get(field, ""))
+	if value.is_empty() or config == null:
+		return null
+	var picture: Texture2D = null
+	match field:
+		"character":
+			picture = _face_picture(value, str(fields.get("face", "")))
+		"picture":
+			if type == "big_picture":
+				var cgs := StoryAssets.scan_cgs(config.cg_folder)
+				if cgs.has(value):
+					picture = _picture(StoryAssets.find_cg(config.cg_folder, value, StoryAssets.default_cg_variant(cgs[value])))
+			else:
+				picture = _picture(StoryAssets.find(config.backdrop_folder, value, StoryAssets.IMAGE_EXTENSIONS))
+	return _small(picture)
+
+
+## [param texture] at chip size, kept for later.
+func _small(texture: Texture2D) -> Texture2D:
+	if texture == null:
+		return null
+	var key := "small:%d" % texture.get_instance_id()
+	if not _pictures.has(key):
+		var image := texture.get_image()
+		var height := TOUCH_SIZE - 14
+		image.resize(maxi(1, roundi(float(height) * image.get_width() / image.get_height())), height, Image.INTERPOLATE_BILINEAR)
+		_pictures[key] = ImageTexture.create_from_image(image)
+	return _pictures[key]
+
+
 ## How [param value] of [param field] shows on a block.
 static func field_text(field: String, value: String) -> String:
 	if value.is_empty():
@@ -566,7 +716,9 @@ static func field_text(field: String, value: String) -> String:
 		"weather":
 			return StoryBlocks.WEATHERS.get(value, value)
 		"scene":
-			return scene_title(value)
+			return scene_title(value.get_slice(".", value.get_slice_count(".") - 1))
+		"character", "face", "picture", "track", "sound":
+			return scene_title(value) if value.is_valid_identifier() else value
 		"text", "prompt":
 			return "“%s”" % (value if value.length() <= 32 else value.left(30) + "…")
 	return value
@@ -619,7 +771,7 @@ func get_selected_line() -> int:
 ## [param lane]. [param fields] replace its starting values. A Code block
 ## without code asks for it first.
 func add_block(type: String, lane: int, index: int, fields := {}) -> bool:
-	var block := StoryBlocks.new_block(type)
+	var block := new_block(type)
 	block["fields"].merge(fields, true)
 	if type == "code" and str(block["fields"]["code"]).strip_edges().is_empty():
 		ask_text(FIELD_QUESTIONS["code"], "", true, func(text: String) -> void:
@@ -678,19 +830,45 @@ func field_value(control: Control, key: String) -> String:
 	return str(block["fields"][key.get_slice(":", 1)])
 
 
-## Edits field [param key] of [param control]. Positions, comparisons,
-## motions, and weather move to their next choice; other fields ask for a
-## new value.
+## Edits field [param key] of [param control] with a picker that fits it:
+## pictures for characters, faces, and backgrounds, lists for sounds,
+## scenes, places, and numbers, a stepper for amounts, and the keyboard for
+## words.
 func edit_field(control: Control, key: String) -> void:
 	var field := key.get_slice(":", key.get_slice_count(":") - 1)
 	var value := field_value(control, key)
-	if field in CYCLE_FIELDS:
-		var choices: Array = CYCLE_FIELDS[field].keys()
-		set_field(control, key, choices[(choices.find(value) + 1) % choices.size()])
-		return
-	var type: String = control.get_meta("block")["type"]
+	var block: Dictionary = control.get_meta("block")
+	var type: String = block["type"]
 	var question: String = _DIALOG_TITLES.get(type, FIELD_QUESTIONS.get(field, field.capitalize()))
-	ask_text(question, value, field == "code", func(text: String) -> void: set_field(control, key, text))
+	var done := func(new_value: String) -> void: set_field(control, key, new_value)
+	match field:
+		"character":
+			pick(question, character_items(), value, done)
+		"face":
+			pick(question, face_items(block["fields"]["character"]), value, done)
+		"picture":
+			pick(question, picture_items("cg" if type == "big_picture" else "backdrop"), value, done)
+		"track":
+			pick(question, sound_items("music"), value, done)
+		"sound":
+			pick(question, sound_items("sounds"), value, done)
+		"scene":
+			pick(question, scene_items(key.begins_with("arm:")), value, done)
+		"position", "comparison", "motion", "weather":
+			pick(question, word_items(field, value), value, done)
+		"number", "word":
+			var make := "Make a number" if field == "number" else "Make a name"
+			pick(question, name_items(field == "number"), value, done, [{"label": "+ " + make, "action": func() -> void:
+				ask_text("Name of the new %s" % field, "", false, func(text: String) -> void:
+					var made := make_name(text)
+					if not made.is_empty():
+						done.call(made))}])
+		"value":
+			ask_number(question, value, 1.0, done)
+		"seconds":
+			ask_number(question, value, 0.5, done)
+		_:
+			ask_text(question, value, field == "code", done)
 
 
 ## Sets field [param key] of [param control] to [param value] and rewrites
@@ -816,7 +994,11 @@ func _fill_new_block(block: Dictionary) -> void:
 		if str(block["fields"][field]).is_empty() and field in ["character", "number", "scene"]:
 			block["fields"][field] = suggest(field)
 	if block["type"] == "if":
-		block["arms"][0]["fields"]["number"] = suggest("number")
+		var arm: Dictionary = block["arms"][0]
+		if arm["test"] == "visited":
+			arm["fields"]["scene"] = qualified_scene(suggest("scene"))
+		else:
+			arm["fields"]["number"] = suggest("number")
 
 
 ## [param text] with a [code]var[/code] line for each number or name
@@ -936,7 +1118,7 @@ func _tap(control: Control) -> void:
 	if _lanes.is_empty():
 		show_message("Add a scene first.")
 		return
-	index = allowed_index(lane, _lane_blocks(lane).size() if index < 0 else index, type, null)
+	index = allowed_index(lane, _lane_blocks(lane).size() if index < 0 else index, new_block(type)["type"], null)
 	if index < 0:
 		show_message("Nothing can go after Go to scene or The end.")
 		return
@@ -948,7 +1130,7 @@ func _tap(control: Control) -> void:
 func start_drag(control: Control, at: Vector2) -> void:
 	_pressing = null
 	_drag = {"control": control, "offset": Vector2(24, 22), "at": at}
-	var block: Dictionary = control.get_meta("block") if control.has_meta("card") else StoryBlocks.new_block(control.get_meta("new_type"))
+	var block: Dictionary = control.get_meta("block") if control.has_meta("card") else new_block(control.get_meta("new_type"))
 	if control.has_meta("card"):
 		control.modulate.a = 0.35
 	_ghost = _block_panel(block["type"], false)
@@ -1034,7 +1216,7 @@ func _update_target(at: Vector2) -> void:
 		if at.y < block.get_global_rect().get_center().y:
 			index = block.get_meta("index")
 			break
-	var type: String = control.get_meta("block")["type"] if moving else control.get_meta("new_type")
+	var type: String = control.get_meta("block")["type"] if moving else new_block(control.get_meta("new_type"))["type"]
 	index = allowed_index(lane, index, type, control if moving else null)
 	if index < 0:
 		return
@@ -1101,27 +1283,7 @@ func open_block_menu(control: Control) -> PopupMenu:
 ## Asks for text over the editor, then calls [param on_done] with it.
 ## Cancel leaves everything as it was.
 func ask_text(question: String, value: String, multiline: bool, on_done: Callable) -> Control:
-	close_dialog()
-	_dialog = Control.new()
-	_dialog.top_level = true
-	_dialog.z_index = 30
-	_dialog.size = get_viewport_rect().size if is_inside_tree() else Vector2(1024, 768)
-	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.5)
-	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dialog.add_child(dim)
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_dialog.add_child(center)
-	var panel := PanelContainer.new()
-	var style := _flat(Color(0.16, 0.17, 0.21), 12)
-	style.set_content_margin_all(20)
-	panel.add_theme_stylebox_override("panel", style)
-	center.add_child(panel)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 12)
-	panel.add_child(column)
-	column.add_child(_label(question, FONT_SIZE + 2, Color.WHITE))
+	var column := _open_dialog(question)
 	var edit: Control
 	if multiline:
 		var text_edit := TextEdit.new()
@@ -1143,17 +1305,293 @@ func ask_text(question: String, value: String, multiline: bool, on_done: Callabl
 		on_done.call(text)
 	if edit is LineEdit:
 		edit.text_submitted.connect(func(_text: String) -> void: done.call())
+	_add_dialog_buttons(column, done)
+	(func() -> void:
+		if is_instance_valid(edit) and edit.is_inside_tree():
+			edit.grab_focus()).call_deferred()
+	return _dialog
+
+
+## Asks for a number with − and + buttons that step by [param step], or
+## typed with the keyboard, then calls [param on_done] with it.
+func ask_number(question: String, value: String, step: float, on_done: Callable) -> Control:
+	var column := _open_dialog(question)
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	column.add_child(row)
+	var edit := LineEdit.new()
+	edit.text = value
+	edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	edit.custom_minimum_size = Vector2(160, TOUCH_SIZE + 16)
+	edit.add_theme_font_size_override("font_size", FONT_SIZE + 10)
+	edit.set_meta("field_key", "dialog:number")
+	var nudge := func(by: float) -> void:
+		var decimals := 1 if step < 1.0 or "." in edit.text else 0
+		var next := (edit.text.to_float() if edit.text.is_valid_float() else 0.0) + by
+		if step < 1.0:
+			next = maxf(next, 0.0)
+		edit.text = ("%.1f" % next) if decimals > 0 else str(roundi(next))
+	var minus := _button("−", nudge.bind(-step))
+	minus.set_meta("field_key", "dialog:minus")
+	var plus := _button("+", nudge.bind(step))
+	plus.set_meta("field_key", "dialog:plus")
+	for button in [minus, plus]:
+		button.custom_minimum_size = Vector2(TOUCH_SIZE + 16, TOUCH_SIZE + 16)
+		button.add_theme_font_size_override("font_size", FONT_SIZE + 10)
+	row.add_child(minus)
+	row.add_child(edit)
+	row.add_child(plus)
+	var done := func() -> void:
+		var text := edit.text.strip_edges()
+		close_dialog()
+		if text.is_valid_float():
+			on_done.call(text)
+	edit.text_submitted.connect(func(_text: String) -> void: done.call())
+	_add_dialog_buttons(column, done)
+	return _dialog
+
+
+## Shows [param items] to pick from, as pictures when they have them, then
+## calls [param on_pick] with the picked value. Each item is
+## [code]{"value", "label", "picture"}[/code]; [param actions] adds buttons
+## such as "Make a number" as [code]{"label", "action"}[/code].
+func pick(question: String, items: Array, current: String, on_pick: Callable, actions := []) -> Control:
+	var column := _open_dialog(question)
+	var with_pictures := items.any(func(item: Dictionary) -> bool: return item.get("picture") != null)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.custom_minimum_size = Vector2(600, mini(440, 60 + ceili(items.size() / 4.0) * (PICTURE_SIZE + 56)) if with_pictures \
+		else mini(440, 8 + ceili(items.size() / 3.0) * (TOUCH_SIZE + 12)))
+	column.add_child(scroll)
+	var flow := HFlowContainer.new()
+	flow.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	flow.add_theme_constant_override("h_separation", 10)
+	flow.add_theme_constant_override("v_separation", 10)
+	scroll.add_child(flow)
+	if items.is_empty():
+		flow.add_child(_label("Nothing here yet.", FONT_SIZE, Color(0.85, 0.87, 0.9)))
+	for item in items:
+		var button := Button.new()
+		button.text = item["label"]
+		button.add_theme_font_size_override("font_size", FONT_SIZE)
+		button.custom_minimum_size = Vector2(130, PICTURE_SIZE + 48) if with_pictures else Vector2(130, TOUCH_SIZE + 8)
+		if item.get("picture") != null:
+			button.icon = item["picture"]
+			button.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+			button.expand_icon = false
+		if item["value"] == current:
+			var style := _flat(Color(0.3, 0.45, 0.75), 10)
+			style.border_color = Color.WHITE
+			style.set_border_width_all(3)
+			button.add_theme_stylebox_override("normal", style)
+		button.set_meta("pick_value", item["value"])
+		var value: String = item["value"]
+		button.pressed.connect(func() -> void:
+			close_dialog()
+			on_pick.call(value))
+		flow.add_child(button)
+	for extra in actions:
+		var button := _button(extra["label"], func() -> void:
+			close_dialog()
+			extra["action"].call())
+		button.set_meta("pick_action", extra["label"])
+		column.add_child(button)
+	_add_dialog_buttons(column, Callable())
+	return _dialog
+
+
+func _open_dialog(question: String) -> VBoxContainer:
+	close_dialog()
+	_dialog = Control.new()
+	_dialog.top_level = true
+	_dialog.z_index = 30
+	_dialog.size = get_viewport_rect().size if is_inside_tree() else Vector2(1024, 768)
+	var dim := ColorRect.new()
+	dim.color = Color(0, 0, 0, 0.5)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_dialog.add_child(dim)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_dialog.add_child(center)
+	var panel := PanelContainer.new()
+	var style := _flat(Color(0.16, 0.17, 0.21), 12)
+	style.set_content_margin_all(20)
+	panel.add_theme_stylebox_override("panel", style)
+	center.add_child(panel)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", 12)
+	panel.add_child(column)
+	column.add_child(_label(question, FONT_SIZE + 2, Color.WHITE))
+	add_child(_dialog)
+	return column
+
+
+## Cancel, and OK when [param done] is valid.
+func _add_dialog_buttons(column: VBoxContainer, done: Callable) -> void:
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_END
 	buttons.add_theme_constant_override("separation", 12)
 	column.add_child(buttons)
 	buttons.add_child(_button("Cancel", close_dialog))
-	buttons.add_child(_button("OK", done))
-	add_child(_dialog)
-	(func() -> void:
-		if is_instance_valid(edit) and edit.is_inside_tree():
-			edit.grab_focus()).call_deferred()
-	return _dialog
+	if done.is_valid():
+		var ok := _button("OK", done)
+		ok.set_meta("field_key", "dialog:ok")
+		buttons.add_child(ok)
+
+
+# --- Picker items ---------------------------------------------------------
+
+## The story's characters, with their pictures.
+func character_items() -> Array:
+	var ids := Array(cast_ids())
+	for id in _characters_in_tale():
+		if id not in ids:
+			ids.append(id)
+	var profiles := _profiles()
+	return ids.map(func(id: String) -> Dictionary:
+		var profile: CastProfile = profiles.get(id)
+		return {"value": id, "label": profile.get_display_name() if profile != null else id.capitalize(),
+			"picture": _face_picture(id, "")})
+
+
+## The faces of [param character], with pictures, after "Any face".
+func face_items(character: String) -> Array:
+	var items := [{"value": "", "label": "Any face", "picture": null}]
+	var profile: CastProfile = _profiles().get(character)
+	if profile != null and profile.look != null:
+		for mood in profile.look.get_moods():
+			items.append({"value": mood, "label": mood.capitalize(), "picture": _face_picture(character, mood)})
+	return items
+
+
+## Backgrounds ([param kind] "backdrop") or big pictures ("cg"), with
+## pictures.
+func picture_items(kind: String) -> Array:
+	var items := []
+	if config == null:
+		return items
+	if kind == "cg":
+		var cgs := StoryAssets.scan_cgs(config.cg_folder)
+		for cg_name in cgs:
+			var path := StoryAssets.find_cg(config.cg_folder, cg_name, StoryAssets.default_cg_variant(cgs[cg_name]))
+			items.append({"value": cg_name, "label": scene_title(cg_name), "picture": _picture(path)})
+	else:
+		for picture_name in StoryAssets.list_names(config.backdrop_folder, StoryAssets.IMAGE_EXTENSIONS):
+			var path := StoryAssets.find(config.backdrop_folder, picture_name, StoryAssets.IMAGE_EXTENSIONS)
+			items.append({"value": picture_name, "label": scene_title(picture_name), "picture": _picture(path)})
+	return items
+
+
+## Music ([param folder] "music") or sounds ("sounds").
+func sound_items(folder: String) -> Array:
+	if config == null:
+		return []
+	return Array(StoryAssets.list_names(config.audio_folder.path_join(folder), StoryAssets.AUDIO_EXTENSIONS)).map(
+		func(sound_name: String) -> Dictionary: return {"value": sound_name, "label": scene_title(sound_name), "picture": null})
+
+
+## The story's scenes; with [param qualified] their full names, as
+## "has been to" tests need.
+func scene_items(qualified: bool) -> Array:
+	return Array(_scenes).map(func(beat_name: String) -> Dictionary:
+		return {"value": qualified_scene(beat_name) if qualified else beat_name, "label": scene_title(beat_name), "picture": null})
+
+
+## The words of [param field]'s choices, plus [param current] when it is
+## something else, such as a spot set in TaleScript.
+func word_items(field: String, current: String) -> Array:
+	var choices: Dictionary = WORD_CHOICES[field]
+	var items := choices.keys().map(func(choice: String) -> Dictionary:
+		return {"value": choice, "label": choices[choice], "picture": null})
+	if not current.is_empty() and not choices.has(current):
+		items.append({"value": current, "label": "this spot" if field == "position" else current, "picture": null})
+	return items
+
+
+## The tale's numbers ([param numbers] true) or names: its variables
+## holding a number or a text.
+func name_items(numbers: bool) -> Array:
+	var items := []
+	for statement in doc.statements:
+		if statement.kind == TaleNode.Kind.VAR and statement.expr != null and statement.expr.kind == TaleExpr.Kind.LITERAL:
+			var value = statement.expr.value
+			if (value is int or value is float) == numbers and (value is String) != numbers:
+				items.append({"value": statement.name, "label": statement.name, "picture": null})
+	return items
+
+
+## A TaleScript name made from what a student typed: "Team Work" is
+## "team_work". Empty when nothing usable is left.
+static func make_name(text: String) -> String:
+	var result := ""
+	for character in text.strip_edges().to_lower().replace(" ", "_").replace("-", "_"):
+		if character == "_" or (character >= "a" and character <= "z") or (character >= "0" and character <= "9"):
+			result += character
+	if not result.is_empty() and result[0] >= "0" and result[0] <= "9":
+		result = "n_" + result
+	return result if result.is_valid_identifier() else ""
+
+
+## The full name of the scene [param beat_name], as "has been to" tests
+## use it: "wheres_biscuit.yard".
+func qualified_scene(beat_name: String) -> String:
+	return "%s.%s" % [tale_name(), beat_name] if not tale_path.is_empty() and "." not in beat_name else beat_name
+
+
+func _profiles() -> Dictionary:
+	if not _pictures.has("profiles"):
+		_pictures["profiles"] = StoryStage.scan_cast(config.cast_folder) if config != null else {}
+	return _pictures["profiles"]
+
+
+## A square picture of [param character] with [param mood] (its usual face
+## when empty), or null.
+func _face_picture(character: String, mood: String) -> Texture2D:
+	var key := "face:%s:%s" % [character, mood]
+	if not _pictures.has(key):
+		var profile: CastProfile = _profiles().get(character)
+		var texture: Texture2D = null
+		if profile != null and profile.look != null:
+			var moods := profile.look.get_moods()
+			var shown := mood if not mood.is_empty() else profile.default_mood if not profile.default_mood.is_empty() \
+				else moods[0] if not moods.is_empty() else ""
+			texture = profile.look.get_preview(shown)
+		_pictures[key] = _thumbnail(texture, true)
+	return _pictures[key]
+
+
+## A small copy of the picture at [param path], or null.
+func _picture(path: String) -> Texture2D:
+	if path.is_empty():
+		return null
+	if not _pictures.has(path):
+		_pictures[path] = _thumbnail(load(path) as Texture2D, false)
+	return _pictures[path]
+
+
+## [param texture] scaled down to [constant PICTURE_SIZE], cut to a square
+## from its top (a character's face) when [param square] is true.
+static func _thumbnail(texture: Texture2D, square: bool) -> Texture2D:
+	var image := texture.get_image() if texture != null else null
+	if image == null:
+		return null
+	image = image.duplicate()
+	if image.is_compressed():
+		image.decompress()
+	image.convert(Image.FORMAT_RGBA8)
+	if square:
+		var used := image.get_used_rect()
+		if used.size.x <= 0 or used.size.y <= 0:
+			return null
+		var side := mini(used.size.x, used.size.y)
+		image = image.get_region(Rect2i(used.position.x + (used.size.x - side) / 2, used.position.y, side, side))
+		image.resize(PICTURE_SIZE, PICTURE_SIZE, Image.INTERPOLATE_BILINEAR)
+	else:
+		var width := PICTURE_SIZE * 4 / 3
+		image.resize(width, maxi(1, roundi(float(width) * image.get_height() / image.get_width())), Image.INTERPOLATE_BILINEAR)
+	return ImageTexture.create_from_image(image)
 
 
 func close_dialog() -> void:
