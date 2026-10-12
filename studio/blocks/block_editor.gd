@@ -14,6 +14,8 @@ signal source_changed(new_source: String)
 signal block_selected(line: int)
 ## Emitted when another scene is shown.
 signal scene_selected(beat_name: String)
+## Emitted when the student taps Map, to see every scene at once.
+signal map_requested
 
 const FONT_SIZE := 20
 ## Smallest height of anything a finger taps (docs/studio-design.md §2).
@@ -316,6 +318,9 @@ func _update_tabs() -> void:
 			button.add_theme_stylebox_override(state, style)
 		scene_tabs.add_child(button)
 	scene_tabs.add_child(_button("+ Scene", add_scene))
+	var map := _button("Map", func() -> void: map_requested.emit())
+	map.set_meta("map_button", true)
+	scene_tabs.add_child(map)
 
 
 ## The scene buttons, in story order.

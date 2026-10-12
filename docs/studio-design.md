@@ -60,7 +60,7 @@ Landscape on a tablet (1024 x 768 points and up, about the size of the smallest 
 ```
 
 - **Blocks palette (left).** Five colored groups, plus a gray one for notes. Tapping a group shows its blocks, and dragging a block into the scene adds it.
-- **Scene (middle).** The blocks of the chosen scene, top to bottom, in the order they play. Tabs above switch scenes; **+** adds one. A **Map** button shows all scenes as boxes with arrows (the Story Map, simplified).
+- **Scene (middle).** The blocks of the chosen scene, top to bottom, in the order they play. Tabs above switch scenes; **+** adds one. A **Map** button shows all scenes as boxes with arrows (the Story Map, simplified): the start, the endings, and problems such as a scene nothing leads to are marked in plain words, and tapping a scene opens it.
 - **Stage preview (right, top).** The scene as it looks at the chosen block. **Play from here** starts the story at that block.
 - **Library (right, bottom).** The story's characters, backgrounds, and sounds, with **+** to add from the starter library or from the student's own pictures.
 - **Top bar.** Home (the list of stories), the story's name, undo and redo, **Play** from the beginning, and **Share**.
