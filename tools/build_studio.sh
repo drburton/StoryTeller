@@ -50,7 +50,7 @@ platform="Linux"
 runnable=false
 custom_features="studio"
 export_filter="all_resources"
-include_filter=""
+include_filter="studio/samples/*.txt"
 exclude_filter="tests/*, tools/*, docs/*, demo/*, build/*"
 export_path=""
 
@@ -65,7 +65,7 @@ platform="Android"
 runnable=false
 custom_features="studio"
 export_filter="all_resources"
-include_filter=""
+include_filter="studio/samples/*.txt"
 exclude_filter="tests/*, tools/*, docs/*, demo/*, build/*"
 export_path=""
 
@@ -84,6 +84,13 @@ package/signed=true
 screen/immersive_mode=true
 PRESETS
 fi
+
+# The Studio edits a tale's text, but an export holds only the imported
+# tale, so the sample's text ships as a plain copy (include_filter above).
+samples="$root/studio/samples"
+mkdir -p "$samples"
+cp "$root/examples/wheres_biscuit/tales/wheres_biscuit.tale" "$samples/wheres_biscuit.tale.txt"
+trap 'cleanup; rm -rf "$samples"' EXIT
 
 "$godot" --headless --path "$root" --import >/dev/null 2>&1
 log="$(mktemp)"

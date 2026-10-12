@@ -4,9 +4,13 @@ The block-based story builder for kids (decisions 0020 and 0021, design in `docs
 
 ## What is here now
 
-- `studio.tscn` is the app. It opens the **Where's Biscuit?** sample in the block editor, saves every change in the app's own storage, and plays the story with **▶ Play** (from the start) or **▶ This scene**, with a ✕ to come back. **Undo** and **Redo** are in the top bar. The **⋯** menu shows the Code blocks, starts the sample over, and opens the tablet check.
+- `studio.tscn` is the app. It opens on the **home screen** (`home/`): the student's stories as cards with a picture, **New story** (a blank story or a copy of the **Where's Biscuit?** sample), and **Open a story file**. Each card's **⋯** renames, shares, or deletes its story, and a card reminds the student to share a copy of a story they changed a week ago and haven't shared since. The **⋯** at the top shows the Code blocks and opens the tablet check.
+- `story_screen.gd` shows one story in the blocks, with **⌂ Stories**, the story's name (tap it to rename), **Undo**, **Redo**, **▶ Play** (from the start), **▶ This scene**, and **⇪ Share**. Every change is saved at once. Play runs the story full screen with a ✕ to come back.
+- `stories/` keeps the stories in the app's own storage (`StudioLibrary`): one folder per story with its `story.json` and `tales/<id>.tale`. **Share** packs a story into one `.zip` and saves it through the system's file picker (`StudioFiles`), and **Open a story file** adds one. A share sheet with AirDrop, Classroom, and email needs a small native plugin and comes later.
 - `blocks/block_editor.gd` is the block editor (`StudioBlockEditor`): scene buttons, a palette of colored block groups, and the chosen scene's blocks. Drag a block in from the palette (or tap it to add it under the chosen block), drag blocks to move them, and drag one back to the palette to delete it. Hold a block for **Duplicate** and **Delete**. Tapping a field opens a picker: faces and backgrounds as pictures, lists for sounds and scenes, − and + for amounts. A **!** on a block explains a problem in plain words. The blocks themselves, and the TaleScript each one writes, are in `addons/storyteller/visual/story_blocks.gd`.
 - `check/` holds the **tablet check** (milestone M8, step S0): one panel for each risk in `docs/studio-design.md` §10. A tester runs it on a real tablet, taps **Works** or **Problem** on each panel, and sends the results summary back.
+
+Until the starter library (step S4), every story uses the characters, backgrounds, and sounds of the Where's Biscuit sample.
 
 ## Building
 
@@ -21,5 +25,5 @@ GitHub Actions builds the Android app on every change to the Studio (`.github/wo
 
 1. Open the repository's **Actions** tab, choose the latest **Studio** run, and download **storyteller-studio-android** from its Summary page. Unzip it to get `storyteller-studio.apk`.
 2. Copy the `.apk` to the tablet (email, Google Drive, or a USB cable) and open it there. Android asks to allow installing apps from that source; allow it for this install.
-3. Open **StoryTeller Studio** and try the blocks with your finger.
-4. For the tablet check, tap **⋯**, then **Tablet check**. Work through the seven panels, then tap **Show results to send** and paste the results into a message.
+3. Open **StoryTeller Studio**, make a story, and try the blocks with your finger. Try **⇪ Share** and **Open a story file** too.
+4. For the tablet check, tap **⋯** on the home screen, then **Tablet check**. Work through the seven panels, then tap **Show results to send** and paste the results into a message.

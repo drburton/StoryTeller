@@ -117,9 +117,10 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 - **Home screen.** The student's stories as cards with a picture, plus **New story**, which offers a blank story or a starter template (a mystery, an adventure, a "choose your path" lesson).
 - **Saving.** Every change saves in the app's own storage on the device (Godot's `user://`), which stays until the app is removed.
-- **Share.** **Share** packs the story into one `.zip` file (its tales, pictures, sounds, and config) and opens the system's share sheet: AirDrop, Files, Google Drive, Google Classroom, or email. **Open a story file** on the home screen loads a `.zip` from Files, so a teacher can open a student's story, and a student can move a story between devices.
-- **Keeping stories safe.** Removing the app removes its stories, so the Studio reminds students to Share a copy of a story they haven't shared in a while.
-- **Into Godot.** The `.zip` unpacks into a Godot project that has the StoryTeller plugin, where the story opens in the Story tab and can be exported as a game.
+- **Share.** **Share** packs the story into one `.zip` file (its tales, pictures, sounds, and config) and opens the system's share sheet: AirDrop, Files, Google Drive, Google Classroom, or email. The first version saves the `.zip` through the system's file picker (Files and iCloud on an iPad, Files and Google Drive on Android); the share sheet needs a small native plugin and follows. **Open a story file** on the home screen loads a `.zip` from Files, so a teacher can open a student's story, and a student can move a story between devices.
+- **Keeping stories safe.** Removing the app removes its stories, so the Studio reminds students to Share a copy of a story they changed and haven't shared for a week.
+- **Publishing goes through an adult (decision 0022).** The Studio never publishes a story itself. A student Shares the story file with a teacher or parent, who opens it in Godot and decides whether it goes public.
+- **Into Godot.** The plugin's **Open a Studio story** command unpacks a story file into a Godot project as its own story folder with its own config. The story plays in the editor, opens in the Story tab, and exports as a game: a web build for itch.io or a class website, or a desktop or Android build. So the file carries everything a build needs: the tale, `story.json`, the pictures and sounds the story uses (from the starter library and the student's own), and a story config.
 
 ## 9. How it is built
 
@@ -147,7 +148,7 @@ The biggest unknowns are about tablets, so M8 starts with a one-week feasibility
 
 Each item gets a pass or a workaround before the Studio work goes on. The check needs a person with the tablets and the developer accounts (§9); the test app is built by GitHub Actions from the repository.
 
-## 11. Plan (milestone M8, about 12 weeks)
+## 11. Plan (milestone M8, about 13 weeks)
 
 | Step | Work | Weeks |
 |---|---|---|
@@ -155,8 +156,8 @@ Each item gets a pass or a workaround before the Studio work goes on. The check 
 | S1 | Studio shell: home screen, stories in the app's storage, Share and Open as `.zip` | 2 |
 | S2 | Blocks: palette, drag and snap, pickers, undo, hints, Code block | 4 |
 | S3 | Stage preview, Play, and Play from here | 2 |
-| S4 | Starter library and adding the student's own pictures and sounds | 1 |
-| S5 | Map of scenes, starter templates, lesson projects and the screenshot script for the textbook (§13) | 1 |
+| S4 | Starter library and adding the student's own pictures and sounds; story files carry the pictures and sounds they use | 1 |
+| S5 | Map of scenes, starter templates, lesson projects and the screenshot script for the textbook (§13); **Open a Studio story** in the plugin, a web export check, and a teacher's guide to publishing a student's story (decision 0022) | 2 |
 | S6 | Store listings (privacy details, Kids category, screenshots) and the first TestFlight and Google Play test release | 1 |
 
 **Exit criteria:** every block, the stage preview, the starter library, and sharing work on an iPad and an Android tablet, and a test build is on TestFlight and Google Play's testing track.
@@ -167,7 +168,6 @@ Each item gets a pass or a workaround before the Studio work goes on. The check 
 
 - Character maker (§6).
 - Blocks inside the Godot plugin's Story tab, as a fourth view next to Text, Cards, and Map.
-- Sharing a playable link instead of a file.
 - Phone layouts, and web and desktop versions (decision 0021).
 - The rest of the former Pro features (`docs/PLANNING.md` §12).
 

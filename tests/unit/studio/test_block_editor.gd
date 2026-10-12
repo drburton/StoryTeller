@@ -429,3 +429,10 @@ func test_an_if_can_test_where_the_player_has_been() -> void:
 	_choose(editor, "wheres_biscuit.couch")
 	assert_eq(_beat_lines(editor, "start")[0], "\tif visited(\"wheres_biscuit.couch\"):")
 	assert_eq(StudioBlockEditor.field_text("scene", "wheres_biscuit.couch"), "Couch")
+
+
+func test_new_picture_blocks_start_with_the_first_picture() -> void:
+	var editor := await _open_example()
+	assert_true(editor.add_block("background", 0, 0))
+	assert_eq(_beat_lines(editor, "start")[0], "\tbackdrop(\"backyard\")")
+	assert_true(editor.get_hints(editor.get_blocks()[0]).is_empty(), "no hint on a new block")

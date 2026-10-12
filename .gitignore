@@ -4,6 +4,8 @@
 
 # Export output and presets (presets can hold signing credentials)
 /build/
+# The sample's text, copied in by tools/build_studio.sh for an export
+/studio/samples/
 export_presets.cfg
 
 # OS and editor files
