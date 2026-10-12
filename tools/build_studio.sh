@@ -52,7 +52,7 @@ runnable=false
 custom_features="studio"
 export_filter="all_resources"
 include_filter="studio/samples/*.txt, studio/templates/*.txt, studio/lessons/*.txt"
-exclude_filter="tests/*, tools/*, docs/*, build/*, demo/tales/*, demo/translations/*, demo/embedded/*, demo/yarn/*, demo/demo.*, demo/story_config.tres"
+exclude_filter="tests/*, tools/*, docs/*, build/*, studio/lessons/screenshots.json, demo/tales/*, demo/translations/*, demo/embedded/*, demo/yarn/*, demo/demo.*, demo/story_config.tres"
 export_path=""
 
 [preset.0.options]
@@ -67,7 +67,7 @@ runnable=false
 custom_features="studio"
 export_filter="all_resources"
 include_filter="studio/samples/*.txt, studio/templates/*.txt, studio/lessons/*.txt"
-exclude_filter="tests/*, tools/*, docs/*, build/*, demo/tales/*, demo/translations/*, demo/embedded/*, demo/yarn/*, demo/demo.*, demo/story_config.tres"
+exclude_filter="tests/*, tools/*, docs/*, build/*, studio/lessons/screenshots.json, demo/tales/*, demo/translations/*, demo/embedded/*, demo/yarn/*, demo/demo.*, demo/story_config.tres"
 export_path=""
 
 [preset.1.options]

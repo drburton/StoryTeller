@@ -121,3 +121,24 @@ func test_lessons_start_a_story_from_the_home_screen() -> void:
 	var finished := home.start_lesson("lesson_3", true)
 	assert_eq(library.get_story(finished)["title"], "3. Two ways to go (finished)")
 	assert_eq(home.start_lesson("no_such_lesson"), "")
+
+
+func test_the_screenshot_list_names_steps_lessons_and_templates_that_exist() -> void:
+	var shots = JSON.parse_string(FileAccess.get_file_as_string("res://studio/lessons/screenshots.json"))
+	assert_true(shots is Array and not shots.is_empty())
+	var steps := ["sample", "new_story", "lessons", "lesson", "template", "palette", "select", "scene", "map", "hint", "add", "play"]
+	var names := {}
+	for shot in shots:
+		assert_false(names.has(shot["name"]), "one shot per name: " + shot["name"])
+		names[shot["name"]] = true
+		for step in shot["steps"]:
+			assert_has(steps, step[0], shot["name"])
+			if step[0] == "lesson":
+				assert_false(StudioTemplates.lesson_text(step[1]).is_empty(), "%s: lesson %s" % [shot["name"], step[1]])
+			elif step[0] == "template":
+				assert_false(StudioTemplates.template_text(step[1]).is_empty(), "%s: template %s" % [shot["name"], step[1]])
+			elif step[0] == "palette":
+				assert_true(StoryBlocks.GROUPS.has(step[1]), "%s: group %s" % [shot["name"], step[1]])
+	var script := FileAccess.get_file_as_string("res://tools/studio_screenshots.gd")
+	for step in steps:
+		assert_true(script.contains("\t\t\"%s\":" % step), "the script does " + step)
