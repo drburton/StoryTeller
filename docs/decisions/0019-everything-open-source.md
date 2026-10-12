@@ -10,7 +10,7 @@ Decisions 0006, 0009, and 0014 planned a paid Pro add-on next to the free tier, 
 ## Decision
 
 - There is no Pro tier. Every StoryTeller feature is open source under the MIT license (decision 0008).
-- The features once planned for Pro become free features. The stage preview, "play from here", and starter templates come first, with StoryTeller Studio (V2, decision 0020); the Story tab gets the same preview in a plugin 1.x release. The rest follow in 1.x releases.
+- The features once planned for Pro become free features. The stage preview, "play from here", and starter templates come first, with Visual Novel StoryTeller Studio (decision 0020); the Story tab gets the same preview in a plugin 1.x release. The rest follow in 1.x releases.
 - Support for the project comes through GitHub Sponsors.
 - Decisions 0006, 0009, and 0014 are superseded. The extension points built for Pro (`docs/PLANNING.md` §12.3) stay, since community add-ons use them.
 

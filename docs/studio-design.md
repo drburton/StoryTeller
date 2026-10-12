@@ -1,10 +1,10 @@
-# StoryTeller Studio: design
+# Visual Novel StoryTeller Studio: design
 
-Status: proposed (decision 0020). StoryTeller Studio is **V2** of StoryTeller: a standalone product for kids, separate from V1, the Godot plugin for adults. This page describes what the Studio is, how a student uses it, how it is built, and what it needs so a textbook can be written for it. It is the plan for milestone M8 (`docs/PLANNING.md` §11).
+Status: proposed (decision 0020). Visual Novel StoryTeller Studio is a standalone product for kids, separate from Visual Novel StoryTeller, the Godot plugin for adults, with its own version numbers. This page describes what the Studio is, how a student uses it, how it is built, and what it needs so a textbook can be written for it. It is the plan for milestone M8 (`docs/PLANNING.md` §11).
 
 ## 1. Who it is for
 
-StoryTeller Studio is a story builder for middle school students, ages 11 to 14, working on iPads in a web browser. Teachers use it in class, guided by a textbook written for it (§13), and anyone can use it on a laptop too.
+Visual Novel StoryTeller Studio is a story builder for middle school students, ages 11 to 14, working on iPads in a web browser. Teachers use it in class, guided by a textbook written for it (§13), and anyone can use it on a laptop too.
 
 **Success test.** A 12-year-old who has used Scratch, working alone on an iPad, makes a story with three scenes, two characters, a background, and one choice within a 45-minute class period, then plays it for a classmate.
 
@@ -170,7 +170,7 @@ Each item gets a pass or a workaround before the Studio work goes on. The check 
 The maintainer is writing a textbook that teachers use to run a class with the Studio. A book stays in print for years and can't change when the Studio does, so the Studio makes these promises:
 
 - **A stable interface for each edition.** Before the first edition is written, the Studio's block names, colors, groups, screen layout, and words for students (§3) are frozen. Changes that would make the book wrong wait for the next major version.
-- **Every edition keeps working.** Each major version stays online at its own address (for example `…/studio/2/`), so a class using an older edition of the book always finds the Studio its pages show. The newest version is at the main address.
+- **Every edition keeps working.** Each major version stays online at its own address (for example `…/studio/1/`), so a class using an older edition of the book always finds the Studio its pages show. The newest version is at the main address.
 - **Lesson projects.** Each chapter's starting and finished stories live in the repository (`studio/lessons/`) and open from the Studio's home screen under **Lessons**, so students start a chapter with one tap.
 - **A stable starter library.** Characters, backgrounds, and sounds used in the book keep their names and pictures within a major version.
 - **Screenshots from a script.** A script opens each lesson project in the Studio and saves the screenshots the book uses, so they can be made again for a new edition or language. It builds on the play-through harness used in release testing.
