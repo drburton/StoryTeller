@@ -365,11 +365,12 @@ func add_face(id: String, character: String, face: String, image: Image) -> Stri
 ## name, or "" when it isn't a sound the Studio can play.
 func add_sound(id: String, kind: String, name: String, source: String) -> String:
 	var item := StudioBlockEditor.make_name(name)
-	var extension := source.get_extension().to_lower()
-	if item.is_empty() or extension not in StoryAssets.RAW_AUDIO_EXTENSIONS:
-		return ""
 	var bytes := FileAccess.get_file_as_bytes(source)
-	if bytes.is_empty() or bytes.size() > MAX_ASSET_BYTES:
+	if item.is_empty() or bytes.is_empty() or bytes.size() > MAX_ASSET_BYTES:
+		return ""
+	# A picked file may have no extension, so its first bytes tell its kind.
+	var extension := StudioFiles.sound_kind(bytes)
+	if extension.is_empty():
 		return ""
 	var target_folder := asset_folder(id, kind)
 	_remove_variants(target_folder.path_join(item), StoryAssets.RAW_AUDIO_EXTENSIONS)

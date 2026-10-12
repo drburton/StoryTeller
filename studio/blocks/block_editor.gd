@@ -638,6 +638,8 @@ func _words_row(words: String, fields: Dictionary, key_prefix: String, target: C
 		var chip := _chip(field, str(fields.get(field, "")), key_prefix + field, target)
 		if target != null and chip is Button:
 			chip.icon = _chip_picture(field, fields, target.get_meta("block")["type"])
+			if field == "character" and not str(fields.get(field, "")).is_empty():
+				chip.text = character_name(fields[field])
 		row.add_child(chip)
 		at = found.get_end()
 	_add_words(row, words.substr(at))
@@ -1585,6 +1587,13 @@ func _profiles() -> Dictionary:
 	if not _pictures.has("profiles"):
 		_pictures["profiles"] = StoryStage.scan_cast(config.cast_folder) if config != null else {}
 	return _pictures["profiles"]
+
+
+## The name students see for [param character]: its display name, such as
+## "Captain Zed", or else its id written as words.
+func character_name(character: String) -> String:
+	var profile := _profile_of(character)
+	return profile.get_display_name() if profile != null else scene_title(character)
 
 
 ## The profile of [param character]: the story's own, or else the starter

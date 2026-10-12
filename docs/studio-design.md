@@ -103,8 +103,10 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 ## 6. Characters, backgrounds, and sounds
 
-- **Starter library.** Original characters with several faces each, backgrounds (home, school, park, forest, castle, space), music, and sounds, all made for the project like the demo's art, so students can start at once.
-- **Their own pictures.** **+ Add** opens the tablet's own picker: take a photo, or choose one from Photos or the gallery. A character's faces are pictures named by the student ("happy", "sad"). The Studio scales large photos down to save space.
+- **Starter library.** Original characters with several faces each, backgrounds (home, school, park, forest, castle, space), music, and sounds, all made for the project like the demo's art, so students can start at once. The first version gathers the Where's Biscuit characters and backgrounds and the demo's characters, backgrounds, music, and sounds (`studio/library/`); the new art follows.
+- **Each story keeps its own copies.** A story's pictures and sounds are plain files in its folder (decision 0023). When a story uses a starter item, the Studio copies it in, so a story file carries everything it needs (decision 0022). Pickers offer the story's own items first, then the rest of the starter library.
+- **Library panel.** Under the stage preview, the story's characters, backgrounds, and sounds, each with **+ Add**: an item from the starter library, or the student's own picture or sound file. Tapping a character shows its faces, with **+ Add a face**; tapping a sound plays it.
+- **Their own pictures.** **+ Add** opens the tablet's own picker: take a photo, or choose one from Photos or the gallery. A character's faces are pictures named by the student ("happy", "sad"). The Studio scales large photos down to save space (backgrounds to 1920 by 1080, faces to 1024 by 1024) and saves photos as `.jpg`.
 - **Character maker (later, §12).** Build a character from parts (skin, hair, eyes, shirt colors) without drawing, using the same drawing code as the example art.
 
 ## 7. Preview and play

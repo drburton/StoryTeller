@@ -19,6 +19,8 @@ const PREVIEW_WIDTH := 360
 var editor: StudioBlockEditor
 ## The stage at the chosen block, beside the blocks.
 var preview: StudioStagePreview
+## The story's characters, backgrounds, and sounds, under the preview.
+var library_panel: StudioLibraryPanel
 var _title_button: Button
 var _undo_button: Button
 var _redo_button: Button
@@ -77,6 +79,14 @@ func _init() -> void:
 	var hint := StudioUI.label("Tap a block to see the stage there.", StudioUI.FONT_SIZE - 4, Color(0.75, 0.78, 0.85))
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	side.add_child(hint)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	side.add_child(scroll)
+	library_panel = StudioLibraryPanel.new()
+	library_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	library_panel.assets_changed.connect(reload_assets)
+	scroll.add_child(library_panel)
 
 
 ## Opens the story [param id] from [member library].
@@ -91,6 +101,7 @@ func open(id: String) -> void:
 	_show_title()
 	_update_buttons()
 	preview.setup(story_config)
+	library_panel.show_story(library, id)
 	refresh_preview()
 
 
@@ -157,6 +168,7 @@ func _on_source_changed(source: String) -> void:
 	if not library.add_starter_items(story_id).is_empty():
 		editor.reload_assets()
 		preview.setup(story_config)
+		library_panel.refresh()
 	_update_buttons()
 	refresh_preview()
 
