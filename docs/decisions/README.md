@@ -25,4 +25,5 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0017](0017-yarn-spinner-import.md) | Importing Yarn Spinner scripts | Accepted |
 | [0018](0018-transitions-and-story-tab-hooks.md) | Named transitions and Story tab hooks | Accepted |
 | [0019](0019-everything-open-source.md) | Everything is open source; no Pro tier | Accepted |
-| [0020](0020-studio-for-students.md) | Visual Novel StoryTeller Studio: a block-based story builder for students | Accepted |
+| [0020](0020-studio-for-students.md) | Visual Novel StoryTeller Studio: a block-based story builder for students | Accepted (hosting replaced by 0021) |
+| [0021](0021-studio-as-mobile-apps.md) | The Studio ships as apps for iOS and Android | Accepted |

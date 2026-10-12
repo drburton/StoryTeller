@@ -1,16 +1,16 @@
 # Visual Novel StoryTeller Studio: design
 
-Status: proposed (decision 0020). Visual Novel StoryTeller Studio is a standalone product for kids, separate from Visual Novel StoryTeller, the Godot plugin for adults, with its own version numbers. This page describes what the Studio is, how a student uses it, how it is built, and what it needs so a textbook can be written for it. It is the plan for milestone M8 (`docs/PLANNING.md` §11).
+Status: proposed (decisions 0020 and 0021). Visual Novel StoryTeller Studio is a standalone product for kids, separate from Visual Novel StoryTeller, the Godot plugin for adults, with its own version numbers. This page describes what the Studio is, how a student uses it, how it is built, and what it needs so a textbook can be written for it. It is the plan for milestone M8 (`docs/PLANNING.md` §11).
 
 ## 1. Who it is for
 
-Visual Novel StoryTeller Studio is a story builder for middle school students, ages 11 to 14, working on iPads in a web browser. Teachers use it in class, guided by a textbook written for it (§13), and anyone can use it on a laptop too.
+Visual Novel StoryTeller Studio is a story builder for middle school students, ages 11 to 14, working on tablets: iPads first, and Android tablets. Students download it as a free app from the App Store or Google Play. Teachers use it in class, guided by a textbook written for it (§13), and anyone can use it at home.
 
-**Success test.** A 12-year-old who has used Scratch, working alone on an iPad, makes a story with three scenes, two characters, a background, and one choice within a 45-minute class period, then plays it for a classmate.
+**Success test.** A 12-year-old who has used Scratch, working alone on a tablet, makes a story with three scenes, two characters, a background, and one choice within a 45-minute class period, then plays it for a classmate.
 
 ## 2. Principles
 
-1. **Open and play in seconds.** The Studio is a web page: no install, no account, no Godot editor. It keeps working without a connection once it has loaded.
+1. **Open and play in seconds.** The Studio is a free app: no account, no Godot editor, and it works without a connection.
 2. **Pictures over names.** Blocks show a character's face and a small picture of the background, so a student recognizes them at a glance.
 3. **Touch first.** Every target is at least 44 points tall. Everything works with one finger: drag, tap, long-press. Nothing depends on hover or right-click. The on-screen keyboard is needed only for typing words.
 4. **The same story files.** The Studio reads and writes TaleScript `.tale` files, the same files the Godot plugin uses (§9.1 of the plan: one source of truth). A student's story can move into Godot later and keep growing.
@@ -36,7 +36,7 @@ The Studio uses simpler words for some of StoryTeller's terms. The files and the
 
 ## 4. The screen
 
-Landscape on an iPad (1024 x 768 points and up); the same layout fills a laptop window.
+Landscape on a tablet (1024 x 768 points and up, about the size of the smallest iPad).
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
@@ -102,7 +102,7 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 ## 6. Characters, backgrounds, and sounds
 
 - **Starter library.** Original characters with several faces each, backgrounds (home, school, park, forest, castle, space), music, and sounds, all made for the project like the demo's art, so students can start at once.
-- **Their own pictures.** **+ Add** opens the iPad's picker: take a photo or choose one from Photos. A character's faces are pictures named by the student ("happy", "sad"). The Studio scales large photos down to save space.
+- **Their own pictures.** **+ Add** opens the tablet's own picker: take a photo, or choose one from Photos or the gallery. A character's faces are pictures named by the student ("happy", "sad"). The Studio scales large photos down to save space.
 - **Character maker (later, §12).** Build a character from parts (skin, hair, eyes, shirt colors) without drawing, using the same drawing code as the example art.
 
 ## 7. Preview and play
@@ -114,55 +114,59 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 ## 8. Stories, saving, and sharing
 
 - **Home screen.** The student's stories as cards with a picture, plus **New story**, which offers a blank story or a starter template (a mystery, an adventure, a "choose your path" lesson).
-- **Saving.** Every change saves on the device in the browser's storage (Godot's `user://` maps to it on the web).
-- **Share.** **Share** downloads the story as one `.zip` file: its tales, pictures, sounds, and config. The student hands it in through the class's usual system (Google Classroom, Canvas, email). **Open a story file** on the home screen loads a `.zip`, so a teacher can open a student's story, and a student can move a story between devices.
-- **Keeping stories safe.** Safari may delete a website's storage after seven days without a visit, unless the site was added to the Home Screen. The Studio asks students to add it to the Home Screen the first time, and reminds them to Share a copy when a story has not been downloaded for a while.
+- **Saving.** Every change saves in the app's own storage on the device (Godot's `user://`), which stays until the app is removed.
+- **Share.** **Share** packs the story into one `.zip` file (its tales, pictures, sounds, and config) and opens the system's share sheet: AirDrop, Files, Google Drive, Google Classroom, or email. **Open a story file** on the home screen loads a `.zip` from Files, so a teacher can open a student's story, and a student can move a story between devices.
+- **Keeping stories safe.** Removing the app removes its stories, so the Studio reminds students to Share a copy of a story they haven't shared in a while.
 - **Into Godot.** The `.zip` unpacks into a Godot project that has the StoryTeller plugin, where the story opens in the Story tab and can be exported as a game.
 
 ## 9. How it is built
 
-- **A Godot project.** The Studio is a Godot project in the repository's `studio/` folder that uses the StoryTeller plugin's runtime and editing layer. It is exported for the web and hosted on GitHub Pages, so it costs nothing to run and needs no server. The same project can be exported for desktops.
+- **A Godot project.** The Studio is a Godot project in the repository's `studio/` folder that uses the StoryTeller plugin's runtime and editing layer. It is exported as an iOS app and an Android app, and needs no server. The same project can be exported for desktops or the web later (decision 0021).
 - **One story model.** Blocks are a new view over the card model from M5 (`TaleCards`, `TaleEdit`). They edit the `.tale` text line by line, exactly as the cards do, so round trips stay clean and the existing round-trip tests cover them.
 - **Runtime editing.** The parser, checker, and editing layer must run in an exported game, without the Godot editor. Some editor code uses `EditorInterface`; that code moves behind a small interface so the Studio can supply its own file listing, pictures, and undo.
 - **Stage preview.** A `StoryStage` drawn in a `SubViewport`, fed by the director's fast mode.
-- **Pictures from the iPad.** A browser file input through `JavaScriptBridge`, since Godot's own file dialog can't reach Photos.
-- **Rendering.** Godot's Compatibility renderer (WebGL 2), which every iPad that runs current Safari supports. The plugin's shaders (transitions, screen filters) must work there.
-- **Single-threaded web export.** It needs no special server headers, so GitHub Pages can host it.
-- **Offline.** A service worker keeps the Studio's files, so it opens without a connection after the first visit.
+- **Pictures and files.** The system's own photo and file pickers, through Godot's native file dialog where it supports them, or a small iOS and Android plugin where it doesn't. The share sheet works the same way.
+- **Rendering.** Godot's Compatibility renderer (OpenGL ES 3), which runs on older and cheaper school tablets as well as new iPads. The plugin's shaders (transitions, screen filters) must work there.
+- **Builds and releases.** GitHub Actions builds the Android app on Linux and the iOS app on a macOS runner, signs them with the maintainer's developer accounts, and uploads them to Google Play's testing track and TestFlight. Releases go to the stores from there.
+- **Store rules for children's apps.** The Studio collects nothing, shows no ads, and has no outside links in the student's path, which fits Apple's Kids category and Google Play's Families policy.
+- **Website.** A project website at a Visual Novel StoryTeller domain links to both stores and hosts the guides and lesson files.
 
 ## 10. Risks and the first step
 
-The biggest unknowns are about iPads, so M8 starts with a one-week feasibility check on a real iPad before the Studio is built:
+The biggest unknowns are about tablets, so M8 starts with a one-week feasibility check: a small test app installed on a real iPad (through TestFlight) and a real Android tablet, before the Studio is built:
 
-1. A Godot 4.7 web export loads in Safari on an iPad in reasonable time on school Wi-Fi (target: under 20 seconds the first time, under 5 after).
+1. The app starts quickly (target: under 5 seconds) and stays smooth on an older, low-cost tablet.
 2. Dragging a block with a finger feels smooth, and long-press works.
 3. Tapping a text field brings up the on-screen keyboard, typed text arrives, and the layout survives the keyboard covering half the screen.
-4. Choosing a photo from Photos reaches the Studio.
-5. A story saved in browser storage is still there after closing Safari and reopening it.
+4. Choosing a photo from Photos or the gallery reaches the Studio, and the share sheet sends a `.zip` to Files.
+5. A saved story is still there after closing the app and restarting the tablet.
 6. Music and sounds play after the first tap.
 7. The stage, transitions, and filters draw correctly in the Compatibility renderer.
 
-Each item gets a pass or a workaround before the Studio work goes on. The check needs a person with an iPad; the build and test page come ready from the repository.
+Each item gets a pass or a workaround before the Studio work goes on. The check needs a person with the tablets and the developer accounts (§9); the test app is built by GitHub Actions from the repository.
 
 ## 11. Plan (milestone M8, about 12 weeks)
 
 | Step | Work | Weeks |
 |---|---|---|
-| S0 | iPad feasibility check (§10) | 1 |
-| S1 | Studio shell: home screen, stories in browser storage, Share and Open as `.zip`, Home Screen prompt | 2 |
+| S0 | Tablet feasibility check (§10), with the developer accounts and the build pipeline set up | 1 |
+| S1 | Studio shell: home screen, stories in the app's storage, Share and Open as `.zip` | 2 |
 | S2 | Blocks: palette, drag and snap, pickers, undo, hints, Code block | 4 |
 | S3 | Stage preview, Play, and Play from here | 2 |
 | S4 | Starter library and adding the student's own pictures and sounds | 1 |
 | S5 | Map of scenes, starter templates, lesson projects and the screenshot script for the textbook (§13) | 1 |
-| S6 | Classroom test with at least five middle school students, then fixes | 1 |
+| S6 | Store listings (privacy details, Kids category, screenshots) and the first TestFlight and Google Play test release | 1 |
 
-**Exit criteria:** at least four of five students in the classroom test pass the success test (§1) without help, on iPads.
+**Exit criteria:** every block, the stage preview, the starter library, and sharing work on an iPad and an Android tablet, and a test build is on TestFlight and Google Play's testing track.
+
+**Later:** a classroom test with middle school students against the success test (§1), once the Studio works. Its timing is open.
 
 ## 12. Later
 
 - Character maker (§6).
 - Blocks inside the Godot plugin's Story tab, as a fourth view next to Text, Cards, and Map.
 - Sharing a playable link instead of a file.
+- Phone layouts, and web and desktop versions (decision 0021).
 - The rest of the former Pro features (`docs/PLANNING.md` §12).
 
 ## 13. Textbook support
@@ -170,7 +174,7 @@ Each item gets a pass or a workaround before the Studio work goes on. The check 
 The maintainer is writing a textbook that teachers use to run a class with the Studio. A book stays in print for years and can't change when the Studio does, so the Studio makes these promises:
 
 - **A stable interface for each edition.** Before the first edition is written, the Studio's block names, colors, groups, screen layout, and words for students (§3) are frozen. Changes that would make the book wrong wait for the next major version.
-- **Every edition keeps working.** Each major version stays online at its own address (for example `…/studio/1/`), so a class using an older edition of the book always finds the Studio its pages show. The newest version is at the main address.
+- **Every edition keeps working.** App stores offer only an app's newest version, so the interface stays as the book shows for the life of an edition. A major version with interface changes ships as its own app listing (for example "Visual Novel StoryTeller Studio 2"), and classes using the older edition keep installing the app their book shows.
 - **Lesson projects.** Each chapter's starting and finished stories live in the repository (`studio/lessons/`) and open from the Studio's home screen under **Lessons**, so students start a chapter with one tap.
 - **A stable starter library.** Characters, backgrounds, and sounds used in the book keep their names and pictures within a major version.
 - **Screenshots from a script.** A script opens each lesson project in the Studio and saves the screenshots the book uses, so they can be made again for a new edition or language. It builds on the play-through harness used in release testing.

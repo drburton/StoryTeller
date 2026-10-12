@@ -1,6 +1,6 @@
 # 0020. Visual Novel StoryTeller Studio: a block-based story builder for students
 
-- **Status:** Accepted
+- **Status:** Accepted; hosting and storage replaced by 0021 (apps for iOS and Android)
 - **Date:** 2026-10-12
 
 ## Context

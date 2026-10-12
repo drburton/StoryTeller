@@ -17,7 +17,7 @@ Decisions 0006, 0009, and 0014 planned a paid Pro add-on next to the free tier, 
 ## Alternatives considered
 
 - **Keep Pro, deferred (decision 0009):** keeps a revenue option open, but splits attention and fits poorly with classroom use.
-- **Paid hosting or school licenses for the Studio:** the Studio runs as a static web page that costs nothing to host (decision 0020), so there is little to charge for without adding accounts and servers that schools would need to approve.
+- **Paid apps or school licenses for the Studio:** the Studio needs no servers or accounts (decisions 0020 and 0021), and a price would keep it out of many classrooms.
 
 ## Consequences
 
