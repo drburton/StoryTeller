@@ -183,9 +183,13 @@ func test_the_preview_follows_the_chosen_block() -> void:
 	var theo := editor.get_blocks()[6]
 	editor.select_block(theo)
 	assert_eq(studio.story.chosen_block().line_start, 17)
-	await tree.create_timer(0.8).timeout
-	var cast: Dictionary = studio.story.preview.story.get_crew(&"Stage").capture()["cast"]
-	assert_eq(cast.keys(), ["cleo", "theo"])
+	# The preview plays the setup over real time; wait for Theo, up to three seconds.
+	var stage: Node = studio.story.preview.story.get_crew(&"Stage")
+	var waited := 0.0
+	while stage.capture()["cast"].keys() != ["cleo", "theo"] and waited < 3.0:
+		await tree.create_timer(0.1).timeout
+		waited += 0.1
+	assert_eq(stage.capture()["cast"].keys(), ["cleo", "theo"])
 	editor.select_scene("couch")
 	assert_eq(studio.story.chosen_block().line_start, editor.doc.find_beat("couch").body[0].line_start)
 
