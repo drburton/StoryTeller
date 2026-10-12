@@ -13,6 +13,7 @@ config_version=5
 config/name="StoryTeller"
 config/description="Visual novel and interactive story framework for Godot."
 run/main_scene="res://demo/demo.tscn"
+run/main_scene.studio="res://studio/check/tablet_check.tscn"
 config/features=PackedStringArray("4.7")
 
 [audio]
@@ -23,6 +24,12 @@ general/text_to_speech=true
 
 Story="*res://addons/storyteller/core/story.gd"
 
+[display]
+
+window/handheld/orientation=4
+window/stretch/mode.studio="canvas_items"
+window/stretch/aspect.studio="expand"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/storyteller/plugin.cfg")
@@ -30,7 +37,14 @@ enabled=PackedStringArray("res://addons/storyteller/plugin.cfg")
 [internationalization]
 
 locale/translations=PackedStringArray("res://demo/translations/demo.en.translation", "res://demo/translations/demo.es.translation")
+locale/translations.studio=PackedStringArray()
 
 [storyteller]
 
 config_path="res://demo/story_config.tres"
+config_path.studio="res://examples/wheres_biscuit/story_config.tres"
+
+[rendering]
+
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
