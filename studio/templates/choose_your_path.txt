@@ -1,0 +1,21 @@
+beat start:
+	backdrop("park")
+	"You stand where the path splits in two."
+	# Change the words of each option. Each one goes to its own scene.
+	choose:
+		"Take the path to the forest":
+			jump forest
+		"Take the path to the beach":
+			jump beach
+
+beat forest:
+	backdrop("forest")
+	"Tall trees grow all around."
+	# Add a character here with Show, then make them talk.
+	"This is the end of the forest path."
+
+beat beach:
+	backdrop("beach")
+	"Waves roll onto the sand."
+	# What happens at the beach? Add your own blocks.
+	"This is the end of the beach path."

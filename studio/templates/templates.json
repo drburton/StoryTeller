@@ -1,0 +1,17 @@
+[
+	{
+		"id": "mystery",
+		"title": "A mystery",
+		"about": "Maya and Sam look for clues in the library and count them with a number."
+	},
+	{
+		"id": "adventure",
+		"title": "An adventure",
+		"about": "Robo and Maya explore a forest and a castle. The ending depends on where they went."
+	},
+	{
+		"id": "choose_your_path",
+		"title": "Choose your path",
+		"about": "A fork in the path with two ways to go. Notes say what to add to each one."
+	}
+]

@@ -161,6 +161,11 @@ func _build_ui() -> void:
 	import_yarn.tooltip_text = "Convert a Yarn Spinner script (.yarn) into a tale in the tales folder set in StoryConfig."
 	import_yarn.pressed.connect(_choose_yarn_file)
 	toolbar.add_child(import_yarn)
+	var open_studio := Button.new()
+	open_studio.text = "Open a Studio story"
+	open_studio.tooltip_text = "Add a story file (.zip) shared from Visual Novel StoryTeller Studio as its own folder under %s, with a scene that plays it." % StudioStoryImport.DEFAULT_PARENT
+	open_studio.pressed.connect(_choose_studio_story)
+	toolbar.add_child(open_studio)
 	var pin_ids := Button.new()
 	pin_ids.text = "Pin Line IDs"
 	pin_ids.tooltip_text = "Write @id(\"...\") on every line and choice of this tale that has none, so editing their text later keeps their translations and read state."
@@ -445,6 +450,25 @@ func import_yarn(yarn_path: String) -> String:
 	return result["path"]
 
 
+## Adds the Studio story file at [param zip_path] to the project (see
+## [StudioStoryImport]) and opens its tale. Returns the new tale's path, or
+## "" when the file could not be added.
+func open_studio_story(zip_path: String, parent := StudioStoryImport.DEFAULT_PARENT) -> String:
+	var result := StudioStoryImport.open(zip_path, parent)
+	var message: String = result["error"]
+	if message.is_empty():
+		message = "Added “%s” in %s. Open %s and press F6 to play it." % [result["title"], result["folder"], result["scene_path"].get_file()]
+	print("StoryTeller: " + message)
+	if Engine.is_editor_hint():
+		EditorInterface.get_resource_filesystem().scan()
+		EditorInterface.get_editor_toaster().push_toast(message)
+	if not result["error"].is_empty():
+		return ""
+	refresh_files()
+	open_file(result["tale_path"])
+	return result["tale_path"]
+
+
 ## Pins the ids of every line in the open tale (see [TaleLineIds]). The
 ## change can be undone like any edit. Returns how many lines were pinned.
 func pin_line_ids() -> int:
@@ -482,6 +506,20 @@ func open_setup() -> StorySetupDialog:
 	add_child(dialog)
 	dialog.popup_centered()
 	return dialog
+
+
+func _choose_studio_story() -> void:
+	var dialog := FileDialog.new()
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.filters = PackedStringArray(["*.zip ; Studio story files"])
+	dialog.title = "Open a story file from Visual Novel StoryTeller Studio"
+	dialog.file_selected.connect(func(path: String) -> void:
+		open_studio_story(path)
+		dialog.queue_free())
+	dialog.canceled.connect(dialog.queue_free)
+	add_child(dialog)
+	dialog.popup_centered_ratio(0.6)
 
 
 func _choose_yarn_file() -> void:

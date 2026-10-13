@@ -14,6 +14,8 @@ signal source_changed(new_source: String)
 signal block_selected(line: int)
 ## Emitted when another scene is shown.
 signal scene_selected(beat_name: String)
+## Emitted when the student taps Map, to see every scene at once.
+signal map_requested
 
 const FONT_SIZE := 20
 ## Smallest height of anything a finger taps (docs/studio-design.md §2).
@@ -316,6 +318,9 @@ func _update_tabs() -> void:
 			button.add_theme_stylebox_override(state, style)
 		scene_tabs.add_child(button)
 	scene_tabs.add_child(_button("+ Scene", add_scene))
+	var map := _button("Map", func() -> void: map_requested.emit())
+	map.set_meta("map_button", true)
+	scene_tabs.add_child(map)
 
 
 ## The scene buttons, in story order.
@@ -1568,13 +1573,7 @@ func name_items(numbers: bool) -> Array:
 ## A TaleScript name made from what a student typed: "Team Work" is
 ## "team_work". Empty when nothing usable is left.
 static func make_name(text: String) -> String:
-	var result := ""
-	for character in text.strip_edges().to_lower().replace(" ", "_").replace("-", "_"):
-		if character == "_" or (character >= "a" and character <= "z") or (character >= "0" and character <= "9"):
-			result += character
-	if not result.is_empty() and result[0] >= "0" and result[0] <= "9":
-		result = "n_" + result
-	return result if result.is_valid_identifier() else ""
+	return StoryFile.make_name(text)
 
 
 ## The full name of the scene [param beat_name], as "has been to" tests

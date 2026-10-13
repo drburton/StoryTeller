@@ -1,0 +1,6 @@
+beat start:
+	backdrop("park")
+	"It is a sunny day in the park."
+	maya.enter("happy", at = CENTER)
+	maya: "Hi! I'm Maya."
+	maya.hop()

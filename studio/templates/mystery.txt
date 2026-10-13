@@ -1,0 +1,52 @@
+var clues := 0
+
+beat start:
+	backdrop("library")
+	music("mystery")
+	"The school library is very quiet today."
+	maya.enter("surprised", at = LEFT)
+	maya: "Sam! The old treasure map is gone!"
+	sam.enter("thinking", at = RIGHT)
+	sam: "Gone? It was on the wall this morning."
+	maya (thinking): "Let's look for clues."
+	choose:
+		"Look under the tables":
+			jump tables
+		"Check the open window":
+			jump window
+
+beat tables:
+	"Under a table, Sam finds a trail of tiny paw prints."
+	sound("pop")
+	clues += 1
+	sam (happy): "Paw prints! Someone with four feet was here."
+	jump cat
+
+beat window:
+	"The window is open. A few leaves blow in."
+	sound("whoosh")
+	clues += 1
+	maya (thinking): "Something small could climb in here."
+	jump cat
+
+beat cat:
+	whiskers.enter("neutral", at = CENTER)
+	whiskers: "Meow."
+	"Whiskers the cat is sitting on something rolled up."
+	clues += 1
+	# Your turn: add another clue to this scene.
+	choose:
+		"Ask Whiskers to move":
+			whiskers.hop()
+			jump found
+		"Give Whiskers a treat":
+			whiskers (happy): "Purr..."
+			jump found
+
+beat found:
+	if clues >= 2:
+		maya (happy): "The map! Whiskers was keeping it warm."
+		sam (happy): "Mystery solved!"
+	else:
+		sam (thinking): "We found the map, but how did it get here?"
+	# Your turn: write what happens next, or add The end.

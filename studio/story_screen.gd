@@ -67,6 +67,7 @@ func _init() -> void:
 	editor.source_changed.connect(_on_source_changed)
 	editor.block_selected.connect(func(_line: int) -> void: refresh_preview())
 	editor.scene_selected.connect(func(_beat_name: String) -> void: refresh_preview())
+	editor.map_requested.connect(open_map)
 	row.add_child(editor)
 	var side := VBoxContainer.new()
 	side.custom_minimum_size.x = PREVIEW_WIDTH
@@ -143,6 +144,17 @@ func play_from_here() -> void:
 
 func get_title() -> String:
 	return library.get_story(story_id).get("title", story_id)
+
+
+## Shows the map of scenes over the blocks; tapping a scene opens it.
+func open_map() -> StudioSceneMap:
+	var map := StudioSceneMap.new()
+	map.top_level = true
+	map.z_index = 20
+	add_child(map)
+	map.show_story(editor.doc, editor.tale_name(), editor.current_scene)
+	map.scene_chosen.connect(editor.select_scene)
+	return map
 
 
 ## Asks for a new name for the story.

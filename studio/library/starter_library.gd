@@ -1,14 +1,15 @@
 class_name StudioStarter
 extends RefCounted
 ## The Studio's starter library (docs/studio-design.md §6): characters,
-## backgrounds, music, and sounds a student can use at once. For now it
-## gathers the art and sounds of the Where's Biscuit example and the
-## plugin's demo.
+## backgrounds, music, and sounds a student can use at once: its own art in
+## studio/library/art (made by tools/demo_assets/starter_library.py), and
+## the art and sounds of the Where's Biscuit example and the plugin's demo.
 ##
 ## A story gets its own copy of each item it uses, as plain pictures and
 ## sounds in its folder (decisions 0022 and 0023), so a story file carries
 ## everything it needs.
 
+const ART := "res://studio/library/art/"
 const BACKDROPS := {
 	"living_room": "res://examples/wheres_biscuit/backdrops/living_room.png",
 	"backyard": "res://examples/wheres_biscuit/backdrops/backyard.png",
@@ -16,7 +17,13 @@ const BACKDROPS := {
 	"library": "res://demo/story/backdrops/library.png",
 	"library_at_night": "res://demo/story/backdrops/library_night.png",
 	"riverside": "res://demo/story/backdrops/riverside_evening.png",
+	"park": ART + "backdrops/park.png",
+	"forest": ART + "backdrops/forest.png",
+	"castle": ART + "backdrops/castle.png",
+	"beach": ART + "backdrops/beach.png",
+	"space": ART + "backdrops/space.png",
 }
+## Each character is a profile, or a folder of faces with a profile.json.
 const CHARACTERS := {
 	"theo": "res://examples/wheres_biscuit/cast/theo.tres",
 	"leo": "res://examples/wheres_biscuit/cast/leo.tres",
@@ -24,15 +31,24 @@ const CHARACTERS := {
 	"biscuit": "res://examples/wheres_biscuit/cast/biscuit.tres",
 	"ada": "res://demo/story/cast/ada.tres",
 	"mira": "res://demo/story/cast/mira.tres",
+	"maya": ART + "cast/maya",
+	"sam": ART + "cast/sam",
+	"robo": ART + "cast/robo",
+	"whiskers": ART + "cast/whiskers",
 }
 const MUSIC := {
 	"quiet_morning": "res://demo/story/audio/music/quiet_morning.wav",
 	"library_theme": "res://demo/story/audio/music/library_theme.wav",
+	"adventure": ART + "audio/music/adventure.wav",
+	"mystery": ART + "audio/music/mystery.wav",
 }
 const SOUNDS := {
 	"chime": "res://demo/story/audio/sounds/chime.wav",
 	"page_turn": "res://demo/story/audio/sounds/page_turn.wav",
 	"rain": "res://demo/story/audio/ambience/rain.wav",
+	"pop": ART + "audio/sounds/pop.wav",
+	"whoosh": ART + "audio/sounds/whoosh.wav",
+	"magic": ART + "audio/sounds/magic.wav",
 }
 ## Each kind of item: its list, and where a story keeps its copies.
 const KINDS := {
@@ -53,9 +69,19 @@ static func has(kind: String, item: String) -> bool:
 	return KINDS.has(kind) and KINDS[kind]["items"].has(item)
 
 
+static var _folder_profiles := {}
+
+
 ## The starter character [param id]'s profile.
 static func profile(id: String) -> CastProfile:
-	return load(CHARACTERS[id]) as CastProfile if CHARACTERS.has(id) else null
+	if not CHARACTERS.has(id):
+		return null
+	var path: String = CHARACTERS[id]
+	if path.get_extension() == "tres":
+		return load(path) as CastProfile
+	if not _folder_profiles.has(id):
+		_folder_profiles[id] = StoryStage.scan_cast(path.get_base_dir()).get(id)
+	return _folder_profiles[id]
 
 
 ## A picture of a starter background, or of a starter character with

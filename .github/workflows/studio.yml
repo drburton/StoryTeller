@@ -4,14 +4,16 @@ name: Studio
 # the tablet check (studio/check/, M8 step S0) in its ⋯ menu. The Android
 # build is kept as a workflow artifact: download it from the run's Summary
 # page and install it on an Android tablet. The iOS build follows once an
-# Apple developer account is set up (docs/studio-design.md §9).
+# Apple developer account is set up (docs/studio-design.md §9). It also
+# checks that a story file from the Studio opens in the plugin, plays, and
+# exports as a web game (decision 0022).
 
 on:
   push:
     branches: [main]
-    paths: ["studio/**", "addons/**", "examples/**", "project.godot", "tools/build_studio.sh", ".github/workflows/studio.yml"]
+    paths: ["studio/**", "addons/**", "examples/**", "project.godot", "tools/build_studio.sh", "tools/check_studio_story.sh", "tools/studio_story/**", "tools/addon_install/**", ".github/workflows/studio.yml"]
   pull_request:
-    paths: ["studio/**", "addons/**", "examples/**", "project.godot", "tools/build_studio.sh", ".github/workflows/studio.yml"]
+    paths: ["studio/**", "addons/**", "examples/**", "project.godot", "tools/build_studio.sh", "tools/check_studio_story.sh", "tools/studio_story/**", "tools/addon_install/**", ".github/workflows/studio.yml"]
   workflow_dispatch:
 
 env:
@@ -38,19 +40,23 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.local/share/godot/export_templates
-          key: godot-templates-android-${{ env.GODOT_VERSION }}
+          key: godot-templates-android-web-${{ env.GODOT_VERSION }}
 
-      - name: Install the Android export templates
+      - name: Install the Android and web export templates
         run: |
           dir=~/.local/share/godot/export_templates/${GODOT_VERSION/-/.}
-          if [[ ! -f "$dir/android_debug.apk" ]]; then
+          if [[ ! -f "$dir/android_debug.apk" || ! -f "$dir/web_nothreads_release.zip" ]]; then
             mkdir -p "$dir"
             curl -fsSL --retry 3 -o templates.tpz \
               "https://github.com/godotengine/godot-builds/releases/download/$GODOT_VERSION/Godot_v${GODOT_VERSION}_export_templates.tpz"
-            unzip -q -j templates.tpz templates/version.txt templates/android_debug.apk templates/android_release.apk -d "$dir"
+            unzip -q -j templates.tpz templates/version.txt templates/android_debug.apk templates/android_release.apk \
+              templates/web_nothreads_release.zip -d "$dir"
             rm templates.tpz
           fi
           ls "$dir"
+
+      - name: Check a Studio story opens in the plugin, plays, and exports for the web
+        run: tools/check_studio_story.sh
 
       - uses: actions/setup-java@v4
         with:

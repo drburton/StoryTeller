@@ -1,0 +1,14 @@
+[
+	{"name": "home", "about": "The home screen with the sample story", "steps": [["sample"]]},
+	{"name": "new_story", "about": "New story with its templates", "steps": [["new_story"]]},
+	{"name": "lessons", "about": "The lessons on the home screen", "steps": [["lessons"]]},
+	{"name": "lesson_1_start", "about": "Lesson 1 as it starts, with its blocks out of order", "steps": [["lesson", "lesson_1"]]},
+	{"name": "lesson_1_finished", "about": "Lesson 1 finished, with Maya on the stage", "steps": [["lesson", "lesson_1", true], ["select", 3]]},
+	{"name": "lesson_2_talk", "about": "The Talk blocks, with Ask the player", "steps": [["lesson", "lesson_2", true], ["palette", "talk"], ["select", 4]]},
+	{"name": "lesson_3_choice", "about": "A Choice block with two options", "steps": [["lesson", "lesson_3", true], ["palette", "choose"], ["select", 3]]},
+	{"name": "lesson_3_map", "about": "The map of scenes in lesson 3", "steps": [["lesson", "lesson_3", true], ["map"]]},
+	{"name": "lesson_4_numbers", "about": "Numbers and an If in lesson 4", "steps": [["lesson", "lesson_4", true], ["palette", "numbers"], ["select", 5]]},
+	{"name": "lesson_5_hint", "about": "A ! hint explaining a mistake", "steps": [["lesson", "lesson_5"], ["hint", 1]]},
+	{"name": "add_character", "about": "Adding a character from the starter library", "steps": [["template", "mystery"], ["add", "cast"]]},
+	{"name": "play", "about": "Playing a story full screen", "steps": [["template", "mystery"], ["play"]]}
+]

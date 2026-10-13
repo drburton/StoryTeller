@@ -1,0 +1,8 @@
+var player_name := ""
+
+beat start:
+	backdrop("classroom")
+	sam.enter("happy", at = CENTER)
+	sam: "Welcome to our class!"
+	# Add an Ask the player block here, and keep the answer in player_name.
+	# Then make Sam say hello with {player_name} in the words.

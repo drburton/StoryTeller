@@ -1,0 +1,19 @@
+var stars := 0
+
+beat start:
+	backdrop("space")
+	robo.enter("happy", at = CENTER)
+	robo: "Let's catch some stars!"
+	choose:
+		"Grab the big star":
+			# Add 1 to stars here.
+			robo (happy): "Got one!"
+		"Fly past it":
+			robo: "Maybe next time."
+	choose:
+		"Grab the small star":
+			# Add 1 to stars here too.
+			robo (happy): "Another one!"
+		"Fly past it":
+			robo: "Whoosh!"
+	# Add an If: when stars is at least 2, Robo cheers. Otherwise, Robo wants to try again.

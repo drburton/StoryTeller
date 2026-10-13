@@ -1,0 +1,47 @@
+beat start:
+	backdrop("castle")
+	music("adventure")
+	"A castle stands at the top of the hill."
+	robo.enter("happy", at = LEFT)
+	robo: "Beep! A castle! Let's go in."
+	maya.enter("thinking", at = RIGHT)
+	maya: "Wait. The gate is locked."
+	choose:
+		"Look for a key in the forest":
+			jump forest
+		"Knock on the gate":
+			jump gate
+
+beat forest:
+	backdrop("forest")
+	weather("rain")
+	"Rain falls between the tall trees."
+	robo (sad): "My circuits are getting wet."
+	maya (happy): "Look! Something shiny under the mushroom."
+	sound("magic")
+	"It is an old golden key."
+	weather("none")
+	jump gate
+
+beat gate:
+	backdrop("castle")
+	robo.enter("thinking", at = LEFT)
+	maya.enter("neutral", at = RIGHT)
+	if visited("adventure.forest"):
+		maya (happy): "The key fits!"
+		robo.hop()
+		"The gate swings open."
+		jump inside
+	else:
+		sound("pop")
+		"Knock, knock. Nobody answers."
+		robo (sad): "Maybe we need a key."
+		jump forest
+
+beat inside:
+	exit_all()
+	"Inside, the great hall is full of light."
+	robo.enter("surprised", at = CENTER)
+	robo: "It's a library of robot stories!"
+	# Your turn: what do they find inside? Add blocks here.
+	return

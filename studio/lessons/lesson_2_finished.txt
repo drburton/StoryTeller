@@ -1,0 +1,8 @@
+var player_name := ""
+
+beat start:
+	backdrop("classroom")
+	sam.enter("happy", at = CENTER)
+	sam: "Welcome to our class!"
+	player_name = await ask_text("What is your name?")
+	sam (happy): "Nice to meet you, {player_name}!"

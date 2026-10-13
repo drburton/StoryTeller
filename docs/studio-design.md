@@ -60,7 +60,7 @@ Landscape on a tablet (1024 x 768 points and up, about the size of the smallest 
 ```
 
 - **Blocks palette (left).** Five colored groups, plus a gray one for notes. Tapping a group shows its blocks, and dragging a block into the scene adds it.
-- **Scene (middle).** The blocks of the chosen scene, top to bottom, in the order they play. Tabs above switch scenes; **+** adds one. A **Map** button shows all scenes as boxes with arrows (the Story Map, simplified).
+- **Scene (middle).** The blocks of the chosen scene, top to bottom, in the order they play. Tabs above switch scenes; **+** adds one. A **Map** button shows all scenes as boxes with arrows (the Story Map, simplified): the start, the endings, and problems such as a scene nothing leads to are marked in plain words, and tapping a scene opens it.
 - **Stage preview (right, top).** The scene as it looks at the chosen block. **Play from here** starts the story at that block.
 - **Library (right, bottom).** The story's characters, backgrounds, and sounds, with **+** to add from the starter library or from the student's own pictures.
 - **Top bar.** Home (the list of stories), the story's name, undo and redo, **Play** from the beginning, and **Share**.
@@ -103,7 +103,7 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 ## 6. Characters, backgrounds, and sounds
 
-- **Starter library.** Original characters with several faces each, backgrounds (home, school, park, forest, castle, space), music, and sounds, all made for the project like the demo's art, so students can start at once. The first version gathers the Where's Biscuit characters and backgrounds and the demo's characters, backgrounds, music, and sounds (`studio/library/`); the new art follows.
+- **Starter library.** Original characters with several faces each, backgrounds (home, school, park, forest, castle, space), music, and sounds, all made for the project like the demo's art, so students can start at once. The library (`studio/library/`) holds the Studio's own art in `studio/library/art/`, made by `tools/demo_assets/starter_library.py`: park, forest, castle, beach, and space backgrounds; Maya, Sam, Robo, and Whiskers with neutral, happy, sad, surprised, and thinking faces; adventure and mystery music; and pop, whoosh, and magic sounds. It also offers the Where's Biscuit characters and backgrounds and the demo's characters, backgrounds, music, and sounds.
 - **Each story keeps its own copies.** A story's pictures and sounds are plain files in its folder (decision 0023). When a story uses a starter item, the Studio copies it in, so a story file carries everything it needs (decision 0022). Pickers offer the story's own items first, then the rest of the starter library.
 - **Library panel.** Under the stage preview, the story's characters, backgrounds, and sounds, each with **+ Add**: an item from the starter library, or the student's own picture or sound file. Tapping a character shows its faces, with **+ Add a face**; tapping a sound plays it.
 - **Their own pictures.** **+ Add** opens the tablet's own picker: take a photo, or choose one from Photos or the gallery. A character's faces are pictures named by the student ("happy", "sad"). The Studio scales large photos down to save space (backgrounds to 1920 by 1080, faces to 1024 by 1024) and saves photos as `.jpg`.
@@ -117,12 +117,12 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 ## 8. Stories, saving, and sharing
 
-- **Home screen.** The student's stories as cards with a picture, plus **New story**, which offers a blank story or a starter template (a mystery, an adventure, a "choose your path" lesson).
+- **Home screen.** The student's stories as cards with a picture, plus **New story**, which offers a blank story or a starter template (a mystery, an adventure, a "choose your path" lesson; `studio/templates/`).
 - **Saving.** Every change saves in the app's own storage on the device (Godot's `user://`), which stays until the app is removed.
 - **Share.** **Share** packs the story into one `.zip` file (its tales, pictures, sounds, and config) and opens the system's share sheet: AirDrop, Files, Google Drive, Google Classroom, or email. The first version saves the `.zip` through the system's file picker (Files and iCloud on an iPad, Files and Google Drive on Android); the share sheet needs a small native plugin and follows. **Open a story file** on the home screen loads a `.zip` from Files, so a teacher can open a student's story, and a student can move a story between devices.
 - **Keeping stories safe.** Removing the app removes its stories, so the Studio reminds students to Share a copy of a story they changed and haven't shared for a week.
 - **Publishing goes through an adult (decision 0022).** The Studio never publishes a story itself. A student Shares the story file with a teacher or parent, who opens it in Godot and decides whether it goes public.
-- **Into Godot.** The plugin's **Open a Studio story** command unpacks a story file into a Godot project as its own story folder with its own config. The story plays in the editor, opens in the Story tab, and exports as a game: a web build for itch.io or a class website, or a desktop or Android build. So the file carries everything a build needs: the tale, `story.json`, the pictures and sounds the story uses (from the starter library and the student's own), and a story config.
+- **Into Godot.** The plugin's **Open a Studio story** command, in the Story tab, unpacks a story file into a Godot project as its own story folder under `res://studio_stories/` with its own config and a `main.tscn` that plays it. `docs/guides/publishing-studio-stories.md` is the teacher's guide. The story plays in the editor, opens in the Story tab, and exports as a game: a web build for itch.io or a class website, or a desktop or Android build. So the file carries everything a build needs: the tale, `story.json`, and the pictures and sounds the story uses (from the starter library and the student's own). The command writes the story config itself, since a story file never holds a Godot resource, which could run code.
 
 ## 9. How it is built
 
@@ -179,9 +179,9 @@ The maintainer is writing a textbook that teachers use to run a class with the S
 
 - **A stable interface for each edition.** Before the first edition is written, the Studio's block names, colors, groups, screen layout, and words for students (§3) are frozen. Changes that would make the book wrong wait for the next major version.
 - **Every edition keeps working.** App stores offer only an app's newest version, so the interface stays as the book shows for the life of an edition. A major version with interface changes ships as its own app listing (for example "Visual Novel StoryTeller Studio 2"), and classes using the older edition keep installing the app their book shows.
-- **Lesson projects.** Each chapter's starting and finished stories live in the repository (`studio/lessons/`) and open from the Studio's home screen under **Lessons**, so students start a chapter with one tap.
+- **Lesson projects.** Each chapter's starting and finished stories live in the repository (`studio/lessons/`, as `<id>_start.txt` and `<id>_finished.txt` listed in `lessons.json`) and open from the Studio's home screen under **Lessons**, so students start a chapter with one tap. Five draft lessons, one for each idea in the table below, hold the place until the book's chapters are written.
 - **A stable starter library.** Characters, backgrounds, and sounds used in the book keep their names and pictures within a major version.
-- **Screenshots from a script.** A script opens each lesson project in the Studio and saves the screenshots the book uses, so they can be made again for a new edition or language. It builds on the play-through harness used in release testing.
+- **Screenshots from a script.** A script opens each lesson project in the Studio and saves the screenshots the book uses, so they can be made again for a new edition or language. `tools/studio_screenshots.sh <folder>` follows the shot list in `studio/lessons/screenshots.json`: each shot is a name and steps such as opening a lesson, showing a palette group, tapping a block, opening the map, or playing, so adding a shot needs no code.
 - **Concepts each chapter can teach.** The blocks cover the main ideas of a first programming course alongside story writing:
 
 | Idea | Where it appears in the Studio |

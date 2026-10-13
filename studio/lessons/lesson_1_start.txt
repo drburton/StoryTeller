@@ -1,0 +1,8 @@
+beat start:
+	# Blocks play from top to bottom, and some of these are out of order.
+	# Drag them so the park comes first, then Maya walks in, talks, and hops.
+	maya: "Hi! I'm Maya."
+	backdrop("park")
+	maya.hop()
+	maya.enter("happy", at = CENTER)
+	"It is a sunny day in the park."

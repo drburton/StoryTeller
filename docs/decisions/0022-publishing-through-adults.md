@@ -27,3 +27,7 @@ Students using Visual Novel StoryTeller Studio will want others to play what the
 - The plugin gains "Open a Studio story", with a test that a story file opens, plays, and exports. The plugin's web export must work, since that is how most student stories will be published; it is tested before Studio 1.0.
 - Teachers need a short guide to publishing a student's story, which the textbook can point to.
 - This replaces "Sharing a playable link instead of a file" in `docs/studio-design.md` §12.
+
+## Update (2026-10-12)
+
+Built in M8, S5. A story file holds `story.json`, `tales/<id>.tale`, and the story's pictures, sounds, and character profiles in their usual folders (`StoryFile`). It carries no story config: a Godot resource in a shared file could run code, so story files never hold one, and **Open a Studio story** writes the config and a `main.tscn` when it adds the story to a project. `tools/check_studio_story.sh` tests that a story file opens, plays, and exports for the web, and `docs/guides/publishing-studio-stories.md` is the teacher's guide.

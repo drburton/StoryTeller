@@ -1,0 +1,17 @@
+beat start:
+	backdrop("forest")
+	robo.enter("thinking", at = CENTER)
+	robo: "Two paths. Which way should I go?"
+	choose:
+		"Follow the sound of water":
+			jump river
+		"Climb the hill":
+			jump castle
+
+beat river:
+	backdrop("riverside")
+	"Robo finds a quiet river."
+
+beat castle:
+	backdrop("castle")
+	"Robo finds a castle on a hill."
