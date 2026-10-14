@@ -71,8 +71,11 @@ application/modify_resources=false
 }
 
 $failed = $false
-# Messages from machines with no sound card, not from StoryTeller.
-$noise = "WASAPI|audio driver|AudioDriver"
+# Messages from machines with no sound card, not from StoryTeller. Also
+# Godot's note about the title music: --quit-after closes the game in the
+# middle of it, before the audio mixer lets go (the game's Quit button
+# stops the music first).
+$noise = "WASAPI|audio driver|AudioDriver|resources still in use at exit"
 
 function Show-Problems([string[]]$log) {
     $problems = $log | Select-String -Pattern "SCRIPT ERROR|^ERROR" | Where-Object { $_ -notmatch $noise }

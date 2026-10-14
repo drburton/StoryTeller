@@ -240,9 +240,14 @@ func can_quit() -> bool:
 	return not OS.has_feature("web")
 
 
+## Saves the global data and closes the game. The music stops first, and
+## the audio mixer gets a moment to let go of it, so the game exits cleanly.
 func quit_game() -> void:
 	if saves() != null:
 		saves().save_globals()
+	if audio() != null:
+		audio().teardown()
+		await get_tree().create_timer(0.2).timeout
 	get_tree().quit()
 
 
