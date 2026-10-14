@@ -29,3 +29,4 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0021](0021-studio-as-mobile-apps.md) | The Studio ships as apps for iOS and Android | Accepted |
 | [0022](0022-publishing-through-adults.md) | Students share; adults publish in Godot | Accepted |
 | [0023](0023-raw-pictures-and-sounds.md) | Raw pictures and sounds outside the import system | Accepted |
+| [0024](0024-studio-web-version.md) | The Studio also runs as a web page | Accepted |

@@ -19,9 +19,18 @@ The block-based story builder for kids (decisions 0020 and 0021, design in `docs
 ```bash
 GODOT_BIN=/path/to/godot tools/build_studio.sh linux build/studio.x86_64   # desktop, for trying it out
 GODOT_BIN=/path/to/godot tools/build_studio.sh android build/studio.apk    # needs the Android SDK
+GODOT_BIN=/path/to/godot tools/build_studio.sh web build/studio-web/index.html   # a web page (decision 0024)
 ```
 
-GitHub Actions builds the Android app on every change to the Studio (`.github/workflows/studio.yml`). The iOS build is added once the Apple developer account exists.
+GitHub Actions builds the Android app and the web version on every change to the Studio (`.github/workflows/studio.yml`). The iOS build is added once the Apple developer account exists.
+
+## The web version
+
+The web version is a folder of files that any web host serves as they are, such as GitHub Pages, a school website, or itch.io: download **storyteller-studio-web** from the latest **Studio** run's Summary page and upload the `studio-web` folder's files. It opens from `index.html`, which must come from a web server, not straight from the folder.
+
+- Stories are kept in the browser's storage for that page. On an iPad, add the Studio to the home screen (Share, then **Add to Home Screen**), or Safari may clear the stories after seven days without a visit. Students should still share a copy of each story they make.
+- **Share** saves the story file as a download. **Open a story file**, **+ Add** pictures, and sounds use the browser's file picker (`web/studio_web.gd`).
+- `tools/check_studio_web.sh` builds the web version and checks it in Chromium (`web/web_check.gd`, `tools/studio_web/check.js`); it needs Node.js with the `playwright` package.
 
 ## Trying it on an Android tablet
 
