@@ -53,6 +53,25 @@ func clear() -> void:
 	stop_all(0.0)
 
 
+## Stops every player at once and lets go of its sound, so no music keeps
+## playing or stays loaded after the story shuts down.
+func teardown() -> void:
+	for tween in _tweens.values():
+		if tween.is_valid():
+			tween.kill()
+	_tweens.clear()
+	var players: Array[AudioStreamPlayer] = []
+	players.append_array(_music)
+	players.append_array(_sounds)
+	players.append_array([_ambience, _voice, _blip])
+	for player in players:
+		if player != null:
+			player.stop()
+			player.stream = null
+	_music_state["track"] = ""
+	_ambience_state["track"] = ""
+
+
 ## Plays a music track, crossfading from the current one over [param fade]
 ## seconds. Playing the track that is already on only changes its volume.
 ## Returns an error message or "".
