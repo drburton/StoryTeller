@@ -2,6 +2,7 @@
 # Exports the project as a .pck and checks it the way a shipped game sees
 # it: source files are gone and only imported resources remain. Catches code
 # that reads folders directly, which works in the editor but not in exports.
+# Then plays it: New Game shows a line, and saving and loading bring it back.
 #
 # Usage:
 #   GODOT_BIN=/path/to/godot tools/check_export.sh
@@ -49,5 +50,11 @@ if ! "$godot" --headless --path "$root" --export-pack "Linux" "$work/game.pck" >
 	exit 1
 fi
 
-cp "$root/tools/export_check.gd" "$work/export_check.gd"
-cd "$work" && "$godot" --headless --main-pack game.pck -s "$work/export_check.gd"
+cp "$root/tools/export_check.gd" "$root/tools/export_play_check.gd" "$work/"
+cd "$work" || exit 1
+"$godot" --headless --main-pack game.pck -s "$work/export_check.gd" || exit 1
+# New Game, a line in the dialogue box, then saving and loading it.
+"$godot" --headless --main-pack game.pck -s "$work/export_play_check.gd" >"$work/play.log" 2>&1
+status=$?
+grep -E '^(CHECK|Play check)' "$work/play.log"
+exit $status

@@ -67,6 +67,18 @@ func test_stop_music_and_audio() -> void:
 	assert_eq(audio.get_ambience_track(), "")
 
 
+func test_shutting_down_stops_and_releases_every_sound() -> void:
+	audio.play_music("theme", 1.0, 0.0)
+	audio.play_ambience("rain", 1.0, 0.0)
+	audio.play_music("other", 1.0, 2.0)
+	var players := audio.find_children("*", "AudioStreamPlayer", true, false)
+	assert_true(players.any(func(player: AudioStreamPlayer) -> bool: return player.playing))
+	story.shut_down()
+	for player in players:
+		assert_false(player.playing, player.name + " stopped")
+		assert_null(player.stream, player.name + " let go of its sound")
+
+
 func test_awaited_sound_takes_its_length() -> void:
 	var clock: EngineClock = track(EngineClock.new())
 	tree.root.add_child(clock)

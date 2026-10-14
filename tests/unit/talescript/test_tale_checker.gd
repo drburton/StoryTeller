@@ -76,6 +76,15 @@ func test_speakers() -> void:
 		["2: Unknown speaker 'ghost'. Use a cast member id or a const holding the speaker's name."]))
 
 
+func test_faces_given_to_cast_members() -> void:
+	assert_eq(_beat("\tmira.enter(\"smile\", at = LEFT)\n\tmira.mood = \"soft\"\n\tjonas.enter(\"anything\")\n"), PackedStringArray())
+	assert_eq(_beat("\tmira.enter(\"angry\", at = LEFT)\n"), PackedStringArray(["2: warning: Cast member 'mira' has no mood 'angry'."]))
+	assert_eq(_beat("\tmira.enter(mood_name = \"angry\")\n"), PackedStringArray(["2: warning: Cast member 'mira' has no mood 'angry'."]))
+	assert_eq(_beat("\tmira.mood = \"angry\"\n"), PackedStringArray(["2: warning: Cast member 'mira' has no mood 'angry'."]))
+	# Faces worked out while playing, and empty ones, aren't checked.
+	assert_eq(_check("var face := \"angry\"\nbeat main:\n\tmira.enter(face)\n\tmira.enter(\"{face}\")\n\tmira.enter()\n\tmira.enter(\"\")\n"), PackedStringArray())
+
+
 func test_text_interpolation() -> void:
 	assert_eq(_beat("\t\"Hi {player_name}, {{literal}}.\"\n"), PackedStringArray())
 	assert_eq(_beat("\t\"You have {coins} coins.\"\n"), PackedStringArray(["2: Unknown name 'coins'."]))

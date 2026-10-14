@@ -64,6 +64,32 @@ jobs:
         shell: pwsh
         run: .\tools\run_tests.ps1
 
+      - name: Cache export templates
+        uses: actions/cache@v4
+        with:
+          path: ~/AppData/Roaming/Godot/export_templates
+          key: godot-templates-windows-${{ env.GODOT_VERSION }}
+
+      - name: Install the Windows export templates
+        shell: pwsh
+        run: |
+          $dir = Join-Path $env:APPDATA "Godot\export_templates\$($env:GODOT_VERSION -replace '-', '.')"
+          if (-not (Test-Path (Join-Path $dir "windows_release_x86_64_console.exe"))) {
+            New-Item -ItemType Directory -Force $dir | Out-Null
+            $ProgressPreference = "SilentlyContinue"
+            $url = "https://github.com/godotengine/godot-builds/releases/download/$env:GODOT_VERSION/Godot_v$($env:GODOT_VERSION)_export_templates.tpz"
+            Invoke-WebRequest $url -OutFile templates.tpz
+            # Windows' own tar reads zip files.
+            & "$env:SystemRoot\System32\tar.exe" -xf templates.tpz -C $dir --strip-components=1 `
+              templates/version.txt templates/windows_release_x86_64.exe templates/windows_release_x86_64_console.exe
+            Remove-Item templates.tpz
+          }
+          Get-ChildItem $dir
+
+      - name: Check the demo exported as a Windows game
+        shell: pwsh
+        run: .\tools\check_windows_export.ps1
+
   test-beta:
     # Early warning for the next Godot release. Set the repository variable
     # GODOT_BETA (for example 4.8-beta1) to enable; failures do not block merges.

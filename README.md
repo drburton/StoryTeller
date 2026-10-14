@@ -180,7 +180,7 @@ Export with Godot's usual **Project > Export**. To check that a project still fi
 GODOT_BIN=/path/to/godot tools/check_export.sh
 ```
 
-CI runs this check on every pull request.
+It also presses New Game and checks that saving and loading bring the line back. On Windows, `.\tools\check_windows_export.ps1 -Godot <folder with Godot>` exports the demo as a Windows game (it needs the Windows export templates) and checks it the same way. CI runs both on every pull request.
 
 ## Documentation
 

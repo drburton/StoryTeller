@@ -11,6 +11,8 @@ extends RefCounted
 
 const K := TaleNode.Kind
 const E := TaleExpr.Kind
+## Cast member methods that take a mood, and that argument's name.
+const MOOD_ARGUMENTS := {"enter": "mood_name"}
 
 ## How each call expression was resolved, for the compiler. Maps a TaleExpr
 ## to "beat", "tale_beat", "action", "function", "constructor", "exposed",
@@ -148,6 +150,9 @@ func _check_statement(node: TaleNode, in_loop: bool) -> void:
 		K.ASSIGN:
 			_check_assign_target(node)
 			_check_expr(node.expr)
+			var target := node.target
+			if target.kind == E.ATTRIBUTE and target.name == "mood" and target.operands[0].kind == E.IDENTIFIER:
+				_check_cast_mood(target.operands[0].name, node.expr, null)
 		K.IF, K.ELIF:
 			_check_expr(node.expr)
 			_check_block(node.body, in_loop)
@@ -199,6 +204,20 @@ func _declare(node: TaleNode) -> void:
 	if _story_vars.has(node.name):
 		_warn_node(node, "'%s' hides the story variable with the same name." % node.name)
 	scope[node.name] = "const" if node.kind == K.CONST else "var"
+
+
+## Warns when [param mood] is a face the cast member [param id] doesn't
+## have, as in [code]mira.enter("angry")[/code] or [code]mira.mood = "angry"[/code].
+## Moods worked out while playing, and cast members whose look takes any
+## mood, are not checked.
+func _check_cast_mood(id: String, mood: TaleExpr, anchor: TaleExpr) -> void:
+	if mood == null or mood.kind != E.LITERAL or not mood.value is String or "{" in mood.value or mood.value.is_empty():
+		return
+	if _lookup(id) != "cast":
+		return
+	var moods: PackedStringArray = _context.cast[id]
+	if not moods.is_empty() and mood.value not in moods:
+		_warn_expr(mood, "Cast member '%s' has no mood '%s'." % [id, mood.value], anchor)
 
 
 func _check_speaker(node: TaleNode) -> void:
@@ -437,6 +456,9 @@ func _check_call(expr: TaleExpr, anchor: TaleExpr) -> void:
 	if callee.kind != E.IDENTIFIER:
 		call_kinds[expr] = "method"
 		_check_expr(callee, anchor)
+		if callee.kind == E.ATTRIBUTE and callee.operands[0].kind == E.IDENTIFIER and MOOD_ARGUMENTS.has(callee.name):
+			var parameter: String = MOOD_ARGUMENTS[callee.name]
+			_check_cast_mood(callee.operands[0].name, expr.args[0] if not expr.args.is_empty() else expr.named_args.get(parameter), anchor)
 		return
 
 	var kind := _lookup(callee.name)
