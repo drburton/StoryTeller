@@ -6,14 +6,16 @@ name: Studio
 # page and install it on an Android tablet. The iOS build follows once an
 # Apple developer account is set up (docs/studio-design.md §9). It also
 # checks that a story file from the Studio opens in the plugin, plays, and
-# exports as a web game (decision 0022).
+# exports as a web game (decision 0022), and builds the Studio's web version
+# and checks it in Chromium (decision 0024); download it from the run's
+# Summary page and put it on any web host.
 
 on:
   push:
     branches: [main]
-    paths: ["studio/**", "addons/**", "examples/**", "project.godot", "tools/build_studio.sh", "tools/check_studio_story.sh", "tools/studio_story/**", "tools/addon_install/**", ".github/workflows/studio.yml"]
+    paths: ["studio/**", "addons/**", "examples/**", "project.godot", "tools/build_studio.sh", "tools/check_studio_story.sh", "tools/studio_story/**", "tools/addon_install/**", "tools/check_studio_web.sh", "tools/studio_web/**", ".github/workflows/studio.yml"]
   pull_request:
-    paths: ["studio/**", "addons/**", "examples/**", "project.godot", "tools/build_studio.sh", "tools/check_studio_story.sh", "tools/studio_story/**", "tools/addon_install/**", ".github/workflows/studio.yml"]
+    paths: ["studio/**", "addons/**", "examples/**", "project.godot", "tools/build_studio.sh", "tools/check_studio_story.sh", "tools/studio_story/**", "tools/addon_install/**", "tools/check_studio_web.sh", "tools/studio_web/**", ".github/workflows/studio.yml"]
   workflow_dispatch:
 
 env:
@@ -57,6 +59,23 @@ jobs:
 
       - name: Check a Studio story opens in the plugin, plays, and exports for the web
         run: tools/check_studio_story.sh
+
+      - name: Install Playwright's Chromium
+        run: |
+          npm install --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.56.1
+          "$RUNNER_TEMP/pw/node_modules/.bin/playwright" install --with-deps chromium
+          echo "NODE_PATH=$RUNNER_TEMP/pw/node_modules" >> "$GITHUB_ENV"
+
+      - name: Check the Studio's web version in a browser
+        run: tools/check_studio_web.sh build/studio-web-shots build/studio-web
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: storyteller-studio-web
+          path: |
+            build/studio-web
+            build/studio-web-shots
 
       - uses: actions/setup-java@v4
         with:

@@ -126,7 +126,7 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 ## 9. How it is built
 
-- **A Godot project.** The Studio is a Godot project in the repository's `studio/` folder that uses the StoryTeller plugin's runtime and editing layer. It is exported as an iOS app and an Android app, and needs no server. The same project can be exported for desktops or the web later (decision 0021).
+- **A Godot project.** The Studio is a Godot project in the repository's `studio/` folder that uses the StoryTeller plugin's runtime and editing layer. It is exported as an iOS app and an Android app, and as a web page for Chromebooks, laptops, and tablets (decision 0024), and needs no server. The same project can be exported for desktops later (decision 0021).
 - **One story model.** Blocks are a new view over the card model from M5 (`TaleCards`, `TaleEdit`). They edit the `.tale` text line by line, exactly as the cards do, so round trips stay clean and the existing round-trip tests cover them.
 - **Runtime editing.** The parser, checker, and editing layer must run in an exported game, without the Godot editor. Some editor code uses `EditorInterface`; that code moves behind a small interface so the Studio can supply its own file listing, pictures, and undo.
 - **Stage preview.** A `StoryStage` drawn in a `SubViewport`, fed by the director's fast mode.

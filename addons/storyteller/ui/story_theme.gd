@@ -65,6 +65,7 @@ static func for_settings(base: Theme, high_contrast_on: bool, readable_font: boo
 	if readable_font:
 		var font := SystemFont.new()
 		font.font_names = PackedStringArray(READABLE_FONTS)
+		preload("res://addons/storyteller/core/story.gd").add_symbol_font(font)
 		theme.default_font = font
 	return theme
 

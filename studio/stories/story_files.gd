@@ -2,8 +2,10 @@ class_name StudioFiles
 extends RefCounted
 ## Sharing a story as one .zip file and opening one, through the system's
 ## own file picker: Files and iCloud on an iPad, Files and Google Drive on
-## Android (docs/studio-design.md §8). A share sheet with AirDrop, Classroom,
-## and email needs a small native plugin and comes later.
+## Android (docs/studio-design.md §8). In a web browser, sharing saves a
+## download and opening uses the browser's file picker ([StudioWeb]). A
+## share sheet with AirDrop, Classroom, and email needs a small native
+## plugin and comes later.
 
 ## Where a story file is made before it is saved elsewhere.
 const OUTBOX := "user://shared"
@@ -16,6 +18,11 @@ static func share(library: StudioLibrary, id: String, report: Callable) -> void:
 	DirAccess.make_dir_recursive_absolute(OUTBOX)
 	if not library.pack(id, zip_path):
 		report.call(library.last_error)
+		return
+	if StudioWeb.is_web():
+		StudioWeb.save_file(FileAccess.get_file_as_bytes(zip_path), id + ".zip", "application/zip")
+		library.mark_shared(id)
+		report.call("Saved a copy of your story as %s in your downloads." % (id + ".zip"))
 		return
 	if not DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
 		library.mark_shared(id)
@@ -37,6 +44,14 @@ static func share(library: StudioLibrary, id: String, report: Callable) -> void:
 ## [param on_opened] with the new story's id, or [param report] with what
 ## went wrong.
 static func open(library: StudioLibrary, on_opened: Callable, report: Callable) -> void:
+	if StudioWeb.is_web():
+		StudioWeb.pick_file(".zip,application/zip", func(bytes: PackedByteArray, _name: String) -> void:
+			var path := _save_picked(bytes, "picked.zip")
+			if path.is_empty():
+				report.call("That file could not be read.")
+			else:
+				open_path(library, path, on_opened, report))
+		return
 	if not DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
 		report.call("This device can't open story files yet.")
 		return
@@ -78,6 +93,14 @@ static func copy_file(from: String, to: String) -> bool:
 ## Asks for a picture with the system's picker (on a tablet, the photos and
 ## the camera), then calls [param on_picked] with it as an Image.
 static func pick_picture(on_picked: Callable, report: Callable) -> void:
+	if StudioWeb.is_web():
+		StudioWeb.pick_file("image/png,image/jpeg,image/webp", func(bytes: PackedByteArray, _name: String) -> void:
+			var image := picture_from_bytes(bytes)
+			if image == null:
+				report.call("That picture could not be read.")
+			else:
+				on_picked.call(image))
+		return
 	if not DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
 		report.call("This device can't pick pictures yet.")
 		return
@@ -94,6 +117,16 @@ static func pick_picture(on_picked: Callable, report: Callable) -> void:
 
 ## Asks for a sound file, then calls [param on_picked] with its path.
 static func pick_sound(on_picked: Callable, report: Callable) -> void:
+	if StudioWeb.is_web():
+		StudioWeb.pick_file("audio/*,.ogg,.wav,.mp3", func(bytes: PackedByteArray, file_name: String) -> void:
+			# The sound's kind comes from its first bytes (see sound_kind);
+			# keeping the file's own name gives the name field a start.
+			var path := _save_picked(bytes, file_name.get_file().get_basename().validate_filename())
+			if path.is_empty():
+				report.call("That sound could not be read.")
+			else:
+				on_picked.call(path))
+		return
 	if not DisplayServer.has_feature(DisplayServer.FEATURE_NATIVE_DIALOG_FILE):
 		report.call("This device can't pick sounds yet.")
 		return
@@ -106,7 +139,12 @@ static func pick_sound(on_picked: Callable, report: Callable) -> void:
 ## The picture in the file at [param path], read from its bytes, since a
 ## picked file may have no extension. Null when it isn't a picture.
 static func read_picture(path: String) -> Image:
-	var bytes := FileAccess.get_file_as_bytes(path)
+	return picture_from_bytes(FileAccess.get_file_as_bytes(path))
+
+
+## The picture in [param bytes], or null when they aren't a PNG, JPEG, or
+## WebP picture.
+static func picture_from_bytes(bytes: PackedByteArray) -> Image:
 	if bytes.is_empty():
 		return null
 	var image := Image.new()
@@ -129,3 +167,18 @@ static func sound_kind(bytes: PackedByteArray) -> String:
 	if head.begins_with("ID3") or (bytes[0] == 0xFF and (bytes[1] & 0xE0) == 0xE0):
 		return "mp3"
 	return ""
+
+
+# Keeps a file picked in a browser in the outbox, and returns its path, or
+# "" when it is empty or can't be written.
+static func _save_picked(bytes: PackedByteArray, file_name: String) -> String:
+	if bytes.is_empty():
+		return ""
+	DirAccess.make_dir_recursive_absolute(OUTBOX)
+	var path := OUTBOX.path_join(file_name if not file_name.is_empty() else "picked")
+	var out := FileAccess.open(path, FileAccess.WRITE)
+	if out == null:
+		return ""
+	out.store_buffer(bytes)
+	out.close()
+	return path

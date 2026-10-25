@@ -15,6 +15,11 @@ const VERSION := "0.1.0-beta"
 const CONFIG_SETTING := "storyteller/config_path"
 ## Version of the dictionary returned by [method capture].
 const STATE_FORMAT := 1
+## The symbols StoryTeller's screens show, such as the dialogue box's ▼,
+## drawn for StoryTeller (tools/demo_assets/symbols_font.py). Godot's
+## default font has none of them, and a web page has no system fonts to
+## borrow them from, so [method add_symbol_font] adds this font behind it.
+const SYMBOL_FONT := "res://addons/storyteller/ui/storyteller_symbols.ttf"
 
 ## The active configuration. Set by [method start].
 var config: StoryConfig
@@ -25,8 +30,21 @@ var _crew: Dictionary[StringName, StoryCrew] = {}
 
 
 func _ready() -> void:
+	add_symbol_font(ThemeDB.fallback_font)
 	if not is_ready:
 		start(load_config())
+
+
+## Adds StoryTeller's symbol font ([constant SYMBOL_FONT]) to the fonts
+## [param font] falls back on, once. The Story autoload does this for
+## Godot's default font when the game starts.
+static func add_symbol_font(font: Font) -> void:
+	var symbols := load(SYMBOL_FONT) as Font
+	if font == null or symbols == null or font == symbols or font.fallbacks.has(symbols):
+		return
+	var fallbacks := font.fallbacks
+	fallbacks.append(symbols)
+	font.fallbacks = fallbacks
 
 
 ## Loads the project's [StoryConfig], or returns defaults when none exists.

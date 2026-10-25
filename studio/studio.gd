@@ -1,13 +1,14 @@
 extends Control
 ## Visual Novel StoryTeller Studio (docs/studio-design.md): the home screen
 ## with the student's stories, and one story open in the blocks. Stories
-## are kept in the app's own storage ([StudioLibrary]). The stage preview
-## (step S3) and the starter library (S4) come next; until then stories use
-## the characters, backgrounds, and sounds of the Where's Biscuit sample.
+## are kept in the app's own storage ([StudioLibrary]), which in a web
+## browser is the browser's storage for the page ([StudioWeb]).
 
 const STORY_CONFIG := "res://examples/wheres_biscuit/story_config.tres"
 const CHECK_SCENE := "res://studio/check/tablet_check.tscn"
 const SETTINGS_PATH := "user://studio_settings.json"
+## Shown in a browser that may clear the Studio's storage.
+const STORAGE_WARNING := "This browser may not keep your stories. Add the Studio to your home screen, and share a copy of each story you make."
 
 ## The folder of the student's stories. Tests set it before the app starts.
 var library_root := StudioLibrary.ROOT
@@ -38,6 +39,14 @@ func _ready() -> void:
 	add_child(story)
 	_add_menu()
 	show_home()
+	if StudioWeb.is_web():
+		StudioWeb.keep_storage()
+		if not StudioWeb.storage_is_kept():
+			home.show_message(STORAGE_WARNING)
+		# "index.html?check=make", then "?check=reopen": the web check.
+		var check := StudioWeb.query("check")
+		if not check.is_empty():
+			add_child(StudioWebCheck.new(self, check))
 	# "-- --studio-open=<id>" opens a story at once, for screenshots and checks.
 	for arg in OS.get_cmdline_user_args():
 		if arg.begins_with("--studio-open=") and not library.get_story(arg.get_slice("=", 1)).is_empty():
