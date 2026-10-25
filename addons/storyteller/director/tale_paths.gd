@@ -162,7 +162,8 @@ func _play_path(config: StoryConfig, tale_name: String, beat: String, plan: Arra
 		await get_tree().process_frame
 	if player.stopped:
 		run["problems"].append({"kind": player.stop_kind, "message": player.stop_reason, "line": 0})
-	if not done[0]:
+	# A path cut short has no ending.
+	if not done[0] or player.stopped:
 		director.stop()
 		run["ending"] = ""
 	run["trace"] = player.trace
@@ -295,10 +296,12 @@ class _Player extends TalePresenter:
 			picks.append(-1)
 		if picks.is_empty():
 			_stop("no_options", "a choice with no option the player can pick")
+			await get_tree().process_frame
 			return -1
-		if trace.size() >= max_choices:
+		if stopped or trace.size() >= max_choices:
 			_stop("loop", "more than %d choices, maybe a loop" % max_choices)
-			return picks[0]
+			await get_tree().process_frame
+			return -1
 		var depth := trace.size()
 		var pick: int = plan[depth] if depth < plan.size() else picks[0]
 		trace.append({"options": picks, "pick": pick, "texts": texts})
@@ -306,11 +309,13 @@ class _Player extends TalePresenter:
 		await get_tree().process_frame
 		return pick
 
+	# Ends the path: the director stops, so a loop can't keep it busy.
 	func _stop(kind: String, reason: String) -> void:
 		if not stopped:
 			stopped = true
 			stop_kind = kind
 			stop_reason = reason
+			director.stop()
 
 
 ## Answers ask_text() with its default (or "Tester") instead of showing a
