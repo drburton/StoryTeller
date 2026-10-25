@@ -10,6 +10,7 @@ Short worked examples for common story mechanics. Each one shows the TaleScript,
 - [Flashback](#flashback)
 - [Branching on a visited beat](#branching-on-a-visited-beat)
 - [Portraits in the dialogue box](#portraits-in-the-dialogue-box)
+- [A 3D scene that pauses for choices](#a-3d-scene-that-pauses-for-choices)
 
 ## Relationship meter
 
@@ -309,3 +310,19 @@ beat phone_call:
 Turn on **Portrait Off Stage Only** to show the portrait only while the character is off stage, as for a phone call, so it never repeats the sprite. In the demo, Ada works this way: her portrait appears after she leaves the stage in the tour. The classic dialogue box shows portraits; a custom box gets the texture as `line["portrait"]`.
 
 The cast profile's **Text Color** colors a character's lines the same way. Leave it fully transparent to keep the dialogue box's own color.
+
+## A 3D scene that pauses for choices
+
+A story told in your own 3D scene can pause for choices while the characters keep moving. Give the scene an `AnimationPlayer` and hand it to the `Shots` crew member, as described in [animations from your own scene](developer-guide.md#animations-from-your-own-scene). In the tale, `await shots.play()` waits for a shot to end, and `shots.hold()` keeps a pose looping while the player chooses. Saves and rewind bring back the shot that was showing. To check every route through the tale, run the [path explorer](developer-guide.md#testing-every-path) on it.
+
+```gdscript
+beat bridge:
+	await shots.play("approach")
+	shots.hold("idle_wait")
+	mira: "The bridge is rotting. What do we do?"
+	choose:
+		"Cross carefully":
+			await shots.play("cross_carefully")
+		"Jump the gap":
+			await shots.play("jump_gap")
+```
