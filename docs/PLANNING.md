@@ -2,10 +2,11 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.34** (the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
+Status: **Draft v0.35** (one language for Godot, Unity, and later Unreal; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
 
-### Where things stand (2026-10-14)
+### Where things stand (2026-10-30)
 
+- **Cross-engine 1.0 (2026-10-30):** the maintainer's textbook needs the tool in the engines schools teach, and this year's students chose Unity with Naninovel over Godot. Version 1.0 now means Godot 1.0 and Unity 1.0 (Unity 6 LTS) together by April 2027, so schools can adopt the book for Fall 2027, when the maintainer's own class is the first full classroom pilot. Unreal follows as 1.1 in summer or fall 2027. TaleScript becomes a cross-engine language with the Godot plugin as the reference, and its tests become a conformance suite (decision 0025). Unity comes first and Unreal second (decision 0026). The name "StoryTeller" has a high trademark risk, so the product is renamed before 1.0, pending the maintainer's choice and an attorney's search (decision 0027, proposed). Until then, documents keep the current name.
 - **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder, downloaded as an app for iPads and Android tablets, with a live stage preview (milestone M8, decisions 0020 and 0021, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
 - **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
@@ -14,6 +15,11 @@ Status: **Draft v0.34** (the plugin: M0 to M4 and M6 complete, M5 built with its
 - **M7 so far:** the last extension points for add-ons, named transitions and Story tab hooks (§12.3), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding cards, keys to move and add cards, selecting several cards, and a condition builder (§9.3), lip-flap (§5.5), shared rewind snapshots, 3D characters through `ViewportLook` (§5.5), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), `@no_wait` (§5.1), and loading tales from a mod folder (§4).
 - **Not done yet:** for the plugin, the M5 usability test with writers, the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing the 0.1.0-beta release and the Asset Library listing), and a trademark search. For the Studio, the rest of M8: running the tablet check on real tablets (S0), a share sheet (S1), trying the photo and sound pickers on real tablets (S4), lessons matched to the textbook's chapters (S5), and the store test releases (S6).
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` (and the Studio's starter art with `tools/demo_assets/starter_library.py`) needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.35:
+- The plan for 1.0 now covers Godot and Unity together by April 2027, with Unreal as 1.1 and a textbook that teaches the same tool in three engines (milestones M9 to M12, §11). Decision 0026 records the engines and the schedule.
+- TaleScript is a cross-engine language. The Godot plugin is the reference, and its existing tests become a conformance suite that every engine must pass (decision 0025).
+- A preliminary name search found a high trademark risk for "StoryTeller". Decision 0027 (proposed) renames the product before 1.0.
 
 Changes in v0.34:
 - Shots (`StoryShots`): a crew member that plays a scene's animations for tales, such as 3D characters rigged and animated in Blender, with `await shots.play()` and `shots.hold()`, and keeps the shot showing in saves and rewind, so a story told in your own 3D scene can pause for choices and load mid-scene.
@@ -859,8 +865,38 @@ A block-based story builder for middle school students, shipped as apps for iOS 
 - **Progress (S2):** the blocks are built (`studio/blocks/`, `addons/storyteller/visual/story_blocks.gd`): every block in `docs/studio-design.md` §5 plus Note, the palette, drag and snap, deleting by dragging to the palette, Duplicate and Delete on a long press, pickers with pictures, − and + for amounts, "Make a number", undo and redo, hints, and the Code block behind a setting. Every block and every line of the sample tales reads back exactly; the Where's Biscuit sample needs no Code blocks. The Studio app opens the sample in the blocks, saves every change, and plays it (`studio/studio.tscn`). Still to do: Help on the long-press menu, and trying the blocks with a finger on real tablets.
 - **Progress (S0):** the tablet check app is built (`studio/check/`, `studio/README.md`): seven panels for the seven checks, with Works and Problem buttons and a results summary to send. `tools/build_studio.sh` exports it with the `studio` feature tag, and GitHub Actions builds the Android app (`.github/workflows/studio.yml`). Still to do: run it on an Android tablet and, once the Apple account exists, an iPad.
 
-### Plugin 1.0 Release (about 34 weeks after M0 starts)
-The Godot plugin with M0 to M7, for adults.
+### M9: Name and Godot 1.0 release (Nov to Dec 2026)
+- Rename (decision 0027): the maintainer chooses the name, a trademark attorney searches it, then the repository text, plugin, documentation, Asset Library listing, and domain change.
+- Beta testers, and the M5 usability test with writers.
+- Hand release checks from `docs/release-testing.md`.
+- Publish the Godot 1.0 release candidate.
+
+### M10: Conformance suite and C# core (Nov 2026 to Jan 2027)
+- Turn the existing tests into an engine-neutral suite, with inputs and expected outputs as data files (decision 0025).
+- Port the lexer, parser, checker, compiler, and director to C#.
+- A command-line checker built from the C# core.
+- The suite passes in C#.
+
+### M11: Unity 1.0 (Jan to Apr 2027)
+- Runtime: dialogue box, choices, variables, saves, audio, the 2D stage, and 3D scenes with Shots on Timeline and Animator, and menus.
+- Editor tools: errors while writing, the path explorer, and the Map view. The Cards view can follow 1.0 if time is short.
+- A Unity 6 LTS package, and sample projects that match the book.
+- A screenshot script for the book.
+- Interface freeze in February 2027, release candidate in March, and 1.0 in April 2027.
+
+### M12: Unreal 1.1 (summer to fall 2027)
+- A runtime that plays compiled tales.
+- Checking with the C# command-line tool.
+- An online chapter for the book.
+
+### Textbook (Nov 2026 to Apr 2027)
+- Shared chapters are written once: story craft, TaleScript, branching, variables, and testing paths.
+- Engine labs for Godot and for Unity.
+- An appendix, "Choosing an engine", compares licensing and costs. Unity Personal is free under US$200,000 in revenue and funding in the last 12 months, then Unity Pro costs about US$2,310 per seat per year as of January 2026. Unreal takes a 5% royalty above US$1 million lifetime gross per product, and Epic Games Store sales are exempt. Godot is MIT licensed with no fees. All figures are checked against the official pages before printing.
+- Manuscript and screenshots are done by March 2027.
+
+### Plugin 1.0 Release (target: April 2027)
+Version 1.0 means the Godot plugin (M0 to M7, with M9) and the Unity version (M10 and M11) released together, for adults and for courses that use the textbook.
 
 ### Studio 1.0 Release (after M8)
 Visual Novel StoryTeller Studio for kids, with its interface frozen for the textbook's first edition.
@@ -1034,7 +1070,10 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 | Risk | Impact | Mitigation |
 |---|---|---|
 | IP or trademark concerns | Takedown or legal cost | Clean-room rules (§2), original vocabulary and language, decision log, legal review before 1.0. |
-| Product name conflicts | Forced rename after launch | "Storyteller" is a common word and is also the title of an existing commercial game; run a trademark search early and pick a distinctive product name if needed. |
+| Product name conflicts | Forced rename after launch; a printed book with the wrong name | A preliminary search found a high risk for "StoryTeller" (decision 0027). Rename in M9, with an attorney's search of the new name. |
+| The April 2027 date slips | The book misses the Fall 2027 adoption cycle | Unreal moved to 1.1; the Cards view in Unity may follow 1.0; interface freeze in February 2027; the Godot 1.0 release candidate comes first. |
+| Engines drift apart | Tales behave differently, and the book is wrong for one engine | The conformance suite (decision 0025) runs in CI for every engine, and language changes start in the suite. |
+| Unity CI needs a license | Unity tests do not run on every change | The maintainer sets up a Unity license for GitHub Actions; until then, Unity tests run locally. |
 | Visual editor round trips damage hand-written files | Lost trust from programmers | Lossless parser from M1, byte-for-byte round-trip tests, script cards for anything unsupported. |
 | Studio schedule overrun | The Studio and the textbook slip | Feasibility check first (M8, S0); the Studio builds on the existing card model; the plugin's 1.0 does not wait for it. |
 | Studio changes make the textbook wrong | Teachers lose trust in the book | Interface freeze before writing; every major version stays online at its own address; screenshots made by a script (`docs/studio-design.md` §13). |
@@ -1065,12 +1104,16 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 
 ## 20. Immediate Next Steps
 
-The plugin (Visual Novel StoryTeller):
-1. Finish testing the 0.1.0-beta release with `docs/release-testing.md` and publish it.
-2. Run the M5 usability test: three writers who do not program each build a short branching scene with cards and the map.
-3. Run a trademark and name search for "StoryTeller" and "Visual Novel StoryTeller", then settle the name (§19, question 2).
-4. Finish M7: time the demo with a real player, the legal review, a trailer and screenshots, the Asset Library listing, then 1.0.
+Both engines (Godot and Unity):
+1. Choose the new name and get a trademark attorney's search (decision 0027, §19, question 2).
+2. Finish Godot beta testing with `docs/release-testing.md`, then run the M5 usability test: three writers who do not program each build a short branching scene with cards and the map.
+3. Start the conformance suite and the C# core (M10, decision 0025).
+4. Set up a Unity 6 LTS project and a Unity license for CI.
+5. Outline the textbook: the shared chapters, the engine labs, and the "Choosing an engine" appendix.
+
+The Godot plugin:
+6. Finish M7: time the demo with a real player, the legal review, a trailer and screenshots, and the Asset Library listing.
 
 The Studio (Visual Novel StoryTeller Studio):
-5. Set up an Apple Developer Program membership and a Google Play Console account, and register the Visual Novel StoryTeller domain for the project website.
-6. Start M8 with the feasibility check (S0): a small test app built by GitHub Actions, installed on a real iPad (TestFlight) and Android tablet, and checked against `docs/studio-design.md` §10.
+7. Set up an Apple Developer Program membership and a Google Play Console account, and register the project website's domain under the new name.
+8. Start M8 with the feasibility check (S0): a small test app built by GitHub Actions, installed on a real iPad (TestFlight) and Android tablet, and checked against `docs/studio-design.md` §10.
