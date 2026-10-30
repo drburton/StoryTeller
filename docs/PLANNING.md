@@ -6,7 +6,7 @@ Status: **Draft v0.35** (one language for Godot, Unity, and later Unreal; the pl
 
 ### Where things stand (2026-10-30)
 
-- **Cross-engine 1.0 (2026-10-30):** the maintainer's textbook needs the tool in the engines schools teach, and this year's students chose Unity with Naninovel over Godot. Version 1.0 now means Godot 1.0 and Unity 1.0 (Unity 6 LTS) together by April 2027, so schools can adopt the book for Fall 2027, when the maintainer's own class is the first full classroom pilot. Unreal follows as 1.1 in summer or fall 2027. TaleScript becomes a cross-engine language with the Godot plugin as the reference, and its tests become a conformance suite (decision 0025). Unity comes first and Unreal second (decision 0026). The name "StoryTeller" has a high trademark risk, so the product is renamed before 1.0 to **Visual Novel Teller** (decision 0027, accepted), pending an attorney's search. Until the M9 rename, documents keep the current name.
+- **Cross-engine 1.0 (2026-10-30):** the maintainer's textbook needs the tool in the engines schools teach, and this year's students chose Unity with Naninovel over Godot. Version 1.0 now means Godot 1.0 and Unity 1.0 (Unity 6.7 LTS) together by April 2027, so schools can adopt the book for Fall 2027, when the maintainer's own class is the first full classroom pilot. Unreal follows as 1.1 in summer or fall 2027. TaleScript becomes a cross-engine language with the Godot plugin as the reference, and its tests become a conformance suite (decision 0025). Unity comes first and Unreal second (decision 0026). The name "StoryTeller" has a high trademark risk, so the product is renamed before 1.0 to **Visual Novel Teller** (decision 0027, accepted), pending an attorney's search. Until the M9 rename, documents keep the current name.
 - **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder, downloaded as an app for iPads and Android tablets, with a live stage preview (milestone M8, decisions 0020 and 0021, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
 - **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
@@ -881,7 +881,7 @@ A block-based story builder for middle school students, shipped as apps for iOS 
 ### M11: Unity 1.0 (Jan to Apr 2027)
 - Runtime: dialogue box, choices, variables, saves, audio, the 2D stage, and 3D scenes with Shots on Timeline and Animator, and menus.
 - Editor tools: errors while writing, the path explorer, and the Map view. The Cards view can follow 1.0 if time is short.
-- A Unity 6 LTS package, and sample projects that match the book.
+- A Unity 6.7 LTS package, and sample projects that match the book.
 - A screenshot script for the book.
 - Interface freeze in February 2027, release candidate in March, and 1.0 in April 2027.
 
@@ -1075,6 +1075,7 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 | The April 2027 date slips | The book misses the Fall 2027 adoption cycle | Unreal moved to 1.1; the Cards view in Unity may follow 1.0; interface freeze in February 2027; the Godot 1.0 release candidate comes first. |
 | Engines drift apart | Tales behave differently, and the book is wrong for one engine | The conformance suite (decision 0025) runs in CI for every engine, and language changes start in the suite. |
 | Unity CI needs a license | Unity tests do not run on every change | The maintainer sets up a Unity license for GitHub Actions; until then, Unity tests run locally. |
+| Unity 6.7 LTS arrives later than the Unity work starts | The port targets a version that is not out yet | Develop on the 6.7 beta, avoid features that are new in it where possible, and test on the previous LTS too; freeze on 6.7 LTS for the book once it ships. |
 | Visual editor round trips damage hand-written files | Lost trust from programmers | Lossless parser from M1, byte-for-byte round-trip tests, script cards for anything unsupported. |
 | Studio schedule overrun | The Studio and the textbook slip | Feasibility check first (M8, S0); the Studio builds on the existing card model; the plugin's 1.0 does not wait for it. |
 | Studio changes make the textbook wrong | Teachers lose trust in the book | Interface freeze before writing; every major version stays online at its own address; screenshots made by a script (`docs/studio-design.md` §13). |
@@ -1109,7 +1110,7 @@ Both engines (Godot and Unity):
 1. Get an attorney's search for "Visual Novel Teller" (decision 0027, §19, question 2), then do the rename in M9.
 2. Finish Godot beta testing with `docs/release-testing.md`, then run the M5 usability test: three writers who do not program each build a short branching scene with cards and the map.
 3. Start the conformance suite and the C# core (M10, decision 0025).
-4. Set up a Unity 6 LTS project and a Unity license for CI.
+4. Set up a Unity 6.7 LTS project and a Unity license for CI.
 5. Outline the textbook: the shared chapters, the engine labs, and the "Choosing an engine" appendix.
 
 The Godot plugin:

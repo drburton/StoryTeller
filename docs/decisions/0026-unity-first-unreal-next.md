@@ -13,7 +13,7 @@ Decision 0004 chose GDScript only. That choice was made for the Godot plugin and
 
 ## Decision
 
-- Version 1.0 means two engines released together by April 2027: Godot 1.0 (feature complete, needing release work) and Unity 1.0 (new, for Unity 6 LTS, frozen for the book's first edition).
+- Version 1.0 means two engines released together by April 2027: Godot 1.0 (feature complete, needing release work) and Unity 1.0 (new, for Unity 6.7 LTS, frozen for the book's first edition).
 - Unreal follows as 1.1 in summer or fall 2027, with an online chapter added to the book when it ships.
 - The Unity version ports the language core (lexer, parser, checker, compiler, director) to C# under decision 0025. The runtime uses Unity's own tools: uGUI or UI Toolkit for the dialogue box and menus, Timeline and Animator for shots (a tale calls `shots.play()` and `shots.hold()` as it does with the Godot Shots crew member), and Unity's saves, audio, 2D stage, and 3D scenes.
 - The Unity editor tools are errors shown while writing, the path explorer, and then the Map view. The Cards view may come after 1.0 if time is short.
