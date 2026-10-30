@@ -14,6 +14,7 @@ All class and method names below come from `addons/storyteller/`. Doc comments (
 - [Menus and theme](#menus-and-theme)
 - [Embedding in your own game](#embedding-in-your-own-game)
 - [Saving custom state](#saving-custom-state)
+- [Testing every path](#testing-every-path)
 - [Player-made tales](#player-made-tales)
 - [Story tab hooks for editor add-ons](#story-tab-hooks-for-editor-add-ons)
 
@@ -84,6 +85,7 @@ Crew members are nodes that extend `StoryCrew` (`core/story_crew.gd`). Audio, sa
 | `Dialogue` | `StoryDialogue` |
 | `Menus` | `StoryMenus` |
 | `Console` | `StoryConsole` |
+| `Shots` | `StoryShots` (not in the default crew; add it for stories told in your own scene) |
 
 Fetch one with a cast to its class:
 
@@ -647,6 +649,36 @@ The director emits these signals:
 | `rewind_barrier` | A line marked `@no_rewind` ran. |
 | `tale_reloaded(tale_name)`, `reload_failed(tale_name, message)` | Live reload swapped in a tale or failed. |
 
+### Animations from your own scene
+
+`StoryShots` (`stage/story_shots.gd`, crew name `Shots`) plays a scene's animations for tales. Use it for characters in your own scene that have an `AnimationPlayer`, such as 3D models rigged and animated in Blender and imported as `.glb`. It is not in the default crew, so set it up in three steps:
+
+1. Put `StoryShots` in the config's crew, with `config.crew.append(StoryShots)` or the **Crew** list in the inspector.
+2. List `"shots"` in `StoryConfig.exposed_names`, so the checker knows the name.
+3. In your scene's script, pass the scene's player to the crew member:
+
+```gdscript
+Story.get_crew(&"Shots").use($AnimationPlayer)
+```
+
+Tales then play the shots by name:
+
+```gdscript
+beat bridge:
+	await shots.play("approach")
+	shots.hold("idle_wait")
+	mira: "The bridge is rotting. What do we do?"
+	choose:
+		"Cross carefully":
+			await shots.play("cross_carefully")
+		"Jump the gap":
+			await shots.play("jump_gap")
+```
+
+`shots.play(name)` plays a shot and returns when it ends. A looping animation returns at once. `shots.hold(name)` starts a looping pose and the tale goes on, so the scene keeps moving while the player chooses. `shots.has_shot(name)` checks that an animation exists, and `shots.current` is the shot now showing. The `shot_started(shot, holding)` signal reports each shot as it starts.
+
+Saves and rewind keep the scene in step. Loading a save or rewinding shows the shot last played at its final frame, or plays the held pose again. If `use()` is called after a load, the saved shot is applied then. While the player skips, a shot jumps to its last frame. Shots do nothing until `use()` is called.
+
 ### Your own presenter
 
 The dialogue crew member is the director's default presenter. To show lines and choices with your own UI, set `TaleDirector.presenter` to an object with the same methods as `TalePresenter`:
@@ -714,6 +746,46 @@ func restore_globals(data: Dictionary) -> void:
 ```
 
 `StorySaves` finds such members by those two method names. It loads the file when the crew starts, and writes it when a slot is saved, when a story finishes, when the player quits from the menu or closes the window, and a few seconds after lines are shown. A member with a `globals_changed` signal marks the file as changed when it emits, which covers changes made between lines.
+
+## Testing every path
+
+`TalePaths` (`director/tale_paths.gd`) plays a tale down every path. At each choice it takes every option in turn, and it lets timed choices run out. When it finishes, it reports:
+
+- How many paths it played, and the ending scene of each path, with counts.
+- Scenes that no path reaches.
+- Problems: runtime errors, paths that get stuck (still running after 10 seconds), loops (more than 60 choices, or 2000 lines without a choice), and choices with no option the player can pick.
+
+The same problem on many paths is shown once, with a count and the first path that meets it. Each path runs skipping, so a large tale finishes in seconds. A 43-path tale took about 5 seconds.
+
+The explorer leaves out the dialogue box, menus, console, saves, and settings. `ask_text()` returns its default answer. Names that game code exposes in `StoryConfig.exposed_names` get stand-ins: their methods return `null`, and their properties are `0`. A crew member that answers to the name is used instead.
+
+Run it from the command line in the project folder:
+
+```
+godot --headless --path . -s res://addons/storyteller/editor/explore_paths.gd -- runaway
+godot --headless --path . -s res://addons/storyteller/editor/explore_paths.gd -- runaway bridge
+godot --headless --path . -s res://addons/storyteller/editor/explore_paths.gd -- path/to/draft.tale --expose=set3d
+```
+
+The first argument is a tale in the tales folder, or a `.tale` file anywhere. The second is the scene to start from, which defaults to `start`. `--expose=name,name` adds exposed names for a draft that you try outside its project. The command exits with 1 when a path has a problem.
+
+Example output:
+
+```
+runaway: 43 paths played.
+Endings: runaway.bridge_holds (9), runaway.mage_lost (28), runaway.climb_down (6)
+Every scene is reached.
+No problems found.
+```
+
+To run the explorer from code:
+
+```gdscript
+var paths := TalePaths.new()
+add_child(paths)
+var report := await paths.explore(Story.load_config(), "runaway")
+print(TalePaths.describe(report))
+```
 
 ## Player-made tales
 
