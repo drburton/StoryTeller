@@ -1,0 +1,8 @@
+## Required, unknown, duplicate, and extra arguments of actions.
+beat main:
+	backdrop("a", time = 1)
+	backdrop(time = 1)
+	backdrop("a", speed = 2)
+	backdrop("a", name = "b")
+	music(1, 2, 3)
+	emit(1, 2, 3, x = 4)

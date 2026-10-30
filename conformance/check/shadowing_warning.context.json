@@ -1,0 +1,53 @@
+{
+	"tale_name": "prologue",
+	"actions": {
+		"backdrop": {
+			"params": [
+				"name",
+				"transition",
+				"time"
+			],
+			"required": 1
+		},
+		"music": {
+			"params": [
+				"track",
+				"volume"
+			],
+			"required": 1
+		},
+		"wait": {
+			"params": [
+				"seconds"
+			],
+			"required": 1
+		}
+	},
+	"actions_unchecked": [
+		"emit"
+	],
+	"cast": {
+		"mira": [
+			"smile",
+			"curious",
+			"soft",
+			"smirk"
+		],
+		"jonas": []
+	},
+	"exposed": [
+		"player_name",
+		"inventory"
+	],
+	"tales": {
+		"chapter_1": {
+			"beats": [
+				"start",
+				"flashback"
+			],
+			"vars": [
+				"met_jonas"
+			]
+		}
+	}
+}

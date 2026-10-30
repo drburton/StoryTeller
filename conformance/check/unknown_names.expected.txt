@@ -1,0 +1,3 @@
+3: Unknown variable 'x'. Declare it first with 'var x'.
+4: Unknown name 'missing'.
+6: Unknown action or beat 'fly'.

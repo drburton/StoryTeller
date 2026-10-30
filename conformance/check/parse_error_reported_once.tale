@@ -1,0 +1,4 @@
+## A parse error is reported once and the checker adds nothing for it.
+beat main:
+	if x y:
+		pass

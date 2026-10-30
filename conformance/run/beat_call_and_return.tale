@@ -1,0 +1,13 @@
+## A beat call runs the beat, then continues; return leaves a beat early.
+beat start:
+	"before"
+	helper()
+	"after"
+	early()
+	"end"
+beat helper:
+	"in helper"
+	return
+	"unreachable"
+beat early:
+	"early"

@@ -1,0 +1,7 @@
+line: 2 6 3
+var: MAX = 3
+var: count = 2
+var: flag = true
+var: name = "Sam"
+var: unset = null
+end

@@ -1,0 +1,8 @@
+## An option whose condition is false is hidden.
+var has_key := false
+var level := 3
+beat start:
+	choose:
+		"Open the door" if has_key: "opened"
+		"Climb" if level > 2: "climbed"
+		"Wait": "waited"

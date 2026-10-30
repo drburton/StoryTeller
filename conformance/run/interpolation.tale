@@ -1,0 +1,8 @@
+## {expression} inserts values; doubled braces are literal.
+var gold := 3
+const NAME := "Alex"
+beat start:
+	"{NAME} has {gold} gold, {gold * 2} doubled."
+	"Literal {{braces}}."
+	var local := "here"
+	"Local is {local}."

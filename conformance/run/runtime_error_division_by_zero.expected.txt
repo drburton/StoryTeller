@@ -1,0 +1,7 @@
+line: before
+error: line 5: Division by zero.
+line: <null>
+error: line 7: Division by zero.
+line: after
+var: d = 0
+end

@@ -1,0 +1,3 @@
+6: warning: Cast member 'mira' has no mood 'angry'.
+7: warning: Cast member 'mira' has no mood 'angry'.
+8: warning: Cast member 'mira' has no mood 'angry'.

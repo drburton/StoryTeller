@@ -1,0 +1,16 @@
+## Annotations on the wrong kind of statement, duplicates, and unknown ones.
+@title("A")
+@title("B")
+@global const A := 1
+beat main:
+	@once "Narration"
+	@id("x") "one"
+	@id("x") "two"
+	@id(3) "three"
+	@id("w")
+	wait(1)
+	choose:
+		@voice("v") "A": pass
+	@sparkle "one"
+	pass
+	@no_rewind

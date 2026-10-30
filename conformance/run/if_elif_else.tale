@@ -1,0 +1,18 @@
+## The first true branch runs, and only that one.
+var n := 5
+beat start:
+	if n < 3:
+		"low"
+	elif n < 10:
+		"middle"
+	elif n < 20:
+		"never"
+	else:
+		"high"
+	if n == 0: "zero"
+	if n == 5: "five"
+	n = 50
+	if n < 3:
+		"low"
+	else:
+		"else branch"

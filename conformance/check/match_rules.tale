@@ -1,0 +1,12 @@
+## Match patterns must be literals or constants; branches after _ never match.
+const GOOD := 1
+beat main:
+	match 2:
+		GOOD, 2: pass
+		_ when true: pass
+		_: pass
+	match 1:
+		_: pass
+		2: pass
+	match 1:
+		1 + 1: pass

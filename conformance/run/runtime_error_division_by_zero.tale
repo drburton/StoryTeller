@@ -1,0 +1,8 @@
+## Dividing by zero is reported at run time.
+var d := 0
+beat start:
+	"before"
+	var x := 10 / d
+	"{x}"
+	var y := 10 % d
+	"after"

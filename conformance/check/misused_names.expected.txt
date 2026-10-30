@@ -1,0 +1,3 @@
+3: 'helper' is a beat. Call it with helper() or use 'jump helper'.
+4: Can't assign to 'mira', because it is a cast member.
+6: 'n' is a variable and can't be called.

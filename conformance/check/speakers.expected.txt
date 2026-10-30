@@ -1,0 +1,2 @@
+4: warning: Cast member 'mira' has no mood 'angry'.
+5: Unknown speaker 'ghost'. Use a cast member id or a const holding the speaker's name.

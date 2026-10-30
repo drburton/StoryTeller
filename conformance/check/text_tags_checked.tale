@@ -1,0 +1,9 @@
+## Tags inside text are checked: act and sound tags call actions, speed needs a number.
+beat main:
+	"Wait[act=wait(0.5)] and [speed=2]go[/speed]."
+	"Boom[act=explode()]"
+	"Hm[act=wait()]"
+	choose:
+		"Ring[sound=bell]":
+			pass
+	"Too [speed=x]fast"

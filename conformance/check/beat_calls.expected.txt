@@ -1,0 +1,2 @@
+5: Beats don't take arguments.
+6: Tale 'chapter_1' has no beat 'ending'.

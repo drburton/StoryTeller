@@ -1,0 +1,4 @@
+## A local with a story variable's name is a warning.
+var gold := 0
+beat main:
+	var gold := 1

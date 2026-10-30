@@ -1,0 +1,13 @@
+## else and elif must follow an if, comments in between are fine.
+beat main:
+	if true:
+		pass
+	# note
+	else:
+		pass
+	pass
+	else:
+		pass
+	pass
+	elif true:
+		pass

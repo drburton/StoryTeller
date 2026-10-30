@@ -1,0 +1,8 @@
+## With an empty context, only the tale itself is known.
+var score := 0
+beat start:
+	score += 1
+	jump finish
+beat finish:
+	"Score {score}"
+	backdrop("x")

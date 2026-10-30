@@ -1,0 +1,2 @@
+3: 'break' can only be used inside a loop.
+10: Beats don't return values. Use 'return' on its own.

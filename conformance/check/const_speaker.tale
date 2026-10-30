@@ -1,0 +1,4 @@
+## A const holding a name is a valid speaker.
+const NARRATOR := "Old Man"
+beat main:
+	NARRATOR: "Long ago..."

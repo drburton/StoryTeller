@@ -1,0 +1,4 @@
+## Constants of value types are known names.
+beat main:
+	var c := Color.RED
+	var v := Vector2.ZERO

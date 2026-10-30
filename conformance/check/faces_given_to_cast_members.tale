@@ -1,0 +1,8 @@
+## Moods given through enter() or the mood property are checked against the cast.
+beat main:
+	mira.enter("smile", at = LEFT)
+	mira.mood = "soft"
+	jonas.enter("anything")
+	mira.enter("angry", at = LEFT)
+	mira.enter(mood_name = "angry")
+	mira.mood = "angry"

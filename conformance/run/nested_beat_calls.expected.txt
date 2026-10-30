@@ -1,0 +1,7 @@
+line: start
+line: outer
+line: inner
+line: tail
+line: outer again
+line: back in start
+end

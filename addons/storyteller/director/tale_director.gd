@@ -644,7 +644,7 @@ func _run(generation: int) -> void:
 		var instruction: Dictionary = frame.tale.instructions[frame.pc]
 		frame.pc += 1
 		steps += 1
-		if steps > max_steps_without_pause:
+		if steps >= max_steps_without_pause:
 			_report("Stopped after %d steps without showing a line. Is there an endless loop?" % steps, frame.tale.tale_name, instruction["line"])
 			break
 		var op: String = instruction["op"]

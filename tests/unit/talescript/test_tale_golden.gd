@@ -1,10 +1,10 @@
 extends "res://tests/framework/story_test.gd"
-## Parses every fixture in tests/fixtures/talescript and compares the tree dump
+## Parses every case in conformance/parse and compares the tree dump
 ## with the stored "<name>.expected.txt". Run the tests with
 ## "-- --update-golden" to rewrite the expected files after an intended change,
 ## then review the diff before committing.
 
-const FIXTURES := "res://tests/fixtures/talescript"
+const FIXTURES := "res://conformance/parse"
 
 
 func test_fixtures_match_expected_trees() -> void:

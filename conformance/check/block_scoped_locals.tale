@@ -1,0 +1,10 @@
+## A local is visible only in its block, and only after its declaration.
+beat main:
+	var a := 1
+	if a > 0:
+		var b := a
+	a = b
+	x = 1
+	var x := 0
+	for item in [1, 2]:
+		emit("i", item)

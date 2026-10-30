@@ -1,0 +1,7 @@
+## Answering a timed choice in time skips the timeout branch.
+beat start:
+	choose(timeout = 3.0):
+		"Answer": "answered"
+		timeout:
+			"Too slow."
+	"after"

@@ -1,0 +1,4 @@
+4: Unknown action or beat 'explode'.
+5: 'wait' needs the argument 'seconds'.
+7: Unknown action or beat 'sound'.
+9: [speed=x] needs a number above 0, e.g. [speed=2] types twice as fast.

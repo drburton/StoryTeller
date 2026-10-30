@@ -1,0 +1,14 @@
+## Beat calls nest, and a jump inside a called beat ends that call.
+beat start:
+	"start"
+	outer()
+	"back in start"
+beat outer:
+	"outer"
+	inner()
+	"outer again"
+beat inner:
+	"inner"
+	jump tail
+beat tail:
+	"tail"

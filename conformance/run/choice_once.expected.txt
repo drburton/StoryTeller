@@ -1,0 +1,8 @@
+choose: Look around | Leave
+pick: Look around
+line: You look around.
+choose: Leave
+pick: Leave
+line: Left after 2 visits.
+var: visits = 2
+end

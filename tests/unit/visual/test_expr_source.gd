@@ -3,9 +3,9 @@ extends "res://tests/framework/story_test.gd"
 ## again gives the same tree.
 
 const TALES := [
-	"res://tests/fixtures/talescript/expressions.tale",
-	"res://tests/fixtures/talescript/statements.tale",
-	"res://tests/fixtures/talescript/prologue.tale",
+	"res://conformance/parse/expressions.tale",
+	"res://conformance/parse/statements.tale",
+	"res://conformance/parse/prologue.tale",
 	"res://demo/tales/welcome.tale",
 	"res://demo/tales/prologue.tale",
 	"res://demo/tales/chapter_1.tale",

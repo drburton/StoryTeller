@@ -1,0 +1,6 @@
+## An assignment, a condition, and a call that use names nobody declared.
+beat main:
+	x = 1
+	if missing > 1:
+		pass
+	fly()

@@ -1,0 +1,5 @@
+## Names inside braces are checked; an unclosed brace is an error.
+beat main:
+	"Hi {player_name}, {{literal}}."
+	"You have {coins} coins."
+	"Broken {brace."

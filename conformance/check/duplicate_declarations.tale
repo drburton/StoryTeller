@@ -1,0 +1,7 @@
+## A beat cannot reuse a variable name, and a block cannot declare a name twice.
+var a := 1
+beat a:
+	pass
+beat main:
+	var t := 1
+	var t := 2

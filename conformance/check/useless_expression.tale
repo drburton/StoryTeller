@@ -1,0 +1,4 @@
+## An expression statement with no effect is a warning.
+beat main:
+	var a := 1
+	a + 1

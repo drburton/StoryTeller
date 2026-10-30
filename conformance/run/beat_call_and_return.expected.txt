@@ -1,0 +1,6 @@
+line: before
+line: in helper
+line: after
+line: early
+line: end
+end

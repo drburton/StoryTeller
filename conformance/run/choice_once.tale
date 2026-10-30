@@ -1,0 +1,10 @@
+## @once removes an option after it has been chosen.
+var visits := 0
+beat start:
+	visits += 1
+	choose:
+		@once "Look around":
+			"You look around."
+			jump start
+		"Leave":
+			"Left after {visits} visits."

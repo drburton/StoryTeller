@@ -22,7 +22,7 @@ func _errors(doc: TaleDocument) -> PackedStringArray:
 
 
 func test_sample_from_plan_parses_without_errors() -> void:
-	var doc := _parse(FileAccess.get_file_as_string("res://tests/fixtures/talescript/prologue.tale"))
+	var doc := _parse(FileAccess.get_file_as_string("res://conformance/parse/prologue.tale"))
 	assert_eq(_errors(doc), PackedStringArray())
 	assert_not_null(doc.find_beat("walk"))
 	assert_null(doc.find_beat("missing"))

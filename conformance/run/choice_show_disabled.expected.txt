@@ -1,0 +1,5 @@
+choose: [Open the door] | Walk away
+pick: Walk away
+line: walked
+var: has_key = false
+end

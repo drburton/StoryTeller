@@ -52,7 +52,7 @@ func test_list_tale_files_skips_ignored_folders() -> void:
 	assert_has(files, "res://demo/tales/welcome.tale")
 	assert_has(files, "res://tests/import/sample.tale")
 	for path in files:
-		assert_false(path.begins_with("res://tests/fixtures/talescript/"), "%s is in a .gdignore folder" % path)
+		assert_false(path.begins_with("res://conformance/parse/"), "%s is in a .gdignore folder" % path)
 
 
 func test_panel_checks_and_saves() -> void:

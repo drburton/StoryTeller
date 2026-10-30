@@ -1,0 +1,12 @@
+## while loops with continue and break.
+var n := 0
+var log := []
+beat start:
+	while n < 10:
+		n += 1
+		if n == 2:
+			continue
+		if n == 5:
+			break
+		log.append(n)
+	"{n} {log}"

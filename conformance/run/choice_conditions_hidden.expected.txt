@@ -1,0 +1,6 @@
+choose: Climb | Wait
+pick: Climb
+line: climbed
+var: has_key = false
+var: level = 3
+end

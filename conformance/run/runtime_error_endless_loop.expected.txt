@@ -1,0 +1,2 @@
+error: line 3: Stopped after 100000 steps without showing a line. Is there an endless loop?
+end

@@ -1,0 +1,2 @@
+7: @heading only applies to beats.
+8: @heading needs one text argument, e.g. @heading("...").

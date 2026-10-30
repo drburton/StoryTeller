@@ -1,0 +1,9 @@
+line: You find a chest.
+choose: Open it | Leave it
+pick: Open it
+line: Alex: Gold!
+signal: done 5
+line: Gold: 5.
+var: HERO = "Alex"
+var: gold = 5
+end

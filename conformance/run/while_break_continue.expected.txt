@@ -1,0 +1,4 @@
+line: 5 [1, 3, 4]
+var: log = [1,3,4]
+var: n = 5
+end

@@ -1,0 +1,6 @@
+## Strings: concatenation, repetition, indexing, and methods.
+beat start:
+	var s := "Hello"
+	s += ", world"
+	"{s} {len(s)} {s[0]} {s.to_upper()}"
+	"{str(1) + str(2)} {'a' + 'b' == 'ab'}"

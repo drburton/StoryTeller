@@ -35,7 +35,7 @@ func _beat(body: String) -> PackedStringArray:
 
 
 func test_plan_sample_is_clean() -> void:
-	var source := FileAccess.get_file_as_string("res://tests/fixtures/talescript/prologue.tale")
+	var source := FileAccess.get_file_as_string("res://conformance/parse/prologue.tale")
 	assert_eq(_check(source), PackedStringArray())
 
 

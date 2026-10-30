@@ -1,0 +1,10 @@
+## Beat calls take no arguments and must name real beats.
+beat main:
+	helper()
+	chapter_1.flashback()
+	helper(1)
+	chapter_1.ending()
+	if chapter_1.met_jonas:
+		pass
+beat helper:
+	return

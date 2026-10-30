@@ -1,0 +1,9 @@
+3: A tale can only have one @title.
+4: @global only applies to a 'var' at the top level of the tale.
+6: @once only applies to choice options.
+8: Line id 'x' is already used on line 7.
+9: @id needs one text argument, e.g. @id("...").
+10: @id only applies to dialogue, narration, and choice options.
+13: @voice only applies to dialogue and narration lines.
+14: Unknown annotation '@sparkle'.
+16: @no_rewind is not followed by a line it can apply to.

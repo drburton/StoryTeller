@@ -1,0 +1,10 @@
+## for loops over arrays, strings, ranges by count, and dictionaries.
+beat start:
+	for item in ["a", "b"]:
+		"item {item}"
+	for letter in "xy":
+		"letter {letter}"
+	for i in 3:
+		"count {i}"
+	for key in {"k": 1}:
+		"key {key}"
