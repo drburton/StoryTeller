@@ -1,0 +1,6 @@
+## When a called beat ends, the story continues after the call; when the first beat ends, the story ends.
+beat start:
+	"a"
+	next()
+beat next:
+	"b"

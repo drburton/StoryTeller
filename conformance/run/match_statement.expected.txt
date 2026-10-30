@@ -1,0 +1,8 @@
+line: low
+line: constant
+line: guarded
+line: fallback
+line: after
+var: GOOD = "good"
+var: trust = 7
+end

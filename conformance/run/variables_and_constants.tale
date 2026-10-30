@@ -1,0 +1,12 @@
+## Top level vars change and are reported at the end; locals live in the beat.
+var count := 0
+var flag := false
+var name: String = "Sam"
+var unset
+const MAX := 3
+beat start:
+	var local := 10
+	count += 2
+	local -= 4
+	flag = true
+	"{count} {local} {MAX}"

@@ -1,0 +1,7 @@
+## Narration, and dialogue from a const speaker.
+const GUIDE := "Old Guide"
+beat start:
+	"Rain falls."
+	GUIDE: "Follow me."
+	GUIDE: """Two lines
+of text."""

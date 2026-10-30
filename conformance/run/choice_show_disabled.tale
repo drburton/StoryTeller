@@ -1,0 +1,7 @@
+## @show_disabled shows a false option greyed out; it appears in brackets.
+var has_key := false
+beat start:
+	choose:
+		@show_disabled "Open the door" if has_key:
+			"opened"
+		"Walk away": "walked"

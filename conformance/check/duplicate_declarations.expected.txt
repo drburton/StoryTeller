@@ -1,0 +1,2 @@
+3: 'a' is already declared on line 2.
+7: 't' is already declared in this block.

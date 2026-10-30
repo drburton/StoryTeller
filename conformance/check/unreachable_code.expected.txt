@@ -1,0 +1,1 @@
+4: warning: This line can never run, because the line before it always leaves the block.

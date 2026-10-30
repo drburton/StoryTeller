@@ -1,0 +1,12 @@
+## Annotations in their proper places produce no problems.
+@title("Prologue")
+@global var seen := false
+beat main:
+	@id("a1") mira: "Hi"
+	@voice("v1")
+	"Narration"
+	choose:
+		@once "A": pass
+		@id("opt") "B": pass
+	@no_rewind
+	wait(1)

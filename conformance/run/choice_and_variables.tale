@@ -1,0 +1,13 @@
+var gold := 0
+const HERO := "Alex"
+
+beat start:
+	"You find a chest."
+	choose:
+		"Open it":
+			gold += 5
+			HERO: "Gold!"
+		"Leave it":
+			"You walk on."
+	emit("done", gold)
+	"Gold: {gold}."

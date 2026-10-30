@@ -1,0 +1,6 @@
+line: Rain falls.
+line: Old Guide: Follow me.
+line: Old Guide: Two lines
+of text.
+var: GUIDE = "Old Guide"
+end

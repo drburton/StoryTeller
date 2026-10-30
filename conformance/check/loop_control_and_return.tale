@@ -1,0 +1,10 @@
+## break and continue need a loop, and beats return nothing.
+beat outside_loop:
+	break
+beat inside_loop:
+	while true:
+		if true:
+			continue
+		break
+beat with_value:
+	return 1

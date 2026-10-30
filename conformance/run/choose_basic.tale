@@ -1,0 +1,11 @@
+## A choice with several options; the picked body runs, then the story continues.
+var mood := ""
+beat start:
+	choose:
+		"Sing":
+			mood = "happy"
+		"Dance":
+			mood = "lively"
+		"Sleep":
+			mood = "tired"
+	"You feel {mood}."

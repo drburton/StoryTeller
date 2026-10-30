@@ -1,0 +1,2 @@
+4: Unknown name 'coins'.
+5: Unclosed '{' in text. Write '{{' for a literal brace.

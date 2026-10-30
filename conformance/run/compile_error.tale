@@ -1,0 +1,4 @@
+## A tale with a mistake is not played; the compile error is reported.
+beat start:
+	"fine"
+	jump nowhere

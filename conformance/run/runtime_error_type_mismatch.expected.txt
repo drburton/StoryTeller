@@ -1,0 +1,6 @@
+error: line 4: Can't use '+' with String and int.
+line: next
+error: line 7: Index 5 is outside the array (size 1).
+line: end
+var: x = "text"
+end

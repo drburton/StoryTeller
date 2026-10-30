@@ -1,0 +1,6 @@
+## A const cannot be assigned.
+const LIMIT := 3
+var gold := 0
+beat main:
+	gold += LIMIT
+	LIMIT = 4

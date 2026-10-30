@@ -1,0 +1,7 @@
+## visited() tells whether a beat has run.
+beat start:
+	"{visited('visited_beats.helper')} {visited('visited_beats.start')}"
+	helper()
+	"{visited('visited_beats.helper')}"
+beat helper:
+	pass

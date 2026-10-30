@@ -1,0 +1,9 @@
+## emit() sends a named signal with an optional value.
+var gold := 5
+beat start:
+	emit("bell")
+	emit("door", 3)
+	emit("gold", gold * 2)
+	emit("text", "hi")
+	emit("list", [1, "a", true])
+	emit("map", {"a": 1})

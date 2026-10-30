@@ -1,0 +1,8 @@
+## The run starts at the beat named in the run settings.
+beat start:
+	"not shown"
+beat middle:
+	"Starting in the middle."
+	jump finale
+beat finale:
+	"The finale."

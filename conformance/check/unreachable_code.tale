@@ -1,0 +1,7 @@
+## Code after a jump is reported once, as a warning.
+beat main:
+	jump other
+	"never"
+	"also never"
+beat other:
+	pass

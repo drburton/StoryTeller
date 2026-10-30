@@ -1,0 +1,4 @@
+4: 'backdrop' needs the argument 'name'.
+5: 'backdrop' has no argument named 'speed'.
+6: Argument 'name' is already given by position.
+7: 'music' takes at most 2 arguments, but 3 were given.

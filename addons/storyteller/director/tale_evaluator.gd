@@ -105,6 +105,10 @@ func binary(op: String, a: Variant, b: Variant) -> Variant:
 			return _contains(b, a)
 		"not in":
 			return not _contains(b, a)
+		"/", "%":
+			if typeof(b) == TYPE_INT and b == 0 and typeof(a) in [TYPE_INT, TYPE_FLOAT]:
+				fail("Division by zero.")
+				return null
 	return _run_expression("a %s b" % op, ["a", "b"], [a, b],
 		"Can't use '%s' with %s and %s." % [op, type_string(typeof(a)), type_string(typeof(b))])
 
@@ -176,6 +180,8 @@ func _unary(op: String, operand: Variant) -> Variant:
 		return null
 	if op == "not":
 		return not operand
+	if op == "~" and typeof(operand) == TYPE_INT:
+		return ~int(operand)
 	return _run_expression("%sa" % op, ["a"], [operand], "Can't use '%s' with %s." % [op, type_string(typeof(operand))])
 
 

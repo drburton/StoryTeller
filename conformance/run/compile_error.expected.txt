@@ -1,0 +1,2 @@
+compile error: line 4: Unknown beat 'nowhere'.
+end

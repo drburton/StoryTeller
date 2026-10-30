@@ -1,0 +1,22 @@
+## match with several patterns, a guard, and the wildcard.
+const GOOD := "good"
+var trust := 7
+beat start:
+	match 2:
+		1, 2: "low"
+		_: "no"
+	match "good":
+		GOOD:
+			"constant"
+		_: "no"
+	match "other":
+		"a", "b": "no"
+		_ when trust > 5: "guarded"
+		_: "fallback"
+	match 99:
+		1: "no"
+		_ when trust > 50: "no"
+		_: "fallback"
+	match 99:
+		1: "no"
+	"after"

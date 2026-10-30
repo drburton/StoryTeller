@@ -1,0 +1,7 @@
+## Faces worked out while playing, and empty ones, are not checked.
+var face := "angry"
+beat main:
+	mira.enter(face)
+	mira.enter("{face}")
+	mira.enter()
+	mira.enter("")

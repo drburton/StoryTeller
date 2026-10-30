@@ -1,0 +1,13 @@
+## Jumps to beats in this tale, other tales, and the tale itself.
+beat main:
+	jump end
+beat end:
+	jump chapter_1.start
+beat missing_beat:
+	jump nowhere
+beat missing_tale_beat:
+	jump chapter_1.middle
+beat missing_tale:
+	jump chapter_9.start
+beat itself:
+	jump prologue.main

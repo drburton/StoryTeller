@@ -1,0 +1,2 @@
+10: warning: This branch can never match, because an earlier '_' branch matches everything.
+12: Match patterns must be literals, constants, or '_'.

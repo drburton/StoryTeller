@@ -1,0 +1,10 @@
+## @heading belongs on beats and needs a text argument.
+@title("T")
+@heading("The walk home")
+beat main:
+	pass
+@heading("Same line") beat other:
+	@heading("x") "one"
+@heading
+beat third:
+	pass

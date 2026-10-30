@@ -1,0 +1,6 @@
+line: [9, 2, 3] 3 2 3
+line: { "gold": 15, "key": true } 15 true false
+line: 2 3
+var: bag = {"gold":15,"key":true}
+var: items = [9,2,3]
+end

@@ -1,0 +1,7 @@
+## Comparisons, and, or, not, in, and the conditional expression.
+var x := 5
+beat start:
+	"{x < 6} {x > 6} {x <= 5} {x >= 6} {x == 5} {x != 5}"
+	"{x > 1 and x < 3} {x > 1 or x < 3} {not x == 5} {x > 1 && x < 9} {!true}"
+	"{3 in [1, 2, 3]} {4 not in [1, 2, 3]} {'a' in 'cat'}"
+	"{'big' if x > 3 else 'small'}"

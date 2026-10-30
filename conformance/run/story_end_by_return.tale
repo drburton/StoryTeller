@@ -1,0 +1,5 @@
+## return in the first beat ends the story.
+beat start:
+	"one"
+	return
+	"two"

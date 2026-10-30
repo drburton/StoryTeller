@@ -1,0 +1,3 @@
+6: A 'choose' block needs at least one option.
+7: warning: 'timeout:' only runs when the choose has a timeout, e.g. choose(timeout = 5.0):
+8: choose only takes named arguments, e.g. choose(style = "list").

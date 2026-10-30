@@ -1,0 +1,2 @@
+6: Unknown name 'b'.
+7: Unknown variable 'x'. Declare it first with 'var x'.

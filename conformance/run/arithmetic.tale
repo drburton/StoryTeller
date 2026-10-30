@@ -1,0 +1,13 @@
+## Arithmetic operators and precedence.
+var a := 7
+var b := 2
+beat start:
+	"{a + b} {a - b} {a * b} {a / b} {a % b} {a ** b}"
+	"{a / 2.0} {2 + 3 * 4} {(2 + 3) * 4} {-a} {2 ** 3 ** 2}"
+	"{1 << 4} {0xFF & 0x0F} {5 | 2} {6 ^ 3}"
+	a += 1
+	a *= 2
+	a -= 1
+	a /= 3
+	a %= 4
+	"{a}"

@@ -1,0 +1,10 @@
+## jump replaces the current beat and never comes back.
+beat start:
+	"one"
+	jump second
+	"never"
+beat second:
+	"two"
+	jump third
+beat third:
+	"three"

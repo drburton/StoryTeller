@@ -1,0 +1,8 @@
+## Adding text to a number is reported, the line is skipped, and the story continues.
+var x := "text"
+beat start:
+	x = x + 1
+	"next"
+	var list := [1]
+	list[5] = 0
+	"end"

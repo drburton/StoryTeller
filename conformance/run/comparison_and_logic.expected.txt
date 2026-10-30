@@ -1,0 +1,6 @@
+line: true false true false true false
+line: false true false true false
+line: true true true
+line: big
+var: x = 5
+end

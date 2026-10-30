@@ -1,0 +1,12 @@
+## Arrays and dictionaries: indexing, assignment, append, size, and membership.
+var items := [1, 2]
+var bag := {"gold": 5}
+beat start:
+	items.append(3)
+	items[0] = 9
+	bag["key"] = true
+	bag.gold += 10
+	"{items} {len(items)} {items[1]} {items.size()}"
+	"{bag} {bag['gold']} {'key' in bag} {bag.has('nope')}"
+	var nested := [[1, 2], {"a": [3]}]
+	"{nested[0][1]} {nested[1]['a'][0]}"

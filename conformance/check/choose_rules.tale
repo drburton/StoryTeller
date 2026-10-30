@@ -1,0 +1,9 @@
+## A choose needs options; timeout without a timeout argument is a warning; choose takes named arguments only.
+beat main:
+	choose(timeout = 3):
+		"A": pass
+		timeout: pass
+	choose:
+		timeout: pass
+	choose("list"):
+		"A": pass

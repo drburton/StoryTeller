@@ -1,0 +1,8 @@
+signal: bell null
+signal: door 3
+signal: gold 10
+signal: text "hi"
+signal: list [1,"a",true]
+signal: map {"a":1}
+var: gold = 5
+end

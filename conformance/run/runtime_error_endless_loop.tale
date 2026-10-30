@@ -1,0 +1,5 @@
+## A loop that never shows a line or choice is stopped with an error.
+beat start:
+	while true:
+		pass
+	"never"

@@ -1,0 +1,5 @@
+## With no picks left, the first enabled option is taken.
+beat start:
+	choose:
+		"One": "first"
+		"Two": "second"

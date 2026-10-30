@@ -1,0 +1,6 @@
+line: Alex has 3 gold, 6 doubled.
+line: Literal {braces}.
+line: Local is here.
+var: NAME = "Alex"
+var: gold = 3
+end
