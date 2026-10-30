@@ -6,7 +6,7 @@ Status: **Draft v0.35** (one language for Godot, Unity, and later Unreal; the pl
 
 ### Where things stand (2026-10-30)
 
-- **Cross-engine 1.0 (2026-10-30):** the maintainer's textbook needs the tool in the engines schools teach, and this year's students chose Unity with Naninovel over Godot. Version 1.0 now means Godot 1.0 and Unity 1.0 (Unity 6 LTS) together by April 2027, so schools can adopt the book for Fall 2027, when the maintainer's own class is the first full classroom pilot. Unreal follows as 1.1 in summer or fall 2027. TaleScript becomes a cross-engine language with the Godot plugin as the reference, and its tests become a conformance suite (decision 0025). Unity comes first and Unreal second (decision 0026). The name "StoryTeller" has a high trademark risk, so the product is renamed before 1.0, pending the maintainer's choice and an attorney's search (decision 0027, proposed). Until then, documents keep the current name.
+- **Cross-engine 1.0 (2026-10-30):** the maintainer's textbook needs the tool in the engines schools teach, and this year's students chose Unity with Naninovel over Godot. Version 1.0 now means Godot 1.0 and Unity 1.0 (Unity 6 LTS) together by April 2027, so schools can adopt the book for Fall 2027, when the maintainer's own class is the first full classroom pilot. Unreal follows as 1.1 in summer or fall 2027. TaleScript becomes a cross-engine language with the Godot plugin as the reference, and its tests become a conformance suite (decision 0025). Unity comes first and Unreal second (decision 0026). The name "StoryTeller" has a high trademark risk, so the product is renamed before 1.0 to **Visual Novel Teller** (decision 0027, accepted), pending an attorney's search. Until the M9 rename, documents keep the current name.
 - **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder, downloaded as an app for iPads and Android tablets, with a live stage preview (milestone M8, decisions 0020 and 0021, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
 - **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
@@ -19,7 +19,8 @@ Status: **Draft v0.35** (one language for Godot, Unity, and later Unreal; the pl
 Changes in v0.35:
 - The plan for 1.0 now covers Godot and Unity together by April 2027, with Unreal as 1.1 and a textbook that teaches the same tool in three engines (milestones M9 to M12, §11). Decision 0026 records the engines and the schedule.
 - TaleScript is a cross-engine language. The Godot plugin is the reference, and its existing tests become a conformance suite that every engine must pass (decision 0025).
-- A preliminary name search found a high trademark risk for "StoryTeller". Decision 0027 (proposed) renames the product before 1.0.
+- A preliminary name search found a high trademark risk for "StoryTeller". Decision 0027 (accepted) renames the product before 1.0.
+- The new name is Visual Novel Teller, and the Studio is Visual Novel Teller Studio (decision 0027).
 
 Changes in v0.34:
 - Shots (`StoryShots`): a crew member that plays a scene's animations for tales, such as 3D characters rigged and animated in Blender, with `await shots.play()` and `shots.hold()`, and keeps the shot showing in saves and rewind, so a story told in your own 3D scene can pause for choices and load mid-scene.
@@ -866,7 +867,7 @@ A block-based story builder for middle school students, shipped as apps for iOS 
 - **Progress (S0):** the tablet check app is built (`studio/check/`, `studio/README.md`): seven panels for the seven checks, with Works and Problem buttons and a results summary to send. `tools/build_studio.sh` exports it with the `studio` feature tag, and GitHub Actions builds the Android app (`.github/workflows/studio.yml`). Still to do: run it on an Android tablet and, once the Apple account exists, an iPad.
 
 ### M9: Name and Godot 1.0 release (Nov to Dec 2026)
-- Rename (decision 0027): the maintainer chooses the name, a trademark attorney searches it, then the repository text, plugin, documentation, Asset Library listing, and domain change.
+- Rename to Visual Novel Teller (decision 0027): a trademark attorney searches the name, then the repository text, plugin, documentation, Asset Library listing, and domain change.
 - Beta testers, and the M5 usability test with writers.
 - Hand release checks from `docs/release-testing.md`.
 - Publish the Godot 1.0 release candidate.
@@ -1105,7 +1106,7 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 ## 20. Immediate Next Steps
 
 Both engines (Godot and Unity):
-1. Choose the new name and get a trademark attorney's search (decision 0027, §19, question 2).
+1. Get an attorney's search for "Visual Novel Teller" (decision 0027, §19, question 2), then do the rename in M9.
 2. Finish Godot beta testing with `docs/release-testing.md`, then run the M5 usability test: three writers who do not program each build a short branching scene with cards and the map.
 3. Start the conformance suite and the C# core (M10, decision 0025).
 4. Set up a Unity 6 LTS project and a Unity license for CI.

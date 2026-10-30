@@ -1,6 +1,6 @@
 # 0027. Rename the product before 1.0
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-10-30
 
 ## Context
@@ -32,7 +32,23 @@ These had no product found in the searches. None is cleared.
 
 ## Decision
 
-Rename before 1.0 and before the book goes to print. The maintainer chooses the new name. A trademark attorney's search confirms it before it is used. Until then, documents keep the current name.
+The product is renamed **Visual Novel Teller** before 1.0 and before the book goes to print. The Studio is renamed **Visual Novel Teller Studio**. The maintainer chose these names on 2026-10-30.
+
+A follow-up preliminary web search (not legal advice and not a trademark clearance) found no exact match for "Visual Novel Teller", "VN Teller", or "Novel Teller". The closest hits were "Teller Novel" (Teller Novel Inc.), a free app for reading chat-style fiction, and "Visual Novel Maker", a known commercial tool with a similar naming pattern.
+
+The trade-off: "Visual Novel" is descriptive, and the field is crowded. The maintainer accepts this because schools are the target audience. A descriptive name is harder to register and protect as a trademark. A trademark attorney's search is still recommended before the name is printed or used in store listings. The findings about "StoryTeller" above remain the reason for the rename.
+
+What the rename covers, in milestone M9:
+
+- The plugin name and description in `addons/storyteller/plugin.cfg`.
+- The README and all docs.
+- The Story tab's visible text where it shows the product name.
+- The Studio's app name and store package display name.
+- The release zip name.
+- The GitHub repository description.
+- The Asset Library listing.
+
+Code identifiers stay as they are for 1.0 to avoid breaking projects, unless the maintainer decides otherwise. These include the `addons/storyteller` folder, class names such as `StoryConfig`, the `Story` autoload, and the TaleScript language name.
 
 ## Alternatives considered
 
@@ -41,7 +57,7 @@ Rename before 1.0 and before the book goes to print. The maintainer chooses the 
 
 ## Consequences
 
-- The rename is part of milestone M9: the new name, the attorney's search, then the repository text, plugin, documentation, Asset Library listing, and domain.
+- The rename is part of milestone M9: the attorney's search, then the repository text, plugin, documentation, Asset Library listing, and domain.
 - The rename should land before the Unity package is listed, so the Unity version never ships under the old name.
 - The Studio's name changes with the product.
-- This record stays Proposed until the name is chosen and cleared. A later record will name it.
+- The name is chosen, but it is not cleared until the attorney's search is done. Get that search before printing and before store listings.
