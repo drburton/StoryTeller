@@ -30,3 +30,6 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0022](0022-publishing-through-adults.md) | Students share; adults publish in Godot | Accepted |
 | [0023](0023-raw-pictures-and-sounds.md) | Raw pictures and sounds outside the import system | Accepted |
 | [0024](0024-studio-web-version.md) | The Studio also runs as a web page | Accepted |
+| [0025](0025-talescript-cross-engine-language.md) | TaleScript is a cross-engine language | Accepted |
+| [0026](0026-unity-first-unreal-next.md) | Unity 1.0 with Godot 1.0, Unreal as 1.1 | Accepted |
+| [0027](0027-rename-before-1-0.md) | Rename the product before 1.0 | Accepted |
