@@ -17,6 +17,12 @@ namespace TaleScript
         /// <summary>Keys in insertion order.</summary>
         public IReadOnlyList<string> Keys { get { return _keys; } }
 
+        public void Clear()
+        {
+            _keys.Clear();
+            _values.Clear();
+        }
+
         public bool Has(string key)
         {
             return _values.ContainsKey(key);
