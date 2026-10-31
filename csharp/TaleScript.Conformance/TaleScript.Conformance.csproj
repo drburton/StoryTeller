@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\TaleScript.Core\TaleScript.Core.csproj" />
+    <Compile Include="..\Shared\*.cs" />
   </ItemGroup>
 
 </Project>

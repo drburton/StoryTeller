@@ -6,6 +6,8 @@ This folder holds a C# port of the TaleScript front end, written for Unity. The 
 
 - `TaleScript.Core` holds the library. Each GDScript class has a C# file with the same name: `TaleToken`, `TaleLexer`, `TaleDiagnostic`, `TaleExpr`, `TaleNode`, `TaleDocument`, `TaleParser`, `TaleText`, `TaleCheckContext`, and `TaleChecker`. Names follow the GDScript ones in PascalCase, and the node kinds and fields keep their meaning. `GdFormat` reproduces the GDScript number and string formatting that shows up in dumps. `OrderedMap` stands in for a GDScript Dictionary where insertion order matters.
 - `TaleScript.Conformance` holds a console runner that reads the cases and compares the output.
+- `TaleScript.Check` builds `talescript-check`, a command-line checker for `.tale` files.
+- `Shared` holds code both tools compile in, such as reading a check context from JSON.
 
 The port covers the lexer, parser, checker, compiler, evaluator, and an engine-neutral director. `TaleCompiler.Build(source, taleName, context)` returns the compiled `Tale` with the diagnostics. `TaleDirector` plays it.
 
@@ -53,6 +55,16 @@ The runner looks for a `conformance` folder by walking up from the current direc
     dotnet run --project csharp/TaleScript.Conformance -- path/to/conformance
 
 It prints `ok` or `FAIL` for each parse, check, and run case, with the first differing line on a failure, then a total. The exit code is 1 when any case fails. The runner reads each check case's `.context.json` with System.Text.Json and builds the context the same way the GDScript test does. For run cases it plays the tale with a small presenter and writes the transcript described in `conformance/README.md`.
+
+## Checking tales from the command line
+
+`talescript-check` checks files or whole folders of `.tale` files without Godot or Unity:
+
+    dotnet run --project csharp/TaleScript.Check -- [--context=names.json] [--strict] <file or folder>...
+
+Each problem prints as `<file>:<line>: <message>`, with `warning:` before warnings, and a total follows. The exit code is 1 when a file has an error, or a warning too with `--strict`, and 2 for a bad argument. Names that come from the game, such as actions, cast members, and exposed objects, go in a context file in the format of the conformance check cases (`conformance/README.md`). Without one, the checker knows only the built-in names.
+
+CI builds the solution with warnings treated as errors, runs the conformance suite, and tries the checker on a clean tale and a broken one.
 
 ## Unity constraints
 

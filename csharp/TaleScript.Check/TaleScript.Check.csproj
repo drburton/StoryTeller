@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>TaleScript.Check</RootNamespace>
+    <AssemblyName>talescript-check</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaleScript.Core\TaleScript.Core.csproj" />
+    <Compile Include="..\Shared\*.cs" />
+  </ItemGroup>
+
+</Project>
