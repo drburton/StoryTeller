@@ -4,7 +4,7 @@ This folder holds a C# port of the TaleScript front end, written for Unity. The 
 
 ## Layout
 
-- `TaleScript.Core` holds the library. Each GDScript class has a C# file with the same name: `TaleToken`, `TaleLexer`, `TaleDiagnostic`, `TaleExpr`, `TaleNode`, `TaleDocument`, `TaleParser`, `TaleText`, `TaleCheckContext`, and `TaleChecker`. Names follow the GDScript ones in PascalCase, and the node kinds and fields keep their meaning. `GdFormat` reproduces the GDScript number and string formatting that shows up in dumps. `OrderedMap` stands in for a GDScript Dictionary where insertion order matters.
+- `TaleScript.Core` builds the library from `unity/com.visualnovelteller.unity/Runtime/TaleScript`, where the sources live so Unity compiles the same files (decision 0028). Each GDScript class has a C# file with the same name: `TaleToken`, `TaleLexer`, `TaleDiagnostic`, `TaleExpr`, `TaleNode`, `TaleDocument`, `TaleParser`, `TaleText`, `TaleCheckContext`, and `TaleChecker`. Names follow the GDScript ones in PascalCase, and the node kinds and fields keep their meaning. `GdFormat` reproduces the GDScript number and string formatting that shows up in dumps. `OrderedMap` stands in for a GDScript Dictionary where insertion order matters.
 - `TaleScript.Conformance` holds a console runner that reads the cases and compares the output.
 - `TaleScript.Check` builds `talescript-check`, a command-line checker for `.tale` files.
 - `Shared` holds code both tools compile in, such as reading a check context from JSON.

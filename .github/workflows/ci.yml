@@ -45,6 +45,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Check the Unity package has its meta files
+        run: python3 tools/unity_meta.py --check
+
       # Treat warnings as errors so the core stays clean for Unity.
       - name: Build
         run: dotnet build csharp/TaleScript.sln -warnaserror

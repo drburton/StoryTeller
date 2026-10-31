@@ -1,0 +1,27 @@
+{
+  "name": "com.visualnovelteller.unity",
+  "version": "0.1.0-preview.1",
+  "displayName": "Visual Novel Teller",
+  "description": "Write visual novels in TaleScript and play them in Unity: dialogue, choices, variables, saves, audio, a 2D stage, and shots for 3D scenes. The same tales run in the Godot version.",
+  "unity": "6000.7",
+  "license": "MIT",
+  "documentationUrl": "https://github.com/drburton/StoryTeller/tree/main/unity/com.visualnovelteller.unity",
+  "changelogUrl": "https://github.com/drburton/StoryTeller/blob/main/unity/com.visualnovelteller.unity/CHANGELOG.md",
+  "licensesUrl": "https://github.com/drburton/StoryTeller/blob/main/unity/com.visualnovelteller.unity/LICENSE.md",
+  "keywords": [
+    "visual novel",
+    "dialogue",
+    "narrative",
+    "TaleScript"
+  ],
+  "author": {
+    "name": "Brian Burton",
+    "url": "https://github.com/drburton/StoryTeller"
+  },
+  "dependencies": {
+    "com.unity.modules.animation": "1.0.0",
+    "com.unity.modules.audio": "1.0.0",
+    "com.unity.modules.uielements": "1.0.0",
+    "com.unity.timeline": "1.8.7"
+  }
+}
