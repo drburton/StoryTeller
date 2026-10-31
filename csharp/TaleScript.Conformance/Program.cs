@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 namespace TaleScript.Conformance
 {
@@ -93,22 +94,114 @@ namespace TaleScript.Conformance
             }
 
             string runDir = Path.Combine(root, "run");
+            var runCases = new List<string>();
             if (Directory.Exists(runDir))
             {
-                Console.WriteLine("skip  run/ (not ported yet)");
                 foreach (string file in Directory.GetFiles(runDir, "*.tale"))
+                    runCases.Add(Path.GetFileNameWithoutExtension(file));
+            }
+            runCases.Sort(StringComparer.Ordinal);
+            foreach (string name in runCases)
+            {
+                string source = File.ReadAllText(Path.Combine(runDir, name + ".tale"), utf8);
+                string settingsPath = Path.Combine(runDir, name + ".run.json");
+                JsonElement? settings = null;
+                if (File.Exists(settingsPath))
                 {
-                    string source = File.ReadAllText(file, utf8);
-                    if (TaleParser.Parse(source, file).ToSource() != source)
-                    {
-                        Console.WriteLine("FAIL  roundtrip/run/" + Path.GetFileNameWithoutExtension(file));
-                        failed++;
-                    }
+                    var doc = JsonDocument.Parse(File.ReadAllText(settingsPath, utf8));
+                    if (doc.RootElement.ValueKind == JsonValueKind.Object) settings = doc.RootElement;
+                }
+                string actual = RunCase(source, settings, name).GetAwaiter().GetResult();
+                string expectedPath = Path.Combine(runDir, name + ".expected.txt");
+                string expected = File.Exists(expectedPath) ? File.ReadAllText(expectedPath, utf8) : null;
+                if (expected == actual)
+                {
+                    Console.WriteLine("ok    run/" + name);
+                    passed++;
+                }
+                else
+                {
+                    Console.WriteLine("FAIL  run/" + name);
+                    Console.WriteLine(expected == null ? "      no expected file" : FirstDifference(expected, actual));
+                    failed++;
                 }
             }
 
             Console.WriteLine(passed + " passed, " + failed + " failed");
             return failed > 0 ? 1 : 0;
+        }
+
+        /// <summary>Plays a run case and returns its transcript (see conformance/README.md).</summary>
+        private static async Task<string> RunCase(string source, JsonElement? settings, string taleName)
+        {
+            var director = new TaleDirector();
+            var player = new Player();
+            JsonElement value;
+            if (TryGet(settings, "picks", out value) && value.ValueKind == JsonValueKind.Array)
+                foreach (var pick in value.EnumerateArray()) player.Picks.Add(pick.Clone());
+            director.Presenter = player;
+            director.Skipping = true;
+            var events = player.Events;
+            director.RuntimeError += (message, tale, line) => events.Add("error: line " + line + ": " + message);
+            director.StorySignal += (signalName, signalValue) => events.Add("signal: " + signalName + " " + GdJson.Stringify(signalValue));
+            var built = TaleCompiler.Build(source, taleName, director.MakeCheckContext(taleName));
+            foreach (var diagnostic in built.Diagnostics)
+                if (diagnostic.IsError())
+                    events.Add("compile error: line " + diagnostic.Line + ": " + diagnostic.Message);
+            Tale tale = built.Tale;
+            if (tale != null)
+            {
+                director.AddTale(tale);
+                string start = TryGet(settings, "start", out value) ? value.GetString() : "start";
+                await director.Play(taleName, start);
+                var names = new List<string>();
+                foreach (var variable in tale.Variables) names.Add(variable.Name);
+                names.Sort(StringComparer.Ordinal);
+                foreach (string varName in names)
+                    events.Add("var: " + varName + " = " + GdJson.Stringify(director.GetVar(taleName, varName)));
+            }
+            events.Add("end");
+            return string.Join("\n", events) + "\n";
+        }
+
+        /// <summary>Shows lines at once and picks options from a list: an index, an option's text, or -1.</summary>
+        private class Player : TalePresenter
+        {
+            public readonly List<JsonElement> Picks = new List<JsonElement>();
+            public readonly List<string> Events = new List<string>();
+
+            public override Task ShowLine(OrderedMap<object> line)
+            {
+                string speaker = GdValue.Str(line["speaker_name"]);
+                Events.Add("line: " + (speaker.Length > 0 ? speaker + ": " : "") + GdValue.Str(line["text"]));
+                return Task.CompletedTask;
+            }
+
+            public override Task<int> Choose(List<OrderedMap<object>> options, OrderedMap<object> settings)
+            {
+                var texts = new List<string>();
+                int first = -1;
+                for (int i = 0; i < options.Count; i++)
+                {
+                    bool enabled = (bool)options[i]["enabled"];
+                    string text = GdValue.Str(options[i]["text"]);
+                    texts.Add(enabled ? text : "[" + text + "]");
+                    if (first == -1 && enabled) first = i;
+                }
+                object timeout;
+                double seconds = settings.TryGetValue("timeout", out timeout) && GdValue.IsNumber(timeout) ? GdValue.ToDouble(timeout) : 0.0;
+                Events.Add("choose: " + string.Join(" | ", texts) + (seconds > 0.0 ? " (timed)" : ""));
+                int pick = first;
+                if (Picks.Count > 0)
+                {
+                    JsonElement wanted = Picks[0];
+                    Picks.RemoveAt(0);
+                    if (wanted.ValueKind == JsonValueKind.Number) pick = (int)wanted.GetDouble();
+                    else pick = texts.IndexOf(wanted.ValueKind == JsonValueKind.String ? wanted.GetString() : wanted.ToString());
+                }
+                Events.Add("pick: " + (pick >= 0 && pick < options.Count ? GdValue.Str(options[pick]["text"]) : "(time runs out)"));
+                return Task.FromResult(pick);
+            }
         }
 
         private static List<string> Strings(JsonElement element)
