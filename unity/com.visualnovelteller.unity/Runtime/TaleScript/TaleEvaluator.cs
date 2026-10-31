@@ -302,7 +302,7 @@ namespace TaleScript
 
         private object CallMethod(object target, string method, List<object> args, OrderedMap<object> named)
         {
-            if (!named.IsEmpty)
+            if (!named.IsEmpty && !(target is TaleExposed))
             {
                 Fail("Named arguments only work with actions.");
                 return null;
@@ -320,6 +320,16 @@ namespace TaleScript
                     return null;
                 }
                 object[] values = args.ToArray();
+                if (!named.IsEmpty)
+                {
+                    string error;
+                    values = exposed.BindNamed(method, args, named, out error);
+                    if (values == null)
+                    {
+                        Fail(error);
+                        return null;
+                    }
+                }
                 return _director.StartTask(() => exposed.Call(method, values));
             }
             if (IsObject(target)) return ObjectError();

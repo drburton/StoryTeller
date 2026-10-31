@@ -38,7 +38,9 @@ namespace TaleScript.Tests
         private static int Main()
         {
             int passed = 0, failed = 0;
-            foreach (var test in StateTests.All())
+            var tests = new List<KeyValuePair<string, Action>>(StateTests.All());
+            tests.AddRange(CallTests.All());
+            foreach (var test in tests)
             {
                 try
                 {

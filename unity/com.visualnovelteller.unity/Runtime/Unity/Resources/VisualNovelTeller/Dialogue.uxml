@@ -1,0 +1,10 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <ui:VisualElement name="vnt-root" class="vnt-root">
+        <ui:VisualElement name="vnt-choices" class="vnt-choices" />
+        <ui:VisualElement name="vnt-box" class="vnt-box">
+            <ui:Label name="vnt-speaker" class="vnt-speaker" />
+            <ui:Label name="vnt-text" class="vnt-text" />
+            <ui:VisualElement name="vnt-more" class="vnt-more" picking-mode="Ignore" />
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
