@@ -45,6 +45,10 @@ Tales are checked against the first Story Config found in the project. Without a
 
 ## Put a Story in a scene
 
+The quickest way: choose **Tools > Visual Novel Teller > Set Up Story in Scene** (also under **GameObject > Visual Novel Teller > Story**). It uses the project's Story Config, or makes `Assets/Story Config.asset` listing every tale in the project, then adds a GameObject with a Story and a DialoguePresenter. Press Play to read the first tale.
+
+To set it up by hand:
+
 1. Create an empty GameObject and add the **Story** component.
 2. Assign your Story Config. Leave **Play On Start** on.
 3. Add a **DialoguePresenter** to the same object, or leave it out and the Story adds one. It builds a UI Toolkit panel on its own, with large high contrast text that needs no theme style sheet.
