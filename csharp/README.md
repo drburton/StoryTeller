@@ -41,7 +41,24 @@ Host code reaches tales through the director:
 
 `Play` returns a `Task` that completes when the story ends or `Stop` runs. The core never blocks on a task and never starts a thread, so continuations run on whatever context awaited them, which is Unity's main thread.
 
-Left out of the director: saves and rewind, route log, live reload, localization tables, asset preloading, and the Godot built-in actions other than `emit` and `wait`. Vector and color values need the host hooks above.
+Left out of the director: live reload, localization tables, asset preloading, and the Godot built-in actions other than `emit` and `wait`. Vector and color values need the host hooks above.
+
+## Saves, rewind, and the route log
+
+`Capture()` returns the story state as plain data (`OrderedMap<object>`, `List<object>`, string, long, double, bool, null). `GdJson.Stringify` writes it and `GdJson.Parse` reads it back, so a Unity host can keep it in a file. `Restore(state)` replaces the story state, and `await Resume()` plays on from the saved line, showing the line or choice that was on screen. Tale dictionaries and non-finite floats are wrapped as `{"$dict": ...}` and `{"$float": ...}` so they survive JSON.
+
+    string json = GdJson.Stringify(director.Capture());
+    // later, in a director that has the same tales registered
+    director.Restore((OrderedMap<object>)GdJson.Parse(json));
+    await director.Resume();
+
+`CaptureGlobals()` and `RestoreGlobals(data)` cover what outlives a playthrough: global variables, read lines, and `Routes`. Keep that data apart from the save slots.
+
+Host state joins the save through `ITaleStateProvider` (`Name`, `Capture()`, `Restore(data)`). Register one with `AddStateProvider`, and its data is stored under its name in the `crew` entry of the save. A stage, audio, or shots layer can use this.
+
+`new TaleHistory(director, depth)` keeps a snapshot at each line and choice. `Rewind(steps)` loads an earlier one and resumes, `CanRewind` and `AvailableSteps` tell what is possible, and a line marked `@no_rewind` clears the snapshots. Call `Clear()` after loading a save.
+
+`director.Routes` is a `TaleRouteLog` with the beats entered (`Beats`, `HasBeat`), the links between them (`GetLinks`), and the state of each choice option (`GetOptionState` returns `Unseen`, `Seen`, or `Picked`).
 
 ## Build and run
 
@@ -64,7 +81,7 @@ It prints `ok` or `FAIL` for each parse, check, and run case, with the first dif
 
 Each problem prints as `<file>:<line>: <message>`, with `warning:` before warnings, and a total follows. The exit code is 1 when a file has an error, or a warning too with `--strict`, and 2 for a bad argument. Names that come from the game, such as actions, cast members, and exposed objects, go in a context file in the format of the conformance check cases (`conformance/README.md`). Without one, the checker knows only the built-in names.
 
-CI builds the solution with warnings treated as errors, runs the conformance suite, and tries the checker on a clean tale and a broken one.
+CI builds the solution with warnings treated as errors, runs the conformance suite and the tests in `TaleScript.Tests`, and tries the checker on a clean tale and a broken one.
 
 ## Unity constraints
 

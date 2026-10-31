@@ -56,6 +56,9 @@ jobs:
       - name: Run the conformance suite
         run: dotnet run --no-build --project csharp/TaleScript.Conformance -- conformance
 
+      - name: Run the tests
+        run: dotnet run --no-build --project csharp/TaleScript.Tests
+
       # A clean tale passes, and a tale with problems fails.
       - name: Check the command-line checker
         run: |

@@ -10,7 +10,7 @@ namespace TaleScript
     /// actions, and hands lines and choices to the presenter. It has no engine dependency.
     /// Unity code drives it with <c>await director.Play("prologue")</c>.
     /// </summary>
-    public class TaleDirector
+    public partial class TaleDirector
     {
         /// <summary>Looks up a name that tales use as a value, such as a cast member. Return false when the name is unknown.</summary>
         public delegate bool NameResolverDelegate(string name, out object value);
@@ -81,6 +81,7 @@ namespace TaleScript
         private readonly HashSet<string> _onceChosen = new HashSet<string>();
         private readonly HashSet<string> _readLines = new HashSet<string>();
         private readonly List<TaleFrame> _stack = new List<TaleFrame>();
+        private readonly List<ITaleStateProvider> _stateProviders = new List<ITaleStateProvider>();
         private readonly List<TaleTask> _pending = new List<TaleTask>();
         private readonly TaleEvaluator _evaluator;
         private readonly TaleContext _context;
@@ -88,6 +89,7 @@ namespace TaleScript
         private string _currentTale = "";
         private int _currentLine;
         private int _generation;
+        private int _linePc = -1;
         private TaskCompletionSource<bool> _finished = new TaskCompletionSource<bool>();
 
         public TaleDirector()
@@ -97,6 +99,9 @@ namespace TaleScript
             AddAction(new EmitAction());
             AddAction(new WaitAction());
         }
+
+        /// <summary>Beats entered and choice options seen and picked, kept across playthroughs for a route chart. Saved by <see cref="CaptureGlobals"/>.</summary>
+        public readonly TaleRouteLog Routes = new TaleRouteLog();
 
         public bool IsPlaying { get { return _playing; } }
 
@@ -582,11 +587,13 @@ namespace TaleScript
             line["source_line"] = (long)instruction.Line;
             line["read"] = _readLines.Contains(instruction.Id) || instruction.SkipSafe;
             if (generation != _generation) return;
+            _linePc = frame.Pc - 1;
             if (LineStarted != null) LineStarted(line);
             if (Presenter != null) await Presenter.ShowLine(line);
             if (generation == _generation)
             {
                 _readLines.Add(instruction.Id);
+                _linePc = -1;
                 if (LineFinished != null) LineFinished(line);
             }
         }
@@ -637,6 +644,7 @@ namespace TaleScript
                 entry["picture"] = option.Picture;
                 shown.Add(entry);
                 sources.Add(option);
+                Routes.SeeOption(frame.Tale.TranslationKey(option.Id));
                 if (enabled) hasEnabled = true;
             }
             if (!hasEnabled)
@@ -645,10 +653,12 @@ namespace TaleScript
                 return;
             }
             if (generation != _generation) return;
+            _linePc = frame.Pc - 1;
             if (ChoiceStarted != null) ChoiceStarted(shown);
             int picked = 0;
             if (Presenter != null) picked = await Presenter.Choose(shown, settings);
             if (generation != _generation) return;
+            _linePc = -1;
             if (picked < 0 || picked >= shown.Count || !(bool)shown[picked]["enabled"])
             {
                 frame.Pc = instruction.TimeoutTarget >= 0 ? instruction.TimeoutTarget : instruction.EndTarget;
@@ -656,6 +666,7 @@ namespace TaleScript
             }
             TaleOption chosen = sources[picked];
             if (chosen.Once) _onceChosen.Add(chosen.Id);
+            Routes.PickOption(frame.Tale.TranslationKey(chosen.Id));
             if (ChoiceMade != null) ChoiceMade(shown[picked]);
             frame.Pc = chosen.Target;
         }
@@ -667,6 +678,7 @@ namespace TaleScript
             _generation++;
             _stack.Clear();
             _pending.Clear();
+            _linePc = -1;
             if (Presenter != null) Presenter.Cancel();
         }
 
@@ -680,7 +692,10 @@ namespace TaleScript
 
         private TaleFrame EnterBeat(Tale tale, string beat)
         {
-            _visited.Add(tale.TaleName + "." + beat);
+            string beatId = tale.TaleName + "." + beat;
+            _visited.Add(beatId);
+            TaleFrame from = _stack.Count > 0 ? _stack[_stack.Count - 1] : null;
+            Routes.Enter(beatId, from != null ? from.Tale.TaleName + "." + from.Beat : "");
             if (BeatEntered != null) BeatEntered(tale.TaleName, beat);
             return new TaleFrame(tale, beat);
         }
