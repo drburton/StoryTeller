@@ -133,6 +133,24 @@ While testing in play mode, the dialogue answers a few keys: F5 saves to the slo
 
 Game code can add its own state with `story.Director.AddStateProvider(provider)`. A provider names itself, returns plain data from `Capture()`, and receives it again in `Restore(data)`.
 
+## Testing every path
+
+A tale with choices has more routes than you can click through by hand. The Path Explorer plays all of them for you. Choose **Window > Visual Novel Teller > Path Explorer**, select a `.tale` file in the Project window (or drag one into the Tale field), and press **Explore**.
+
+The window takes its exposed names, cast, and other tales from the Story Config in your project. Objects from game code are replaced by stand-ins whose methods do nothing, and the built-in actions such as `music()` and `backdrop()` do nothing as well, so your scene stays untouched while it runs. A timed choice is tried with the time running out. `ask_text()` answers with its default.
+
+Results include:
+
+- the number of paths and lines, and a warning when a limit cut the exploration short;
+- the endings, with how many paths reach each;
+- the beats no path enters;
+- the problems, such as runtime errors, choices that never end, and paths that run past the limits. Each shows how many paths hit it and the choices that led to the first one. Click a problem to open the tale at that line;
+- every path, with the options taken and where it ended.
+
+Under **Limits** you set the most paths, the most choices on one path, the most lines between two choices, and the seconds a path may run. A path that passes a limit is cut off and has no ending. Because each choice multiplies the paths, a tale with many independent choices can reach the path limit. The window then says the list is not complete.
+
+Outside Unity, `talescript-check --paths prologue.tale` prints the same report in a terminal and fails when a path hits a problem, which suits a build server. See `csharp/README.md` for the options. Game code can call `TalePaths.Explore` too, for example from a test.
+
 ## Where to go next
 
 Godot's plugin documents the same TaleScript language, so its reference applies here. The package README lists the folders, and `csharp/README.md` in the repository describes the core API for game code.

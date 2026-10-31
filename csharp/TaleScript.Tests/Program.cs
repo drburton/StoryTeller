@@ -40,6 +40,7 @@ namespace TaleScript.Tests
             int passed = 0, failed = 0;
             var tests = new List<KeyValuePair<string, Action>>(StateTests.All());
             tests.AddRange(CallTests.All());
+            tests.AddRange(PathTests.All());
             foreach (var test in tests)
             {
                 try
