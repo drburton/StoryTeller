@@ -1,0 +1,12 @@
+# Unity writes these; only Assets, Packages, and ProjectSettings are kept.
+/Library/
+/Temp/
+/Obj/
+/Logs/
+/UserSettings/
+/Build/
+/Builds/
+*.csproj
+*.sln
+.vs/
+.idea/
