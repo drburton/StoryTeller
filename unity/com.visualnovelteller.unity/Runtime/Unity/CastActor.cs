@@ -90,6 +90,26 @@ namespace VisualNovelTeller
             Refresh();
         }
 
+        /// <summary>Puts the actor back in its starting state, off stage, for a restore. Running motions stop.</summary>
+        internal void ResetForRestore()
+        {
+            _nameOverride = "";
+            _mood = "";
+            OnStage = false;
+            Visible = false;
+            Flip = false;
+            DrawOrder = 0;
+            Tint = Color.white;
+            Scale = Member.scale <= 0f ? 1f : Member.scale;
+            Alpha = 1f;
+            OffsetPixels = Vector2.zero;
+            Position = new Vector2(0.5f, 0f);
+            AlphaToken++;
+            MoveToken++;
+            ScaleToken++;
+            MotionToken++;
+        }
+
         /// <summary>Draws the actor again after a change.</summary>
         public void Refresh()
         {

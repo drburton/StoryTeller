@@ -82,6 +82,9 @@ namespace VisualNovelTeller
         [Tooltip("Names that game code adds with Story.Expose. Listing them lets tales that use them import without errors.")]
         [SerializeField] private List<string> exposedNames = new List<string>();
 
+        [Header("Saves")]
+        [Tooltip("How many lines and choices the player can step back through. 0 turns rewind off.")]
+        [Min(0)] [SerializeField] private int rewindDepth = 50;
         [Header("Dialogue")]
         [Tooltip("Characters per second. 0 shows each line at once.")]
         [Range(0f, 200f)] [SerializeField] private float textSpeed = 40f;
@@ -93,6 +96,7 @@ namespace VisualNovelTeller
         [SerializeField] private ThemeStyleSheet themeStyleSheet;
 
         public IReadOnlyList<TaleAsset> Tales { get { return tales; } }
+        public int RewindDepth { get { return Mathf.Max(rewindDepth, 0); } }
         public TaleAsset FirstTale { get { return firstTale; } }
         public string FirstBeat { get { return string.IsNullOrEmpty(firstBeat) ? "start" : firstBeat; } }
         public IReadOnlyList<CastMember> Cast { get { return cast; } }

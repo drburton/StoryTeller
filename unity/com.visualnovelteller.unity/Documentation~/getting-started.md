@@ -110,7 +110,28 @@ For stories told in your own 3D scene, the **StoryShots** component plays animat
 
 For a Timeline shot, set the director's extrapolation to None so the end of the timeline can be detected. Tracks that should keep their final pose can hold it in their own settings.
 
-StoryShots keeps `Current` and `Holding` for scripts. `Capture()` returns a dictionary with the keys `current` and `holding`, and `Restore(data)` puts the scene back. Saving the whole story is planned for a later release.
+StoryShots keeps `Current` and `Holding` for scripts. Saves include the shot automatically, as described below.
+
+## Saving and rewinding
+
+Story saves the whole play state: the place in the tale, its variables, the stage, the music, and the current shot. The stage, audio, and shots components join every save on their own.
+
+    story.SaveSlot("slot1");                 // writes saves/slot1.json
+    if (story.HasSlot("slot1")) await story.LoadSlot("slot1");
+    story.DeleteSlot("slot1");
+
+    string json = story.SaveToJson();        // keep the text anywhere you like
+    await story.LoadFromJson(json);
+
+Slot names allow letters, digits, `-`, and `_`. Files go to `Application.persistentDataPath/saves/` as UTF-8 JSON. Saving a slot also writes `globals.json` next to it, which holds the global variables, the lines already read, and the route log. Story reads that file when the scene starts. Loading stops the current play, restores the state, and plays on from the saved line or choice. A save that cannot be read is reported with `Debug.LogError` and the story keeps going where it was.
+
+Rewind steps back through lines and choices. The Story Config has a **Rewind Depth** field, 50 by default, and 0 turns rewind off. A line marked `@no_rewind` clears the history, so the player cannot go back past it.
+
+    if (story.CanRewind) await story.Rewind(1);
+
+While testing in play mode, the dialogue answers a few keys: F5 saves to the slot `quick`, F9 loads it, and PageUp or the mouse wheel up rewinds one step. Each does nothing when the story cannot do it. A line or choice on screen is cancelled during a load or rewind, so nothing from the old moment finishes later.
+
+Game code can add its own state with `story.Director.AddStateProvider(provider)`. A provider names itself, returns plain data from `Capture()`, and receives it again in `Restore(data)`.
 
 ## Where to go next
 

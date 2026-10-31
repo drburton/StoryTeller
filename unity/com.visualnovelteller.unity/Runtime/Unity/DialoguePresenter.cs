@@ -18,6 +18,7 @@ namespace VisualNovelTeller
     public class DialoguePresenter : MonoBehaviour
     {
         private const string ResourcePath = "VisualNovelTeller/Dialogue";
+        private const string QuickSlot = "quick";
 
         [Tooltip("Optional. A UIDocument to draw on. Left empty, the presenter makes its own.")]
         [SerializeField] private UIDocument document;
@@ -50,6 +51,7 @@ namespace VisualNovelTeller
         private int _shown;
         private bool _revealDone;
         private int _lastAdvanceFrame = -1;
+        private int _lastShortcutFrame = -1;
 
         private TaskCompletionSource<int> _choiceDone;
         private float _timeout;
@@ -154,6 +156,7 @@ namespace VisualNovelTeller
             _root.focusable = true;
             _root.RegisterCallback<PointerDownEvent>(OnPointerDown);
             _root.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
+            _root.RegisterCallback<WheelEvent>(OnWheel);
             _choices.style.display = DisplayStyle.None;
             Hide();
         }
@@ -169,6 +172,41 @@ namespace VisualNovelTeller
         {
             if (evt.keyCode == KeyCode.Space || evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
                 Advance();
+            else if (evt.keyCode == KeyCode.F5 || evt.keyCode == KeyCode.F9 || evt.keyCode == KeyCode.PageUp)
+                Shortcut(evt.keyCode);
+        }
+
+        private void OnWheel(WheelEvent evt)
+        {
+            // In UI Toolkit a negative delta is the wheel turning up.
+            if (evt.delta.y < 0f) Shortcut(KeyCode.PageUp);
+        }
+
+        /// <summary>
+        /// Test shortcuts: F5 saves to the slot "quick", F9 loads it, and PageUp or the mouse
+        /// wheel up steps back one line or choice. Each works only when the story allows it.
+        /// </summary>
+        private void Shortcut(KeyCode key)
+        {
+            if (_story == null || Time.frameCount == _lastShortcutFrame) return;
+            if (key == KeyCode.F5)
+            {
+                if (!_story.IsPlaying) return;
+                _lastShortcutFrame = Time.frameCount;
+                _story.SaveSlot(QuickSlot);
+            }
+            else if (key == KeyCode.F9)
+            {
+                if (!_story.HasSlot(QuickSlot)) return;
+                _lastShortcutFrame = Time.frameCount;
+                _ = _story.LoadSlot(QuickSlot);
+            }
+            else if (key == KeyCode.PageUp)
+            {
+                if (!_story.CanRewind) return;
+                _lastShortcutFrame = Time.frameCount;
+                _ = _story.Rewind(1);
+            }
         }
 
         /// <summary>
@@ -213,6 +251,9 @@ namespace VisualNovelTeller
 #if ENABLE_LEGACY_INPUT_MANAGER
             if (_lineDone != null && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
                 Advance();
+            if (Input.GetKeyDown(KeyCode.F5)) Shortcut(KeyCode.F5);
+            if (Input.GetKeyDown(KeyCode.F9)) Shortcut(KeyCode.F9);
+            if (Input.GetKeyDown(KeyCode.PageUp) || Input.mouseScrollDelta.y > 0f) Shortcut(KeyCode.PageUp);
 #endif
         }
 

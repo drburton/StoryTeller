@@ -15,7 +15,7 @@ namespace VisualNovelTeller
     /// Positions are fractions of the screen: x runs from 0 (left edge) to 1 (right edge),
     /// and y lifts the character's feet above the bottom of the screen.
     /// </summary>
-    public class Stage2D : MonoBehaviour
+    public class Stage2D : MonoBehaviour, ITaleStateProvider
     {
         [Tooltip("Optional. A UIDocument to draw on. Left empty, the stage makes its own.")]
         [SerializeField] private UIDocument document;
@@ -51,6 +51,9 @@ namespace VisualNovelTeller
         private bool _pending;
         private int _backdropGeneration;
         private int _useCounter;
+        private string _backdropName = "";
+        private bool _hasBackdropColor;
+        private Color _backdropColor;
 
         /// <summary>The story this stage belongs to.</summary>
         public Story Story { get { return _story; } }
@@ -154,6 +157,7 @@ namespace VisualNovelTeller
             }
             bool instant = transition == "none" || _story.Skipping;
             int generation = ++_backdropGeneration;
+            RememberBackdrop(source is Color ? null : TaleValues.ToText(source), sprite == null ? color : new Color(0f, 0f, 0f, 0f));
             if (sprite == null && color.a <= 0f)
             {
                 return _tweens.Run(time, delegate (float t)
@@ -427,6 +431,7 @@ namespace VisualNovelTeller
             _back.style.backgroundColor = new Color(0f, 0f, 0f, 0f);
             _back.style.opacity = 1f;
             _front.style.display = DisplayStyle.None;
+            RememberBackdrop(null, new Color(0f, 0f, 0f, 0f));
             foreach (var actor in _story.Actors)
             {
                 actor.OnStage = false;
@@ -437,7 +442,134 @@ namespace VisualNovelTeller
             }
         }
 
-        // TODO: capture and restore the stage (backdrop and cast state) once Story saves exist.
+        // --- Saves --------------------------------------------------------------
+
+        /// <summary>The key of this stage in a save.</summary>
+        public string Name { get { return "Stage"; } }
+
+        private void RememberBackdrop(string backdropName, Color color)
+        {
+            _backdropName = backdropName ?? "";
+            _hasBackdropColor = backdropName == null && color.a > 0f;
+            _backdropColor = _hasBackdropColor ? color : new Color(0f, 0f, 0f, 0f);
+        }
+
+        /// <summary>
+        /// The backdrop and every cast member on stage as plain data: the keys "backdrop"
+        /// (a name), "backdrop_color" (r, g, b, a, only for a plain color), and "cast", a
+        /// list with id, mood, x, y, flip, tint, scale, and order for each member.
+        /// </summary>
+        public object Capture()
+        {
+            var data = new OrderedMap<object>();
+            data["backdrop"] = _backdropName;
+            if (_hasBackdropColor) data["backdrop_color"] = ColorData(_backdropColor);
+            var cast = new List<object>();
+            if (_story != null)
+            {
+                foreach (var actor in _story.Actors)
+                {
+                    if (!actor.OnStage) continue;
+                    var entry = new OrderedMap<object>();
+                    entry["id"] = actor.Id;
+                    entry["mood"] = actor.Mood;
+                    entry["x"] = (double)actor.Position.x;
+                    entry["y"] = (double)actor.Position.y;
+                    entry["flip"] = actor.Flip;
+                    entry["tint"] = ColorData(actor.Tint);
+                    entry["scale"] = (double)actor.Scale;
+                    entry["order"] = (long)actor.DrawOrder;
+                    cast.Add(entry);
+                }
+            }
+            data["cast"] = cast;
+            return data;
+        }
+
+        /// <summary>Puts the stage back from data made by <see cref="Capture"/>, at once and without fades.</summary>
+        public void Restore(object data)
+        {
+            if (_stage == null || _story == null) return;
+            var map = data as OrderedMap<object>;
+            _tweens.FinishAll();
+            _backdropGeneration++;
+            _pending = false;
+            _front.style.display = DisplayStyle.None;
+            _front.style.opacity = 0f;
+            _back.style.opacity = 1f;
+            var sprite = default(Sprite);
+            var color = new Color(0f, 0f, 0f, 0f);
+            string backdropName = map != null ? TextOf(map, "backdrop") : "";
+            object value;
+            if (backdropName.Length > 0)
+            {
+                sprite = _story.Config != null ? _story.Config.FindBackdrop(backdropName) : null;
+                if (sprite == null) _story.Director.ReportError("Backdrop '" + backdropName + "' was not found in the Story Config.");
+            }
+            else if (map != null && map.TryGetValue("backdrop_color", out value))
+            {
+                color = ToColor(value, color);
+            }
+            _back.sprite = sprite;
+            _back.style.backgroundColor = sprite != null ? new Color(0f, 0f, 0f, 0f) : color;
+            if (sprite != null) RememberBackdrop(backdropName, color);
+            else RememberBackdrop(null, color);
+
+            foreach (var actor in _story.Actors) actor.ResetForRestore();
+            var list = map != null && map.TryGetValue("cast", out value) ? value as List<object> : null;
+            if (list != null)
+            {
+                foreach (object item in list)
+                {
+                    var entry = item as OrderedMap<object>;
+                    if (entry == null) continue;
+                    CastActor actor = _story.GetActor(TextOf(entry, "id"));
+                    if (actor == null) continue;
+                    EnsureView(actor);
+                    string mood = TextOf(entry, "mood");
+                    if (mood.Length > 0) actor.SetMood(mood);
+                    actor.OnStage = true;
+                    actor.Visible = true;
+                    actor.Position = new Vector2((float)NumberOf(entry, "x", 0.5), (float)NumberOf(entry, "y", 0.0));
+                    actor.Flip = entry.TryGetValue("flip", out value) && GdValue.Truthy(value);
+                    actor.Tint = entry.TryGetValue("tint", out value) ? ToColor(value, Color.white) : Color.white;
+                    actor.Scale = (float)NumberOf(entry, "scale", actor.Scale);
+                    actor.DrawOrder = (int)NumberOf(entry, "order", 0.0);
+                }
+            }
+            foreach (var actor in _story.Actors) Layout(actor);
+            ReorderCast();
+        }
+
+        private static OrderedMap<object> ColorData(Color color)
+        {
+            var data = new OrderedMap<object>();
+            data["r"] = (double)color.r;
+            data["g"] = (double)color.g;
+            data["b"] = (double)color.b;
+            data["a"] = (double)color.a;
+            return data;
+        }
+
+        private static Color ToColor(object value, Color fallback)
+        {
+            var map = value as OrderedMap<object>;
+            if (map == null) return fallback;
+            return new Color((float)NumberOf(map, "r", fallback.r), (float)NumberOf(map, "g", fallback.g),
+                (float)NumberOf(map, "b", fallback.b), (float)NumberOf(map, "a", fallback.a));
+        }
+
+        private static string TextOf(OrderedMap<object> map, string key)
+        {
+            object value;
+            return map.TryGetValue(key, out value) && value != null ? GdValue.Str(value) : "";
+        }
+
+        private static double NumberOf(OrderedMap<object> map, string key, double fallback)
+        {
+            object value;
+            return map.TryGetValue(key, out value) && GdValue.IsNumber(value) ? GdValue.ToDouble(value) : fallback;
+        }
 
         private void OnLineStarted(OrderedMap<object> line)
         {

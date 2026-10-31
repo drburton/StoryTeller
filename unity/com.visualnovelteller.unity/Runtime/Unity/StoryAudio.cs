@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using TaleScript;
 using UnityEngine;
 
 namespace VisualNovelTeller
@@ -8,7 +9,7 @@ namespace VisualNovelTeller
     /// Tales use <c>music(track, volume, fade, loop)</c>, <c>stop_music(fade)</c>, and
     /// <c>sound(name, volume)</c>, naming clips from the Story Config.
     /// </summary>
-    public class StoryAudio : MonoBehaviour
+    public class StoryAudio : MonoBehaviour, ITaleStateProvider
     {
         [Tooltip("Multiplier for all music, from 0 to 1.")]
         [Range(0f, 1f)] [SerializeField] private float musicVolume = 1f;
@@ -24,6 +25,7 @@ namespace VisualNovelTeller
         private int _current;
         private string _track = "";
         private float _trackVolume = 1f;
+        private bool _trackLoop = true;
 
         /// <summary>The name of the music playing, or "".</summary>
         public string CurrentTrack { get { return _track; } }
@@ -80,6 +82,7 @@ namespace VisualNovelTeller
             if (_track == track && current.isPlaying)
             {
                 _trackVolume = volume;
+                _trackLoop = loop;
                 current.loop = loop;
                 Fade(_current, volume, fade, false);
                 return "";
@@ -97,6 +100,7 @@ namespace VisualNovelTeller
             Fade(_current, volume, fade, false);
             _track = track;
             _trackVolume = volume;
+            _trackLoop = loop;
             return "";
         }
 
@@ -136,6 +140,36 @@ namespace VisualNovelTeller
                 ApplyVolume(i);
             }
             _sound.Stop();
+        }
+
+        // --- Saves --------------------------------------------------------------
+
+        /// <summary>The key of the audio in a save.</summary>
+        public string Name { get { return "Audio"; } }
+
+        /// <summary>The music playing as plain data with the keys "track", "volume", and "loop".</summary>
+        public object Capture()
+        {
+            var data = new OrderedMap<object>();
+            data["track"] = _track;
+            data["volume"] = (double)_trackVolume;
+            data["loop"] = _trackLoop;
+            return data;
+        }
+
+        /// <summary>Stops all audio and starts the saved music again, without a fade.</summary>
+        public void Restore(object data)
+        {
+            Clear();
+            var map = data as OrderedMap<object>;
+            object value;
+            if (map == null || !map.TryGetValue("track", out value) || value == null) return;
+            string track = GdValue.Str(value);
+            if (track.Length == 0) return;
+            float volume = map.TryGetValue("volume", out value) && GdValue.IsNumber(value) ? (float)GdValue.ToDouble(value) : 1f;
+            bool loop = !map.TryGetValue("loop", out value) || GdValue.Truthy(value);
+            string problem = PlayMusic(track, volume, 0f, loop);
+            if (problem.Length > 0 && _story != null) _story.Director.ReportError(problem);
         }
 
         private AudioClip Find(string clipName)

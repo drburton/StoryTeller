@@ -32,7 +32,7 @@ namespace VisualNovelTeller
     /// </code>
     /// While the player skips, a shot jumps to its last frame.
     /// </summary>
-    public class StoryShots : MonoBehaviour, ITaleObject
+    public class StoryShots : MonoBehaviour, ITaleObject, ITaleStateProvider
     {
         [Tooltip("The Animator whose states are the shots.")]
         [SerializeField] private Animator animator;
@@ -152,22 +152,26 @@ namespace VisualNovelTeller
             if (playableDirector != null) playableDirector.Stop();
         }
 
+        /// <summary>The key of the shots in a save.</summary>
+        public string Name { get { return "Shots"; } }
+
         /// <summary>The state to keep in a save, as plain data with the keys "current" and "holding".</summary>
-        public Dictionary<string, object> Capture()
+        public object Capture()
         {
-            var data = new Dictionary<string, object>();
+            var data = new OrderedMap<object>();
             data["current"] = Current ?? "";
             data["holding"] = Holding;
             return data;
         }
 
         /// <summary>Puts the scene back from data made by <see cref="Capture"/>: a held pose plays again, and a played shot shows its last frame.</summary>
-        public void Restore(Dictionary<string, object> data)
+        public void Restore(object saved)
         {
             ++_generation;
+            var data = saved as OrderedMap<object>;
             object value;
-            Current = data != null && data.TryGetValue("current", out value) && value != null ? Convert.ToString(value) : "";
-            Holding = data != null && data.TryGetValue("holding", out value) && value is bool && (bool)value;
+            Current = data != null && data.TryGetValue("current", out value) && value != null ? GdValue.Str(value) : "";
+            Holding = data != null && data.TryGetValue("holding", out value) && GdValue.Truthy(value);
             ShowCurrent();
         }
 

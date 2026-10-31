@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using TaleScript;
 using UnityEngine;
@@ -48,7 +50,9 @@ namespace VisualNovelTeller
         private readonly Dictionary<string, CastActor> _actorsById = new Dictionary<string, CastActor>();
         private readonly Dictionary<string, TaleExposed> _actorObjects = new Dictionary<string, TaleExposed>();
         private TaleDirector _director;
+        private TaleHistory _history;
         private bool _ready;
+        private bool _loading;
 
         /// <summary>Raised by <c>emit("name", value)</c> in a tale.</summary>
         public event Action<string, object> Signal;
@@ -82,6 +86,7 @@ namespace VisualNovelTeller
         private void Start()
         {
             EnsureReady();
+            LoadGlobals();
             if (playOnStart) _ = Play();
         }
 
@@ -207,8 +212,222 @@ namespace VisualNovelTeller
             return _actorsById.TryGetValue(id, out actor) ? actor : null;
         }
 
-        // TODO(saves): when TaleDirector can capture and restore its state, add Save and Load
-        // here and include Stage2D, StoryAudio, and StoryShots.Capture() in what is saved.
+        // --- Saves and rewind ---------------------------------------------------
+
+        /// <summary>
+        /// The whole story state as JSON text: where the story is, its variables, and the
+        /// stage, audio, and shots. Pass it to <see cref="LoadFromJson"/> later.
+        /// </summary>
+        public string SaveToJson()
+        {
+            EnsureReady();
+            return GdJson.Stringify(_director.Capture());
+        }
+
+        /// <summary>
+        /// Stops the current play, puts the story back as <see cref="SaveToJson"/> saved it, and
+        /// plays on. The task completes when the story ends. Bad data is reported and nothing changes.
+        /// </summary>
+        public async Task LoadFromJson(string json)
+        {
+            EnsureReady();
+            OrderedMap<object> data = ParseSave(json);
+            if (data == null) return;
+            _loading = true;
+            try
+            {
+                Stop();
+            }
+            finally
+            {
+                _loading = false;
+            }
+            try
+            {
+                _director.Restore(data);
+                if (_history != null) _history.Clear();
+                await _director.Resume();
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Story: could not load the save. " + e.Message, this);
+                Debug.LogException(e, this);
+            }
+        }
+
+        /// <summary>Writes the story state to saves/slot.json in the persistent data folder, and the globals to saves/globals.json. A slot name has letters, digits, '-', and '_'.</summary>
+        public void SaveSlot(string slot)
+        {
+            if (!CheckSlot(slot)) return;
+            EnsureReady();
+            if (!_director.IsPlaying)
+            {
+                Debug.LogWarning("Story: nothing to save, no tale is playing.", this);
+                return;
+            }
+            try
+            {
+                Directory.CreateDirectory(SaveFolder());
+                WriteText(SlotPath(slot), SaveToJson());
+                WriteText(GlobalsPath(), GdJson.Stringify(_director.CaptureGlobals()));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Story: could not save slot '" + slot + "'. " + e.Message, this);
+            }
+        }
+
+        /// <summary>Loads a slot written by <see cref="SaveSlot"/> and plays on. The task completes when the story ends.</summary>
+        public Task LoadSlot(string slot)
+        {
+            if (!CheckSlot(slot)) return Task.CompletedTask;
+            string path = SlotPath(slot);
+            string json;
+            try
+            {
+                if (!File.Exists(path))
+                {
+                    Debug.LogWarning("Story: there is no save in slot '" + slot + "'.", this);
+                    return Task.CompletedTask;
+                }
+                json = File.ReadAllText(path, Encoding.UTF8);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Story: could not read slot '" + slot + "'. " + e.Message, this);
+                return Task.CompletedTask;
+            }
+            return LoadFromJson(json);
+        }
+
+        /// <summary>True when the slot has a save.</summary>
+        public bool HasSlot(string slot)
+        {
+            if (!IsValidSlot(slot)) return false;
+            try
+            {
+                return File.Exists(SlotPath(slot));
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>Deletes the save in a slot, if there is one.</summary>
+        public void DeleteSlot(string slot)
+        {
+            if (!CheckSlot(slot)) return;
+            try
+            {
+                string path = SlotPath(slot);
+                if (File.Exists(path)) File.Delete(path);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Story: could not delete slot '" + slot + "'. " + e.Message, this);
+            }
+        }
+
+        /// <summary>True when the player can step back at least one line or choice.</summary>
+        public bool CanRewind { get { return _history != null && _history.CanRewind; } }
+
+        /// <summary>
+        /// Goes back that many lines or choices and plays on from there. Returns false when
+        /// that many steps are not available or rewind is off in the Story Config.
+        /// </summary>
+        public Task<bool> Rewind(int steps = 1)
+        {
+            if (_history == null || steps < 1 || !_history.CanRewind || steps > _history.AvailableSteps)
+                return Task.FromResult(false);
+            // Waits of the abandoned run end now. The history restores the story, which
+            // cancels the line or choice on screen, and resumes play itself.
+            CompleteWaits();
+            return Task.FromResult(_history.Rewind(steps));
+        }
+
+        private OrderedMap<object> ParseSave(string json)
+        {
+            if (string.IsNullOrEmpty(json))
+            {
+                Debug.LogError("Story: could not load the save. The text is empty.", this);
+                return null;
+            }
+            OrderedMap<object> data;
+            try
+            {
+                data = GdJson.Parse(json) as OrderedMap<object>;
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Story: could not load the save. It is not valid JSON. " + e.Message, this);
+                return null;
+            }
+            object value;
+            if (data == null || !data.TryGetValue("stack", out value) || !(value is List<object>)
+                || !data.TryGetValue("format", out value) || !GdValue.IsNumber(value) || GdValue.ToLong(value) != TaleDirector.StateFormat)
+            {
+                Debug.LogError("Story: could not load the save. It is not story save data, or it comes from another version.", this);
+                return null;
+            }
+            return data;
+        }
+
+        private void LoadGlobals()
+        {
+            string path = GlobalsPath();
+            try
+            {
+                if (!File.Exists(path)) return;
+                var data = GdJson.Parse(File.ReadAllText(path, Encoding.UTF8)) as OrderedMap<object>;
+                if (data != null) _director.RestoreGlobals(data);
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("Story: could not read " + path + ". " + e.Message, this);
+            }
+        }
+
+        private bool CheckSlot(string slot)
+        {
+            if (IsValidSlot(slot)) return true;
+            Debug.LogError("Story: '" + slot + "' is not a save slot name. Use letters, digits, '-', and '_'.", this);
+            return false;
+        }
+
+        private static bool IsValidSlot(string slot)
+        {
+            if (string.IsNullOrEmpty(slot)) return false;
+            foreach (char c in slot)
+            {
+                bool letter = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
+                if (!letter && !(c >= '0' && c <= '9') && c != '-' && c != '_') return false;
+            }
+            return true;
+        }
+
+        private static string SaveFolder()
+        {
+            return Path.Combine(Application.persistentDataPath, "saves");
+        }
+
+        private static string SlotPath(string slot)
+        {
+            return Path.Combine(SaveFolder(), slot + ".json");
+        }
+
+        private static string GlobalsPath()
+        {
+            return Path.Combine(SaveFolder(), "globals.json");
+        }
+
+        private static void WriteText(string path, string text)
+        {
+            string temp = path + ".tmp";
+            File.WriteAllText(temp, text, new UTF8Encoding(false));
+            if (File.Exists(path)) File.Delete(path);
+            File.Move(temp, path);
+        }
 
         // --- Setup --------------------------------------------------------------
 
@@ -253,14 +472,24 @@ namespace VisualNovelTeller
                 dialogue.Attach(this);
                 _director.Presenter = dialogue.Presenter;
             }
-            if (stage != null) stage.Attach(this);
-            if (storyAudio != null) storyAudio.Attach(this);
+            if (stage != null)
+            {
+                stage.Attach(this);
+                _director.AddStateProvider(stage);
+            }
+            if (storyAudio != null)
+            {
+                storyAudio.Attach(this);
+                _director.AddStateProvider(storyAudio);
+            }
             if (shots != null)
             {
                 shots.Attach(this);
+                _director.AddStateProvider(shots);
                 Expose("shots", shots, new[] { "play", "hold", "has_shot" }, new[] { "current" });
             }
             LoadTales();
+            if (config != null && config.RewindDepth > 0) _history = new TaleHistory(_director, config.RewindDepth);
         }
 
         private void FindParts()
@@ -359,6 +588,7 @@ namespace VisualNovelTeller
 
         private void OnStoryFinished()
         {
+            if (_loading) return;
             if (dialogue != null) dialogue.Hide();
             if (onStoryFinished != null) onStoryFinished.Invoke();
         }
