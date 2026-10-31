@@ -35,6 +35,31 @@ jobs:
       - name: Check the plugin installs in an empty project
         run: tools/check_addon_install.sh
 
+  csharp:
+    name: TaleScript C# core
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      # Treat warnings as errors so the core stays clean for Unity.
+      - name: Build
+        run: dotnet build csharp/TaleScript.sln -warnaserror
+
+      # The same conformance suite the Godot reference passes (decision 0025).
+      - name: Run the conformance suite
+        run: dotnet run --no-build --project csharp/TaleScript.Conformance -- conformance
+
+      # A clean tale passes, and a tale with problems fails.
+      - name: Check the command-line checker
+        run: |
+          check="dotnet run --no-build --project csharp/TaleScript.Check --"
+          $check --strict --context=conformance/check/full_sample_is_clean.context.json conformance/check/full_sample_is_clean.tale
+          if $check conformance/check/unknown_names.tale; then echo "expected a failure"; exit 1; fi
+
   test-windows:
     name: Tests (Windows)
     runs-on: windows-latest
