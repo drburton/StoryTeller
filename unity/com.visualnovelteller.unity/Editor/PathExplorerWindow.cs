@@ -154,11 +154,20 @@ namespace VisualNovelTeller
 
         private TalePathsOptions MakeOptions(StoryConfig config)
         {
-            var options = new TalePathsOptions();
+            TalePathsOptions options = MakeOptions(config, new TalePathsOptions());
             options.MaxPaths = maxPaths;
             options.MaxChoices = maxChoices;
             options.MaxLines = maxLines;
             options.PathSeconds = pathSeconds;
+            return options;
+        }
+
+        /// <summary>
+        /// Fills <paramref name="options"/> with the config's exposed names and cast, a stand-in
+        /// for shots, and the built-in actions as actions that do nothing.
+        /// </summary>
+        internal static TalePathsOptions MakeOptions(StoryConfig config, TalePathsOptions options)
+        {
             if (config != null)
             {
                 foreach (string exposed in config.ExposedNames)
@@ -191,7 +200,7 @@ namespace VisualNovelTeller
         }
 
         /// <summary>The project's StoryConfig (the first by path), or null. The importer picks the same one.</summary>
-        private static StoryConfig FindConfig()
+        internal static StoryConfig FindConfig()
         {
             string[] guids = AssetDatabase.FindAssets("t:StoryConfig");
             if (guids.Length == 0) return null;
