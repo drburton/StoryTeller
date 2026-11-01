@@ -10,7 +10,7 @@ This guide takes you from an empty Unity 6 project to a tale playing in a scene,
 
        https://github.com/drburton/StoryTeller.git?path=/unity/com.visualnovelteller.unity
 
-Unity downloads the package and its dependencies (Timeline, UI Toolkit, Audio, and Animation). Packages added this way are read only in your project, which keeps updates simple.
+Unity downloads the package and its dependencies (Timeline, the Input System, UI Toolkit, Audio, and Animation). Packages added this way are read only in your project, which keeps updates simple.
 
 ## Make a Story Config
 
@@ -57,7 +57,7 @@ To set it up by hand:
 
 Click, Space, or Enter finishes the typing of a line and then moves on. Choices appear as buttons, and options that are not available show greyed out. A timed choice, written `choose(timeout = 5)`, shows a shrinking bar and takes the timeout path when it runs out.
 
-If clicks do nothing, check that the scene has an EventSystem (**GameObject > UI > Event System**) that matches your input setting.
+The package reads the keyboard and mouse through the Input System package (`com.unity.inputsystem`), which it installs. Set **Edit > Project Settings > Player > Active Input Handling** to **Input System Package (New)**; Unity offers to do this and restart when the package first installs. The dialogue box needs no EventSystem.
 
 ### Change the look
 
