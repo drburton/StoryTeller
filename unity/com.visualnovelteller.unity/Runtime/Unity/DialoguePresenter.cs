@@ -82,6 +82,10 @@ namespace VisualNovelTeller
         private bool _ctrlHeld;
         private bool _skipApplied;
         private bool _lineRead;
+        private bool _wasPaused;
+        private float _autoDelayOverride = -1f;
+        private int _skipUnreadOverride = -1;
+        private HistoryEntry _currentLine;
         private List<string> _optionTexts;
 
         private TaskCompletionSource<bool> _lineDone;
@@ -154,6 +158,39 @@ namespace VisualNovelTeller
         /// <summary>True while the history screen is open.</summary>
         public bool HistoryOpen { get { return _historyOpen; } }
 
+        /// <summary>The last line shown, with its speaker. Empty before the first line. Saves use it to describe a slot.</summary>
+        public HistoryEntry CurrentLine { get { return _currentLine; } }
+
+        /// <summary>
+        /// Seconds auto mode waits after a line has finished typing. Setting it overrides the
+        /// Story Config, for example from a settings screen.
+        /// </summary>
+        public float AutoDelay
+        {
+            get
+            {
+                if (_autoDelayOverride >= 0f) return _autoDelayOverride;
+                return _story != null && _story.Config != null ? _story.Config.AutoDelay : 1f;
+            }
+            set { _autoDelayOverride = Mathf.Max(value, 0f); }
+        }
+
+        /// <summary>
+        /// True when skip may pass lines the player has not read yet. Setting it overrides the
+        /// Story Config, for example from a settings screen.
+        /// </summary>
+        public bool SkipUnread
+        {
+            get
+            {
+                if (_skipUnreadOverride >= 0) return _skipUnreadOverride == 1;
+                return _story != null && _story.Config != null && _story.Config.SkipUnread;
+            }
+            set { _skipUnreadOverride = value ? 1 : 0; }
+        }
+
+        private bool Paused { get { return _story != null && _story.Paused; } }
+
         /// <summary>The lines and choices shown so far, oldest first. The Story Config limits the count.</summary>
         public IReadOnlyList<HistoryEntry> History { get { return _history; } }
 
@@ -162,6 +199,13 @@ namespace VisualNovelTeller
         {
             _story = story;
             EnsureUi();
+        }
+
+        /// <summary>Forgets the lines of the history screen and the current line. A new game does this.</summary>
+        public void ClearHistory()
+        {
+            _history.Clear();
+            _currentLine = default(HistoryEntry);
         }
 
         /// <summary>Hides the dialogue box and choices.</summary>
@@ -348,7 +392,7 @@ namespace VisualNovelTeller
         /// </summary>
         public void Advance()
         {
-            if (_lineDone == null || Time.frameCount == _lastAdvanceFrame) return;
+            if (_lineDone == null || Paused || Time.frameCount == _lastAdvanceFrame) return;
             _lastAdvanceFrame = Time.frameCount;
             if (!_revealDone)
             {
@@ -363,6 +407,19 @@ namespace VisualNovelTeller
 
         private void Update()
         {
+            if (Paused)
+            {
+                // Input that closed a menu in this frame must not also move the story on.
+                _wasPaused = true;
+                _ctrlHeld = false;
+                ApplySkip();
+                return;
+            }
+            if (_wasPaused)
+            {
+                _wasPaused = false;
+                return;
+            }
             if (_historyOpen)
             {
                 PollHistoryInput();
@@ -395,11 +452,6 @@ namespace VisualNovelTeller
             }
         }
 
-        private float AutoDelay
-        {
-            get { return _story != null && _story.Config != null ? _story.Config.AutoDelay : 1f; }
-        }
-
         // --- Skip ---------------------------------------------------------------
 
         /// <summary>
@@ -409,7 +461,7 @@ namespace VisualNovelTeller
         /// </summary>
         private void ApplySkip()
         {
-            bool wanted = !_historyOpen && (_skipOn || _ctrlHeld);
+            bool wanted = !_historyOpen && !Paused && (_skipOn || _ctrlHeld);
             bool allowed = _choiceDone == null && (_lineDone == null || _lineRead || SkipUnread);
             bool target = wanted && allowed;
             if (target != _skipApplied)
@@ -418,11 +470,6 @@ namespace VisualNovelTeller
                 if (_story != null) _story.Skipping = target;
             }
             RefreshQuick();
-        }
-
-        private bool SkipUnread
-        {
-            get { return _story != null && _story.Config != null && _story.Config.SkipUnread; }
         }
 
         // --- History ------------------------------------------------------------
@@ -551,6 +598,7 @@ namespace VisualNovelTeller
             if (line.TryGetValue("speaker_color", out colorValue) && colorValue is Color && ((Color)colorValue).a > 0f)
                 historyColor = (Color)colorValue;
             AddHistory(speakerName, historyColor, _reveal.PlainText);
+            _currentLine = new HistoryEntry(speakerName, historyColor, _reveal.PlainText);
             object readValue;
             _lineRead = line.TryGetValue("read", out readValue) && readValue is bool && (bool)readValue;
             // Skip stops at the first line the player has not read.

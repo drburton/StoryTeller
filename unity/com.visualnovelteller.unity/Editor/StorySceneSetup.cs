@@ -6,8 +6,8 @@ namespace VisualNovelTeller
 {
     /// <summary>
     /// Menu items that put a playable story into the open scene in one step: a Story Config
-    /// listing the project's tales, and a GameObject with a <see cref="Story"/> and a
-    /// <see cref="DialoguePresenter"/>. Press Play afterwards to read the first tale.
+    /// listing the project's tales, and a GameObject with a <see cref="Story"/>, a
+    /// <see cref="DialoguePresenter"/>, and <see cref="StoryMenus"/>. Press Play afterwards to read the first tale.
     /// </summary>
     public static class StorySceneSetup
     {
@@ -26,6 +26,9 @@ namespace VisualNovelTeller
                 story = gameObject.AddComponent<Story>();
                 gameObject.AddComponent<DialoguePresenter>();
             }
+            // The menus stay out of the way until the config asks for the title screen or the player presses Escape.
+            if (story.GetComponent<StoryMenus>() == null)
+                story.gameObject.AddComponent<StoryMenus>();
             var serialized = new SerializedObject(story);
             SerializedProperty configProperty = serialized.FindProperty("config");
             if (configProperty != null && configProperty.objectReferenceValue == null)
