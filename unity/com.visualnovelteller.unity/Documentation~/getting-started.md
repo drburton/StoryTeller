@@ -67,7 +67,7 @@ Copy `Dialogue.uxml` and `Dialogue.uss` from `Runtime/Unity/Resources/VisualNove
 
 Game code can read and change tale variables and listen for signals:
 
-    var story = FindFirstObjectByType<Story>();
+    var story = FindAnyObjectByType<Story>();
     story.Expose("player", player);          // tales may call player.give("key")
     story.SetVar("prologue", "trust", 3);
     story.Signal += (name, value) => Debug.Log(name);

@@ -495,18 +495,18 @@ namespace VisualNovelTeller
         private void FindParts()
         {
             if (dialogue == null) dialogue = GetComponentInChildren<DialoguePresenter>();
-            if (dialogue == null) dialogue = FindFirstObjectByType<DialoguePresenter>();
+            if (dialogue == null) dialogue = FindAnyObjectByType<DialoguePresenter>();
             if (dialogue == null) dialogue = gameObject.AddComponent<DialoguePresenter>();
             if (stage == null) stage = GetComponentInChildren<Stage2D>();
-            if (stage == null) stage = FindFirstObjectByType<Stage2D>();
+            if (stage == null) stage = FindAnyObjectByType<Stage2D>();
             if (stage == null && config != null && (config.Cast.Count > 0 || config.Backdrops.Count > 0))
                 stage = gameObject.AddComponent<Stage2D>();
             if (storyAudio == null) storyAudio = GetComponentInChildren<StoryAudio>();
-            if (storyAudio == null) storyAudio = FindFirstObjectByType<StoryAudio>();
+            if (storyAudio == null) storyAudio = FindAnyObjectByType<StoryAudio>();
             if (storyAudio == null && config != null && config.AudioClips.Count > 0)
                 storyAudio = gameObject.AddComponent<StoryAudio>();
             if (shots == null) shots = GetComponentInChildren<StoryShots>();
-            if (shots == null) shots = FindFirstObjectByType<StoryShots>();
+            if (shots == null) shots = FindAnyObjectByType<StoryShots>();
         }
 
         private void BuildActors()

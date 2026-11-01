@@ -18,7 +18,7 @@ namespace VisualNovelTeller
         public static void SetUp()
         {
             StoryConfig config = FindOrCreateConfig();
-            var story = Object.FindFirstObjectByType<Story>();
+            var story = Object.FindAnyObjectByType<Story>();
             if (story == null)
             {
                 var gameObject = new GameObject("Story");
