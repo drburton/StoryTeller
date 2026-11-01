@@ -61,7 +61,10 @@ if (Test-Path $log) {
     $report = Select-String -Path $log -Pattern "\[Visual Novel Teller\]" |
         ForEach-Object { $_.Line.Trim() }
     if ($report) { $report } else { "(the check did not run; see the compile errors above and the log)" }
-    $other = Select-String -Path $log -Pattern "Exception|executeMethod" |
+    # Real exceptions only: "SomethingException: message", not file names that
+    # contain the word, such as ValidationExceptions.json.
+    $other = Select-String -Path $log -Pattern "\b\w*Exception: |executeMethod class|executeMethod method" |
+        Where-Object { $_.Line -notmatch "^\s*Importing " } |
         ForEach-Object { $_.Line.Trim() } | Select-Object -First 20
     if ($other) {
         Write-Host ""
