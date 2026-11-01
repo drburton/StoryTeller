@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TaleScript;
@@ -7,6 +8,24 @@ using UnityEngine.UIElements;
 
 namespace VisualNovelTeller
 {
+    /// <summary>One line or choice in the history screen.</summary>
+    public struct HistoryEntry
+    {
+        /// <summary>The speaker's name. Empty for narration and for choices taken.</summary>
+        public string Speaker;
+        /// <summary>The color of the speaker's name.</summary>
+        public Color Color;
+        /// <summary>The text without any tags.</summary>
+        public string Text;
+
+        public HistoryEntry(string speaker, Color color, string text)
+        {
+            Speaker = speaker;
+            Color = color;
+            Text = text;
+        }
+    }
+
     /// <summary>
     /// Shows lines and choices with UI Toolkit. The speaker's name appears in the speaker's
     /// color and the text types out at the config's speed. A click, Space, or Enter
@@ -15,6 +34,9 @@ namespace VisualNovelTeller
     /// nothing when the time runs out.
     /// The layout and style come from the fields below, then from the Story Config, then
     /// from the files that ship in the package (Resources/VisualNovelTeller/Dialogue).
+    /// The player can also skip, let lines continue on their own (auto mode), open a log of
+    /// past lines (history), and use a small quick menu. Skip, auto, history, save, and load
+    /// show as buttons when the layout has the elements for them.
     /// </summary>
     public class DialoguePresenter : MonoBehaviour
     {
@@ -45,6 +67,22 @@ namespace VisualNovelTeller
         private Label _text;
         private VisualElement _more;
         private VisualElement _choices;
+        private Button _autoButton;
+        private Button _skipButton;
+
+        private readonly List<HistoryEntry> _history = new List<HistoryEntry>();
+        private VisualElement _historyOverlay;
+        private ScrollView _historyScroll;
+        private bool _historyOpen;
+        private bool _visible;
+
+        private bool _auto;
+        private float _autoElapsed;
+        private bool _skipOn;
+        private bool _ctrlHeld;
+        private bool _skipApplied;
+        private bool _lineRead;
+        private List<string> _optionTexts;
 
         private TaskCompletionSource<bool> _lineDone;
         private RevealText _reveal;
@@ -80,6 +118,45 @@ namespace VisualNovelTeller
             set { textSpeed = value; }
         }
 
+        /// <summary>
+        /// True while auto mode is on. A line that has finished typing then continues after the
+        /// Auto Delay of the Story Config plus a little time for each character. Auto mode does
+        /// not pick choices. A click or Space still moves on at once.
+        /// </summary>
+        public bool Auto
+        {
+            get { return _auto; }
+            set
+            {
+                if (_auto == value) return;
+                _auto = value;
+                _autoElapsed = 0f;
+                RefreshQuick();
+            }
+        }
+
+        /// <summary>
+        /// True while skip is switched on. Skip passes lines the player has read before, and
+        /// lines that are not read yet when Skip Unread is on in the Story Config. It switches
+        /// itself off at an unread line, at a choice, and when a load or rewind happens.
+        /// Holding Ctrl skips as well, without changing this value.
+        /// </summary>
+        public bool SkipOn
+        {
+            get { return _skipOn; }
+            set
+            {
+                _skipOn = value;
+                ApplySkip();
+            }
+        }
+
+        /// <summary>True while the history screen is open.</summary>
+        public bool HistoryOpen { get { return _historyOpen; } }
+
+        /// <summary>The lines and choices shown so far, oldest first. The Story Config limits the count.</summary>
+        public IReadOnlyList<HistoryEntry> History { get { return _history; } }
+
         /// <summary>Connects the presenter to a story and builds the interface. <see cref="Story"/> calls this.</summary>
         public void Attach(Story story)
         {
@@ -90,11 +167,13 @@ namespace VisualNovelTeller
         /// <summary>Hides the dialogue box and choices.</summary>
         public void Hide()
         {
+            _visible = false;
             if (_root != null) _root.style.display = DisplayStyle.None;
         }
 
         private void Show()
         {
+            _visible = true;
             if (_root != null) _root.style.display = DisplayStyle.Flex;
         }
 
@@ -157,7 +236,38 @@ namespace VisualNovelTeller
             _root.focusable = true;
             _root.RegisterCallback<PointerDownEvent>(OnPointerDown);
             _choices.style.display = DisplayStyle.None;
+            SetUpQuickMenu(tree);
             Hide();
+        }
+
+        private void SetUpQuickMenu(VisualElement tree)
+        {
+            VisualElement quick = tree.Q<VisualElement>("vnt-quick");
+            if (quick == null) return;
+            // A click on the quick menu must not also move the story on.
+            quick.RegisterCallback<PointerDownEvent>(delegate (PointerDownEvent evt) { evt.StopPropagation(); });
+            _autoButton = QuickButton(quick, "vnt-auto", delegate { Auto = !Auto; });
+            _skipButton = QuickButton(quick, "vnt-skip", delegate { SkipOn = !SkipOn; });
+            QuickButton(quick, "vnt-history", ShowHistory);
+            QuickButton(quick, "vnt-save", delegate { Shortcut(KeyCode.F5); });
+            QuickButton(quick, "vnt-load", delegate { Shortcut(KeyCode.F9); });
+            RefreshQuick();
+        }
+
+        private static Button QuickButton(VisualElement quick, string buttonName, Action onClick)
+        {
+            Button button = quick.Q<Button>(buttonName);
+            if (button == null) return null;
+            // Without focus, Space and Enter do not press the button a second time.
+            button.focusable = false;
+            button.clicked += onClick;
+            return button;
+        }
+
+        private void RefreshQuick()
+        {
+            if (_autoButton != null) _autoButton.EnableInClassList("vnt-on", _auto);
+            if (_skipButton != null) _skipButton.EnableInClassList("vnt-on", _skipOn || _ctrlHeld);
         }
 
         // --- Input --------------------------------------------------------------
@@ -169,7 +279,8 @@ namespace VisualNovelTeller
 
         /// <summary>
         /// Reads the keyboard and mouse wheel through the Input System: Space or Enter moves
-        /// the story on, and the test shortcuts work as described below. Clicks reach the
+        /// the story on, Ctrl skips while held, Tab switches skip on or off, A switches auto
+        /// mode, H opens the history, and the test shortcuts work as described below. Clicks reach the
         /// dialogue box through UI Toolkit.
         /// </summary>
         private void PollInput()
@@ -183,9 +294,25 @@ namespace VisualNovelTeller
                 if (keyboard.f5Key.wasPressedThisFrame) Shortcut(KeyCode.F5);
                 if (keyboard.f9Key.wasPressedThisFrame) Shortcut(KeyCode.F9);
                 if (keyboard.pageUpKey.wasPressedThisFrame) Shortcut(KeyCode.PageUp);
+                _ctrlHeld = keyboard.leftCtrlKey.isPressed || keyboard.rightCtrlKey.isPressed;
+                if (keyboard.tabKey.wasPressedThisFrame) SkipOn = !_skipOn;
+                if (keyboard.aKey.wasPressedThisFrame) Auto = !_auto;
+                if (keyboard.hKey.wasPressedThisFrame) ShowHistory();
+            }
+            else
+            {
+                _ctrlHeld = false;
             }
             Mouse mouse = Mouse.current;
             if (mouse != null && mouse.scroll.ReadValue().y > 0f) Shortcut(KeyCode.PageUp);
+        }
+
+        /// <summary>While the history screen is open, only H, Escape, and a click on its buttons are read.</summary>
+        private void PollHistoryInput()
+        {
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null && (keyboard.hKey.wasPressedThisFrame || keyboard.escapeKey.wasPressedThisFrame))
+                HideHistory();
         }
 
         /// <summary>
@@ -236,6 +363,13 @@ namespace VisualNovelTeller
 
         private void Update()
         {
+            if (_historyOpen)
+            {
+                PollHistoryInput();
+                return;
+            }
+            PollInput();
+            ApplySkip();
             if (_lineDone != null)
             {
                 if (_story != null && _story.Skipping)
@@ -247,6 +381,11 @@ namespace VisualNovelTeller
                 }
                 if (_elapsed < float.MaxValue) _elapsed += Time.unscaledDeltaTime;
                 UpdateReveal();
+                if (_auto && _revealDone)
+                {
+                    _autoElapsed += Time.unscaledDeltaTime;
+                    if (_autoElapsed >= AutoDelay + 0.03f * _reveal.VisibleCount) CompleteLine();
+                }
             }
             else if (_choiceDone != null && _timeout > 0f)
             {
@@ -254,7 +393,141 @@ namespace VisualNovelTeller
                 if (_timerFill != null) _timerFill.style.width = Length.Percent(Mathf.Clamp01(_remaining / _timeout) * 100f);
                 if (_remaining <= 0f) CompleteChoice(-1);
             }
-            PollInput();
+        }
+
+        private float AutoDelay
+        {
+            get { return _story != null && _story.Config != null ? _story.Config.AutoDelay : 1f; }
+        }
+
+        // --- Skip ---------------------------------------------------------------
+
+        /// <summary>
+        /// Sets Story.Skipping from what the player asks for. Skip needs the toggle or Ctrl, no
+        /// history screen, no choice on screen, and a read line unless Skip Unread is on.
+        /// Only changes are passed on, so game code that sets Story.Skipping itself keeps its value.
+        /// </summary>
+        private void ApplySkip()
+        {
+            bool wanted = !_historyOpen && (_skipOn || _ctrlHeld);
+            bool allowed = _choiceDone == null && (_lineDone == null || _lineRead || SkipUnread);
+            bool target = wanted && allowed;
+            if (target != _skipApplied)
+            {
+                _skipApplied = target;
+                if (_story != null) _story.Skipping = target;
+            }
+            RefreshQuick();
+        }
+
+        private bool SkipUnread
+        {
+            get { return _story != null && _story.Config != null && _story.Config.SkipUnread; }
+        }
+
+        // --- History ------------------------------------------------------------
+
+        private void AddHistory(string speaker, Color color, string text)
+        {
+            _history.Add(new HistoryEntry(speaker, color, text));
+            int limit = _story != null && _story.Config != null ? _story.Config.HistoryLength : 200;
+            if (_history.Count > limit) _history.RemoveRange(0, _history.Count - limit);
+        }
+
+        /// <summary>
+        /// Opens the history screen over the dialogue. Advance, the shortcuts, and the timers of
+        /// timed choices and auto mode wait until it closes. Skip switches off.
+        /// </summary>
+        public void ShowHistory()
+        {
+            if (_historyOpen || _root == null || !_visible) return;
+            EnsureHistoryUi();
+            _historyOpen = true;
+            _skipOn = false;
+            ApplySkip();
+            FillHistory();
+            _historyOverlay.style.display = DisplayStyle.Flex;
+            _historyScroll.schedule.Execute(ScrollHistoryToEnd);
+            _historyScroll.schedule.Execute(ScrollHistoryToEnd).ExecuteLater(60);
+        }
+
+        /// <summary>Closes the history screen.</summary>
+        public void HideHistory()
+        {
+            if (!_historyOpen) return;
+            _historyOpen = false;
+            if (_historyOverlay != null) _historyOverlay.style.display = DisplayStyle.None;
+            if (_root != null) _root.Focus();
+        }
+
+        private void ScrollHistoryToEnd()
+        {
+            if (_historyScroll == null) return;
+            _historyScroll.scrollOffset = new Vector2(0f, _historyScroll.verticalScroller.highValue);
+        }
+
+        private void EnsureHistoryUi()
+        {
+            if (_historyOverlay != null) return;
+            _historyOverlay = new VisualElement();
+            _historyOverlay.name = "vnt-history-overlay";
+            _historyOverlay.AddToClassList("vnt-history");
+            StoryUI.Fill(_historyOverlay, true);
+            _historyOverlay.style.display = DisplayStyle.None;
+            // Clicks stop here so they never move the story on. A right click closes the screen.
+            _historyOverlay.RegisterCallback<PointerDownEvent>(delegate (PointerDownEvent evt)
+            {
+                evt.StopPropagation();
+                if (evt.button == 1) HideHistory();
+            });
+            var title = new Label("History");
+            title.name = "vnt-history-title";
+            title.AddToClassList("vnt-history-title");
+            _historyOverlay.Add(title);
+            _historyScroll = new ScrollView();
+            _historyScroll.name = "vnt-history-scroll";
+            _historyScroll.AddToClassList("vnt-history-scroll");
+            _historyOverlay.Add(_historyScroll);
+            var close = new Button();
+            close.name = "vnt-history-close";
+            close.text = "Close";
+            close.AddToClassList("vnt-history-close");
+            close.focusable = false;
+            close.clicked += HideHistory;
+            _historyOverlay.Add(close);
+            _root.Add(_historyOverlay);
+        }
+
+        private void FillHistory()
+        {
+            _historyScroll.Clear();
+            if (_history.Count == 0)
+            {
+                _historyScroll.Add(HistoryLabel("Nothing yet.", "vnt-history-text"));
+                return;
+            }
+            foreach (HistoryEntry entry in _history)
+            {
+                var row = new VisualElement();
+                row.AddToClassList("vnt-history-entry");
+                if (!string.IsNullOrEmpty(entry.Speaker))
+                {
+                    Label speaker = HistoryLabel(entry.Speaker, "vnt-history-speaker");
+                    speaker.style.color = entry.Color;
+                    row.Add(speaker);
+                }
+                row.Add(HistoryLabel(entry.Text, "vnt-history-text"));
+                _historyScroll.Add(row);
+            }
+        }
+
+        private static Label HistoryLabel(string text, string className)
+        {
+            var label = new Label();
+            label.enableRichText = false;
+            label.text = text;
+            label.AddToClassList(className);
+            return label;
         }
 
         // --- Lines --------------------------------------------------------------
@@ -274,12 +547,22 @@ namespace VisualNovelTeller
             else
                 _speaker.style.color = StyleKeyword.Null;
             _reveal = RevealText.Parse(Text(line, "text"), TextSpeed);
+            Color historyColor = Color.white;
+            if (line.TryGetValue("speaker_color", out colorValue) && colorValue is Color && ((Color)colorValue).a > 0f)
+                historyColor = (Color)colorValue;
+            AddHistory(speakerName, historyColor, _reveal.PlainText);
+            object readValue;
+            _lineRead = line.TryGetValue("read", out readValue) && readValue is bool && (bool)readValue;
+            // Skip stops at the first line the player has not read.
+            if (!_lineRead && !SkipUnread) _skipOn = false;
+            _autoElapsed = 0f;
             _elapsed = 0f;
             _shown = -1;
             _revealDone = false;
             _more.style.visibility = Visibility.Hidden;
             UpdateReveal();
             _lineDone = new TaskCompletionSource<bool>();
+            ApplySkip();
             _root.Focus();
             return _lineDone.Task;
         }
@@ -316,9 +599,11 @@ namespace VisualNovelTeller
             Show();
             ClearChoices();
             _more.style.visibility = Visibility.Hidden;
+            _optionTexts = new List<string>();
             for (int i = 0; i < options.Count; i++)
             {
                 int index = i;
+                _optionTexts.Add(Text(options[i], "text"));
                 bool enabled = true;
                 object flag;
                 if (options[i].TryGetValue("enabled", out flag) && flag is bool) enabled = (bool)flag;
@@ -350,6 +635,9 @@ namespace VisualNovelTeller
             }
             _choices.style.display = DisplayStyle.Flex;
             _choiceDone = new TaskCompletionSource<int>();
+            // Skip stops at a choice.
+            _skipOn = false;
+            ApplySkip();
             return _choiceDone.Task;
         }
 
@@ -359,6 +647,9 @@ namespace VisualNovelTeller
             if (done == null) return;
             _choiceDone = null;
             _lastAdvanceFrame = Time.frameCount;
+            if (index >= 0 && _optionTexts != null && index < _optionTexts.Count)
+                AddHistory("", Color.white, "> " + _optionTexts[index]);
+            _optionTexts = null;
             ClearChoices();
             done.TrySetResult(index);
         }
@@ -378,7 +669,12 @@ namespace VisualNovelTeller
             TaskCompletionSource<int> choice = _choiceDone;
             _lineDone = null;
             _choiceDone = null;
+            _optionTexts = null;
             ClearChoices();
+            HideHistory();
+            // A load or rewind ends skip.
+            _skipOn = false;
+            ApplySkip();
             if (line != null) line.TrySetResult(true);
             if (choice != null) choice.TrySetResult(-1);
             Hide();

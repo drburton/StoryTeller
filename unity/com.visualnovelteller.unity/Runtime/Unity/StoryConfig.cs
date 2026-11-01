@@ -88,6 +88,12 @@ namespace VisualNovelTeller
         [Header("Dialogue")]
         [Tooltip("Characters per second. 0 shows each line at once.")]
         [Range(0f, 200f)] [SerializeField] private float textSpeed = 40f;
+        [Tooltip("Lets skip pass lines the player has not read yet. Off, skip stops at the first unread line.")]
+        [SerializeField] private bool skipUnread = false;
+        [Tooltip("Seconds auto mode waits after a line has finished typing. It adds 0.03 seconds for each visible character.")]
+        [Range(0.2f, 5f)] [SerializeField] private float autoDelay = 1f;
+        [Tooltip("How many shown lines the history screen keeps.")]
+        [Range(10, 1000)] [SerializeField] private int historyLength = 200;
         [Tooltip("Makes the dialogue box and choices larger or smaller. 1 fits text for a 1920 by 1080 screen; raise it when text is hard to read.")]
         [Range(0.5f, 2f)] [SerializeField] private float uiScale = 1f;
         [Tooltip("Optional. Replaces the dialogue layout that comes with the package.")]
@@ -106,6 +112,9 @@ namespace VisualNovelTeller
         public IReadOnlyList<NamedClip> AudioClips { get { return audioClips; } }
         public IReadOnlyList<string> ExposedNames { get { return exposedNames; } }
         public float TextSpeed { get { return textSpeed; } }
+        public bool SkipUnread { get { return skipUnread; } }
+        public float AutoDelay { get { return Mathf.Clamp(autoDelay, 0.2f, 5f); } }
+        public int HistoryLength { get { return Mathf.Clamp(historyLength, 10, 1000); } }
         public float UiScale { get { return Mathf.Clamp(uiScale, 0.5f, 2f); } }
         public VisualTreeAsset DialogueLayout { get { return dialogueLayout; } }
         public StyleSheet DialogueStyle { get { return dialogueStyle; } }

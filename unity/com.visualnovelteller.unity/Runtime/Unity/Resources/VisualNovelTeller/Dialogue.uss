@@ -11,7 +11,7 @@
 .vnt-choices {
     flex-direction: column;
     align-items: center;
-    margin-bottom: 32px;
+    margin-bottom: 64px;
 }
 
 .vnt-choice {
@@ -100,4 +100,88 @@
     border-top-color: rgb(255, 255, 255);
     border-left-color: rgba(0, 0, 0, 0);
     border-right-color: rgba(0, 0, 0, 0);
+}
+
+/* The row of small buttons above the top-right corner of the dialogue box. */
+.vnt-quick {
+    position: absolute;
+    right: 24px;
+    top: -56px;
+    flex-direction: row;
+}
+
+.vnt-quick-button {
+    margin: 0 0 0 8px;
+    padding: 4px 18px;
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.7);
+    background-color: rgba(10, 12, 28, 0.6);
+    border-width: 2px;
+    border-color: rgba(235, 235, 255, 0.5);
+    border-radius: 10px;
+}
+
+.vnt-quick-button:hover {
+    color: rgb(255, 255, 255);
+    background-color: rgba(64, 76, 140, 0.9);
+    border-color: rgb(235, 235, 255);
+}
+
+.vnt-quick-button.vnt-on {
+    color: rgb(255, 220, 90);
+    border-color: rgb(255, 220, 90);
+}
+
+/* The history screen is built in code and covers the whole panel. */
+.vnt-history {
+    flex-direction: column;
+    padding: 64px 160px;
+    background-color: rgba(0, 0, 0, 0.85);
+}
+
+.vnt-history-title {
+    margin-bottom: 20px;
+    font-size: 64px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    -unity-text-align: upper-center;
+}
+
+.vnt-history-scroll {
+    flex-grow: 1;
+    flex-shrink: 1;
+    margin-bottom: 24px;
+}
+
+.vnt-history-entry {
+    margin-bottom: 28px;
+}
+
+.vnt-history-speaker {
+    font-size: 40px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+}
+
+.vnt-history-text {
+    font-size: 40px;
+    color: rgb(255, 255, 255);
+    white-space: normal;
+    -unity-text-align: upper-left;
+}
+
+.vnt-history-close {
+    align-self: center;
+    min-width: 300px;
+    padding: 14px 40px;
+    font-size: 40px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(28, 32, 60);
+    border-width: 3px;
+    border-color: rgb(235, 235, 255);
+    border-radius: 14px;
+}
+
+.vnt-history-close:hover {
+    background-color: rgb(64, 76, 140);
 }

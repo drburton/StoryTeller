@@ -61,13 +61,21 @@ To set it up by hand:
 
 Click, Space, or Enter finishes the typing of a line and then moves on. Choices appear as buttons, and options that are not available show greyed out. A timed choice, written `choose(timeout = 5)`, shows a shrinking bar and takes the timeout path when it runs out.
 
+A row of small buttons sits above the top-right corner of the dialogue box: **Auto**, **Skip**, **History**, **Save**, and **Load**. Save and Load use the slot `quick`. Clicking one of them does not move the story on.
+
+- Skip passes lines while you hold Ctrl, and Tab switches it on and off. It passes only lines you have read before. At the first unread line it switches itself off and the line shows as usual. Turn on **Skip Unread** in the Story Config to let it pass unread lines too. Skip also switches off when a choice appears and when a load or rewind happens.
+- Auto mode (key A, or the Auto button) continues a line on its own once it has finished typing. It waits **Auto Delay** seconds plus 0.03 seconds for each visible character. It never picks a choice, and a click or Space still moves on at once. It can stay on while skip is on.
+- History (key H, or the History button) opens a screen with the last lines and the choices taken, newest at the bottom. Close it with H, Escape, the Close button, or a right click. While it is open the story waits, and so do the timers of timed choices and auto mode.
+
 The package reads the keyboard and mouse through the Input System package (`com.unity.inputsystem`), which it installs. Set **Edit > Project Settings > Player > Active Input Handling** to **Input System Package (New)**; Unity offers to do this and restart when the package first installs. The dialogue box needs no EventSystem.
+
+The Story Config also has **Skip Unread**, **Auto Delay** (1 second by default), and **History Length** (the last 200 lines are kept) under **Dialogue**. Game code can use `presenter.Auto`, `presenter.SkipOn`, `presenter.ShowHistory()`, `presenter.HideHistory()`, `presenter.HistoryOpen`, and `presenter.History`.
 
 ### Change the look
 
 Text is sized for a 1920 by 1080 screen and shrinks with a smaller window, such as a docked Game view. To make the dialogue box and choices larger, raise **UI Scale** in the Story Config under **Dialogue** (1.5 suits a small Game view or a classroom projector). Setting the Game view to **Full HD (1920x1080)** shows the size players see.
 
-Copy `Dialogue.uxml` and `Dialogue.uss` from `Runtime/Unity/Resources/VisualNovelTeller` in the package into your project, edit them, and assign them in the Story Config under **Dialogue**. Keep the element names that start with `vnt-`, since the presenter looks for them. If you use a ThemeStyleSheet, assign it in the same place.
+Copy `Dialogue.uxml` and `Dialogue.uss` from `Runtime/Unity/Resources/VisualNovelTeller` in the package into your project, edit them, and assign them in the Story Config under **Dialogue**. Keep the element names that start with `vnt-`, since the presenter looks for them. The quick menu (`vnt-quick` with the buttons `vnt-auto`, `vnt-skip`, `vnt-history`, `vnt-save`, and `vnt-load`) is optional, and each button can be left out. The history screen is built in code with names that start with `vnt-history-`, so a custom layout gets it too. If you use a ThemeStyleSheet, assign it in the same place.
 
 ### Talk to game code
 
@@ -139,7 +147,7 @@ Rewind steps back through lines and choices. The Story Config has a **Rewind Dep
 
     if (story.CanRewind) await story.Rewind(1);
 
-While testing in play mode, the dialogue answers a few keys: F5 saves to the slot `quick`, F9 loads it, and PageUp or the mouse wheel up rewinds one step. Each does nothing when the story cannot do it. A line or choice on screen is cancelled during a load or rewind, so nothing from the old moment finishes later.
+While testing in play mode, the dialogue answers a few keys: F5 saves to the slot `quick`, F9 loads it, and PageUp or the mouse wheel up rewinds one step. Each does nothing when the story cannot do it. Ctrl, Tab, A, and H work as described under **Put a Story in a scene**. A line or choice on screen is cancelled during a load or rewind, so nothing from the old moment finishes later.
 
 Game code can add its own state with `story.Director.AddStateProvider(provider)`. A provider names itself, returns plain data from `Capture()`, and receives it again in `Restore(data)`.
 
