@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <!-- The sources live in the Unity package, so Unity and the command-line
+       tools build the same files (decision 0028). -->
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <LangVersion>9.0</LangVersion>
@@ -7,6 +9,11 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <RootNamespace>TaleScript</RootNamespace>
     <AssemblyName>TaleScript.Core</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\unity\com.visualnovelteller.unity\Runtime\TaleScript\**\*.cs" />
+  </ItemGroup>
 
 </Project>

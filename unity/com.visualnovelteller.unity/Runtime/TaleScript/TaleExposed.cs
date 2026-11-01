@@ -17,6 +17,17 @@ namespace TaleScript
         object CallMethod(string name, object[] args);
     }
 
+    /// <summary>
+    /// Gives the parameter names of an <see cref="ITaleObject"/>'s methods, so tales can pass
+    /// named arguments such as <c>mira.enter("smile", at = LEFT)</c>. Arguments a tale leaves
+    /// out arrive as null, and the object uses its own default for them.
+    /// </summary>
+    public interface ITaleSignatures
+    {
+        /// <summary>The parameter names of a method in order, or null when it has none known.</summary>
+        IReadOnlyList<string> GetParameters(string method);
+    }
+
     /// <summary>A name tales may use as a speaker. A value that implements it shows a display name.</summary>
     public interface ITaleSpeaker
     {
@@ -112,6 +123,73 @@ namespace TaleScript
                 }
             }
             throw new GdOpException();
+        }
+
+        /// <summary>
+        /// Puts named arguments in their places among the positional ones, for a call to
+        /// <paramref name="name"/>. Returns null with an error message when a name is unknown.
+        /// </summary>
+        public object[] BindNamed(string name, List<object> args, OrderedMap<object> named, out string error)
+        {
+            error = "";
+            List<string> parameters = null;
+            List<object> defaults = null;
+            var signatures = Target as ITaleSignatures;
+            if (signatures != null)
+            {
+                IReadOnlyList<string> known = signatures.GetParameters(name);
+                if (known != null) parameters = new List<string>(known);
+            }
+            else if (!(Target is ITaleObject))
+            {
+                foreach (MethodInfo method in Target.GetType().GetMethods(BindingFlags.Public | BindingFlags.Instance))
+                {
+                    if (method.Name != name) continue;
+                    parameters = new List<string>();
+                    defaults = new List<object>();
+                    foreach (ParameterInfo parameter in method.GetParameters())
+                    {
+                        parameters.Add(parameter.Name);
+                        defaults.Add(parameter.HasDefaultValue ? parameter.DefaultValue : null);
+                    }
+                    break;
+                }
+            }
+            if (parameters == null)
+            {
+                error = "Named arguments only work with actions.";
+                return null;
+            }
+            if (args.Count > parameters.Count)
+            {
+                error = "'" + name + "' takes at most " + parameters.Count + " arguments.";
+                return null;
+            }
+            int last = args.Count - 1;
+            foreach (string key in named.Keys)
+            {
+                int index = parameters.IndexOf(key);
+                if (index == -1)
+                {
+                    error = "'" + name + "' has no argument named '" + key + "'.";
+                    return null;
+                }
+                if (index < args.Count)
+                {
+                    error = "Argument '" + key + "' is already given by position.";
+                    return null;
+                }
+                if (index > last) last = index;
+            }
+            var values = new object[last + 1];
+            for (int i = 0; i <= last; i++)
+            {
+                object value;
+                if (i < args.Count) values[i] = args[i];
+                else if (named.TryGetValue(parameters[i], out value)) values[i] = value;
+                else values[i] = defaults != null ? defaults[i] : null;
+            }
+            return values;
         }
 
         private static object ToValue(object value)

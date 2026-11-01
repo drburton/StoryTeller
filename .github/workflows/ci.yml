@@ -45,6 +45,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Check the Unity package has its meta files
+        run: python3 tools/unity_meta.py --check
+
       # Treat warnings as errors so the core stays clean for Unity.
       - name: Build
         run: dotnet build csharp/TaleScript.sln -warnaserror
@@ -52,6 +55,9 @@ jobs:
       # The same conformance suite the Godot reference passes (decision 0025).
       - name: Run the conformance suite
         run: dotnet run --no-build --project csharp/TaleScript.Conformance -- conformance
+
+      - name: Run the tests
+        run: dotnet run --no-build --project csharp/TaleScript.Tests
 
       # A clean tale passes, and a tale with problems fails.
       - name: Check the command-line checker

@@ -1,0 +1,22 @@
+## A first tale for the Unity sample. The same file plays in the Godot version.
+@title("Hello")
+
+var friendly := 0
+
+beat start:
+	"The train pulls into a small station at dusk."
+	"A stranger waves from the platform."
+	choose:
+		"Wave back":
+			friendly += 1
+			"The stranger smiles and walks over."
+		"Look away":
+			"The stranger shrugs and turns to go."
+	jump goodbye
+
+beat goodbye:
+	if friendly > 0:
+		"\"See you tomorrow,\" the stranger says."
+	else:
+		"The platform is quiet again."
+	"The end."

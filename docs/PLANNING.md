@@ -2,7 +2,7 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.36** (one language for Godot, Unity, and later Unreal; M10 complete; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
+Status: **Draft v0.37** (one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
 
 ### Where things stand (2026-10-30)
 
@@ -15,6 +15,9 @@ Status: **Draft v0.36** (one language for Godot, Unity, and later Unreal; M10 co
 - **M7 so far:** the last extension points for add-ons, named transitions and Story tab hooks (§12.3), the setup wizard and Pin Line IDs (§8), the documentation guides and a generated Action Reference (§17), custom actions listed in `StoryConfig.actions`, chapter titles on save slots, interruption tests (§16), demo chapter 2, gamepad buttons, a hide-interface key, a text size setting, typing sounds, and in the card editor a markup toolbar, copy and paste between tales, pictures in the character, mood, and asset lists, a variable picker, lists narrowed by typing, folding cards, keys to move and add cards, selecting several cards, and a condition builder (§9.3), lip-flap (§5.5), shared rewind snapshots, 3D characters through `ViewportLook` (§5.5), dialogue box portraits and character text colors (§5.5), warnings for missing assets (§5.6), an action folder for custom actions (§5.4), word-at-a-time and fade-in typing, high-contrast and readable font settings, reading lines aloud, blur and vignette filters, save encryption (§7), `@no_wait` (§5.1), and loading tales from a mod folder (§4).
 - **Not done yet:** for the plugin, the M5 usability test with writers, the rest of M7 (timing the demo with a player, trailer and screenshots, the legal review, publishing the 0.1.0-beta release and the Asset Library listing), and a trademark search. For the Studio, the rest of M8: running the tablet check on real tablets (S0), a share sheet (S1), trying the photo and sound pickers on real tablets (S4), lessons matched to the textbook's chapters (S5), and the store test releases (S6).
 - **To continue on another computer:** clone the repository, open `project.godot` in Godot 4.7.2, and run the tests with `.\tools\run_tests.ps1 -Godot <folder with Godot>` on Windows or `GODOT_BIN=<path> tools/run_tests.sh` elsewhere (see README). Work branches start from the latest `main`. Regenerating demo art and audio with `tools/demo_assets/generate.py` (and the Studio's starter art with `tools/demo_assets/starter_library.py`) needs Python 3 with Pillow and NumPy. `tools/check_export.sh` needs a preset named "Linux" when `export_presets.cfg` exists (it is not committed).
+
+Changes in v0.37:
+- M11 is under way: the Unity package, its runtime, saves, rewind, and the Path Explorer exist and wait for their first run in Unity 6.7 (§11, decision 0028).
 
 Changes in v0.36:
 - M10 is complete. The C# core in `csharp/` passes the whole conformance suite, `talescript-check` checks tales from the command line, and CI runs both (§11).
@@ -889,6 +892,8 @@ Status, 31 October 2026: done ahead of schedule. `csharp/TaleScript.Core` (netst
 - A Unity 6.7 LTS package, and sample projects that match the book.
 - A screenshot script for the book.
 - Interface freeze in February 2027, release candidate in March, and 1.0 in April 2027.
+
+Status, 31 October 2026: started. The package `unity/com.visualnovelteller.unity` (decision 0028) holds the C# core and a first Unity layer: `.tale` import with problems in the Console, a Story component, UI Toolkit dialogue and timed choices, a 2D stage, audio, Shots on Animator and Timeline, save slots and rewind, a Path Explorer window, and a one-click scene setup. It compiles against stand-ins for Unity's API but has not yet run in Unity 6.7. Still to come: the first run in Unity, skip and auto, the history screen, menus, backdrop transitions, effects, and the Map view.
 
 ### M12: Unreal 1.1 (summer to fall 2027)
 - A runtime that plays compiled tales.
