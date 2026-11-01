@@ -65,6 +65,8 @@ The package reads the keyboard and mouse through the Input System package (`com.
 
 ### Change the look
 
+Text is sized for a 1920 by 1080 screen and shrinks with a smaller window, such as a docked Game view. To make the dialogue box and choices larger, raise **UI Scale** in the Story Config under **Dialogue** (1.5 suits a small Game view or a classroom projector). Setting the Game view to **Full HD (1920x1080)** shows the size players see.
+
 Copy `Dialogue.uxml` and `Dialogue.uss` from `Runtime/Unity/Resources/VisualNovelTeller` in the package into your project, edit them, and assign them in the Story Config under **Dialogue**. Keep the element names that start with `vnt-`, since the presenter looks for them. If you use a ThemeStyleSheet, assign it in the same place.
 
 ### Talk to game code

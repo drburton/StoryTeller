@@ -11,10 +11,11 @@ namespace VisualNovelTeller
 
         /// <summary>
         /// Makes panel settings that scale with the screen from a 1920 by 1080 layout.
-        /// A higher sorting order draws in front. Without a theme, the package's default
+        /// A higher sorting order draws in front, and <paramref name="scale"/> enlarges
+        /// everything on the panel. Without a theme, the package's default
         /// theme is used, since UI Toolkit draws nothing right without one.
         /// </summary>
-        public static PanelSettings CreatePanelSettings(ThemeStyleSheet theme, float sortingOrder)
+        public static PanelSettings CreatePanelSettings(ThemeStyleSheet theme, float sortingOrder, float scale = 1f)
         {
             var settings = ScriptableObject.CreateInstance<PanelSettings>();
             settings.name = "VisualNovelTeller Panel";
@@ -23,6 +24,7 @@ namespace VisualNovelTeller
             settings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
             settings.match = 0.5f;
             settings.sortingOrder = sortingOrder;
+            settings.scale = scale > 0f ? scale : 1f;
             if (theme == null) theme = Resources.Load<ThemeStyleSheet>(DefaultThemePath);
             if (theme != null) settings.themeStyleSheet = theme;
             else Debug.LogWarning("Visual Novel Teller: the default theme " + DefaultThemePath + " is missing from the package's Resources folder.");

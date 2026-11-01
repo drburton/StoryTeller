@@ -115,7 +115,7 @@ namespace VisualNovelTeller
             {
                 if (panelSettings == null)
                 {
-                    _createdSettings = StoryUI.CreatePanelSettings(themeSheet, sortingOrder);
+                    _createdSettings = StoryUI.CreatePanelSettings(themeSheet, sortingOrder, config != null ? config.UiScale : 1f);
                     panelSettings = _createdSettings;
                 }
                 if (document == null) document = StoryUI.CreateDocument(transform, "Dialogue UI", panelSettings);
