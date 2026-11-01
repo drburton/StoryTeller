@@ -12,6 +12,10 @@ This guide takes you from an empty Unity 6 project to a tale playing in a scene,
 
 Unity downloads the package and its dependencies (Timeline, the Input System, UI Toolkit, Audio, and Animation). Packages added this way are read only in your project, which keeps updates simple.
 
+### Render pipelines
+
+Visual Novel Teller works with the Universal Render Pipeline (URP), which Unity recommends for new projects, and with HDRP and the built-in pipeline too. The dialogue box and the 2D stage draw with UI Toolkit on top of what the camera renders, and Shots drives an Animator or a Timeline, so the package needs no pipeline of its own. For a new project, start from a URP template in Unity Hub.
+
 ## Make a Story Config
 
 A Story Config holds the settings for your game: which tales to load, who is in the cast, and which pictures and sounds tales can name.
