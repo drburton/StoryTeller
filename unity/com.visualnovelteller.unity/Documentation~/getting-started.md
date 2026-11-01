@@ -51,7 +51,7 @@ To set it up by hand:
 
 1. Create an empty GameObject and add the **Story** component.
 2. Assign your Story Config. Leave **Play On Start** on.
-3. Add a **DialoguePresenter** to the same object, or leave it out and the Story adds one. It builds a UI Toolkit panel on its own, with large high contrast text that needs no theme style sheet.
+3. Add a **DialoguePresenter** to the same object, or leave it out and the Story adds one. It builds a UI Toolkit panel on its own, with large high contrast text and Unity's default runtime theme. Give the presenter or the Story Config a theme style sheet of your own to change it.
 4. If the config has cast or backdrops, the Story also adds a **Stage2D**. If it has audio clips, it adds a **StoryAudio**. You can add these yourself to change their settings.
 5. Press Play.
 

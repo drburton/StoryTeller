@@ -30,7 +30,7 @@ namespace VisualNovelTeller
         [SerializeField] private VisualTreeAsset layout;
         [Tooltip("Optional. Replaces the style sheet from the Story Config and the package.")]
         [SerializeField] private StyleSheet style;
-        [Tooltip("Optional theme for the panel. The default style looks right without one.")]
+        [Tooltip("Optional theme for the panel. Without one, Unity's default runtime theme is used.")]
         [SerializeField] private ThemeStyleSheet theme;
         [Tooltip("Characters per second. A negative number uses the Story Config. 0 shows each line at once.")]
         [SerializeField] private float textSpeed = -1f;

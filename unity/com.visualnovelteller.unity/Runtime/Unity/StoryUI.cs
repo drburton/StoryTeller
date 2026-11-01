@@ -6,9 +6,13 @@ namespace VisualNovelTeller
     /// <summary>Helpers shared by the components that draw with UI Toolkit.</summary>
     public static class StoryUI
     {
+        /// <summary>Where the package's default theme lives under Resources: Unity's default runtime theme.</summary>
+        public const string DefaultThemePath = "VisualNovelTeller/DefaultTheme";
+
         /// <summary>
         /// Makes panel settings that scale with the screen from a 1920 by 1080 layout.
-        /// A higher sorting order draws in front.
+        /// A higher sorting order draws in front. Without a theme, the package's default
+        /// theme is used, since UI Toolkit draws nothing right without one.
         /// </summary>
         public static PanelSettings CreatePanelSettings(ThemeStyleSheet theme, float sortingOrder)
         {
@@ -19,7 +23,9 @@ namespace VisualNovelTeller
             settings.screenMatchMode = PanelScreenMatchMode.MatchWidthOrHeight;
             settings.match = 0.5f;
             settings.sortingOrder = sortingOrder;
+            if (theme == null) theme = Resources.Load<ThemeStyleSheet>(DefaultThemePath);
             if (theme != null) settings.themeStyleSheet = theme;
+            else Debug.LogWarning("Visual Novel Teller: the default theme " + DefaultThemePath + " is missing from the package's Resources folder.");
             return settings;
         }
 
