@@ -124,7 +124,7 @@ namespace VisualNovelTeller
         {
             var layer = new Image { name = layerName };
             StoryUI.Fill(layer, false);
-            layer.scaleMode = UnityEngine.UIElements.ScaleMode.ScaleAndCrop;
+            layer.scaleMode = UnityEngine.ScaleMode.ScaleAndCrop;
             return layer;
         }
 
@@ -220,7 +220,7 @@ namespace VisualNovelTeller
             if (actor.View != null) return;
             var view = new Image { name = "vnt-cast-" + actor.Id };
             view.pickingMode = PickingMode.Ignore;
-            view.scaleMode = UnityEngine.UIElements.ScaleMode.ScaleToFit;
+            view.scaleMode = UnityEngine.ScaleMode.ScaleToFit;
             view.style.position = Position.Absolute;
             view.style.width = Length.Percent(castWidthPercent);
             view.style.height = Length.Percent(castHeightPercent);

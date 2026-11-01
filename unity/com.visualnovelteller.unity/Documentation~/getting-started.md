@@ -10,7 +10,11 @@ This guide takes you from an empty Unity 6 project to a tale playing in a scene,
 
        https://github.com/drburton/StoryTeller.git?path=/unity/com.visualnovelteller.unity
 
-Unity downloads the package and its dependencies (Timeline, UI Toolkit, Audio, and Animation). Packages added this way are read only in your project, which keeps updates simple.
+Unity downloads the package and its dependencies (Timeline, the Input System, UI Toolkit, Audio, and Animation). Packages added this way are read only in your project, which keeps updates simple.
+
+### Render pipelines
+
+Visual Novel Teller works with the Universal Render Pipeline (URP), which Unity recommends for new projects, and with HDRP and the built-in pipeline too. The dialogue box and the 2D stage draw with UI Toolkit on top of what the camera renders, and Shots drives an Animator or a Timeline, so the package needs no pipeline of its own. For a new project, start from a URP template in Unity Hub.
 
 ## Make a Story Config
 
@@ -51,15 +55,17 @@ To set it up by hand:
 
 1. Create an empty GameObject and add the **Story** component.
 2. Assign your Story Config. Leave **Play On Start** on.
-3. Add a **DialoguePresenter** to the same object, or leave it out and the Story adds one. It builds a UI Toolkit panel on its own, with large high contrast text that needs no theme style sheet.
+3. Add a **DialoguePresenter** to the same object, or leave it out and the Story adds one. It builds a UI Toolkit panel on its own, with large high contrast text and Unity's default runtime theme. Give the presenter or the Story Config a theme style sheet of your own to change it.
 4. If the config has cast or backdrops, the Story also adds a **Stage2D**. If it has audio clips, it adds a **StoryAudio**. You can add these yourself to change their settings.
 5. Press Play.
 
 Click, Space, or Enter finishes the typing of a line and then moves on. Choices appear as buttons, and options that are not available show greyed out. A timed choice, written `choose(timeout = 5)`, shows a shrinking bar and takes the timeout path when it runs out.
 
-If clicks do nothing, check that the scene has an EventSystem (**GameObject > UI > Event System**) that matches your input setting.
+The package reads the keyboard and mouse through the Input System package (`com.unity.inputsystem`), which it installs. Set **Edit > Project Settings > Player > Active Input Handling** to **Input System Package (New)**; Unity offers to do this and restart when the package first installs. The dialogue box needs no EventSystem.
 
 ### Change the look
+
+Text is sized for a 1920 by 1080 screen and shrinks with a smaller window, such as a docked Game view. To make the dialogue box and choices larger, raise **UI Scale** in the Story Config under **Dialogue** (1.5 suits a small Game view or a classroom projector). Setting the Game view to **Full HD (1920x1080)** shows the size players see.
 
 Copy `Dialogue.uxml` and `Dialogue.uss` from `Runtime/Unity/Resources/VisualNovelTeller` in the package into your project, edit them, and assign them in the Story Config under **Dialogue**. Keep the element names that start with `vnt-`, since the presenter looks for them. If you use a ThemeStyleSheet, assign it in the same place.
 
@@ -67,7 +73,7 @@ Copy `Dialogue.uxml` and `Dialogue.uss` from `Runtime/Unity/Resources/VisualNove
 
 Game code can read and change tale variables and listen for signals:
 
-    var story = FindFirstObjectByType<Story>();
+    var story = FindAnyObjectByType<Story>();
     story.Expose("player", player);          // tales may call player.give("key")
     story.SetVar("prologue", "trust", 3);
     story.Signal += (name, value) => Debug.Log(name);

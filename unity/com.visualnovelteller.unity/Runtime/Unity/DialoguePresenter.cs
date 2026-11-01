@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using TaleScript;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
 
 namespace VisualNovelTeller
@@ -30,7 +31,7 @@ namespace VisualNovelTeller
         [SerializeField] private VisualTreeAsset layout;
         [Tooltip("Optional. Replaces the style sheet from the Story Config and the package.")]
         [SerializeField] private StyleSheet style;
-        [Tooltip("Optional theme for the panel. The default style looks right without one.")]
+        [Tooltip("Optional theme for the panel. Without one, Unity's default runtime theme is used.")]
         [SerializeField] private ThemeStyleSheet theme;
         [Tooltip("Characters per second. A negative number uses the Story Config. 0 shows each line at once.")]
         [SerializeField] private float textSpeed = -1f;
@@ -114,7 +115,7 @@ namespace VisualNovelTeller
             {
                 if (panelSettings == null)
                 {
-                    _createdSettings = StoryUI.CreatePanelSettings(themeSheet, sortingOrder);
+                    _createdSettings = StoryUI.CreatePanelSettings(themeSheet, sortingOrder, config != null ? config.UiScale : 1f);
                     panelSettings = _createdSettings;
                 }
                 if (document == null) document = StoryUI.CreateDocument(transform, "Dialogue UI", panelSettings);
@@ -155,8 +156,6 @@ namespace VisualNovelTeller
             _root = tree;
             _root.focusable = true;
             _root.RegisterCallback<PointerDownEvent>(OnPointerDown);
-            _root.RegisterCallback<KeyDownEvent>(OnKeyDown, TrickleDown.TrickleDown);
-            _root.RegisterCallback<WheelEvent>(OnWheel);
             _choices.style.display = DisplayStyle.None;
             Hide();
         }
@@ -168,18 +167,25 @@ namespace VisualNovelTeller
             if (evt.button == 0) Advance();
         }
 
-        private void OnKeyDown(KeyDownEvent evt)
+        /// <summary>
+        /// Reads the keyboard and mouse wheel through the Input System: Space or Enter moves
+        /// the story on, and the test shortcuts work as described below. Clicks reach the
+        /// dialogue box through UI Toolkit.
+        /// </summary>
+        private void PollInput()
         {
-            if (evt.keyCode == KeyCode.Space || evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
-                Advance();
-            else if (evt.keyCode == KeyCode.F5 || evt.keyCode == KeyCode.F9 || evt.keyCode == KeyCode.PageUp)
-                Shortcut(evt.keyCode);
-        }
-
-        private void OnWheel(WheelEvent evt)
-        {
-            // In UI Toolkit a negative delta is the wheel turning up.
-            if (evt.delta.y < 0f) Shortcut(KeyCode.PageUp);
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard != null)
+            {
+                if (_lineDone != null && (keyboard.spaceKey.wasPressedThisFrame || keyboard.enterKey.wasPressedThisFrame
+                    || keyboard.numpadEnterKey.wasPressedThisFrame))
+                    Advance();
+                if (keyboard.f5Key.wasPressedThisFrame) Shortcut(KeyCode.F5);
+                if (keyboard.f9Key.wasPressedThisFrame) Shortcut(KeyCode.F9);
+                if (keyboard.pageUpKey.wasPressedThisFrame) Shortcut(KeyCode.PageUp);
+            }
+            Mouse mouse = Mouse.current;
+            if (mouse != null && mouse.scroll.ReadValue().y > 0f) Shortcut(KeyCode.PageUp);
         }
 
         /// <summary>
@@ -248,13 +254,7 @@ namespace VisualNovelTeller
                 if (_timerFill != null) _timerFill.style.width = Length.Percent(Mathf.Clamp01(_remaining / _timeout) * 100f);
                 if (_remaining <= 0f) CompleteChoice(-1);
             }
-#if ENABLE_LEGACY_INPUT_MANAGER
-            if (_lineDone != null && (Input.GetKeyDown(KeyCode.Space) || Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)))
-                Advance();
-            if (Input.GetKeyDown(KeyCode.F5)) Shortcut(KeyCode.F5);
-            if (Input.GetKeyDown(KeyCode.F9)) Shortcut(KeyCode.F9);
-            if (Input.GetKeyDown(KeyCode.PageUp) || Input.mouseScrollDelta.y > 0f) Shortcut(KeyCode.PageUp);
-#endif
+            PollInput();
         }
 
         // --- Lines --------------------------------------------------------------

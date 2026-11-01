@@ -306,7 +306,7 @@ namespace VisualNovelTeller
         /// <summary>Finds the Story in the scene when no one attached this component. Returns false when there is none.</summary>
         private bool EnsureStory()
         {
-            if (_story == null) _story = FindFirstObjectByType<Story>();
+            if (_story == null) _story = FindAnyObjectByType<Story>();
             return _story != null;
         }
 

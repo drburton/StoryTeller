@@ -1,7 +1,11 @@
 {
     "name": "VisualNovelTeller",
     "rootNamespace": "VisualNovelTeller",
-    "references": ["TaleScript.Core", "Unity.Timeline"],
+    "references": [
+        "TaleScript.Core",
+        "Unity.Timeline",
+        "Unity.InputSystem"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

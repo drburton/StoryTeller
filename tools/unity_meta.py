@@ -35,6 +35,10 @@ def importer(path):
         return ("ScriptedImporter:\n  internalIDToNameTable: []\n  externalObjects: {}\n  serializedVersion: 2\n"
                 + FOOTER + "  script: {fileID: 12385, guid: 0000000000000000e000000000000000, type: 0}\n"
                 "  disableValidation: 0\n")
+    if ext in (".tss",):
+        return ("ScriptedImporter:\n  internalIDToNameTable: []\n  externalObjects: {}\n  serializedVersion: 2\n"
+                + FOOTER + "  script: {fileID: 12388, guid: 0000000000000000e000000000000000, type: 0}\n"
+                "  disableValidation: 0\n")
     if ext in (".md", ".json", ".txt"):
         return "TextScriptImporter:\n  externalObjects: {}\n" + FOOTER
     return "DefaultImporter:\n  externalObjects: {}\n" + FOOTER

@@ -8,3 +8,11 @@ A Unity 6.7 project that loads the package from `../com.visualnovelteller.unity`
 4. **Window > Visual Novel Teller > Path Explorer** plays every path of a tale and lists its endings and problems.
 
 Unity writes `Library`, `Temp`, `Logs`, and `UserSettings`, which `.gitignore` leaves out. Commit `Assets`, `Packages`, and `ProjectSettings`.
+
+## Checking from the command line
+
+On Windows, close the project in Unity, then from the repository folder run:
+
+    .\tools\check_unity.ps1
+
+It finds Unity 6.7 under Unity Hub, opens this project in batch mode, and runs `VisualNovelTeller.BatchCheck`: it compiles the package, lists each tale's problems, and plays every path of each tale. It prints the compile errors and the report, and exits with 1 when something fails. The full log goes to `unity/check_unity.log`. Pass `-Unity <path to Unity.exe>` when Unity lives somewhere else.

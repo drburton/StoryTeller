@@ -88,11 +88,13 @@ namespace VisualNovelTeller
         [Header("Dialogue")]
         [Tooltip("Characters per second. 0 shows each line at once.")]
         [Range(0f, 200f)] [SerializeField] private float textSpeed = 40f;
+        [Tooltip("Makes the dialogue box and choices larger or smaller. 1 fits text for a 1920 by 1080 screen; raise it when text is hard to read.")]
+        [Range(0.5f, 2f)] [SerializeField] private float uiScale = 1f;
         [Tooltip("Optional. Replaces the dialogue layout that comes with the package.")]
         [SerializeField] private VisualTreeAsset dialogueLayout;
         [Tooltip("Optional. Replaces the dialogue style sheet that comes with the package.")]
         [SerializeField] private StyleSheet dialogueStyle;
-        [Tooltip("Optional. The theme for the UI panels. The default dialogue style looks right without one.")]
+        [Tooltip("Optional. The theme for the UI panels. Without one, Unity's default runtime theme is used.")]
         [SerializeField] private ThemeStyleSheet themeStyleSheet;
 
         public IReadOnlyList<TaleAsset> Tales { get { return tales; } }
@@ -104,6 +106,7 @@ namespace VisualNovelTeller
         public IReadOnlyList<NamedClip> AudioClips { get { return audioClips; } }
         public IReadOnlyList<string> ExposedNames { get { return exposedNames; } }
         public float TextSpeed { get { return textSpeed; } }
+        public float UiScale { get { return Mathf.Clamp(uiScale, 0.5f, 2f); } }
         public VisualTreeAsset DialogueLayout { get { return dialogueLayout; } }
         public StyleSheet DialogueStyle { get { return dialogueStyle; } }
         public ThemeStyleSheet ThemeStyleSheet { get { return themeStyleSheet; } }

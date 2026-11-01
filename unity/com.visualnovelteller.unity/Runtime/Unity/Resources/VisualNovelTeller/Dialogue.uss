@@ -15,11 +15,11 @@
 }
 
 .vnt-choice {
-    min-width: 800px;
-    max-width: 1500px;
-    margin: 8px 0;
-    padding: 18px 36px;
-    font-size: 38px;
+    min-width: 900px;
+    max-width: 1600px;
+    margin: 10px 0;
+    padding: 20px 40px;
+    font-size: 46px;
     color: rgb(255, 255, 255);
     background-color: rgb(28, 32, 60);
     border-width: 3px;
@@ -65,7 +65,7 @@
 }
 
 .vnt-box {
-    min-height: 260px;
+    min-height: 300px;
     padding: 28px 44px 40px 44px;
     background-color: rgba(10, 12, 28, 0.93);
     border-width: 3px;
@@ -74,14 +74,14 @@
 }
 
 .vnt-speaker {
-    margin-bottom: 10px;
-    font-size: 46px;
+    margin-bottom: 12px;
+    font-size: 54px;
     -unity-font-style: bold;
     color: rgb(255, 255, 255);
 }
 
 .vnt-text {
-    font-size: 40px;
+    font-size: 50px;
     color: rgb(255, 255, 255);
     white-space: normal;
     -unity-text-align: upper-left;
