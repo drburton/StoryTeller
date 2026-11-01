@@ -25,9 +25,12 @@ namespace VisualNovelTeller
 
         private readonly List<Piece> _pieces = new List<Piece>();
         private readonly List<float> _times = new List<float>();
+        private readonly StringBuilder _plain = new StringBuilder();
 
         /// <summary>How many characters the line shows when fully revealed.</summary>
         public int VisibleCount { get { return _times.Count; } }
+        /// <summary>The visible text of the whole line, without tags.</summary>
+        public string PlainText { get { return _plain.ToString(); } }
         /// <summary>Seconds until the last character appears.</summary>
         public float Duration { get; private set; }
 
@@ -68,6 +71,7 @@ namespace VisualNovelTeller
                     unit = c == '<' ? "<noparse><</noparse>" : c.ToString();
                     i++;
                 }
+                _plain.Append(c == '<' ? "<" : unit);
                 _pieces.Add(new Piece { Visible = true, Markup = unit });
                 _times.Add(time);
                 float speed = charactersPerSecond;

@@ -893,7 +893,7 @@ Status, 31 October 2026: done ahead of schedule. `csharp/TaleScript.Core` (netst
 - A screenshot script for the book.
 - Interface freeze in February 2027, release candidate in March, and 1.0 in April 2027.
 
-Status, 31 October 2026: started. The package `unity/com.visualnovelteller.unity` (decision 0028) holds the C# core and a first Unity layer: `.tale` import with problems in the Console, a Story component, UI Toolkit dialogue and timed choices, a 2D stage, audio, Shots on Animator and Timeline, save slots and rewind, a Path Explorer window, and a one-click scene setup. It compiles against stand-ins for Unity's API but has not yet run in Unity 6.7. Still to come: the first run in Unity, skip and auto, the history screen, menus, backdrop transitions, effects, and the Map view.
+Status, 31 October 2026: started. The package `unity/com.visualnovelteller.unity` (decision 0028) holds the C# core and a first Unity layer: `.tale` import with problems in the Console, a Story component, UI Toolkit dialogue and timed choices, a 2D stage, audio, Shots on Animator and Timeline, save slots and rewind, a Path Explorer window, and a one-click scene setup. It compiles against stand-ins for Unity's API but has not yet run in Unity 6.7. It now runs in Unity 6.7 (6000.7.0b7) with the Input System and URP, and has skip, auto mode, a history screen, and a quick menu. Still to come: menus, backdrop transitions, effects, and the Map view.
 
 ### M12: Unreal 1.1 (summer to fall 2027)
 - A runtime that plays compiled tales.
