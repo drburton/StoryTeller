@@ -82,6 +82,17 @@ namespace VisualNovelTeller
         [Tooltip("Names that game code adds with Story.Expose. Listing them lets tales that use them import without errors.")]
         [SerializeField] private List<string> exposedNames = new List<string>();
 
+        [Header("Menus (needs a StoryMenus component)")]
+        [Tooltip("Show the title screen when the scene starts instead of playing the first tale at once. New Game starts the story.")]
+        [SerializeField] private bool showTitleScreen = false;
+        [Tooltip("The game's name on the title screen. Empty uses the product name from Project Settings.")]
+        [SerializeField] private string title = "";
+        [Tooltip("Optional. A picture that fills the title screen.")]
+        [SerializeField] private Sprite titleBackground;
+        [Tooltip("Optional. The name of a clip in Audio Clips that plays on the title screen.")]
+        [SerializeField] private string titleMusic = "";
+        [Tooltip("Optional. Replaces the menu style sheet that comes with the package.")]
+        [SerializeField] private StyleSheet menuStyle;
         [Header("Saves")]
         [Tooltip("How many lines and choices the player can step back through. 0 turns rewind off.")]
         [Min(0)] [SerializeField] private int rewindDepth = 50;
@@ -116,6 +127,14 @@ namespace VisualNovelTeller
         public float AutoDelay { get { return Mathf.Clamp(autoDelay, 0.2f, 5f); } }
         public int HistoryLength { get { return Mathf.Clamp(historyLength, 10, 1000); } }
         public float UiScale { get { return Mathf.Clamp(uiScale, 0.5f, 2f); } }
+        /// <summary>True when <see cref="StoryMenus"/> shows the title screen before the story starts.</summary>
+        public bool ShowTitleScreen { get { return showTitleScreen; } }
+        /// <summary>The game's name on the title screen, or "" to use the product name.</summary>
+        public string Title { get { return title ?? ""; } }
+        public Sprite TitleBackground { get { return titleBackground; } }
+        /// <summary>The name of the title screen's music clip, or "".</summary>
+        public string TitleMusic { get { return titleMusic ?? ""; } }
+        public StyleSheet MenuStyle { get { return menuStyle; } }
         public VisualTreeAsset DialogueLayout { get { return dialogueLayout; } }
         public StyleSheet DialogueStyle { get { return dialogueStyle; } }
         public ThemeStyleSheet ThemeStyleSheet { get { return themeStyleSheet; } }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Text;
@@ -14,6 +15,23 @@ namespace VisualNovelTeller
     [Serializable]
     public class StorySignalEvent : UnityEvent<string, string>
     {
+    }
+
+    /// <summary>What the save menus show about a slot. Read it with <see cref="Story.GetSlotInfo"/>.</summary>
+    public class SlotInfo
+    {
+        /// <summary>The slot name, such as slot3 or quick.</summary>
+        public string Slot = "";
+        /// <summary>When the slot was saved, in local time.</summary>
+        public DateTime SavedAt;
+        /// <summary>The tale the story was in. Empty for saves from older versions.</summary>
+        public string Tale = "";
+        /// <summary>The beat the story was in. Empty for saves from older versions.</summary>
+        public string Beat = "";
+        /// <summary>The speaker of the line on screen. Empty for narration.</summary>
+        public string Speaker = "";
+        /// <summary>The text of the line on screen, without tags.</summary>
+        public string Text = "";
     }
 
     /// <summary>
@@ -56,6 +74,8 @@ namespace VisualNovelTeller
 
         /// <summary>Raised by <c>emit("name", value)</c> in a tale.</summary>
         public event Action<string, object> Signal;
+        /// <summary>Raised when the story ends or is stopped. Not raised while a load replaces the play.</summary>
+        public event Action Finished;
 
         /// <summary>The settings this story plays with.</summary>
         public StoryConfig Config { get { return config; } set { config = value; } }
@@ -75,6 +95,13 @@ namespace VisualNovelTeller
             set { Director.Skipping = value; }
         }
 
+        /// <summary>
+        /// True while the story waits for the player, for example behind a pause menu. Timed
+        /// waits stop counting. <see cref="DialoguePresenter"/> then ignores input and freezes
+        /// typing, auto mode, and timed choices. Time.timeScale stays as it is.
+        /// </summary>
+        public bool Paused { get; set; }
+
         /// <summary>True while a tale is playing.</summary>
         public bool IsPlaying { get { return _director != null && _director.IsPlaying; } }
 
@@ -87,7 +114,7 @@ namespace VisualNovelTeller
         {
             EnsureReady();
             LoadGlobals();
-            if (playOnStart) _ = Play();
+            if (playOnStart && !WantsTitleScreen()) _ = Play();
         }
 
         private void OnDestroy()
@@ -103,7 +130,7 @@ namespace VisualNovelTeller
                 _frameWaiters.Clear();
                 foreach (var source in frame) source.TrySetResult(true);
             }
-            if (_waits.Count == 0) return;
+            if (Paused || _waits.Count == 0) return;
             bool skipping = Skipping;
             float delta = Time.unscaledDeltaTime;
             List<TimedWait> due = null;
@@ -148,6 +175,27 @@ namespace VisualNovelTeller
         {
             if (_director != null) _director.Stop();
             CompleteWaits();
+        }
+
+        /// <summary>
+        /// Stops the story and puts everything back as it is before a new game: story
+        /// variables, rewind history, dialogue, backdrop and cast, music, and shots. Global
+        /// variables and the lines already read stay. Call <see cref="Play"/> afterwards.
+        /// </summary>
+        public void ResetToStart()
+        {
+            EnsureReady();
+            Stop();
+            _director.Clear();
+            if (_history != null) _history.Clear();
+            if (dialogue != null)
+            {
+                dialogue.ClearHistory();
+                dialogue.Hide();
+            }
+            if (stage != null) stage.Clear();
+            if (storyAudio != null) storyAudio.Clear();
+            if (shots != null) shots.Clear();
         }
 
         /// <summary>
@@ -255,7 +303,7 @@ namespace VisualNovelTeller
             }
         }
 
-        /// <summary>Writes the story state to saves/slot.json in the persistent data folder, and the globals to saves/globals.json. A slot name has letters, digits, '-', and '_'.</summary>
+        /// <summary>Writes the story state to saves/slot.json in the persistent data folder, a small description of it to saves/slot.meta.json, and the globals to saves/globals.json. A slot name has letters, digits, '-', and '_'.</summary>
         public void SaveSlot(string slot)
         {
             if (!CheckSlot(slot)) return;
@@ -268,7 +316,9 @@ namespace VisualNovelTeller
             try
             {
                 Directory.CreateDirectory(SaveFolder());
-                WriteText(SlotPath(slot), SaveToJson());
+                OrderedMap<object> state = _director.Capture();
+                WriteText(SlotPath(slot), GdJson.Stringify(state));
+                WriteText(MetaPath(slot), GdJson.Stringify(MakeMeta(state)));
                 WriteText(GlobalsPath(), GdJson.Stringify(_director.CaptureGlobals()));
             }
             catch (Exception e)
@@ -322,11 +372,78 @@ namespace VisualNovelTeller
             {
                 string path = SlotPath(slot);
                 if (File.Exists(path)) File.Delete(path);
+                string meta = MetaPath(slot);
+                if (File.Exists(meta)) File.Delete(meta);
             }
             catch (Exception e)
             {
                 Debug.LogError("Story: could not delete slot '" + slot + "'. " + e.Message, this);
             }
+        }
+
+        /// <summary>
+        /// What the save menus show about a slot: when it was saved and the line on screen.
+        /// Returns null when the slot has no save. A save without a description, such as one
+        /// from an older version, gives the file's write time and empty text.
+        /// </summary>
+        public SlotInfo GetSlotInfo(string slot)
+        {
+            if (!IsValidSlot(slot)) return null;
+            try
+            {
+                string path = SlotPath(slot);
+                if (!File.Exists(path)) return null;
+                var info = new SlotInfo { Slot = slot, SavedAt = File.GetLastWriteTime(path) };
+                string metaPath = MetaPath(slot);
+                if (!File.Exists(metaPath)) return info;
+                var meta = GdJson.Parse(File.ReadAllText(metaPath, Encoding.UTF8)) as OrderedMap<object>;
+                if (meta == null) return info;
+                object value;
+                DateTime when;
+                if (meta.TryGetValue("saved_at", out value) && value != null
+                    && DateTime.TryParse(GdValue.Str(value), CultureInfo.InvariantCulture, DateTimeStyles.None, out when))
+                    info.SavedAt = when;
+                if (meta.TryGetValue("tale", out value) && value != null) info.Tale = GdValue.Str(value);
+                if (meta.TryGetValue("beat", out value) && value != null) info.Beat = GdValue.Str(value);
+                if (meta.TryGetValue("speaker", out value) && value != null) info.Speaker = GdValue.Str(value);
+                if (meta.TryGetValue("text", out value) && value != null) info.Text = GdValue.Str(value);
+                return info;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// The slot written most recently, including "quick" and "auto", or null when there is
+        /// none. It goes by the time each save file was written.
+        /// </summary>
+        public string LatestSlot()
+        {
+            string latest = null;
+            DateTime latestTime = DateTime.MinValue;
+            try
+            {
+                string folder = SaveFolder();
+                if (!Directory.Exists(folder)) return null;
+                foreach (string file in Directory.GetFiles(folder, "*.json"))
+                {
+                    string slot = Path.GetFileNameWithoutExtension(file);
+                    if (slot == "globals" || !IsValidSlot(slot)) continue;
+                    DateTime time = File.GetLastWriteTime(file);
+                    if (latest == null || time > latestTime)
+                    {
+                        latest = slot;
+                        latestTime = time;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+            return latest;
         }
 
         /// <summary>True when the player can step back at least one line or choice.</summary>
@@ -414,6 +531,37 @@ namespace VisualNovelTeller
         private static string SlotPath(string slot)
         {
             return Path.Combine(SaveFolder(), slot + ".json");
+        }
+
+        private static string MetaPath(string slot)
+        {
+            return Path.Combine(SaveFolder(), slot + ".meta.json");
+        }
+
+        private OrderedMap<object> MakeMeta(OrderedMap<object> state)
+        {
+            var meta = new OrderedMap<object>();
+            meta["saved_at"] = DateTime.Now.ToString("yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
+            string taleName = "";
+            string beat = "";
+            object value;
+            if (state.TryGetValue("stack", out value))
+            {
+                var frames = value as List<object>;
+                if (frames != null && frames.Count > 0)
+                {
+                    var top = frames[frames.Count - 1] as OrderedMap<object>;
+                    object field;
+                    if (top != null && top.TryGetValue("tale", out field) && field != null) taleName = GdValue.Str(field);
+                    if (top != null && top.TryGetValue("beat", out field) && field != null) beat = GdValue.Str(field);
+                }
+            }
+            meta["tale"] = taleName;
+            meta["beat"] = beat;
+            HistoryEntry line = dialogue != null ? dialogue.CurrentLine : default(HistoryEntry);
+            meta["speaker"] = line.Speaker ?? "";
+            meta["text"] = line.Text ?? "";
+            return meta;
         }
 
         private static string GlobalsPath()
@@ -586,10 +734,18 @@ namespace VisualNovelTeller
             if (onSignal != null) onSignal.Invoke(signalName, value == null ? "" : GdValue.Str(value));
         }
 
+        private bool WantsTitleScreen()
+        {
+            var menus = GetComponent<StoryMenus>();
+            if (menus == null) menus = FindAnyObjectByType<StoryMenus>();
+            return menus != null && menus.WantsTitle;
+        }
+
         private void OnStoryFinished()
         {
             if (_loading) return;
             if (dialogue != null) dialogue.Hide();
+            if (Finished != null) Finished();
             if (onStoryFinished != null) onStoryFinished.Invoke();
         }
 

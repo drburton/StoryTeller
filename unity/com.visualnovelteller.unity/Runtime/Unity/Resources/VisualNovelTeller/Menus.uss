@@ -1,0 +1,282 @@
+/* Default look of the Visual Novel Teller menus: title, pause, save and load, settings,
+   and the confirm dialog. The screens are built in code. Their names start with vnt-menu-.
+   Every control is styled here, so the menus render correctly without a theme style sheet. */
+
+.vnt-menu-root {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.82);
+}
+
+/* The title screen covers the story completely. */
+.vnt-menu-root--title {
+    background-color: rgb(10, 12, 28);
+}
+
+.vnt-menu-background {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+}
+
+.vnt-menu-screen {
+    flex-direction: column;
+    align-items: center;
+    max-height: 100%;
+    padding: 24px 80px;
+}
+
+.vnt-menu-game-title {
+    margin-bottom: 56px;
+    font-size: 120px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+    white-space: normal;
+}
+
+.vnt-menu-heading {
+    margin-bottom: 28px;
+    font-size: 72px;
+    -unity-font-style: bold;
+    color: rgb(255, 255, 255);
+    -unity-text-align: middle-center;
+}
+
+.vnt-menu-button {
+    min-width: 640px;
+    margin: 10px 0;
+    padding: 18px 40px;
+    font-size: 46px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(28, 32, 60);
+    border-width: 3px;
+    border-color: rgb(235, 235, 255);
+    border-radius: 14px;
+    -unity-text-align: middle-center;
+}
+
+.vnt-menu-button:hover {
+    background-color: rgb(64, 76, 140);
+}
+
+.vnt-menu-button:active {
+    background-color: rgb(104, 118, 196);
+}
+
+.vnt-menu-button:focus {
+    border-color: rgb(255, 220, 90);
+}
+
+.vnt-menu-button:disabled {
+    color: rgb(140, 140, 150);
+    background-color: rgb(40, 40, 48);
+    border-color: rgb(90, 90, 100);
+}
+
+.vnt-menu-buttons {
+    flex-direction: row;
+    justify-content: center;
+}
+
+.vnt-menu-buttons > .vnt-menu-button {
+    min-width: 320px;
+    margin: 10px 12px;
+}
+
+/* Save and load: pages of slots in two columns. */
+.vnt-menu-pages {
+    flex-direction: row;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+.vnt-menu-page {
+    min-width: 96px;
+    margin: 0 8px;
+    padding: 8px 24px;
+    font-size: 40px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(28, 32, 60);
+    border-width: 3px;
+    border-color: rgb(235, 235, 255);
+    border-radius: 12px;
+}
+
+.vnt-menu-page:hover {
+    background-color: rgb(64, 76, 140);
+}
+
+.vnt-menu-page:focus {
+    border-color: rgb(255, 220, 90);
+}
+
+.vnt-menu-page.vnt-on {
+    color: rgb(255, 220, 90);
+    border-color: rgb(255, 220, 90);
+}
+
+.vnt-menu-slots {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 1560px;
+}
+
+.vnt-menu-slot {
+    width: 740px;
+    height: 150px;
+    margin: 8px 20px;
+}
+
+.vnt-menu-slot-button {
+    flex-grow: 1;
+    padding: 12px 24px;
+    font-size: 34px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(28, 32, 60);
+    border-width: 3px;
+    border-color: rgb(235, 235, 255);
+    border-radius: 12px;
+    -unity-text-align: upper-left;
+    white-space: normal;
+}
+
+.vnt-menu-slot-button:hover {
+    background-color: rgb(64, 76, 140);
+}
+
+.vnt-menu-slot-button:focus {
+    border-color: rgb(255, 220, 90);
+}
+
+.vnt-menu-slot-button:disabled {
+    color: rgb(140, 140, 150);
+    background-color: rgb(40, 40, 48);
+    border-color: rgb(90, 90, 100);
+}
+
+.vnt-menu-slot-button.vnt-empty {
+    color: rgb(170, 170, 185);
+}
+
+.vnt-menu-delete {
+    position: absolute;
+    right: 14px;
+    top: 12px;
+    padding: 2px 16px;
+    font-size: 26px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(96, 30, 40);
+    border-width: 2px;
+    border-color: rgb(255, 200, 200);
+    border-radius: 8px;
+}
+
+.vnt-menu-delete:hover {
+    background-color: rgb(150, 44, 60);
+}
+
+.vnt-menu-delete:focus {
+    border-color: rgb(255, 220, 90);
+}
+
+/* Settings: one row for each slider or toggle. */
+.vnt-menu-settings {
+    width: 1100px;
+    margin-bottom: 12px;
+}
+
+.vnt-menu-setting-row {
+    flex-direction: row;
+    align-items: center;
+    margin: 8px 0;
+}
+
+.vnt-menu-setting {
+    flex-grow: 1;
+    font-size: 40px;
+    color: rgb(255, 255, 255);
+}
+
+.vnt-menu-setting > Label {
+    min-width: 440px;
+    font-size: 40px;
+    color: rgb(255, 255, 255);
+}
+
+.vnt-menu-setting .unity-base-slider__tracker {
+    height: 14px;
+    background-color: rgb(70, 76, 120);
+    border-radius: 7px;
+}
+
+.vnt-menu-setting .unity-base-slider__dragger {
+    width: 40px;
+    height: 40px;
+    margin-top: -13px;
+    background-color: rgb(255, 220, 90);
+    border-radius: 20px;
+}
+
+.vnt-menu-setting:focus .unity-base-slider__dragger {
+    background-color: rgb(255, 255, 255);
+}
+
+.vnt-menu-setting .unity-toggle__input {
+    flex-grow: 0;
+}
+
+.vnt-menu-setting .unity-toggle__checkmark {
+    width: 40px;
+    height: 40px;
+    background-color: rgb(28, 32, 60);
+    border-width: 3px;
+    border-color: rgb(235, 235, 255);
+    border-radius: 8px;
+}
+
+.vnt-menu-setting:focus .unity-toggle__checkmark {
+    border-color: rgb(255, 220, 90);
+}
+
+.vnt-menu-setting-value {
+    min-width: 150px;
+    margin-left: 16px;
+    font-size: 36px;
+    color: rgb(235, 235, 255);
+    -unity-text-align: middle-right;
+}
+
+/* The confirm dialog sits over the screen that asked. */
+.vnt-menu-confirm {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.6);
+}
+
+.vnt-menu-confirm-box {
+    align-items: center;
+    max-width: 1300px;
+    padding: 48px 64px;
+    background-color: rgb(14, 16, 36);
+    border-width: 3px;
+    border-color: rgb(235, 235, 255);
+    border-radius: 18px;
+}
+
+.vnt-menu-confirm-message {
+    margin-bottom: 32px;
+    font-size: 52px;
+    color: rgb(255, 255, 255);
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
