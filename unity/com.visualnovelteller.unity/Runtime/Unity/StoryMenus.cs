@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -9,7 +10,8 @@ namespace VisualNovelTeller
 {
     /// <summary>
     /// The menus of a game: a title screen, a pause menu (Escape or the gamepad Start button),
-    /// save and load screens with slots, a settings screen, and a confirm dialog. Put it on the
+    /// save and load screens with slots, a settings screen, a confirm dialog, and the purchase
+    /// screen for demos with paid content (decision 0029). Put it on the
     /// same object as the <see cref="Story"/>. It draws its own UI Toolkit panel in front of the
     /// dialogue. Turn on Show Title Screen in the Story Config to start at the title; New Game
     /// then starts the story. The look comes from Menus.uss in the package, or from the Story
@@ -56,6 +58,20 @@ namespace VisualNovelTeller
         private int _slotPage;
         private bool _ignoreFinish;
         private bool _historyWasOpen;
+        private VisualElement _offerLayer;
+        private Image _offerPicture;
+        private Label _offerTitle;
+        private Label _offerDescription;
+        private Label _offerPrice;
+        private Label _offerMessage;
+        private Button _offerBuy;
+        private Button _offerDecline;
+        private StoryProduct _offerProduct;
+        private TaskCompletionSource<bool> _offerDone;
+        private bool _offerPausedStory;
+
+        /// <summary>True while the purchase screen is open.</summary>
+        public bool IsOffering { get { return _offerDone != null; } }
 
         /// <summary>True when the Story Config asks for a title screen. <see cref="Story"/> then waits for New Game instead of playing at once.</summary>
         public bool WantsTitle
@@ -89,6 +105,7 @@ namespace VisualNovelTeller
             _settings = StorySettings.Load(_story.Config);
             _settings.Apply(_story);
             _story.Finished += OnStoryFinished;
+            _story.Store.OfferScreen = Offer;
             EnsureUi();
             if (WantsTitle) ShowTitle();
         }
@@ -98,7 +115,8 @@ namespace VisualNovelTeller
             if (_story != null)
             {
                 _story.Finished -= OnStoryFinished;
-                if (IsOpen) _story.Paused = false;
+                if (_story.Store.OfferScreen == (Func<StoryProduct, Task<bool>>)Offer) _story.Store.OfferScreen = null;
+                if (IsOpen || IsOffering) _story.Paused = false;
             }
             SaveSettingsIfDirty();
             if (_createdSettings != null) Destroy(_createdSettings);
@@ -112,6 +130,11 @@ namespace VisualNovelTeller
             bool start = pad != null && pad.startButton.wasPressedThisFrame;
             bool back = pad != null && pad.buttonEast.wasPressedThisFrame;
             if (!escape && !start && !back) return;
+            if (IsOffering)
+            {
+                DeclineOffer();
+                return;
+            }
             if (IsOpen)
             {
                 Back();
@@ -218,14 +241,36 @@ namespace VisualNovelTeller
         private void ContinueGame()
         {
             string slot = _story.LatestSlot();
-            Close();
-            if (slot != null) _ = _story.LoadSlot(slot);
+            if (slot != null) LoadAndClose(slot);
+            else Close();
         }
 
         private void LoadAndClose(string slot)
         {
+            _ = LoadOffering(slot);
+        }
+
+        /// <summary>
+        /// Loads a slot, first offering any product the save needs that the reader doesn't own.
+        /// Gives true when it loaded.
+        /// </summary>
+        public async Task<bool> LoadOffering(string slot)
+        {
+            foreach (string id in _story.GetLockedProducts(slot))
+            {
+                StoryProduct product = _story.Store.GetProduct(id);
+                if (product == null || !await Offer(product)) return false;
+            }
             Close();
             _ = _story.LoadSlot(slot);
+            return true;
+        }
+
+        private async void RestorePurchases(Button button)
+        {
+            button.SetEnabled(false);
+            await _story.Store.Restore();
+            button.text = "Purchases restored";
         }
 
         private void ReturnToTitle()
@@ -291,6 +336,7 @@ namespace VisualNovelTeller
             _screen.AddToClassList("vnt-menu-screen");
             _root.Add(_screen);
             BuildConfirm();
+            BuildOffer();
             StoryUI.Fill(_document.rootVisualElement, false);
             _document.rootVisualElement.Add(_root);
         }
@@ -334,6 +380,7 @@ namespace VisualNovelTeller
             resume.SetEnabled(_story.LatestSlot() != null);
             AddButton(_screen, "vnt-menu-load", "Load", delegate { Push(Page.Load); });
             AddButton(_screen, "vnt-menu-settings", "Settings", delegate { Push(Page.Settings); });
+            AddRestoreButton();
             AddButton(_screen, "vnt-menu-quit", "Quit", QuitGame);
             _firstFocus = newGame;
         }
@@ -347,6 +394,7 @@ namespace VisualNovelTeller
             AddButton(_screen, "vnt-menu-settings", "Settings", delegate { Push(Page.Settings); });
             Button history = AddButton(_screen, "vnt-menu-history", "History", ShowHistory);
             history.SetEnabled(_story.Dialogue != null);
+            AddRestoreButton();
             if (WantsTitle)
                 AddButton(_screen, "vnt-menu-title", "Title", delegate
                 {
@@ -394,6 +442,14 @@ namespace VisualNovelTeller
             if (_firstFocus == null) _firstFocus = _screen.Q<Button>("vnt-menu-back");
         }
 
+        /// <summary>Restore purchases, shown when the game has products and the store can restore. Apple requires it.</summary>
+        private void AddRestoreButton()
+        {
+            if (!_story.Store.CanRestore) return;
+            Button restore = null;
+            restore = AddButton(_screen, "vnt-menu-restore", "Restore purchases", delegate { RestorePurchases(restore); });
+        }
+
         private void AddSlot(VisualElement grid, string slot, bool saving)
         {
             SlotInfo info = _story.GetSlotInfo(slot);
@@ -415,8 +471,10 @@ namespace VisualNovelTeller
             }
             else
             {
+                List<string> locked = saving ? new List<string>() : _story.Store.Missing(info.Needs);
                 button.text = label + "   " + info.SavedAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
-                    + "\n" + Shorten(info.Speaker, info.Text);
+                    + "\n" + (locked.Count > 0 ? "Locked: " + ProductTitles(locked) : Shorten(info.Speaker, info.Text));
+                button.EnableInClassList("vnt-locked", locked.Count > 0);
                 if (saving)
                     button.clicked += delegate { Confirm("Overwrite " + SlotWords(slot) + "?", delegate { SaveTo(slot); }); };
                 else
@@ -439,6 +497,17 @@ namespace VisualNovelTeller
         {
             _story.SaveSlot(slot);
             Build();
+        }
+
+        private string ProductTitles(List<string> ids)
+        {
+            var titles = new List<string>();
+            foreach (string id in ids)
+            {
+                StoryProduct product = _story.Store.GetProduct(id);
+                titles.Add(product != null ? product.DisplayTitle : id);
+            }
+            return string.Join(", ", titles);
         }
 
         private static string SlotLabel(string slot)
@@ -584,7 +653,135 @@ namespace VisualNovelTeller
             VisualElement target = _firstFocus;
             if (target == null || _root == null) return;
             // The new elements join the panel on the next update, so the focus waits for it.
-            _root.schedule.Execute(delegate { target.Focus(); });
+            _root.schedule.Execute(() => target.Focus());
+        }
+
+        // --- Purchase screen ----------------------------------------------------
+
+        private void BuildOffer()
+        {
+            _offerLayer = new VisualElement();
+            _offerLayer.name = "vnt-menu-offer";
+            _offerLayer.AddToClassList("vnt-menu-confirm");
+            _offerLayer.AddToClassList("vnt-menu-offer");
+            _offerLayer.style.display = DisplayStyle.None;
+            var box = new VisualElement();
+            box.name = "vnt-menu-offer-box";
+            box.AddToClassList("vnt-menu-confirm-box");
+            box.AddToClassList("vnt-menu-offer-box");
+            _offerPicture = new Image();
+            _offerPicture.name = "vnt-menu-offer-picture";
+            _offerPicture.AddToClassList("vnt-menu-offer-picture");
+            _offerPicture.scaleMode = ScaleMode.ScaleToFit;
+            box.Add(_offerPicture);
+            _offerTitle = AddOfferLabel(box, "vnt-menu-offer-title");
+            _offerDescription = AddOfferLabel(box, "vnt-menu-offer-description");
+            _offerPrice = AddOfferLabel(box, "vnt-menu-offer-price");
+            _offerMessage = AddOfferLabel(box, "vnt-menu-offer-message");
+            var row = new VisualElement();
+            row.AddToClassList("vnt-menu-buttons");
+            _offerBuy = AddButton(row, "vnt-menu-offer-buy", "Buy", delegate { _ = BuyOffered(); });
+            _offerDecline = AddButton(row, "vnt-menu-offer-decline", "Not now", DeclineOffer);
+            box.Add(row);
+            _offerLayer.Add(box);
+            _root.Add(_offerLayer);
+        }
+
+        private static Label AddOfferLabel(VisualElement parent, string elementName)
+        {
+            var label = new Label();
+            label.name = elementName;
+            label.AddToClassList(elementName);
+            label.AddToClassList("vnt-menu-confirm-message");
+            label.enableRichText = false;
+            parent.Add(label);
+            return label;
+        }
+
+        /// <summary>
+        /// Shows the purchase screen for a product: its picture, title, description, and the
+        /// store's price, with Buy and Not now. Gives true when the reader owns it afterwards.
+        /// <see cref="StoryStore.Offer"/> uses it for offer() and @needs in tales.
+        /// </summary>
+        public Task<bool> Offer(StoryProduct product)
+        {
+            EnsureUi();
+            if (_root == null || product == null) return Task.FromResult(false);
+            if (_offerDone != null) return Task.FromResult(_story.Store.Owns(product.id));
+            _offerProduct = product;
+            _offerDone = new TaskCompletionSource<bool>();
+            _offerPicture.sprite = product.picture;
+            _offerPicture.style.display = product.picture != null ? DisplayStyle.Flex : DisplayStyle.None;
+            _offerTitle.text = product.DisplayTitle;
+            _offerDescription.text = product.description ?? "";
+            _offerDescription.style.display = string.IsNullOrEmpty(product.description) ? DisplayStyle.None : DisplayStyle.Flex;
+            string price = _story.Store.GetPrice(product.id);
+            _offerPrice.text = price;
+            _offerPrice.style.display = price.Length > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            ShowOfferMessage("");
+            _offerBuy.style.display = DisplayStyle.Flex;
+            _offerBuy.SetEnabled(true);
+            _offerDecline.SetEnabled(true);
+            _offerDecline.text = "Not now";
+            _offerPausedStory = !_story.Paused;
+            _story.Paused = true;
+            _root.style.display = DisplayStyle.Flex;
+            if (_screen != null) _screen.SetEnabled(false);
+            _offerLayer.style.display = DisplayStyle.Flex;
+            Button target = _offerBuy;
+            _root.schedule.Execute(() => target.Focus());
+            return _offerDone.Task;
+        }
+
+        private async Task BuyOffered()
+        {
+            if (_offerProduct == null) return;
+            _offerBuy.SetEnabled(false);
+            _offerDecline.SetEnabled(false);
+            PurchaseResult result = await _story.Store.Purchase(_offerProduct.id);
+            if (_offerDone == null) return;
+            _offerBuy.SetEnabled(true);
+            _offerDecline.SetEnabled(true);
+            switch (result)
+            {
+                case PurchaseResult.Bought:
+                    FinishOffer(true);
+                    break;
+                case PurchaseResult.Pending:
+                    ShowOfferMessage("Your purchase is waiting for the store to confirm it.");
+                    _offerBuy.style.display = DisplayStyle.None;
+                    _offerDecline.text = "OK";
+                    break;
+                case PurchaseResult.Failed:
+                    ShowOfferMessage("The purchase didn't go through. Please try again.");
+                    break;
+            }
+        }
+
+        /// <summary>Closes the purchase screen without buying.</summary>
+        private void DeclineOffer()
+        {
+            if (_offerProduct == null) return;
+            FinishOffer(_story.Store.Owns(_offerProduct.id));
+        }
+
+        private void FinishOffer(bool owned)
+        {
+            TaskCompletionSource<bool> done = _offerDone;
+            _offerDone = null;
+            _offerProduct = null;
+            _offerLayer.style.display = DisplayStyle.None;
+            if (_screen != null) _screen.SetEnabled(true);
+            if (_stack.Count == 0) _root.style.display = DisplayStyle.None;
+            else FocusFirst();
+            if (_offerPausedStory && _stack.Count == 0) _story.Paused = false;
+            if (done != null) done.TrySetResult(owned);
+        }
+
+        private void ShowOfferMessage(string text)
+        {
+            _offerMessage.text = text;
+            _offerMessage.style.display = text.Length > 0 ? DisplayStyle.Flex : DisplayStyle.None;
         }
 
         // --- Confirm dialog -----------------------------------------------------
@@ -622,7 +819,7 @@ namespace VisualNovelTeller
             // Keys and the gamepad must not reach the screen below the dialog.
             _screen.SetEnabled(false);
             VisualElement target = _confirmNo;
-            _root.schedule.Execute(delegate { target.Focus(); });
+            _root.schedule.Execute(() => target.Focus());
         }
 
         private void ConfirmAnswer(bool yes)

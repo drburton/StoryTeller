@@ -1,0 +1,26 @@
+{
+    "name": "VisualNovelTeller.Purchasing",
+    "rootNamespace": "VisualNovelTeller",
+    "references": [
+        "VisualNovelTeller",
+        "TaleScript.Core",
+        "Unity.Purchasing"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "VNT_UNITY_PURCHASING"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.unity.purchasing",
+            "expression": "5.0.0",
+            "define": "VNT_UNITY_PURCHASING"
+        }
+    ],
+    "noEngineReferences": false
+}

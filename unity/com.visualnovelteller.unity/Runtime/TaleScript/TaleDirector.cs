@@ -89,6 +89,8 @@ namespace TaleScript
         private readonly Dictionary<string, object> _namedConstants = new Dictionary<string, object>();
         private readonly HashSet<string> _visited = new HashSet<string>();
         private readonly HashSet<string> _onceChosen = new HashSet<string>();
+        /// <summary>Products of the @needs beats entered in this playthrough, so a save made after them is locked for a reader who doesn't own them.</summary>
+        private readonly HashSet<string> _paid = new HashSet<string>();
         private readonly HashSet<string> _readLines = new HashSet<string>();
         private readonly List<TaleFrame> _stack = new List<TaleFrame>();
         private readonly List<ITaleStateProvider> _stateProviders = new List<ITaleStateProvider>();
@@ -125,6 +127,15 @@ namespace TaleScript
             _constants.Clear();
             _visited.Clear();
             _onceChosen.Clear();
+            _paid.Clear();
+        }
+
+        /// <summary>The products of the @needs beats this playthrough has entered, sorted. A save made now needs them all.</summary>
+        public List<string> GetPaidProducts()
+        {
+            var products = new List<string>(_paid);
+            products.Sort(string.CompareOrdinal);
+            return products;
         }
 
         /// <summary>
@@ -787,8 +798,12 @@ namespace TaleScript
             string product;
             if (!tale.Needs.TryGetValue(beat, out product) || product.Length == 0) return true;
             int generation = _generation;
-            if (Owns != null && Owns(product)) return true;
-            if (Offer != null && await Offer(product)) return generation == _generation;
+            if ((Owns != null && Owns(product)) || (Offer != null && await Offer(product)))
+            {
+                if (generation != _generation) return false;
+                _paid.Add(product);
+                return true;
+            }
             if (generation == _generation)
             {
                 _stack.Clear();

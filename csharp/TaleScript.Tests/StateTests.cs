@@ -31,6 +31,56 @@ namespace TaleScript.Tests
             yield return Test("route log round trips", RouteLogDict);
             yield return Test("state provider is captured and restored", ProviderRoundTrip);
             yield return Test("state provider rewinds with the story", ProviderRewinds);
+            yield return Test("paid content entered is saved and cleared", PaidContentSaved);
+            yield return Test("a declined @needs beat ends the story", NeedsDeclined);
+        }
+
+        private const string Paid =
+            "beat start:\n\t\"Free.\"\n\tjump paid\n\n@needs(\"full_story\")\nbeat paid:\n\t\"Paid one.\"\n\t\"Paid two.\"\n";
+
+        private static void PaidContentSaved()
+        {
+            var player = new Player();
+            var director = Make(player, "main", Paid);
+            var owned = new HashSet<string> { "full_story" };
+            director.Owns = owned.Contains;
+            OrderedMap<object> saved = null;
+            player.OnLine = line =>
+            {
+                if (GdValue.Str(line["text"]) == "Paid one." && saved == null) saved = ThroughJson(director.Capture());
+            };
+            Task play = director.Play("main");
+            Check.True(play.IsCompleted, "story finished");
+            Check.Lines(new[] { "Free.", "Paid one.", "Paid two." }, player.Lines);
+            Check.Equal("full_story", string.Join(",", director.GetPaidProducts()), "paid products");
+            Check.True(saved != null && saved.Has("paid"), "the save records the paid content");
+            director.Clear();
+            Check.Equal(0, director.GetPaidProducts().Count, "a new game forgets it");
+            var second = new Player();
+            var fresh = Make(second, "main", Paid);
+            fresh.Owns = owned.Contains;
+            fresh.Restore(saved);
+            Check.Equal("full_story", string.Join(",", fresh.GetPaidProducts()), "loading brings it back");
+        }
+
+        private static void NeedsDeclined()
+        {
+            var player = new Player();
+            var director = Make(player, "main", Paid);
+            var offered = new List<string>();
+            var locked = new List<string>();
+            director.Offer = product =>
+            {
+                offered.Add(product);
+                return Task.FromResult(false);
+            };
+            director.BeatLocked += (tale, beat, product) => locked.Add(tale + "." + beat + ":" + product);
+            Task play = director.Play("main");
+            Check.True(play.IsCompleted, "story finished");
+            Check.Lines(new[] { "Free." }, player.Lines);
+            Check.Equal("full_story", string.Join(",", offered), "offered at the beat");
+            Check.Equal("main.paid:full_story", string.Join(",", locked), "BeatLocked");
+            Check.Equal(0, director.GetPaidProducts().Count, "nothing paid was entered");
         }
 
         private static KeyValuePair<string, Action> Test(string name, Action body)
