@@ -2,10 +2,11 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.37** (one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
+Status: **Draft v0.38** (demos and purchases proposed, M13; one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
 
 ### Where things stand (2026-10-30)
 
+- **Demos and purchases, proposed (2026-11-10):** a story can ship as a free demo and sell the full story or extra chapters inside the game, through Steam, Google Play, and the Apple App Store. The paid content ships in the game, locked until bought. Tales check `owns("id")`, show the purchase screen with `await offer("id")`, and mark paid beats with `@needs("id")`. A built-in test store makes all of it work without any store account. See milestone M13 and decision 0029 (proposed).
 - **Cross-engine 1.0 (2026-10-30):** the maintainer's textbook needs the tool in the engines schools teach, and this year's students chose Unity with Naninovel over Godot. Version 1.0 now means Godot 1.0 and Unity 1.0 (Unity 6.7 LTS) together by April 2027, so schools can adopt the book for Fall 2027, when the maintainer's own class is the first full classroom pilot. Unreal follows as 1.1 in summer or fall 2027. TaleScript becomes a cross-engine language with the Godot plugin as the reference, and its tests become a conformance suite (decision 0025). Unity comes first and Unreal second (decision 0026). The name "StoryTeller" has a high trademark risk, so the product is renamed before 1.0 to **Visual Novel Teller** (decision 0027, accepted), pending an attorney's search. Until the M9 rename, documents keep the current name.
 - **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder, downloaded as an app for iPads and Android tablets, with a live stage preview (milestone M8, decisions 0020 and 0021, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
 - **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
@@ -775,6 +776,8 @@ Built:
 - **Read tracking:** read line ids kept in global data and used by skip; each line passed to dialogue boxes says whether it was read.
 - **Settings:** text speed, auto delay, five volumes, full screen, skipping unread lines, and language. From M7: text size, typing sounds, and high contrast (opaque black panels with white borders and text, and yellow focus, built from the game's own theme by `StoryTheme.high_contrast()`), **Readable font** (the first of Atkinson Hyperlegible, Lexend, Verdana, and other clear fonts the system has, combinable with high contrast), and **Read lines aloud**, which speaks each line with its speaker and the choice options through the system's text-to-speech (`StoryDialogue.speak`, replaceable by game code). It shows only when the system has voices, which needs the project setting `audio/general/text_to_speech`; the setup wizard turns it on. Voiced and skipped lines stay quiet.
 
+Planned (M13, decision 0029): demos and purchases. A purchase screen (`StoryConfig.offer_scene`) with the store's price, **Restore purchases** in the title and pause menus, and locked save slots for content the reader doesn't own.
+
 Rewind snapshots share every part that did not change since the one before (M7), so a story's stage, audio, and variables are stored once while they stay the same.
 
 ---
@@ -899,6 +902,25 @@ Status, 31 October 2026: started. The package `unity/com.visualnovelteller.unity
 - A runtime that plays compiled tales.
 - Checking with the C# command-line tool.
 - An online chapter for the book.
+
+### M13: Demos and purchases, Godot (proposed, decision 0029)
+Readers play a free demo and buy the full story or extra chapters inside the game. The content ships in the game and is locked until bought. Only non-consumable products: bought once, owned for good.
+- **Phase 0, feasibility (1 week):**
+  - Confirm GodotSteam, Godot's Google Play Billing plugin, and an iOS StoreKit plugin with Godot 4.7.2.
+  - On real hardware, buy and restore one test product on each: a Steam test DLC, a Google Play internal testing track, and the App Store sandbox.
+- **Phase 1, the core (3 weeks):**
+  - `StoryProduct` resources in `res://story/products/` and the `StoryStore` crew member with the `StoreBackend` interface.
+  - The test backend and the debug console's `store` commands.
+  - `owns()`, `offer()`, and `@needs` in the spec, the checker, and the conformance suite.
+  - The purchase screen, **Restore purchases**, locked save slots, and ownership kept in the global data.
+  - The `demo` export feature tag, a lock on `@needs` beats in the Map view, and the path explorer following both ways.
+- **Phase 2, Steam (1 week):** DLC ownership, buying through the overlay, and the change callback.
+- **Phase 3, Google Play and Apple (2 weeks):** buying, restoring, pending purchases, and acknowledging them.
+- **Phase 4, docs and example (1 week):**
+  - A guide, a release-testing section for each store, and the `PRIVACY.md` note for the legal review.
+  - Where's Biscuit as a demo with a test-store unlock.
+
+Timing is open (§19, question 9). The Unity layer gets the same TaleScript names with Steamworks.NET and Unity IAP backends after Unity 1.0. The Studio sells nothing.
 
 ### Textbook (Nov 2026 to Apr 2027)
 - Shared chapters are written once: story craft, TaleScript, branching, variables, and testing paths.
@@ -1111,6 +1133,7 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 6. ~~**Studio address.**~~ Resolved 2026-10-12: the Studio is a downloadable app (decision 0021); a project website at a Visual Novel StoryTeller domain links to the stores.
 7. **Classroom test:** which school and class, and when? Deferred until the Studio works.
 8. ~~**The Studio's name and version numbers.**~~ Resolved 2026-10-12: Visual Novel StoryTeller Studio, numbered separately from the plugin.
+9. **When do demos and purchases (M13) land?** In Godot 1.0, if they're ready before the interface freeze in February 2027, or in Godot 1.1 next to Unity 1.0? Phase 0 needs a Steam app id, and it needs the Apple and Google developer accounts from step 8 of §20.
 
 ---
 
@@ -1125,7 +1148,8 @@ Both engines (Godot and Unity):
 
 The Godot plugin:
 6. Finish M7: time the demo with a real player, the legal review, a trailer and screenshots, and the Asset Library listing.
+7. Accept or revise decision 0029 (demos and purchases), choose M13's timing (§19, question 9), and run its phase 0.
 
 The Studio (Visual Novel StoryTeller Studio):
-7. Set up an Apple Developer Program membership and a Google Play Console account, and register the project website's domain under the new name.
-8. Start M8 with the feasibility check (S0): a small test app built by GitHub Actions, installed on a real iPad (TestFlight) and Android tablet, and checked against `docs/studio-design.md` §10.
+8. Set up an Apple Developer Program membership and a Google Play Console account, and register the project website's domain under the new name.
+9. Start M8 with the feasibility check (S0): a small test app built by GitHub Actions, installed on a real iPad (TestFlight) and Android tablet, and checked against `docs/studio-design.md` §10.
