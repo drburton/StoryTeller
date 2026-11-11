@@ -2,11 +2,11 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.41** (demos and purchases: decision 0029 accepted, M13 phase 1 complete, M13 ships in Godot 1.0; one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
+Status: **Draft v0.42** (demos and purchases: M13 phase 1 complete, ships in Godot 1.0, Apple first, then Steam; one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
 
 ### Where things stand (2026-10-30)
 
-- **Demos and purchases (2026-11-10):** a story can ship as a free demo and sell the full story or extra chapters inside the game, through Steam, Google Play, and the Apple App Store. The paid content ships in the game, locked until bought. Tales check `owns("id")`, show the purchase screen with `await offer("id")`, and mark paid beats with `@needs("id")`. A built-in test store makes all of it work without any store account. See milestone M13 and decision 0029 (accepted). Phase 1 is built: the Store crew member, the test store, `owns()`, `offer()`, `@needs` (in Godot, C#, and the conformance suite), the purchase screen, Restore purchases, locked save slots, the lock in the Map view, the path explorer playing both ways, the checker's warning for unguarded jumps into paid beats, the console's `store` commands, and the `demo` feature tag.
+- **Demos and purchases (2026-11-10):** a story can ship as a free demo and sell the full story or extra chapters inside the game, through Steam, Google Play, and the Apple App Store. The paid content ships in the game, locked until bought. Tales check `owns("id")`, show the purchase screen with `await offer("id")`, and mark paid beats with `@needs("id")`. A built-in test store makes all of it work without any store account. See milestone M13 and decision 0029 (accepted). Phase 1 is built: the Store crew member, the test store, `owns()`, `offer()`, `@needs` (in Godot, C#, and the conformance suite), the purchase screen, Restore purchases, locked save slots, the lock in the Map view, the path explorer playing both ways, the checker's warning for unguarded jumps into paid beats, the console's `store` commands, and the `demo` feature tag. The Apple App Store is the first store (2026-11-10): the maintainer's LLC exists from January 1, 2027, and Apple's organization enrollment can use the D-U-N-S number already on file. Steam follows in January, with a game published on both by the end of January 2027.
 - **Cross-engine 1.0 (2026-10-30):** the maintainer's textbook needs the tool in the engines schools teach, and this year's students chose Unity with Naninovel over Godot. Version 1.0 now means Godot 1.0 and Unity 1.0 (Unity 6.7 LTS) together by April 2027, so schools can adopt the book for Fall 2027, when the maintainer's own class is the first full classroom pilot. Unreal follows as 1.1 in summer or fall 2027. TaleScript becomes a cross-engine language with the Godot plugin as the reference, and its tests become a conformance suite (decision 0025). Unity comes first and Unreal second (decision 0026). The name "StoryTeller" has a high trademark risk, so the product is renamed before 1.0 to **Visual Novel Teller** (decision 0027, accepted), pending an attorney's search. Until the M9 rename, documents keep the current name.
 - **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder, downloaded as an app for iPads and Android tablets, with a live stage preview (milestone M8, decisions 0020 and 0021, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
 - **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with thirteen crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
@@ -908,24 +908,26 @@ Status, 31 October 2026: started. The package `unity/com.visualnovelteller.unity
 
 ### M13: Demos and purchases, Godot (decision 0029)
 Readers play a free demo and buy the full story or extra chapters inside the game. The content ships in the game and is locked until bought. Only non-consumable products: bought once, owned for good.
-- **Phase 0, feasibility (1 week):**
-  - Confirm GodotSteam, Godot's Google Play Billing plugin, and an iOS StoreKit plugin with Godot 4.7.2.
-  - On real hardware, buy and restore one test product on each: a Steam test DLC, a Google Play internal testing track, and the App Store sandbox.
+- **Phase 0, feasibility (1 week, split by store):**
+  - Now: confirm an iOS StoreKit plugin, GodotSteam, and Godot's Google Play Billing plugin with Godot 4.7.2, using the tools that need no account: Xcode's local StoreKit testing and Steam's public test app (Spacewar, app id 480).
+  - When each account is open: buy and restore one test product on real hardware, in the App Store sandbox, with a Steam test DLC, and on a Google Play internal testing track.
 - **Phase 1, the core (3 weeks):**
   - `StoryProduct` resources in `res://story/products/` and the `StoryStore` crew member with the `StoreBackend` interface.
   - The test backend and the debug console's `store` commands.
   - `owns()`, `offer()`, and `@needs` in the spec, the checker, and the conformance suite.
   - The purchase screen, **Restore purchases**, locked save slots, and ownership kept in the global data.
   - The `demo` export feature tag, a lock on `@needs` beats in the Map view, and the path explorer following both ways.
-- **Phase 2, Steam (1 week):** DLC ownership, buying through the overlay, and the change callback.
-- **Phase 3, Google Play and Apple (2 weeks):** buying, restoring, pending purchases, and acknowledging them.
-- **Phase 4, docs and example (1 week):**
+- **Phase 2, Apple, the first store (1 to 2 weeks):** StoreKit buying, restoring, pending purchases (Ask to Buy), and refunds. Built in December 2026 against Xcode's local StoreKit testing. Checked in the App Store sandbox and published once the LLC's organization membership is active in early January 2027.
+- **Phase 3, Steam (1 week):** DLC ownership, buying through the overlay, and the change callback. Built in December against the Spacewar test app. Steamworks onboarding as the LLC starts in January, then the app id, a test DLC, and the checks.
+- **Goal:** a StoryTeller game published on the App Store and Steam by the end of January 2027.
+- **Phase 4, Google Play (1 week):** buying, restoring, pending purchases, and acknowledging them, with a Play Console account in the LLC's name. Finished before the February 2027 interface freeze.
+- **Phase 5, docs and example (1 week):**
   - A guide, a release-testing section for each store, and the `PRIVACY.md` note for the legal review.
   - Where's Biscuit as a demo with a test-store unlock.
 
-Status, 10 November 2026: phase 1 is complete. A save made after a `@needs` beat records the products it needs; the load screen shows it as locked and offers them before loading. The Map view marks `@needs` beats with a lock. The path explorer plays a game that sells products twice, once owning nothing and once owning everything. The checker warns about jumps into `@needs` beats that nothing checks first, in Godot and C#. The C# path explorer still plays only the unowned way. Phase 0 waits on the store accounts, then phases 2 and 3 add the real stores.
+Status, 10 November 2026: phase 1 is complete. A save made after a `@needs` beat records the products it needs; the load screen shows it as locked and offers them before loading. The Map view marks `@needs` beats with a lock. The path explorer plays a game that sells products twice, once owning nothing and once owning everything. The checker warns about jumps into `@needs` beats that nothing checks first, in Godot and C#. The C# path explorer still plays only the unowned way. The account-free part of phase 0 and the Apple and Steam code come next; the store checks wait for the LLC's accounts in January.
 
-Timing (decided 2026-11-10): M13 ships in **Godot 1.0**. Phases 0 to 4 finish before the interface freeze in February 2027, so the store accounts and a Steam app id are needed by early December 2026 to leave time for phases 2 and 3. The Unity layer gets the same TaleScript names with Steamworks.NET and Unity IAP backends after Unity 1.0. The Studio sells nothing.
+Timing (decided 2026-11-10): M13 ships in **Godot 1.0**. The store accounts are opened in the name of the maintainer's LLC, which exists from January 1, 2027. Apple enrolls first, with the D-U-N-S number already on file (its name and address must match the LLC), and Steam onboarding follows in January. Apple and Steam are published by the end of January, and Google Play and the docs are finished before the interface freeze in February 2027. The Unity layer gets the same TaleScript names with Steamworks.NET and Unity IAP backends after Unity 1.0. The Studio sells nothing.
 
 ### Textbook (Nov 2026 to Apr 2027)
 - Shared chapters are written once: story craft, TaleScript, branching, variables, and testing paths.
@@ -1153,8 +1155,8 @@ Both engines (Godot and Unity):
 
 The Godot plugin:
 6. Finish M7: time the demo with a real player, the legal review, a trailer and screenshots, and the Asset Library listing.
-7. M13 (demos and purchases, in Godot 1.0): get a Steam app id and the Apple and Google developer accounts (step 8) by early December 2026, run phase 0, then phases 2 to 4 before the February 2027 interface freeze.
+7. M13 (demos and purchases, in Godot 1.0): in December, the account-free part of phase 0 and the Apple and Steam code. In January, once the LLC exists: Apple organization enrollment, Steamworks onboarding, the store checks, and a game published on both by the end of January. Google Play and the docs before the February 2027 interface freeze.
 
 The Studio (Visual Novel StoryTeller Studio):
-8. Set up an Apple Developer Program membership and a Google Play Console account, and register the project website's domain under the new name.
+8. Set up an Apple Developer Program membership (as the LLC, from January 1, 2027, with the D-U-N-S number on file) and a Google Play Console account, and register the project website's domain under the new name.
 9. Start M8 with the feasibility check (S0): a small test app built by GitHub Actions, installed on a real iPad (TestFlight) and Android tablet, and checked against `docs/studio-design.md` §10.
