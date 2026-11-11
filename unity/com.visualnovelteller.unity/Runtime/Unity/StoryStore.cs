@@ -206,11 +206,13 @@ namespace VisualNovelTeller
     /// </summary>
     public class StoryStore
     {
-        /// <summary>
-        /// Makes the backend for the platform's store. The Unity In-App Purchasing support in
-        /// this package sets it when that package is installed; a game may set its own.
-        /// </summary>
-        public static Func<StoreBackend> PlatformBackend;
+        private class PlatformEntry
+        {
+            public int Priority;
+            public Func<StoreBackend> Make;
+        }
+
+        private static readonly List<PlatformEntry> _platformBackends = new List<PlatformEntry>();
 
         private readonly Dictionary<string, StoryProduct> _products = new Dictionary<string, StoryProduct>();
         private readonly List<StoryProduct> _ordered = new List<StoryProduct>();
@@ -251,8 +253,44 @@ namespace VisualNovelTeller
         public IReadOnlyList<StoryProduct> Products { get { return _ordered; } }
 
         /// <summary>
-        /// The backend a mode asks for. Auto uses the test store in the editor, the
-        /// <see cref="PlatformBackend"/> in a build, and no store otherwise.
+        /// Adds a way to make the platform's store, tried by <see cref="StoreMode.Auto"/> in builds
+        /// from the highest priority down. The factory gives null when its store doesn't apply,
+        /// for example Steam when the game wasn't started through Steam. This package adds Steam
+        /// (priority 10) when Steamworks.NET is installed, and Unity In-App Purchasing (priority 0)
+        /// when com.unity.purchasing is installed. A game can add its own.
+        /// </summary>
+        public static void AddPlatformBackend(Func<StoreBackend> make, int priority = 0)
+        {
+            if (make == null) return;
+            foreach (var entry in _platformBackends)
+                if (entry.Make == make) return;
+            _platformBackends.Add(new PlatformEntry { Priority = priority, Make = make });
+            _platformBackends.Sort((a, b) => b.Priority.CompareTo(a.Priority));
+        }
+
+        /// <summary>The first platform store from <see cref="AddPlatformBackend"/> that applies, or null.</summary>
+        public static StoreBackend MakePlatformBackend()
+        {
+            foreach (var entry in _platformBackends.ToArray())
+            {
+                StoreBackend made = null;
+                try
+                {
+                    made = entry.Make();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning("StoryStore: a platform store failed to start. " + e.Message);
+                }
+                if (made != null) return made;
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// The backend a mode asks for. Auto uses the test store in the editor, the first
+        /// platform store that applies in a build (see <see cref="AddPlatformBackend"/>), and no
+        /// store otherwise.
         /// </summary>
         public static StoreBackend MakeBackend(StoreMode mode, string testStorePath = "")
         {
@@ -264,8 +302,7 @@ namespace VisualNovelTeller
                     return new StoreBackend();
             }
             if (Application.isEditor) return new TestStoreBackend { FilePath = testStorePath };
-            StoreBackend platform = PlatformBackend != null ? PlatformBackend() : null;
-            return platform ?? new StoreBackend();
+            return MakePlatformBackend() ?? new StoreBackend();
         }
 
         /// <summary>Switches to a backend and asks it what the reader owns.</summary>

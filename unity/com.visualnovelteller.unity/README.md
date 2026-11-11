@@ -15,6 +15,7 @@ In Unity, open **Window > Package Manager**, choose **+ > Install package from g
 - `Runtime/TaleScript`: the TaleScript language core (lexer, parser, checker, compiler, and director). It uses no Unity code, and the command-line tools in `csharp/` build the same files.
 - `Runtime/Unity`: components that play tales in a Unity scene.
 - `Runtime/Purchasing`: selling through the Apple App Store and Google Play with Unity In-App Purchasing. It only compiles when the project has `com.unity.purchasing` 5.0 or newer.
+- `Runtime/Steam`: selling DLC on Steam with Steamworks.NET. It only compiles when the project has `com.rlabrecque.steamworks.net`, and only for Windows, macOS, and Linux.
 - `Editor`: import of `.tale` files and the editor tools.
 
 ## Demos and purchases
@@ -51,7 +52,16 @@ A story can ship as a free demo and sell the rest inside the game (decision 0029
    - In a build, Store **Auto** then sells through the App Store on iOS and macOS, and Google Play on Android.
    - The store's answers decide what the reader owns. The last answer is kept in `saves/store.json`, so the game works offline.
 
-Steam DLC comes next. `Story.Store.SetBackend` takes any `StoreBackend`, for another storefront or a game's own key system.
+6. **Selling on Steam:**
+   - In Steamworks, create a DLC for each product and put its app id in the product's `steamAppId`.
+   - Add Steamworks.NET with the git URL `https://github.com/rlabrecque/Steamworks.NET.git?path=/com.rlabrecque.steamworks.net#2025.164.1`. That version is tested.
+   - In a Windows, macOS, or Linux build that Steam starts, Store **Auto** then sells through Steam. On a Mac, Steam comes first, and the Mac App Store is used when the game wasn't started through Steam.
+   - **Buy** opens the DLC's page in the Steam overlay. The purchase counts when the reader owns the DLC as the overlay closes. Steam doesn't tell games prices, so the purchase screen shows none, and Restore purchases is hidden because Steam keeps ownership with the account.
+   - The overlay must be on in Steam's settings.
+   - While testing outside Steam, put a `steam_appid.txt` with your game's app id next to the executable.
+   - Visual Novel Teller starts Steam and runs its callbacks. If the game has its own Steam manager, set `SteamworksStoreApi.ManageSteam = false` before the story starts.
+
+`Story.Store.SetBackend` takes any `StoreBackend`, for another storefront or a game's own key system. `StoryStore.AddPlatformBackend` adds one to the stores Auto tries.
 
 ## License
 
