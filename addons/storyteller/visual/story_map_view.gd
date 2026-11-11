@@ -20,6 +20,7 @@ const TALE_COLORS: Array[Color] = [
 ]
 const UNREACHABLE_COLOR := Color(0.95, 0.65, 0.25)
 const MISSING_COLOR := Color(0.95, 0.35, 0.3)
+const NEEDS_COLOR := Color(0.55, 0.8, 0.95)
 
 var graph: StoryGraph
 ## Tale name to file path, and to current text.
@@ -140,6 +141,15 @@ func _make_node(id: String, at: Vector2) -> GraphNode:
 	count.text = "%d statement%s" % [info["statements"], "" if info["statements"] == 1 else "s"]
 	count.add_theme_font_size_override("font_size", 12)
 	column.add_child(count)
+	if not info.get("needs", "").is_empty():
+		var lock := Label.new()
+		lock.name = "Needs"
+		lock.text = "🔒 needs %s" % info["needs"]
+		lock.tooltip_text = "Paid content: readers who don't own %s are offered it here." % info["needs"]
+		lock.mouse_filter = Control.MOUSE_FILTER_PASS
+		lock.add_theme_color_override("font_color", NEEDS_COLOR)
+		lock.add_theme_font_size_override("font_size", 12)
+		column.add_child(lock)
 	for exit in info["exits"]:
 		if exit["kind"] == "choice":
 			var label := Label.new()

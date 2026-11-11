@@ -48,7 +48,7 @@ const UI_TEXT: Array[String] = [
 	"Buy", "Not now", "Restore purchases", "Purchases restored.",
 	"Your purchase is waiting for the store to confirm it.",
 	"The purchase didn't go through. Please try again.",
-	"The full game is a separate purchase.",
+	"The full game is a separate purchase.", "Locked: %s",
 ]
 
 var layer: CanvasLayer
@@ -238,8 +238,19 @@ func continue_game() -> void:
 	var slot := saves().latest_slot() if saves() else ""
 	if slot.is_empty():
 		return
+	await load_slot(slot)
+
+
+## Loads [param slot], first offering any product the save needs that the
+## reader doesn't own. Awaitable; returns true when it loaded.
+func load_slot(slot: String) -> bool:
+	if saves() == null:
+		return false
+	for product in saves().get_locked_products(slot):
+		if store() == null or not store().has_product(product) or not await offer(store().get_product(product)):
+			return false
 	close_all()
-	saves().load_slot(slot)
+	return saves().load_slot(slot) == OK
 
 
 ## False where a game cannot close itself, such as in a web browser. The
@@ -424,7 +435,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("story_quick_save") and saves():
 			saves().quick_save()
 		elif event.is_action_pressed("story_quick_load") and saves() and saves().has_slot(StorySaves.QUICK_SLOT):
-			saves().quick_load()
+			load_slot(StorySaves.QUICK_SLOT)
 		else:
 			return
 		get_viewport().set_input_as_handled()
