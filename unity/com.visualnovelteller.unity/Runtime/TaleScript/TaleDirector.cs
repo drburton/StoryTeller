@@ -38,6 +38,8 @@ namespace TaleScript
         public event Action<string, object> StorySignal;
         /// <summary>Emitted when a tale does something invalid at runtime (message, tale name, line). The tale continues.</summary>
         public event Action<string, string, int> RuntimeError;
+        /// <summary>The story ended at a beat marked @needs: tale, beat, and product.</summary>
+        public event Action<string, string, string> BeatLocked;
 
         /// <summary>Upper limit of instructions run without showing a line or choice, which stops endless loops.</summary>
         public int MaxStepsWithoutPause = 100000;
@@ -55,6 +57,14 @@ namespace TaleScript
         public Func<string, string> Translator;
         /// <summary>Tells collected("id"). Without it, collected() is false.</summary>
         public Func<string, bool> Collected;
+        /// <summary>Tells owns("id"). Without it, the reader owns nothing.</summary>
+        public Func<string, bool> Owns;
+        /// <summary>
+        /// Offers a product on the purchase screen at a beat marked @needs, and gives true
+        /// when the reader owns it afterwards. Without it, a beat the reader doesn't own ends
+        /// the story.
+        /// </summary>
+        public Func<string, Task<bool>> Offer;
         /// <summary>Loads a tale that is not registered yet, such as one from a file.</summary>
         public Func<string, Tale> TaleLoader;
         /// <summary>Resolves names such as cast members. Values may implement <see cref="ITaleSpeaker"/>, <see cref="TaleExposed"/>, or be plain tale values.</summary>
@@ -138,6 +148,7 @@ namespace TaleScript
             }
             await PrepareTale(tale);
             if (generation != _generation) return;
+            if (!await UnlockBeat(tale, beat) || generation != _generation) return;
             _stack.Add(EnterBeat(tale, beat));
             _playing = true;
             _finished = new TaskCompletionSource<bool>();
@@ -505,7 +516,8 @@ namespace TaleScript
                     if (target != null && CheckBeat(target, instruction.Beat))
                     {
                         await PrepareTale(target);
-                        _stack[_stack.Count - 1] = EnterBeat(target, instruction.Beat);
+                        if (await UnlockBeat(target, instruction.Beat))
+                            _stack[_stack.Count - 1] = EnterBeat(target, instruction.Beat);
                     }
                     break;
                 }
@@ -515,7 +527,8 @@ namespace TaleScript
                     if (callee != null && CheckBeat(callee, instruction.Beat))
                     {
                         await PrepareTale(callee);
-                        _stack.Add(EnterBeat(callee, instruction.Beat));
+                        if (await UnlockBeat(callee, instruction.Beat))
+                            _stack.Add(EnterBeat(callee, instruction.Beat));
                     }
                     break;
                 }
@@ -760,8 +773,28 @@ namespace TaleScript
             string beat = expr.Operands[0].Name;
             if (tale == null || tale.GetBeatStart(beat) < 0) return false;
             await PrepareTale(tale);
-            _stack.Add(EnterBeat(tale, beat));
+            if (await UnlockBeat(tale, beat))
+                _stack.Add(EnterBeat(tale, beat));
             return true;
+        }
+
+        /// <summary>
+        /// True when the reader may enter a beat: it needs no product, or they own it or buy
+        /// it now through <see cref="Offer"/>. Otherwise the story ends there.
+        /// </summary>
+        private async Task<bool> UnlockBeat(Tale tale, string beat)
+        {
+            string product;
+            if (!tale.Needs.TryGetValue(beat, out product) || product.Length == 0) return true;
+            int generation = _generation;
+            if (Owns != null && Owns(product)) return true;
+            if (Offer != null && await Offer(product)) return generation == _generation;
+            if (generation == _generation)
+            {
+                _stack.Clear();
+                if (BeatLocked != null) BeatLocked(tale.TaleName, beat, product);
+            }
+            return false;
         }
 
         private async Task FinishPending()
@@ -879,6 +912,9 @@ namespace TaleScript
                         break;
                     case "collected":
                         if (count == 1) return Collected != null && Collected(GdValue.Str(args[0]));
+                        break;
+                    case "owns":
+                        if (count == 1) return Owns != null && Owns(GdValue.Str(args[0]));
                         break;
                     case "Vector2":
                     case "Vector2i":

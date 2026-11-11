@@ -95,6 +95,9 @@ func _compile(doc: TaleDocument, tale_name: String, call_kinds: Dictionary) -> T
 				var heading := _annotation_text(beat_annotations, "heading")
 				if not heading.is_empty():
 					_tale.headings[node.name] = heading
+				var needs := _annotation_text(beat_annotations, "needs")
+				if not needs.is_empty():
+					_tale.needs[node.name] = needs
 				_tale.beats[node.name] = _tale.instructions.size()
 				_block(node.body)
 				_emit({"op": "end"}, node.line_end)

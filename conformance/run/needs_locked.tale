@@ -1,0 +1,13 @@
+## Without a store, the reader owns nothing: owns() is false, and the story ends at a beat marked @needs.
+var reached := false
+
+beat start:
+	"Free part."
+	if owns("full_story"):
+		"Never shown."
+	jump paid
+
+@needs("full_story")
+beat paid:
+	reached = true
+	"Paid part."

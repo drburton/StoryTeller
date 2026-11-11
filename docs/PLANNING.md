@@ -2,14 +2,14 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.38** (demos and purchases proposed, M13; one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
+Status: **Draft v0.39** (demos and purchases: decision 0029 accepted, M13 phase 1 under way; one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
 
 ### Where things stand (2026-10-30)
 
-- **Demos and purchases, proposed (2026-11-10):** a story can ship as a free demo and sell the full story or extra chapters inside the game, through Steam, Google Play, and the Apple App Store. The paid content ships in the game, locked until bought. Tales check `owns("id")`, show the purchase screen with `await offer("id")`, and mark paid beats with `@needs("id")`. A built-in test store makes all of it work without any store account. See milestone M13 and decision 0029 (proposed).
+- **Demos and purchases (2026-11-10):** a story can ship as a free demo and sell the full story or extra chapters inside the game, through Steam, Google Play, and the Apple App Store. The paid content ships in the game, locked until bought. Tales check `owns("id")`, show the purchase screen with `await offer("id")`, and mark paid beats with `@needs("id")`. A built-in test store makes all of it work without any store account. See milestone M13 and decision 0029 (accepted). Phase 1, part 1 is built: the Store crew member, the test store, `owns()`, `offer()`, `@needs` (in Godot, C#, and the conformance suite), the purchase screen, Restore purchases, the console's `store` commands, and the `demo` feature tag.
 - **Cross-engine 1.0 (2026-10-30):** the maintainer's textbook needs the tool in the engines schools teach, and this year's students chose Unity with Naninovel over Godot. Version 1.0 now means Godot 1.0 and Unity 1.0 (Unity 6.7 LTS) together by April 2027, so schools can adopt the book for Fall 2027, when the maintainer's own class is the first full classroom pilot. Unreal follows as 1.1 in summer or fall 2027. TaleScript becomes a cross-engine language with the Godot plugin as the reference, and its tests become a conformance suite (decision 0025). Unity comes first and Unreal second (decision 0026). The name "StoryTeller" has a high trademark risk, so the product is renamed before 1.0 to **Visual Novel Teller** (decision 0027, accepted), pending an attorney's search. Until the M9 rename, documents keep the current name.
 - **Two products (2026-10-12):** **Visual Novel StoryTeller**, the Godot plugin for adults, finishes as 1.0 from the current 0.1.0 beta. **Visual Novel StoryTeller Studio** is for kids: a standalone, block-based story builder, downloaded as an app for iPads and Android tablets, with a live stage preview (milestone M8, decisions 0020 and 0021, `docs/studio-design.md`). The maintainer is writing a textbook for teachers to use with the Studio. Both live in this repository. There is no Pro tier; everything is open source (decision 0019, §12).
-- **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with twelve crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
+- **Built and merged to `main`:** milestones M0 to M6. M5 is built but stays open until the usability test with writers (§11). The language and compiler, the runtime with thirteen crew members (§5.1), stage, audio, effects, movies, saves, rewind, history, settings, menus, Extras, translation, the debug console, live reload, and the Story tab with Text, Cards, and Map views.
 - **M6:** inline text tags, CGs with gallery variants (decision 0013), character renames, character animations with drawing order, per-character data (`ada.affection`), a save screen with pages, renaming, deleting, and timed autosave, presentation details (title art and music, an animated dialogue box, and named text styles), a route chart for players in Extras, picture choices with a registry of choice styles, and Yarn Spinner import. Also merged: clicking anywhere on the dialogue box continues, and the default theme shows `[code]` in a tinted monospace font.
 - **Tests:** 544 tests in the built-in runner pass on Linux and Windows in CI, plus a browser check of the Studio's web version, an export check of the demo as a `.pck` that also plays, saves, and loads it, the demo exported as a Windows game and run on Windows, and an install check of the plugin zip in an empty project.
 - **Demo:** `demo/` plays a tour, a prologue, chapter 1, and chapter 2 with two endings (about 12 to 15 minutes by estimate; not yet timed with a player) in English and Spanish; `demo/embedded/` shows dialogue inside a 3D scene. The tour shows the TaleScript behind each feature it explains. Ada is "???" until she introduces herself, chapter 1 has a CG with two variants, characters hop, nod, and shake, and Mira's friendship grows with the player's choices.
@@ -515,13 +515,15 @@ Story (autoload)
 ├── StoryAudio       "Audio"         music crossfade, sounds, ambience, voice on audio buses
 ├── StoryEffects     "Effects"       weather, color filters, flashes, screen fades, movies
 ├── StoryCollection  "Collection"    gallery (with CG variants), music room, and codex unlocks
+├── StoryStore       "Store"         products the reader owns, buying, restoring (decision 0029)
 ├── StorySaves       "Saves"         slots, quick save, autosave, thumbnails, global data
 ├── StorySettings    "Settings"      player preferences and language
 ├── StoryRewind      "Rewind"        snapshots for stepping back
 ├── StoryHistory     "History"       log of past lines
 ├── StoryDialogue    "Dialogue"      dialogue box styles, choice styles, input actions
 ├── StoryMenus       "Menus"         title, pause, save and load, settings, history, Extras,
-│                                    confirmations, text input, quick menu, notices
+│                                    confirmations, text input, purchase screen, quick menu,
+│                                    notices
 └── StoryConsole     "Console"       debug console (debug builds only)
 ```
 
@@ -608,6 +610,7 @@ Built (the full reference with arguments is §13 of `docs/talescript-spec.md`):
 | Flow | `wait()`, `autosave()`, `emit()` |
 | Player input | `ask_text()`, `ask_number()` |
 | Collection | `collect()` |
+| Store | `offer()` (with the function `owns()` and the annotation `@needs`) |
 
 Planned: the remaining M6 items (§11). Considered in earlier drafts and not scheduled: `line_up()`, `skip_lock()`, `change_scene()`, and a manual `preload()` (beats already preload their assets). Generated reference docs for actions are part of M7.
 
@@ -903,7 +906,7 @@ Status, 31 October 2026: started. The package `unity/com.visualnovelteller.unity
 - Checking with the C# command-line tool.
 - An online chapter for the book.
 
-### M13: Demos and purchases, Godot (proposed, decision 0029)
+### M13: Demos and purchases, Godot (decision 0029)
 Readers play a free demo and buy the full story or extra chapters inside the game. The content ships in the game and is locked until bought. Only non-consumable products: bought once, owned for good.
 - **Phase 0, feasibility (1 week):**
   - Confirm GodotSteam, Godot's Google Play Billing plugin, and an iOS StoreKit plugin with Godot 4.7.2.
@@ -919,6 +922,8 @@ Readers play a free demo and buy the full story or extra chapters inside the gam
 - **Phase 4, docs and example (1 week):**
   - A guide, a release-testing section for each store, and the `PRIVACY.md` note for the legal review.
   - Where's Biscuit as a demo with a test-store unlock.
+
+Status, 10 November 2026: phase 1, part 1 is built. Still to come in phase 1: locked save slots, the lock in the Map view, the path explorer following both ways, and a checker warning for jumps into `@needs` beats that aren't guarded. Phase 0 waits on the store accounts.
 
 Timing is open (§19, question 9). The Unity layer gets the same TaleScript names with Steamworks.NET and Unity IAP backends after Unity 1.0. The Studio sells nothing.
 
@@ -1148,7 +1153,7 @@ Both engines (Godot and Unity):
 
 The Godot plugin:
 6. Finish M7: time the demo with a real player, the legal review, a trailer and screenshots, and the Asset Library listing.
-7. Accept or revise decision 0029 (demos and purchases), choose M13's timing (§19, question 9), and run its phase 0.
+7. Finish M13 phase 1 (demos and purchases), choose its timing (§19, question 9), and run phase 0 once the store accounts exist.
 
 The Studio (Visual Novel StoryTeller Studio):
 8. Set up an Apple Developer Program membership and a Google Play Console account, and register the project website's domain under the new name.

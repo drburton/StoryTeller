@@ -78,6 +78,13 @@ static func choices(callee: String, param: String, config: StoryConfig, context:
 			var ids := PackedStringArray(StoryCollection.scan(config.collection_folder).keys())
 			ids.sort()
 			return ids
+		["offer", "id"]:
+			var ids := PackedStringArray(StoryStore.scan(config.product_folder).keys())
+			for product in config.products:
+				if product != null and product.id not in ids:
+					ids.append(product.id)
+			ids.sort()
+			return ids
 		["weather", "kind"]:
 			return PackedStringArray(StoryEffects.WEATHER_KINDS)
 		["filter", "name"]:
@@ -161,6 +168,15 @@ static func add_asset_checks(context: TaleCheckContext, config: StoryConfig) -> 
 	context.add_asset_check("collect", "id", func(id: String) -> String:
 		if not StoryCollection.scan(collection_folder).has(id):
 			return "There is no collection item '%s' in %s." % [id, collection_folder]
+		return "")
+	var product_ids := StoryStore.scan(config.product_folder).keys()
+	for product in config.products:
+		if product != null:
+			product_ids.append(product.id)
+	var product_folder := config.product_folder
+	context.add_asset_check("offer", "id", func(id: String) -> String:
+		if id not in product_ids:
+			return "There is no product '%s' in %s." % [id, product_folder]
 		return "")
 
 

@@ -1,0 +1,15 @@
+## @needs goes on a beat and names one product; owns() is a built-in function.
+@needs("full_story")
+beat start:
+	if owns("full_story"):
+		jump paid
+	@needs("full_story")
+	"A line can't need a product."
+
+@needs
+beat paid:
+	pass
+
+@needs("a", "b")
+beat other:
+	pass

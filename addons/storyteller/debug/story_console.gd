@@ -23,6 +23,10 @@ const HELP := """Commands:
   <expr>               show a value, e.g. trust + 1
   reload               reload tales whose files changed
   unlock_all           unlock every collection item
+  store                list products and what the reader owns
+  store own <id>       give the reader a product (test store)
+  store drop <id>      take a product away, as a refund would
+  store reset          take every product away
   clear                clear this log
   help                 show this list"""
 
@@ -106,6 +110,9 @@ func run_command(command: String) -> void:
 				collection.unlock_all()
 				write("Unlocked every collection item.")
 			return
+		"store":
+			_store_command(words)
+			return
 		"jump":
 			if words.size() != 2:
 				write("Usage: jump <tale>.<beat> or jump <beat>")
@@ -130,6 +137,36 @@ func run_command(command: String) -> void:
 		return
 	var result: Array = await director.evaluate_source(command)
 	write(_format(result[1]) if result[0] else str(result[1]))
+
+
+func _store_command(words: PackedStringArray) -> void:
+	var store := _crew(&"Store") as StoryStore
+	if store == null:
+		write("There is no Store crew member.")
+		return
+	if words.size() == 1:
+		write("Store: %s" % store.backend.get_store_name())
+		if store.get_products().is_empty():
+			write("No products in %s." % store.product_folder)
+		for product in store.get_products():
+			write("  %s  %s" % [product.id, "owned" if store.owns(product.id) else "not owned"])
+		return
+	var test_store := store.backend as TestStoreBackend
+	if test_store == null:
+		write("Only the test store can be changed from the console.")
+		return
+	match words[1]:
+		"own", "drop":
+			if words.size() != 3 or not store.has_product(words[2]):
+				write("Usage: store %s <product id>" % words[1])
+				return
+			test_store.set_owned(words[2], words[1] == "own")
+			write("%s %s." % [words[2], "is owned" if words[1] == "own" else "is not owned"])
+		"reset":
+			test_store.reset()
+			write("The reader owns nothing.")
+		_:
+			write("Usage: store, store own <id>, store drop <id>, or store reset")
 
 
 func _process(_delta: float) -> void:
