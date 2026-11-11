@@ -9,7 +9,8 @@ extends RefCounted
 ## graph.unreachable                        # beats nothing leads to
 ## [/codeblock]
 
-## "tale.beat" to [code]{"tale", "beat", "line", "statements", "ends", "exits": Array}[/code].
+## "tale.beat" to [code]{"tale", "beat", "line", "statements", "ends", "needs", "exits": Array}[/code].
+## "needs" is the product from the beat's [code]@needs[/code], or "".
 ## Exits are [code]{"to", "kind" ("jump", "call", "choice"), "label", "line"}[/code].
 var beats: Dictionary = {}
 ## Exits whose target beat does not exist: [code]{"from", "to", "line"}[/code].
@@ -29,14 +30,23 @@ static func build(docs: Dictionary, start_tale := "", start_beat := "start") -> 
 	names.sort()
 	for tale_name in names:
 		var doc: TaleDocument = docs[tale_name]
+		var annotations: Array[TaleExpr] = []
 		for statement in doc.statements:
-			if statement.kind != TaleNode.Kind.BEAT:
+			if statement.kind == TaleNode.Kind.ANNOTATION:
+				annotations.append_array(statement.annotations)
 				continue
+			if statement.kind != TaleNode.Kind.BEAT:
+				if not statement.is_trivia():
+					annotations.clear()
+				continue
+			annotations.append_array(statement.annotations)
 			var id := "%s.%s" % [tale_name, statement.name]
 			var info := {
 				"tale": tale_name, "beat": statement.name, "line": statement.line_start,
-				"statements": _count(statement), "ends": _falls_through(statement), "exits": [],
+				"statements": _count(statement), "ends": _falls_through(statement),
+				"needs": _needs(annotations), "exits": [],
 			}
+			annotations.clear()
 			_collect_exits(statement, tale_name, docs, info["exits"], "")
 			graph.beats[id] = info
 	for id in graph.beats:
@@ -187,6 +197,14 @@ static func _collect_exits(node: TaleNode, tale_name: String, docs: Dictionary, 
 		elif child.kind == TaleNode.Kind.TIMEOUT:
 			child_label = "timeout"
 		_collect_exits(child, tale_name, docs, exits, child_label)
+
+
+## The product a beat's [code]@needs[/code] names, or "".
+static func _needs(annotations: Array[TaleExpr]) -> String:
+	for annotation in annotations:
+		if annotation.name == "needs" and annotation.args.size() == 1 and annotation.args[0].value is String:
+			return annotation.args[0].value
+	return ""
 
 
 static func _resolve(target: String, tale_name: String) -> String:

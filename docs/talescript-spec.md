@@ -420,7 +420,8 @@ The checker runs after parsing and reports, with file and line:
 - unreachable statements after `jump` or `return`;
 - expression statements that have no effect (warning);
 - duplicate `@id` values, unknown annotations, and annotations on the wrong kind of line;
-- `choose` blocks without options, extra `timeout:` branches, and unreachable `match` branches.
+- `choose` blocks without options, extra `timeout:` branches, and unreachable `match` branches;
+- a `jump` or beat call into a beat of the same tale marked `@needs("id")` (warning), unless it is inside a beat that needs the same product, or under an `if`, `elif`, or `while` whose condition calls `owns("id")` or `offer("id")` for it.
 
 ### 9.1 Runtime errors
 

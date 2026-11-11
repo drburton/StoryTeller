@@ -18,6 +18,11 @@ extends Node
 ## default answer. Objects game code exposes (StoryConfig.exposed_names)
 ## are stood in for by objects whose methods return null and whose
 ## properties are 0, unless a crew member answers to the name.
+##
+## A game that sells products (decision 0029) is explored twice: once by a
+## reader who owns nothing and turns down every offer, and once by a reader
+## who owns every product. Paths of the second kind start with
+## [constant OWNER_STEP].
 
 ## Stops after this many paths; the report then says it is not complete.
 var max_paths := 1000
@@ -29,6 +34,8 @@ var max_lines := 2000
 var path_seconds := 10.0
 
 const LEFT_OUT := ["StoryDialogue", "StoryMenus", "StoryConsole", "StorySaves", "StorySettings"]
+## First step of the paths played by a reader who owns every product.
+const OWNER_STEP := "(owns every product)"
 const StoryScript := preload("res://addons/storyteller/core/story.gd")
 
 
@@ -49,27 +56,35 @@ func explore(config: StoryConfig, tale_name: String, beat := "start", sources :=
 			return report
 		tales.append(compiled["tale"])
 	var entered := {}
-	var plan: Array = []
-	while true:
-		if report["paths"] >= max_paths:
-			report["complete"] = false
-			break
-		var run := await _play_path(config, tale_name, beat, plan, tales, stand_ins)
-		report["paths"] += 1
-		entered.merge(run["entered"])
-		if not run["ending"].is_empty():
-			report["endings"][run["ending"]] = report["endings"].get(run["ending"], 0) + 1
-		for problem in run["problems"]:
-			problem["path"] = run["path"]
-			report["problems"].append(problem)
-		var next := next_plan(run["trace"])
-		if next.is_empty():
-			break
-		plan = next
+	for owner in [false, true] if sells_products(config) else [false]:
+		var plan: Array = []
+		while true:
+			if report["paths"] >= max_paths:
+				report["complete"] = false
+				break
+			var run := await _play_path(config, tale_name, beat, plan, tales, stand_ins, owner)
+			report["paths"] += 1
+			entered.merge(run["entered"])
+			if not run["ending"].is_empty():
+				report["endings"][run["ending"]] = report["endings"].get(run["ending"], 0) + 1
+			for problem in run["problems"]:
+				problem["path"] = run["path"]
+				report["problems"].append(problem)
+			var next := next_plan(run["trace"])
+			if next.is_empty():
+				break
+			plan = next
 	for beat_name in _beats_of(config, tale_name, sources):
 		if not entered.has("%s.%s" % [tale_name, beat_name]):
 			report["unreached"].append(beat_name)
 	return report
+
+
+## True when [param config] has the Store crew member and products to sell.
+static func sells_products(config: StoryConfig) -> bool:
+	if not config.crew.any(func(script: Script) -> bool: return script != null and script.get_global_name() == "StoryStore"):
+		return false
+	return not config.products.is_empty() or not StoryStore.scan(config.product_folder).is_empty()
 
 
 ## The picks for the next path after the path whose choices were
@@ -126,10 +141,10 @@ static func describe(report: Dictionary) -> String:
 	return "\n".join(lines)
 
 
-func _play_path(config: StoryConfig, tale_name: String, beat: String, plan: Array, tales: Array[Tale], stand_ins: Dictionary) -> Dictionary:
+func _play_path(config: StoryConfig, tale_name: String, beat: String, plan: Array, tales: Array[Tale], stand_ins: Dictionary, owner := false) -> Dictionary:
 	var run := {"trace": [], "path": PackedStringArray(), "entered": {}, "ending": "", "problems": []}
 	var story: Node = StoryScript.new()
-	story.start(_config_for_paths(config))
+	story.start(_config_for_paths(config, owner))
 	add_child(story)
 	var director := story.get_crew(&"TaleDirector") as TaleDirector
 	var player := _Player.new()
@@ -167,6 +182,8 @@ func _play_path(config: StoryConfig, tale_name: String, beat: String, plan: Arra
 		director.stop()
 		run["ending"] = ""
 	run["trace"] = player.trace
+	if owner:
+		run["path"].append(OWNER_STEP)
 	for step in player.trace:
 		run["path"].append(step["texts"].get(step["pick"], "(time runs out)"))
 	story.shut_down()
@@ -179,8 +196,9 @@ func _play_path(config: StoryConfig, tale_name: String, beat: String, plan: Arra
 
 
 # The project's config without the members that wait for a player or write
-# files, and with a menus member that answers ask_text() by itself.
-func _config_for_paths(config: StoryConfig) -> StoryConfig:
+# files, and with a menus member that answers ask_text() by itself. The
+# reader owns nothing, or every product when [param owner] is true.
+func _config_for_paths(config: StoryConfig, owner := false) -> StoryConfig:
 	var copy := config.duplicate() as StoryConfig
 	var crew: Array[Script] = []
 	for script in config.crew:
@@ -189,6 +207,8 @@ func _config_for_paths(config: StoryConfig) -> StoryConfig:
 	crew.append(_Answers)
 	copy.crew = crew
 	copy.autosave_on_choice = false
+	copy.store = "none"
+	copy.store_backend = _OwnsEverything if owner else null
 	return copy
 
 
@@ -332,3 +352,13 @@ class _Answers extends StoryMenus:
 
 	func ask_text(_prompt: String, default_text := "", _max_length := 24) -> String:
 		return default_text if not default_text.is_empty() else "Tester"
+
+	# Turns down every offer, so the paths without the product are played.
+	func offer(_product: StoryProduct) -> bool:
+		return false
+
+
+## A store where the reader owns every product.
+class _OwnsEverything extends StoreBackend:
+	func owns(_id: String) -> bool:
+		return true

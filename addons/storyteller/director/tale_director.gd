@@ -148,6 +148,9 @@ var _current_tale := ""
 var _current_line := 0
 ## Increases on every play or stop, so an old run loop knows to quit.
 var _generation := 0
+## Products of the @needs beats entered in this playthrough, so a save made
+## after them is locked for a reader who doesn't own them.
+var _paid: Dictionary = {}
 
 
 func _init() -> void:
@@ -171,6 +174,7 @@ func setup(config: StoryConfig) -> void:
 
 func clear() -> void:
 	stop()
+	_paid.clear()
 	_story_vars.clear()
 	_constants.clear()
 	_visited.clear()
@@ -478,7 +482,7 @@ func capture() -> Dictionary:
 		"vars": JSON.from_native(_story_vars),
 		"visited": _visited.keys(),
 		"once": _once_chosen.keys(),
-	}
+	}.merged({"paid": _paid.keys()} if not _paid.is_empty() else {})
 
 
 ## Replaces the story state with [param data] from [method capture]. Call
@@ -494,6 +498,9 @@ func restore(data: Dictionary) -> void:
 	_once_chosen.clear()
 	for key in data.get("once", []):
 		_once_chosen[key] = true
+	_paid.clear()
+	for product in data.get("paid", []):
+		_paid[str(product)] = true
 	for saved in data.get("stack", []):
 		var tale := get_tale(saved["tale"])
 		if tale == null:
@@ -505,6 +512,12 @@ func restore(data: Dictionary) -> void:
 		frame.locals = JSON.to_native(saved["locals"])
 		frame.iterators = JSON.to_native(saved["iterators"])
 		_stack.append(frame)
+
+
+## Products of the [code]@needs[/code] beats this playthrough has
+## entered. A save made now needs them all.
+func get_paid_products() -> PackedStringArray:
+	return PackedStringArray(_paid.keys())
 
 
 ## Continues playback from a restored state. Awaitable: returns when the
@@ -850,7 +863,10 @@ func _unlock_beat(tale: Tale, beat: String) -> bool:
 	var generation := _generation
 	var store: Node = _sibling(&"Store")
 	if store != null and await store.offer(product):
-		return generation == _generation
+		if generation != _generation:
+			return false
+		_paid[product] = true
+		return true
 	if generation == _generation:
 		_stack.clear()
 		beat_locked.emit(tale.tale_name, beat, product)

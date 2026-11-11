@@ -101,6 +101,7 @@ func save_slot(slot: String) -> Error:
 		"speaker": _last_line["speaker"],
 		"text": _last_line["text"],
 		"title": _current_title(),
+		"needs": _director().get_paid_products() if _director() != null else PackedStringArray(),
 		"state": story.capture(),
 	}
 	var error := _write_json(_slot_path(slot), data)
@@ -117,11 +118,14 @@ func save_slot(slot: String) -> Error:
 
 
 ## Loads [param slot] and continues the story from the line that was showing.
-## Returns OK or an error code.
+## Returns OK or an error code: ERR_UNAUTHORIZED when the save is in paid
+## content the reader doesn't own (see [method get_locked_products]).
 func load_slot(slot: String) -> Error:
 	var data := read_slot(slot)
 	if data.is_empty():
 		return ERR_FILE_NOT_FOUND
+	if not _locked_in(data).is_empty():
+		return ERR_UNAUTHORIZED
 	var story := get_parent()
 	story.restore(data["state"])
 	playtime = float(data.get("playtime", 0.0))
@@ -195,6 +199,22 @@ func get_slot_info(slot: String) -> Dictionary:
 		if image != null:
 			data["thumbnail"] = ImageTexture.create_from_image(image)
 	return data
+
+
+## Products a save needs that the reader doesn't own: the save was made
+## after a [code]@needs[/code] beat. Loading it is refused until they buy
+## them, for example from the purchase screen.
+func get_locked_products(slot: String) -> PackedStringArray:
+	return _locked_in(read_slot(slot))
+
+
+func _locked_in(data: Dictionary) -> PackedStringArray:
+	var locked := PackedStringArray()
+	var store := get_parent().get_crew(&"Store") as StoryStore if get_parent() != null and get_parent().has_method("get_crew") else null
+	for product in data.get("needs", []):
+		if store == null or not store.owns(str(product)):
+			locked.append(str(product))
+	return locked
 
 
 func has_slot(slot: String) -> bool:

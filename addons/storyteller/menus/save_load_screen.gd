@@ -137,8 +137,11 @@ func _make_slot(slot: String) -> Control:
 	var label := str(info.get("label", ""))
 	var text_label := Label.new()
 	text_label.auto_translate_mode = Node.AUTO_TRANSLATE_MODE_DISABLED
+	var locked := menus.saves().get_locked_products(slot) if menus.saves() and not info.is_empty() else PackedStringArray()
 	if info.is_empty():
 		text_label.text = tr("Empty")
+	elif mode == "load" and not locked.is_empty():
+		text_label.text = tr("Locked: %s") % _product_titles(locked)
 	else:
 		text_label.text = label if not label.is_empty() else str(info.get("text", ""))
 	text_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -173,8 +176,7 @@ func _on_slot_pressed(slot: String, occupied: bool) -> void:
 	else:
 		if menus.is_story_playing() and not await menus.confirm("Load this save? Unsaved progress will be lost."):
 			return
-		menus.close_all()
-		saves.load_slot(slot)
+		menus.load_slot(slot)
 
 
 func _rename(slot: String, current: String) -> void:
@@ -188,6 +190,15 @@ func _delete(slot: String) -> void:
 		return
 	menus.saves().delete_slot(slot)
 	show_page(page)
+
+
+## The titles of [param products], for a locked save.
+func _product_titles(products: PackedStringArray) -> String:
+	var titles := PackedStringArray()
+	for id in products:
+		var product := menus.store().get_product(id) if menus.store() != null else null
+		titles.append(tr(product.title) if product != null else id)
+	return ", ".join(titles)
 
 
 static func _slot_label(slot: String) -> String:
