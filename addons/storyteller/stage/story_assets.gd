@@ -15,6 +15,11 @@ const RAW_AUDIO_EXTENSIONS: Array[String] = ["ogg", "wav", "mp3"]
 ## Raw files already read: path to [signature, resource], where the
 ## signature is the file's modified time and size.
 static var _raw_cache := {}
+## Paths passed to [method ResourceLoader.load_threaded_request] whose
+## result has not been collected yet. Godot keeps each request until
+## [method ResourceLoader.load_threaded_get] collects it, and reports the
+## ones still waiting as leaked objects when the game quits.
+static var _requested := {}
 
 
 ## Path of the first existing "<folder>/<name>.<extension>", or "".
@@ -57,6 +62,9 @@ static func load_path(path: String) -> Resource:
 	if path.is_empty():
 		return null
 	if not is_raw(path):
+		if _requested.has(path):
+			_requested.erase(path)
+			return ResourceLoader.load_threaded_get(path)
 		return load(path) if ResourceLoader.exists(path) else null
 	var signature := _signature(path)
 	var cached: Array = _raw_cache.get(path, [])
@@ -161,5 +169,21 @@ static func default_cg_variant(variants: PackedStringArray) -> String:
 
 ## Starts loading [param path] in the background so it is ready when needed.
 static func preload_path(path: String) -> void:
-	if not path.is_empty() and ResourceLoader.exists(path) and not ResourceLoader.has_cached(path):
-		ResourceLoader.load_threaded_request(path)
+	if path.is_empty() or _requested.has(path) or not ResourceLoader.exists(path) or ResourceLoader.has_cached(path):
+		return
+	if ResourceLoader.load_threaded_request(path) == OK:
+		_requested[path] = true
+
+
+## Collects every background load [method preload_path] started that was
+## never used, waiting for those still loading, so Godot can let them go.
+## The [code]Story[/code] autoload calls this when it shuts down.
+static func finish_preloads() -> void:
+	for path in _requested.keys():
+		ResourceLoader.load_threaded_get(path)
+	_requested.clear()
+
+
+## Number of background loads waiting to be collected, for tests.
+static func pending_preloads() -> int:
+	return _requested.size()

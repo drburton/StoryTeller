@@ -41,6 +41,10 @@ static func make_actions(scripts: Array[Script]) -> Array[TaleAction]:
 			made.append(action)
 		else:
 			push_warning("StoryTeller: %s is not a TaleAction with a name." % (script.resource_path if script != null else "An empty entry in StoryConfig.actions"))
+			# A script that makes a Node, such as a crew member listed by
+			# mistake, is not freed by letting go of it.
+			if action is Object and not action is RefCounted:
+				action.free()
 	return made
 
 
