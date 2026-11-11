@@ -190,6 +190,7 @@ It also presses New Game and checks that saving and loading bring the line back.
 - [TaleScript for GDScript users](docs/guides/talescript-for-gdscript-users.md): only the differences
 - [Developer guide](docs/guides/developer-guide.md): crew members, actions, looks, styles, transitions, embedding, editor add-ons
 - [Recipes](docs/guides/recipes.md): relationship meters, inventories, mini-games, timed and picture choices
+- [Demos and purchases](docs/guides/demos-and-purchases.md): a free demo with the rest sold inside the game, the test store, and the Apple App Store
 - [Publishing a student's story](docs/guides/publishing-studio-stories.md): for teachers and parents, from a Studio story file to a web game
 - [Action reference](docs/action-reference.md), generated from the built-in actions
 - [TaleScript specification](docs/talescript-spec.md)

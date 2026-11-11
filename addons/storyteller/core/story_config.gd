@@ -167,9 +167,11 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Extra products, added to those in [member product_folder].
 @export var products: Array[StoryProduct] = []
 ## The store the game sells through. "auto" uses the test store when the
-## game runs from the editor, and no store otherwise. "test" always uses the
-## test store, and "none" sells nothing.
-@export_enum("auto", "test", "none") var store := "auto"
+## game runs from the editor, the Apple App Store when the Godot StoreKit 2
+## plugin is in the build ([AppleStoreBackend]), and no store otherwise.
+## "test" always uses the test store, "apple" the App Store, and "none"
+## sells nothing.
+@export_enum("auto", "test", "apple", "none") var store := "auto"
 ## A script extending [StoreBackend] for another store, such as a game's own
 ## key system. Used instead of [member store] when set.
 @export var store_backend: Script

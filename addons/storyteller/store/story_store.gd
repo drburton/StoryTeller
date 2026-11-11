@@ -46,7 +46,8 @@ func setup(config: StoryConfig) -> void:
 ## The backend [param config] asks for: its
 ## [member StoryConfig.store_backend] script, or one named by
 ## [member StoryConfig.store]. "auto" uses the test store when the game
-## runs from the editor, and no store otherwise.
+## runs from the editor, the App Store when the Godot StoreKit 2 plugin is
+## in the build, and no store otherwise.
 static func make_backend(config: StoryConfig) -> StoreBackend:
 	if config.store_backend != null:
 		var made: Variant = config.store_backend.new()
@@ -56,8 +57,14 @@ static func make_backend(config: StoryConfig) -> StoreBackend:
 	match config.store:
 		"test":
 			return TestStoreBackend.new()
+		"apple":
+			return AppleStoreBackend.new()
 		"auto":
-			return TestStoreBackend.new() if OS.has_feature("editor") else StoreBackend.new()
+			if OS.has_feature("editor"):
+				return TestStoreBackend.new()
+			if AppleStoreBackend.is_available():
+				return AppleStoreBackend.new()
+			return StoreBackend.new()
 		"none":
 			return StoreBackend.new()
 	push_error("StoryTeller: unknown store '%s' in StoryConfig.store." % config.store)
