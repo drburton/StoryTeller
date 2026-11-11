@@ -9,8 +9,10 @@ namespace VisualNovelTeller
     /// <summary>
     /// Sells through the platform's store with Unity In-App Purchasing 5: the Apple App Store
     /// on iOS and macOS, and Google Play on Android. This assembly only compiles when the
-    /// project has the com.unity.purchasing package (5.0 or newer), and then it becomes
-    /// <see cref="StoryStore.PlatformBackend"/>, which <see cref="StoreMode.Auto"/> uses in builds.
+    /// project has the com.unity.purchasing package (5.0 or newer), and then it is added as a
+    /// platform store (<see cref="StoryStore.AddPlatformBackend"/>) for iOS, Android, and macOS,
+    /// which <see cref="StoreMode.Auto"/> uses in builds. On macOS, Steam comes first when the
+    /// game was started through Steam.
     /// Each <see cref="StoryProduct"/> is a non-consumable, sold under its appleId or
     /// googlePlayId (or its id when that is empty).
     /// </summary>
@@ -28,7 +30,19 @@ namespace VisualNovelTeller
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Register()
         {
-            if (StoryStore.PlatformBackend == null) StoryStore.PlatformBackend = () => new UnityIapStoreBackend();
+            StoryStore.AddPlatformBackend(MakeForPlatform, 0);
+        }
+
+        private static StoreBackend MakeForPlatform()
+        {
+            switch (Application.platform)
+            {
+                case RuntimePlatform.IPhonePlayer:
+                case RuntimePlatform.Android:
+                case RuntimePlatform.OSXPlayer:
+                    return new UnityIapStoreBackend();
+            }
+            return null;
         }
 
         public override string StoreName { get { return "unity-iap"; } }
