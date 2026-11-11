@@ -584,7 +584,7 @@ namespace VisualNovelTeller
             VisualElement target = _firstFocus;
             if (target == null || _root == null) return;
             // The new elements join the panel on the next update, so the focus waits for it.
-            _root.schedule.Execute(delegate { target.Focus(); });
+            _root.schedule.Execute(() => target.Focus());
         }
 
         // --- Confirm dialog -----------------------------------------------------
@@ -622,7 +622,7 @@ namespace VisualNovelTeller
             // Keys and the gamepad must not reach the screen below the dialog.
             _screen.SetEnabled(false);
             VisualElement target = _confirmNo;
-            _root.schedule.Execute(delegate { target.Focus(); });
+            _root.schedule.Execute(() => target.Focus());
         }
 
         private void ConfirmAnswer(bool yes)
