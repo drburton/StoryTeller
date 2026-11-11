@@ -6,7 +6,7 @@ namespace VisualNovelTeller
     /// <summary>
     /// The actions that come with the Unity layer, with the names and parameters of the
     /// Godot version so the same tales run in both: backdrop, exit_all, music,
-    /// stop_music, and sound. The core adds emit and wait.
+    /// stop_music, sound, and offer. The core adds emit and wait.
     /// </summary>
     public static class StoryActions
     {
@@ -21,6 +21,31 @@ namespace VisualNovelTeller
             director.AddAction(new MusicAction(story));
             director.AddAction(new StopMusicAction(story));
             director.AddAction(new SoundAction(story));
+            director.AddAction(new OfferAction(story));
+        }
+    }
+
+    /// <summary>offer(id): shows the purchase screen for a product from the Story Config. With await, gives true when the reader owns it afterwards: <c>if await offer("full_story"):</c></summary>
+    public class OfferAction : TaleAction
+    {
+        private readonly Story _story;
+
+        public OfferAction(Story story)
+            : base("offer", new[] { "id" }, 1)
+        {
+            _story = story;
+        }
+
+        public override async Task<object> RunAsync(TaleContext context, object[] args)
+        {
+            StoryStore store = _story != null ? _story.Store : null;
+            string id = TaleValues.ToText(args[0]);
+            if (store == null || !store.HasProduct(id))
+            {
+                context.Fail("There is no product '" + id + "' in the Story Config.");
+                return false;
+            }
+            return await store.Offer(id);
         }
     }
 

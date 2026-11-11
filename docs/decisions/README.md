@@ -34,4 +34,5 @@ To add one, copy `0000-template.md`, use the next number, and include it in the 
 | [0026](0026-unity-first-unreal-next.md) | Unity 1.0 with Godot 1.0, Unreal as 1.1 | Accepted |
 | [0027](0027-rename-before-1-0.md) | Rename the product before 1.0 | Accepted |
 | [0028](0028-unity-package-layout.md) | The Unity package holds the C# core | Accepted |
-| [0029](0029-demos-and-purchases.md) | Demos and purchases through the stores | Accepted |
+| [0029](0029-demos-and-purchases.md) | Demos and purchases through the stores | Accepted (Unity timing replaced by 0030) |
+| [0030](0030-unity-purchases-first.md) | Unity purchases before Unity 1.0, and Unity 6.3 support | Accepted |

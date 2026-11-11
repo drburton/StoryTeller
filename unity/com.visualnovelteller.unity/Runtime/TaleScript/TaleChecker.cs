@@ -568,7 +568,8 @@ namespace TaleScript
                     case "needs":
                         if (kind != TaleNodeKind.Beat)
                             ErrorExpr(annotation, "@needs only applies to beats.");
-                        ExpectOneString(annotation);
+                        if (ExpectOneString(annotation))
+                            CheckProduct(annotation.Args[0], null);
                         break;
                     case "picture":
                         if (kind != TaleNodeKind.Option)
@@ -716,6 +717,8 @@ namespace TaleScript
                     CallKinds[expr] = kind;
                     if (expr.NamedArgs.Count > 0)
                         ErrorExpr(expr, Fmt("'{0}' does not take named arguments.", callee.Name), anchor);
+                    if (callee.Name == "owns" && expr.Args.Count == 1)
+                        CheckProduct(expr.Args[0], anchor);
                     break;
                 case "exposed":
                     CallKinds[expr] = "exposed";
@@ -856,6 +859,20 @@ namespace TaleScript
                     return;
             }
             Add(TaleSeverity.Warning, Fmt("Beat '{0}' needs the product '{1}', so readers without it are offered it here, and the story ends if they don't buy it. Check first with 'if owns(\"{1}\"):' or 'if await offer(\"{1}\"):'.", beat, product), line, column);
+        }
+
+        /// <summary>Warns when an argument names a product the project doesn't have, using the check registered for offer()'s id.</summary>
+        private void CheckProduct(TaleExpr argument, TaleExpr anchor)
+        {
+            Func<string, string> check;
+            if (!_context.AssetChecks.TryGetValue("offer.id", out check) || check == null)
+                return;
+            var text = argument.Kind == TaleExprKind.Literal ? argument.Value as string : null;
+            if (text == null || text.Contains("{"))
+                return;
+            string problem = check(text);
+            if (!string.IsNullOrEmpty(problem))
+                WarnExpr(argument, problem, anchor);
         }
 
         /// <summary>Products that expr tests with owns("...") or offer("...").</summary>
