@@ -18,6 +18,17 @@ In Unity, open **Window > Package Manager**, choose **+ > Install package from g
 - `Runtime/Steam`: selling DLC on Steam with Steamworks.NET. It only compiles when the project has `com.rlabrecque.steamworks.net`, and only for Windows, macOS, and Linux.
 - `Editor`: import of `.tale` files and the editor tools.
 
+## Localization
+
+Translations use the same strings file as the Godot plugin (decision 0011): one CSV with a `keys` column, a column per language, and `_context` and `_status` columns for translators. Lines and choice options are keyed `tale:line-id`; names, titles, products, and menu text are keyed by their English text. The same tales and the same file work in both engines.
+
+1. In the Story Config, set **Source Language** (such as `en`) and list the **Languages** to translate into (such as `es`, `fr`).
+2. Select the Story Config and choose **Assets > Visual Novel Teller > Export Strings**. It writes `Translations/strings.csv` next to the config and sets it as the config's **Translation File**. The file includes every line and choice, tale titles and beat headings, `tr("...")` texts, cast names, product titles and descriptions, the game title, and the menu text.
+3. Translators fill in the language columns in a spreadsheet or translation tool. A translated line may use `{expr}` and text tags like the original.
+4. Export again after changing tales: translations are kept, new strings are added, and the `_status` column marks strings no longer used or whose English text changed.
+
+The game starts in the language the player chose before, or the system's language when the file has it, or the source language. With `StoryMenus`, **Settings > Language** lists the file's languages and switches at once. In code, use `Story.Localization`: its `Language`, `Languages`, `T("text")` for your own interface text, and the `LanguageChanged` event.
+
 ## Demos and purchases
 
 A story can ship as a free demo and sell the rest inside the game (decision 0029). The paid content ships in the game, locked until bought.

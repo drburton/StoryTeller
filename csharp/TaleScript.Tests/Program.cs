@@ -41,6 +41,7 @@ namespace TaleScript.Tests
             var tests = new List<KeyValuePair<string, Action>>(StateTests.All());
             tests.AddRange(CallTests.All());
             tests.AddRange(PathTests.All());
+            tests.AddRange(LocalizationTests.All());
             foreach (var test in tests)
             {
                 try

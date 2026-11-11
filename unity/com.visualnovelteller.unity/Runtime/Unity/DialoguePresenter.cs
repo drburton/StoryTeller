@@ -199,6 +199,33 @@ namespace VisualNovelTeller
         {
             _story = story;
             EnsureUi();
+            _story.Localization.LanguageChanged += TranslateQuickMenu;
+            TranslateQuickMenu();
+        }
+
+        /// <summary>Translates interface text into the reader's language.</summary>
+        private string T(string text)
+        {
+            return _story != null ? _story.Localization.T(text) : text;
+        }
+
+        // The quick menu's labels come from the layout. The layout's text is kept as each
+        // button's source text, so a later language change translates from it again.
+        private void TranslateQuickMenu()
+        {
+            if (_root == null) return;
+            VisualElement quick = _root.Q<VisualElement>("vnt-quick");
+            if (quick == null) return;
+            quick.Query<Button>().ForEach(delegate (Button button)
+            {
+                var source = button.userData as string;
+                if (source == null)
+                {
+                    source = button.text;
+                    button.userData = source;
+                }
+                button.text = T(source);
+            });
         }
 
         /// <summary>Forgets the lines of the history screen and the current line. A new game does this.</summary>
@@ -223,6 +250,7 @@ namespace VisualNovelTeller
 
         private void OnDestroy()
         {
+            if (_story != null) _story.Localization.LanguageChanged -= TranslateQuickMenu;
             if (_createdSettings != null) Destroy(_createdSettings);
         }
 
@@ -493,6 +521,8 @@ namespace VisualNovelTeller
             _skipOn = false;
             ApplySkip();
             FillHistory();
+            _historyOverlay.Q<Label>("vnt-history-title").text = T("History");
+            _historyOverlay.Q<Button>("vnt-history-close").text = T("Close");
             _historyOverlay.style.display = DisplayStyle.Flex;
             _historyScroll.schedule.Execute(ScrollHistoryToEnd);
             _historyScroll.schedule.Execute(ScrollHistoryToEnd).ExecuteLater(60);
@@ -550,7 +580,7 @@ namespace VisualNovelTeller
             _historyScroll.Clear();
             if (_history.Count == 0)
             {
-                _historyScroll.Add(HistoryLabel("Nothing yet.", "vnt-history-text"));
+                _historyScroll.Add(HistoryLabel(T("Nothing yet."), "vnt-history-text"));
                 return;
             }
             foreach (HistoryEntry entry in _history)

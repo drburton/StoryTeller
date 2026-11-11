@@ -71,6 +71,7 @@ namespace VisualNovelTeller
         private readonly Dictionary<string, TaleExposed> _actorObjects = new Dictionary<string, TaleExposed>();
         private TaleDirector _director;
         private StoryStore _store;
+        private StoryLocalization _localization;
         private TaleHistory _history;
         private bool _ready;
         private bool _loading;
@@ -79,6 +80,9 @@ namespace VisualNovelTeller
         public event Action<string, object> Signal;
         /// <summary>Raised when the story ends or is stopped. Not raised while a load replaces the play.</summary>
         public event Action Finished;
+
+        /// <summary>The reader's language and the translations of the Story Config's strings file. Tales, menus, and the dialogue box are translated with it.</summary>
+        public StoryLocalization Localization { get { EnsureDirector(); return _localization; } }
 
         /// <summary>What the reader owns, and buying more (decision 0029). It answers owns(), offer(), and @needs in tales.</summary>
         public StoryStore Store { get { EnsureDirector(); return _store; } }
@@ -120,6 +124,7 @@ namespace VisualNovelTeller
         {
             EnsureReady();
             LoadGlobals();
+            _localization.Language = _localization.PickLanguage(StorySettings.Load(config).language);
             _ = _store.SetBackend(StoryStore.MakeBackend(config != null ? config.Store : StoreMode.Auto,
                 Path.Combine(Application.persistentDataPath, "test_store.json")));
             if (playOnStart && !WantsTitleScreen()) _ = Play();
@@ -632,6 +637,8 @@ namespace VisualNovelTeller
             _director.StoryFinished += OnStoryFinished;
             _director.NameResolver = ResolveName;
             _director.ContextExtender = ExtendContext;
+            _localization = new StoryLocalization(config);
+            _director.Translator = _localization.Translate;
             _store = new StoryStore(config != null ? config.Products : null, Path.Combine(SaveFolder(), "store.json"));
             _director.Owns = _store.Owns;
             _director.Offer = _store.Offer;
