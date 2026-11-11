@@ -89,6 +89,7 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 	preload("res://addons/storyteller/audio/story_audio.gd"),
 	preload("res://addons/storyteller/effects/story_effects.gd"),
 	preload("res://addons/storyteller/collection/story_collection.gd"),
+	preload("res://addons/storyteller/store/story_store.gd"),
 	preload("res://addons/storyteller/saves/story_saves.gd"),
 	preload("res://addons/storyteller/saves/story_settings.gd"),
 	preload("res://addons/storyteller/rewind/story_rewind.gd"),
@@ -158,6 +159,23 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Show the route chart in Extras: the beats the player has reached and the
 ## choices they met there, with options they have not seen left out.
 @export var show_route_chart := true
+
+@export_group("Store")
+## Folder with [StoryProduct] files: the full story, extra chapters, and
+## anything else readers can buy (decision 0029).
+@export_dir var product_folder := "res://story/products"
+## Extra products, added to those in [member product_folder].
+@export var products: Array[StoryProduct] = []
+## The store the game sells through. "auto" uses the test store when the
+## game runs from the editor, and no store otherwise. "test" always uses the
+## test store, and "none" sells nothing.
+@export_enum("auto", "test", "none") var store := "auto"
+## A script extending [StoreBackend] for another store, such as a game's own
+## key system. Used instead of [member store] when set.
+@export var store_backend: Script
+## Scene for the purchase screen. Its root must extend [OfferScreen].
+## Empty uses StoryTeller's own.
+@export var offer_scene: PackedScene
 
 @export_group("Localization")
 ## Language the tales are written in, such as "en".

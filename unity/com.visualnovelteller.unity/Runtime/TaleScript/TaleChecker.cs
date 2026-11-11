@@ -527,6 +527,11 @@ namespace TaleScript
                             ErrorExpr(annotation, "@heading only applies to beats.");
                         ExpectOneString(annotation);
                         break;
+                    case "needs":
+                        if (kind != TaleNodeKind.Beat)
+                            ErrorExpr(annotation, "@needs only applies to beats.");
+                        ExpectOneString(annotation);
+                        break;
                     case "picture":
                         if (kind != TaleNodeKind.Option)
                             ErrorExpr(annotation, "@picture only applies to choice options.");

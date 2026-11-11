@@ -26,6 +26,9 @@ signal choice_made(option: Dictionary)
 signal rewind_barrier
 ## Emitted by [code]emit("name", value)[/code] in tales.
 signal story_signal(signal_name: String, value: Variant)
+## Emitted when the story ends at a beat marked [code]@needs[/code] because
+## the reader doesn't own the product and didn't buy it.
+signal beat_locked(tale_name: String, beat: String, product: String)
 ## Emitted when a tale does something invalid at runtime. The director
 ## reports it and continues with the next instruction.
 signal runtime_error(message: String, tale_name: String, line: int)
@@ -42,6 +45,7 @@ const POSITIONS := {
 }
 const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_wait.gd"),
+	preload("res://addons/storyteller/actions/action_offer.gd"),
 	preload("res://addons/storyteller/actions/action_emit.gd"),
 	preload("res://addons/storyteller/actions/action_backdrop.gd"),
 	preload("res://addons/storyteller/actions/action_prop.gd"),
@@ -189,6 +193,8 @@ func play(tale_name: String, beat := "start") -> void:
 		return
 	await _prepare_tale(tale)
 	if generation != _generation:
+		return
+	if not await _unlock_beat(tale, beat) or generation != _generation:
 		return
 	_stack.append(_enter_beat(tale, beat))
 	_playing = true
@@ -683,12 +689,14 @@ func _execute(instruction: Dictionary, frame: TaleFrame) -> void:
 			var target := _find_tale(instruction["tale"], frame)
 			if target != null and _check_beat(target, instruction["beat"], instruction["line"]):
 				await _prepare_tale(target)
-				_stack[_stack.size() - 1] = _enter_beat(target, instruction["beat"])
+				if await _unlock_beat(target, instruction["beat"]):
+					_stack[_stack.size() - 1] = _enter_beat(target, instruction["beat"])
 		"call_beat":
 			var callee := _find_tale(instruction["tale"], frame)
 			if callee != null and _check_beat(callee, instruction["beat"], instruction["line"]):
 				await _prepare_tale(callee)
-				_stack.append(_enter_beat(callee, instruction["beat"]))
+				if await _unlock_beat(callee, instruction["beat"]):
+					_stack.append(_enter_beat(callee, instruction["beat"]))
 		"return", "end":
 			_stack.pop_back()
 		"goto":
@@ -830,6 +838,23 @@ func _enter_beat(tale: Tale, beat: String) -> TaleFrame:
 	beat_entered.emit(tale.tale_name, beat)
 	_preload_beat(tale, tale.get_beat_start(beat))
 	return TaleFrame.new(tale, beat)
+
+
+## True when the reader may enter [param beat]: it needs no product, or they
+## own it or buy it now from the Store crew member. Otherwise the story
+## ends there.
+func _unlock_beat(tale: Tale, beat: String) -> bool:
+	var product: String = tale.needs.get(beat, "")
+	if product.is_empty():
+		return true
+	var generation := _generation
+	var store: Node = _sibling(&"Store")
+	if store != null and await store.offer(product):
+		return generation == _generation
+	if generation == _generation:
+		_stack.clear()
+		beat_locked.emit(tale.tale_name, beat, product)
+	return false
 
 
 ## Asks crew members to start loading the assets a beat names, so they are
@@ -1001,7 +1026,8 @@ func _try_tale_beat_call(expr: Array, frame: TaleFrame) -> bool:
 	if tale == null or tale.get_beat_start(expr[1][2]) < 0:
 		return false
 	await _prepare_tale(tale)
-	_stack.append(_enter_beat(tale, expr[1][2]))
+	if await _unlock_beat(tale, expr[1][2]):
+		_stack.append(_enter_beat(tale, expr[1][2]))
 	return true
 
 
@@ -1076,6 +1102,10 @@ func _builtin_function(name: String, args: Array) -> Variant:
 			if count == 1:
 				var collection: Node = _sibling(&"Collection")
 				return collection != null and collection.is_collected(str(args[0]))
+		"owns":
+			if count == 1:
+				var store: Node = _sibling(&"Store")
+				return store != null and store.owns(str(args[0]))
 		"Vector2", "Vector2i", "Vector3", "Color", "Rect2":
 			return _construct(name, args)
 		_:

@@ -30,7 +30,7 @@ namespace TaleScript
         public static readonly string[] BuiltinFunctions =
         {
             "abs", "ceil", "clamp", "collected", "float", "floor", "int", "len", "max",
-            "min", "randf", "randf_range", "randi", "randi_range", "round", "str", "tr",
+            "min", "owns", "randf", "randf_range", "randi", "randi_range", "round", "str", "tr",
             "visited",
         };
 

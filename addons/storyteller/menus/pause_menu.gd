@@ -2,6 +2,8 @@ class_name PauseMenu
 extends MenuScreen
 ## The in-game menu opened with Escape or a right click.
 
+var _restore: Button
+
 
 func _ready() -> void:
 	add_dim(0.55)
@@ -12,12 +14,15 @@ func _ready() -> void:
 	column.add_child(MenuScreen.make_button("Load", func() -> void: menus.open("load")))
 	column.add_child(MenuScreen.make_button("History", func() -> void: menus.open("history")))
 	column.add_child(MenuScreen.make_button("Settings", func() -> void: menus.open("settings")))
+	_restore = MenuScreen.make_button("Restore purchases", func() -> void: menus.restore_purchases())
+	column.add_child(_restore)
 	column.add_child(MenuScreen.make_button("Title Screen", _to_title))
 	if menus.can_quit():
 		column.add_child(MenuScreen.make_button("Quit", _quit))
 
 
 func open() -> void:
+	_restore.visible = menus.can_restore_purchases()
 	focus_first()
 
 

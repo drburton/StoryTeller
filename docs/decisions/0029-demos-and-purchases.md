@@ -1,7 +1,7 @@
 # 0029. Demos and purchases through the stores
 
-- **Status:** Proposed
-- **Date:** 2026-11-10
+- **Status:** Accepted
+- **Date:** 2026-11-10 (accepted 2026-11-10)
 
 ## Context
 
@@ -46,7 +46,7 @@ The plugin does no receipt checking on a server and has no copy protection.
 **TaleScript**, in the same style as `collect()` and `collected()`:
 - `owns("id")` is a built-in function that is true when the reader owns the product.
 - `offer("id")` is an action that shows the purchase screen. With `await`, it gives true when the reader bought the product (or already owned it): `if await offer("full_story"):`.
-- `@needs("id")` goes on a beat, or at the top of a tale for the whole tale, and marks content that requires the product. Entering it without the product shows the offer. If the reader doesn't buy, the story goes to the title screen. The checker warns about a jump into a `@needs` beat that isn't guarded by `owns()` or `offer()`, so writers handle the demo's end themselves.
+- `@needs("id")` goes on a beat and marks content that requires the product. Writers mark the beats where paid content begins, since those are the only ways in. Entering such a beat without the product shows the offer. If the reader doesn't buy, the story ends there and goes back to the title screen. A form for a whole tale was considered but left out, because TaleScript has no annotation that applies to a whole tale except `@title`. The checker warns about a jump into a `@needs` beat that isn't guarded by `owns()` or `offer()`, so writers handle the demo's end themselves.
 
 **Screens:**
 - The purchase screen is a replaceable scene (`StoryConfig.offer_scene`). By default it shows the product's picture, title, description, and store price, with Buy and Not now.

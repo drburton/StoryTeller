@@ -374,6 +374,11 @@ func _check_annotations(annotations: Array[TaleExpr], node: TaleNode, top_level:
 				if node.kind != K.BEAT:
 					_error_expr(annotation, "@heading only applies to beats.")
 				_expect_one_string(annotation)
+			"needs":
+				if node.kind != K.BEAT:
+					_error_expr(annotation, "@needs only applies to beats.")
+				if _expect_one_string(annotation):
+					_check_product(annotation.args[0], null)
 			"picture":
 				if node.kind != K.OPTION:
 					_error_expr(annotation, "@picture only applies to choice options.")
@@ -473,6 +478,8 @@ func _check_call(expr: TaleExpr, anchor: TaleExpr) -> void:
 			call_kinds[expr] = kind
 			if not expr.named_args.is_empty():
 				_error_expr(expr, "'%s' does not take named arguments." % callee.name, anchor)
+			if callee.name == "owns" and expr.args.size() == 1:
+				_check_product(expr.args[0], anchor)
 		"exposed":
 			call_kinds[expr] = "exposed"
 		"":
@@ -510,6 +517,16 @@ func _check_action_arguments(expr: TaleExpr, action: String, anchor: TaleExpr) -
 			var problem: String = check.call(argument.value)
 			if not problem.is_empty():
 				_warn_expr(argument, problem, anchor)
+
+
+## Warns when [param argument] names a product the project doesn't have,
+## using the check registered for offer()'s id.
+func _check_product(argument: TaleExpr, anchor: TaleExpr) -> void:
+	var check: Callable = _context.asset_checks.get("offer.id", Callable())
+	if check.is_valid() and argument.kind == E.LITERAL and argument.value is String and not "{" in argument.value:
+		var problem: String = check.call(argument.value)
+		if not problem.is_empty():
+			_warn_expr(argument, problem, anchor)
 
 
 func _check_tale_member(tale: String, member: String, is_call: bool, expr: TaleExpr, anchor: TaleExpr) -> void:

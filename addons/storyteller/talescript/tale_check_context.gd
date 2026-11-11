@@ -11,7 +11,7 @@ const BUILTIN_CONSTANTS: Array[String] = ["LEFT", "CENTER", "RIGHT", "PI", "TAU"
 ## Functions usable in every tale.
 const BUILTIN_FUNCTIONS: Array[String] = [
 	"abs", "ceil", "clamp", "collected", "float", "floor", "int", "len", "max",
-	"min", "randf", "randf_range", "randi", "randi_range", "round", "str", "tr",
+	"min", "owns", "randf", "randf_range", "randi", "randi_range", "round", "str", "tr",
 	"visited",
 ]
 ## Godot value types that can be constructed in tales.
