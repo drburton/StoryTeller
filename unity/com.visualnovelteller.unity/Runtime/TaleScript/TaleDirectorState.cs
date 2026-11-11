@@ -67,6 +67,7 @@ namespace TaleScript
             state2["vars"] = vars;
             state2["visited"] = TaleStateCodec.SortedList(_visited);
             state2["once"] = TaleStateCodec.SortedList(_onceChosen);
+            if (_paid.Count > 0) state2["paid"] = TaleStateCodec.SortedList(_paid);
             state2["crew"] = crew;
             return state2;
         }
@@ -101,6 +102,8 @@ namespace TaleScript
             foreach (string key in TaleRouteLog.Strings(data, "visited")) _visited.Add(key);
             _onceChosen.Clear();
             foreach (string key in TaleRouteLog.Strings(data, "once")) _onceChosen.Add(key);
+            _paid.Clear();
+            foreach (string key in TaleRouteLog.Strings(data, "paid")) _paid.Add(key);
             var stack = data.TryGetValue("stack", out value) ? value as List<object> : null;
             if (stack != null)
             {

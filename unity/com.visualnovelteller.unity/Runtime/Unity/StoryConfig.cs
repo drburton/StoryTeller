@@ -93,6 +93,11 @@ namespace VisualNovelTeller
         [SerializeField] private string titleMusic = "";
         [Tooltip("Optional. Replaces the menu style sheet that comes with the package.")]
         [SerializeField] private StyleSheet menuStyle;
+        [Header("Store (demos and purchases)")]
+        [Tooltip("What readers can buy inside the game, such as the full story. Tales use the ids in owns(), offer(), and @needs.")]
+        [SerializeField] private List<StoryProduct> products = new List<StoryProduct>();
+        [Tooltip("Auto uses the test store in the editor and the platform's store in a build when Unity In-App Purchasing is installed.")]
+        [SerializeField] private StoreMode store = StoreMode.Auto;
         [Header("Saves")]
         [Tooltip("How many lines and choices the player can step back through. 0 turns rewind off.")]
         [Min(0)] [SerializeField] private int rewindDepth = 50;
@@ -122,6 +127,10 @@ namespace VisualNovelTeller
         public IReadOnlyList<NamedSprite> Backdrops { get { return backdrops; } }
         public IReadOnlyList<NamedClip> AudioClips { get { return audioClips; } }
         public IReadOnlyList<string> ExposedNames { get { return exposedNames; } }
+        /// <summary>What readers can buy inside the game.</summary>
+        public IReadOnlyList<StoryProduct> Products { get { return products; } }
+        /// <summary>Which store the game sells through.</summary>
+        public StoreMode Store { get { return store; } }
         public float TextSpeed { get { return textSpeed; } }
         public bool SkipUnread { get { return skipUnread; } }
         public float AutoDelay { get { return Mathf.Clamp(autoDelay, 0.2f, 5f); } }
@@ -152,6 +161,14 @@ namespace VisualNovelTeller
         {
             foreach (var backdrop in backdrops)
                 if (backdrop.name == backdropName) return backdrop.sprite;
+            return null;
+        }
+
+        /// <summary>The product with this id, or null.</summary>
+        public StoryProduct FindProduct(string id)
+        {
+            foreach (var product in products)
+                if (product != null && product.id == id) return product;
             return null;
         }
 
@@ -194,6 +211,10 @@ namespace VisualNovelTeller
                 {
                     return FindBackdrop(value) != null ? "" : "Backdrop '" + value + "' is not in the Story Config.";
                 });
+            context.AddAssetCheck("offer", "id", delegate (string value)
+            {
+                return FindProduct(value) != null ? "" : "There is no product '" + value + "' in the Story Config.";
+            });
             if (audioClips.Count > 0)
             {
                 context.AddAssetCheck("music", "track", delegate (string value)
