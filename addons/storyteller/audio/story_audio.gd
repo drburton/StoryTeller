@@ -72,6 +72,12 @@ func teardown() -> void:
 	_ambience_state["track"] = ""
 
 
+## A story freed without [method Story.shut_down] stops its sounds too.
+## Godot reports a sound as leaked when its player is freed mid-play.
+func _exit_tree() -> void:
+	teardown()
+
+
 ## Plays a music track, crossfading from the current one over [param fade]
 ## seconds. Playing the track that is already on only changes its volume.
 ## Returns an error message or "".

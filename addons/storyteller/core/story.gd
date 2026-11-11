@@ -206,6 +206,11 @@ func shut_down() -> void:
 		member.queue_free()
 	_crew.clear()
 	is_ready = false
+	StoryAssets.finish_preloads()
+
+
+func _exit_tree() -> void:
+	StoryAssets.finish_preloads()
 
 
 func _instantiate_crew(script: Script) -> StoryCrew:

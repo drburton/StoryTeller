@@ -79,6 +79,17 @@ func test_shutting_down_stops_and_releases_every_sound() -> void:
 		assert_null(player.stream, player.name + " let go of its sound")
 
 
+func test_a_story_freed_without_shutting_down_stops_its_sounds() -> void:
+	audio.play_music("theme", 1.0, 0.0)
+	audio.play_music("other", 1.0, 2.0)
+	var players := audio.find_children("*", "AudioStreamPlayer", true, false)
+	tree.root.remove_child(story)
+	for player in players:
+		assert_false(player.playing, player.name + " stopped")
+		assert_null(player.stream, player.name + " let go of its sound")
+	tree.root.add_child(story)
+
+
 func test_awaited_sound_takes_its_length() -> void:
 	var clock: EngineClock = track(EngineClock.new())
 	tree.root.add_child(clock)

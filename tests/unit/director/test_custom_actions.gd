@@ -31,9 +31,11 @@ func test_config_actions_run_in_tales_and_are_known_to_the_checker() -> void:
 
 func test_entries_that_are_not_actions_are_skipped() -> void:
 	var scripts: Array[Script] = [RING_BELL, preload("res://tests/fixtures/fake_crew.gd"), null]
+	var nodes := Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT)
 	var made := StoryConfig.make_actions(scripts)
 	assert_eq(made.size(), 1)
 	assert_eq(made[0].get_action_name(), "ring_bell")
+	assert_eq(Performance.get_monitor(Performance.OBJECT_ORPHAN_NODE_COUNT), nodes, "the crew script's node is freed")
 
 
 func test_actions_in_the_action_folder_are_found() -> void:
