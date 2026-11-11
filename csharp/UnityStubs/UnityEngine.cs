@@ -234,6 +234,46 @@ namespace UnityEngine
         }
     }
 
+    public static class Random
+    {
+        public static float Range(float minInclusive, float maxInclusive)
+        {
+            throw null;
+        }
+    }
+
+    public enum TextureFormat
+    {
+        RGBA32
+    }
+
+    public enum TextureWrapMode
+    {
+        Clamp
+    }
+
+    public class Texture : Object
+    {
+        public TextureWrapMode wrapMode { get; set; }
+    }
+
+    public class Texture2D : Texture
+    {
+        public Texture2D(int width, int height, TextureFormat textureFormat, bool mipChain)
+        {
+        }
+
+        public void SetPixel(int x, int y, Color color)
+        {
+            throw null;
+        }
+
+        public void Apply(bool updateMipmaps = true, bool makeNoLongerReadable = false)
+        {
+            throw null;
+        }
+    }
+
     public static class Time
     {
         public static float unscaledDeltaTime { get { throw null; } }
@@ -273,6 +313,16 @@ namespace UnityEngine
     public struct Mathf
     {
         public const float PI = 3.14159274F;
+
+        public static float Cos(float f)
+        {
+            throw null;
+        }
+
+        public static float Sqrt(float f)
+        {
+            throw null;
+        }
 
         public static float Sin(float f)
         {
@@ -383,6 +433,9 @@ namespace UnityEngine
 
     public struct Rect
     {
+        public float width { get; set; }
+        public float height { get; set; }
+
         public Rect(float x, float y, float width, float height)
         {
             throw null;
@@ -440,6 +493,7 @@ namespace UnityEngine
 
     public enum ScaleMode
     {
+        StretchToFill,
         ScaleToFit,
         ScaleAndCrop
     }

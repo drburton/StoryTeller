@@ -51,6 +51,24 @@ namespace UnityEngine.UIElements
         NoTrickleDown
     }
 
+    public enum Overflow
+    {
+        Visible,
+        Hidden
+    }
+
+    public enum ArcDirection
+    {
+        Clockwise,
+        CounterClockwise
+    }
+
+    public enum FillRule
+    {
+        NonZero,
+        OddEven
+    }
+
     public enum SliderDirection
     {
         Horizontal
@@ -82,6 +100,61 @@ namespace UnityEngine.UIElements
         {
             throw null;
         }
+    }
+
+    public struct Angle
+    {
+        public static Angle Degrees(float value)
+        {
+            throw null;
+        }
+    }
+
+    public class Painter2D
+    {
+        public Color strokeColor { get; set; }
+        public Color fillColor { get; set; }
+        public float lineWidth { get; set; }
+
+        public void BeginPath()
+        {
+            throw null;
+        }
+
+        public void ClosePath()
+        {
+            throw null;
+        }
+
+        public void MoveTo(Vector2 pos)
+        {
+            throw null;
+        }
+
+        public void LineTo(Vector2 pos)
+        {
+            throw null;
+        }
+
+        public void Arc(Vector2 center, float radius, Angle startAngle, Angle endAngle, ArcDirection direction = ArcDirection.Clockwise)
+        {
+            throw null;
+        }
+
+        public void Stroke()
+        {
+            throw null;
+        }
+
+        public void Fill(FillRule fillRule = FillRule.NonZero)
+        {
+            throw null;
+        }
+    }
+
+    public class MeshGenerationContext
+    {
+        public Painter2D painter2D { get { throw null; } }
     }
 
     public struct Translate
@@ -203,6 +276,7 @@ namespace UnityEngine.UIElements
 
     public interface IStyle
     {
+        StyleEnum<Overflow> overflow { get; set; }
         StyleEnum<Position> position { get; set; }
         StyleLength left { get; set; }
         StyleLength right { get; set; }
@@ -295,11 +369,18 @@ namespace UnityEngine.UIElements
     public class VisualElement
     {
         public string name { get; set; }
+        public Rect contentRect { get { throw null; } }
+        public Action<MeshGenerationContext> generateVisualContent { get; set; }
         public IStyle style { get { throw null; } }
         public PickingMode pickingMode { get; set; }
         public bool focusable { get; set; }
         public IVisualElementScheduler schedule { get { throw null; } }
         public VisualElementStyleSheetSet styleSheets { get { throw null; } }
+
+        public void MarkDirtyRepaint()
+        {
+            throw null;
+        }
 
         public void Add(VisualElement child)
         {
@@ -367,6 +448,7 @@ namespace UnityEngine.UIElements
     public class Image : VisualElement
     {
         public Sprite sprite { get; set; }
+        public Texture image { get; set; }
         public ScaleMode scaleMode { get; set; }
         public Color tintColor { get; set; }
     }
