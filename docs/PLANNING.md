@@ -2,7 +2,7 @@
 
 StoryTeller is a visual novel and interactive story framework for **Godot 4**. Writers author stories in **TaleScript**, a small language that looks and feels like GDScript. The framework handles characters, scenery, dialogue boxes, choices, audio, saving, localization, and menus so creators can ship a complete visual novel, or add story sequences to any Godot game, with little or no extra code.
 
-Status: **Draft v0.40** (demos and purchases: decision 0029 accepted, M13 phase 1 complete; one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
+Status: **Draft v0.41** (demos and purchases: decision 0029 accepted, M13 phase 1 complete, M13 ships in Godot 1.0; one language for Godot, Unity, and later Unreal; M10 complete, M11 under way; the plugin: M0 to M4 and M6 complete, M5 built with its usability test open, M7 under way. Visual Novel StoryTeller Studio: M8 under way, with its home screen, blocks, stage preview, and story pictures and sounds built)
 
 ### Where things stand (2026-10-30)
 
@@ -925,7 +925,7 @@ Readers play a free demo and buy the full story or extra chapters inside the gam
 
 Status, 10 November 2026: phase 1 is complete. A save made after a `@needs` beat records the products it needs; the load screen shows it as locked and offers them before loading. The Map view marks `@needs` beats with a lock. The path explorer plays a game that sells products twice, once owning nothing and once owning everything. The checker warns about jumps into `@needs` beats that nothing checks first, in Godot and C#. The C# path explorer still plays only the unowned way. Phase 0 waits on the store accounts, then phases 2 and 3 add the real stores.
 
-Timing is open (§19, question 9). The Unity layer gets the same TaleScript names with Steamworks.NET and Unity IAP backends after Unity 1.0. The Studio sells nothing.
+Timing (decided 2026-11-10): M13 ships in **Godot 1.0**. Phases 0 to 4 finish before the interface freeze in February 2027, so the store accounts and a Steam app id are needed by early December 2026 to leave time for phases 2 and 3. The Unity layer gets the same TaleScript names with Steamworks.NET and Unity IAP backends after Unity 1.0. The Studio sells nothing.
 
 ### Textbook (Nov 2026 to Apr 2027)
 - Shared chapters are written once: story craft, TaleScript, branching, variables, and testing paths.
@@ -934,7 +934,7 @@ Timing is open (§19, question 9). The Unity layer gets the same TaleScript name
 - Manuscript and screenshots are done by March 2027.
 
 ### Plugin 1.0 Release (target: April 2027)
-Version 1.0 means the Godot plugin (M0 to M7, with M9) and the Unity version (M10 and M11) released together, for adults and for courses that use the textbook.
+Version 1.0 means the Godot plugin (M0 to M7, with M9 and M13) and the Unity version (M10 and M11) released together, for adults and for courses that use the textbook. Demos and purchases (M13) are in Godot 1.0 only; Unity gets them after its 1.0.
 
 ### Studio 1.0 Release (after M8)
 Visual Novel StoryTeller Studio for kids, with its interface frozen for the textbook's first edition.
@@ -1138,7 +1138,7 @@ Built in M7, in `docs/guides/` unless noted. Every TaleScript example in the gui
 6. ~~**Studio address.**~~ Resolved 2026-10-12: the Studio is a downloadable app (decision 0021); a project website at a Visual Novel StoryTeller domain links to the stores.
 7. **Classroom test:** which school and class, and when? Deferred until the Studio works.
 8. ~~**The Studio's name and version numbers.**~~ Resolved 2026-10-12: Visual Novel StoryTeller Studio, numbered separately from the plugin.
-9. **When do demos and purchases (M13) land?** In Godot 1.0, if they're ready before the interface freeze in February 2027, or in Godot 1.1 next to Unity 1.0? Phase 0 needs a Steam app id, and it needs the Apple and Google developer accounts from step 8 of §20.
+9. ~~**When do demos and purchases (M13) land?**~~ Resolved 2026-11-10: in Godot 1.0, before the interface freeze in February 2027.
 
 ---
 
@@ -1153,7 +1153,7 @@ Both engines (Godot and Unity):
 
 The Godot plugin:
 6. Finish M7: time the demo with a real player, the legal review, a trailer and screenshots, and the Asset Library listing.
-7. M13 (demos and purchases): choose its timing (§19, question 9), and run phase 0 once the store accounts exist, then phases 2 and 3.
+7. M13 (demos and purchases, in Godot 1.0): get a Steam app id and the Apple and Google developer accounts (step 8) by early December 2026, run phase 0, then phases 2 to 4 before the February 2027 interface freeze.
 
 The Studio (Visual Novel StoryTeller Studio):
 8. Set up an Apple Developer Program membership and a Google Play Console account, and register the project website's domain under the new name.
