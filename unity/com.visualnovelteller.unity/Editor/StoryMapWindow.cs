@@ -15,8 +15,11 @@ namespace VisualNovelTeller
     /// Map view (§9.4). Beats nothing leads to, jumps to missing beats, beats where the story can
     /// end, and paid beats (@needs) are marked. Drag a box to move it; the position is saved
     /// next to the tale in tale.tale.map, the file the Godot plugin uses. Double-click a box to
-    /// open its beat. Drag the background (or with the middle button) to pan, and use Ctrl and
-    /// the mouse wheel, or the zoom buttons, to zoom.
+    /// open its beat. Drag from a box's handle (the square on its right edge) to another box to
+    /// add a jump to it, or to empty space to create a new beat there, linked with a jump. Undo
+    /// Map Edit puts the tale back as it was before the last of these edits. Drag the background
+    /// (or with the middle button) to pan, and use Ctrl and the mouse wheel, or the zoom buttons,
+    /// to zoom.
     /// </summary>
     public class StoryMapWindow : EditorWindow
     {
@@ -44,6 +47,12 @@ namespace VisualNovelTeller
         private readonly Dictionary<string, Color> _colors = new Dictionary<string, Color>();
         private string _dragging;
         private bool _panning;
+        private string _linkFrom;
+        private Vector2 _linkMouse;
+        private string _undoPath;
+        private string _undoSource;
+        private string _undoMapPath;
+        private string _undoMapSource;
         private GUIStyle _title;
         private GUIStyle _row;
 
@@ -148,6 +157,9 @@ namespace VisualNovelTeller
             }
             if (GUILayout.Button("Refresh", EditorStyles.toolbarButton)) Rebuild();
             if (GUILayout.Button("Automatic Layout", EditorStyles.toolbarButton)) ResetLayout();
+            EditorGUI.BeginDisabledGroup(_undoPath == null);
+            if (GUILayout.Button("Undo Map Edit", EditorStyles.toolbarButton)) UndoMapEdit();
+            EditorGUI.EndDisabledGroup();
             GUILayout.FlexibleSpace();
             if (GUILayout.Button("-", EditorStyles.toolbarButton, GUILayout.Width(24f))) SetZoom(zoom / 1.25f);
             GUILayout.Label(Mathf.RoundToInt(zoom * 100f) + "%", EditorStyles.miniLabel, GUILayout.Width(40f));
@@ -260,10 +272,31 @@ namespace VisualNovelTeller
                 y += RowHeight * zoom;
             }
             EditorGUIUtility.AddCursorRect(box, MouseCursor.MoveArrow);
+            Rect port = PortRect(id);
+            EditorGUI.DrawRect(port, Color.white);
+            EditorGUI.DrawRect(new Rect(port.x + 1f, port.y + 1f, port.width - 2f, port.height - 2f), tale);
+            EditorGUIUtility.AddCursorRect(port, MouseCursor.Arrow);
+        }
+
+        /// <summary>The handle on a box's right edge: drag from it to link the beat.</summary>
+        private Rect PortRect(string id)
+        {
+            Rect box = BoxRect(id, zoom);
+            float size = Mathf.Max(8f, 12f * zoom);
+            return new Rect(box.xMax - size * 0.5f, box.y + TitleHeight * zoom * 0.5f - size * 0.5f, size, size);
         }
 
         private void DrawLinks()
         {
+            if (_linkFrom != null && _graph.Beats.Has(_linkFrom))
+            {
+                Rect port = PortRect(_linkFrom);
+                Vector2 start = port.center;
+                float bend = Mathf.Max(40f * zoom, Mathf.Abs(_linkMouse.x - start.x) * 0.5f);
+                Color color;
+                if (!_colors.TryGetValue(_graph.Beats[_linkFrom].Tale, out color)) color = Color.white;
+                Handles.DrawBezier(start, _linkMouse, start + Vector2.right * bend, _linkMouse + Vector2.left * bend, color, null, Mathf.Max(1.5f, 2.5f * zoom));
+            }
             var drawn = new HashSet<string>();
             foreach (string id in _graph.Beats.Keys)
             {
@@ -292,6 +325,14 @@ namespace VisualNovelTeller
             switch (e.type)
             {
                 case EventType.MouseDown:
+                    string port = PortAt(e.mousePosition);
+                    if (e.button == 0 && port != null)
+                    {
+                        _linkFrom = port;
+                        _linkMouse = e.mousePosition;
+                        e.Use();
+                        break;
+                    }
                     string hit = BeatAt(e.mousePosition);
                     if (e.button == 0 && hit != null)
                     {
@@ -312,7 +353,13 @@ namespace VisualNovelTeller
                     }
                     break;
                 case EventType.MouseDrag:
-                    if (_dragging != null)
+                    if (_linkFrom != null)
+                    {
+                        _linkMouse = e.mousePosition;
+                        e.Use();
+                        Repaint();
+                    }
+                    else if (_dragging != null)
                     {
                         _positions[_dragging] += e.delta / zoom;
                         e.Use();
@@ -326,7 +373,17 @@ namespace VisualNovelTeller
                     }
                     break;
                 case EventType.MouseUp:
-                    if (_dragging != null)
+                    if (_linkFrom != null)
+                    {
+                        string from = _linkFrom;
+                        _linkFrom = null;
+                        string target = BeatAt(e.mousePosition);
+                        if (target == null) LinkToNewBeat(from, e.mousePosition / zoom);
+                        else if (target != from) Link(from, target);
+                        e.Use();
+                        Repaint();
+                    }
+                    else if (_dragging != null)
                     {
                         SavePosition(_dragging);
                         _dragging = null;
@@ -350,6 +407,102 @@ namespace VisualNovelTeller
             foreach (string id in _graph.Beats.Keys)
                 if (BoxRect(id, zoom).Contains(point)) found = id;
             return found;
+        }
+
+        private string PortAt(Vector2 point)
+        {
+            foreach (string id in _graph.Beats.Keys)
+                if (PortRect(id).Contains(point)) return id;
+            return null;
+        }
+
+        /// <summary>Adds "jump to" at the end of the beat fromId. Returns false when the tale can't be changed.</summary>
+        public bool Link(string fromId, string toId)
+        {
+            TaleGraphBeat from = _graph != null && _graph.Beats.Has(fromId) ? _graph.Beats[fromId] : null;
+            if (from == null) return false;
+            string talePath = TalePath(from.Tale);
+            string source = ReadTale(talePath);
+            if (source == null) return false;
+            TaleDocument doc = TaleParser.Parse(source, talePath);
+            TaleNode beat = doc.FindBeat(from.Beat);
+            if (beat == null) return false;
+            WriteTale(talePath, source, TaleEdits.AppendTo(source, doc, beat, "jump " + TaleEdits.JumpTarget(toId, from.Tale)));
+            return true;
+        }
+
+        /// <summary>
+        /// Creates a new beat in fromId's tale, linked from it with a jump, and places it at the
+        /// given map position. Returns the new beat's name, or null when the tale can't be changed.
+        /// </summary>
+        public string LinkToNewBeat(string fromId, Vector2 at)
+        {
+            TaleGraphBeat from = _graph != null && _graph.Beats.Has(fromId) ? _graph.Beats[fromId] : null;
+            if (from == null) return null;
+            string talePath = TalePath(from.Tale);
+            string source = ReadTale(talePath);
+            if (source == null) return null;
+            TaleDocument doc = TaleParser.Parse(source, talePath);
+            TaleNode beat = doc.FindBeat(from.Beat);
+            if (beat == null) return null;
+            string name = TaleEdits.NewBeatName(doc);
+            string linked = TaleEdits.AppendTo(source, doc, beat, "jump " + name);
+            string mapPath = talePath + ".map";
+            _undoMapPath = mapPath;
+            _undoMapSource = File.Exists(mapPath) ? File.ReadAllText(mapPath, Encoding.UTF8) : null;
+            SavePosition(talePath, name, at);
+            WriteTale(talePath, source, TaleEdits.AddBeat(linked, TaleParser.Parse(linked, talePath), name), true);
+            return name;
+        }
+
+        private string TalePath(string tale)
+        {
+            TaleAsset asset;
+            return _assets.TryGetValue(tale, out asset) ? AssetDatabase.GetAssetPath(asset) : null;
+        }
+
+        private static string ReadTale(string talePath)
+        {
+            if (string.IsNullOrEmpty(talePath) || !File.Exists(talePath)) return null;
+            return File.ReadAllText(talePath, Encoding.UTF8);
+        }
+
+        // Writes the tale and reimports it, keeping the old text for Undo Map Edit.
+        private void WriteTale(string talePath, string oldSource, string newSource, bool keepMapUndo = false)
+        {
+            if (!keepMapUndo)
+            {
+                _undoMapPath = null;
+                _undoMapSource = null;
+            }
+            _undoPath = talePath;
+            _undoSource = oldSource;
+            File.WriteAllText(talePath, newSource, new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(talePath);
+            if (File.Exists(talePath + ".map")) AssetDatabase.ImportAsset(talePath + ".map");
+            Rebuild();
+        }
+
+        /// <summary>Puts the tale (and its map file) back as they were before the last link or new beat.</summary>
+        public void UndoMapEdit()
+        {
+            if (_undoPath == null) return;
+            File.WriteAllText(_undoPath, _undoSource, new UTF8Encoding(false));
+            AssetDatabase.ImportAsset(_undoPath);
+            if (_undoMapPath != null)
+            {
+                if (_undoMapSource != null)
+                {
+                    File.WriteAllText(_undoMapPath, _undoMapSource, new UTF8Encoding(false));
+                    AssetDatabase.ImportAsset(_undoMapPath);
+                }
+                else if (File.Exists(_undoMapPath)) AssetDatabase.DeleteAsset(_undoMapPath);
+            }
+            _undoPath = null;
+            _undoSource = null;
+            _undoMapPath = null;
+            _undoMapSource = null;
+            Rebuild();
         }
 
         private void OpenBeat(string id)

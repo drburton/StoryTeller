@@ -42,6 +42,7 @@ namespace TaleScript.Tests
             tests.AddRange(CallTests.All());
             tests.AddRange(PathTests.All());
             tests.AddRange(LocalizationTests.All());
+            tests.AddRange(EditTests.All());
             foreach (var test in tests)
             {
                 try

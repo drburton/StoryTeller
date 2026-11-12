@@ -476,6 +476,7 @@ namespace UnityEngine
         public float height { get; set; }
         public float xMax { get { throw null; } }
         public float yMax { get { throw null; } }
+        public Vector2 center { get { throw null; } }
 
         public bool Contains(Vector2 point)
         {

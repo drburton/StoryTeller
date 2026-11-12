@@ -1,0 +1,54 @@
+{
+  "about": "Edits the Story Map makes: append 'jump new_beat' to a beat, then add the beat 'new_beat'. The expected text comes from the Godot plugin's TaleEdit; the C# TaleEdits must match it.",
+  "cases": [
+    {
+      "name": "content",
+      "source": "beat start:\n\t\"Hello.\"\n\nbeat next:\n\tpass\n",
+      "beat": "start",
+      "appended": "beat start:\n\t\"Hello.\"\n\tjump new_beat\n\nbeat next:\n\tpass\n",
+      "added": "beat start:\n\t\"Hello.\"\n\tjump new_beat\n\nbeat next:\n\tpass\n\nbeat new_beat:\n\tpass\n"
+    },
+    {
+      "name": "only_pass",
+      "source": "beat start:\n\t\"Hello.\"\n\nbeat next:\n\tpass\n",
+      "beat": "next",
+      "appended": "beat start:\n\t\"Hello.\"\n\nbeat next:\n\tjump new_beat\n",
+      "added": "beat start:\n\t\"Hello.\"\n\nbeat next:\n\tjump new_beat\n\nbeat new_beat:\n\tpass\n"
+    },
+    {
+      "name": "comment_last",
+      "source": "beat start:\n\t\"Hello.\"\n\t# a note\n",
+      "beat": "start",
+      "appended": "beat start:\n\t\"Hello.\"\n\t# a note\n\tjump new_beat\n",
+      "added": "beat start:\n\t\"Hello.\"\n\t# a note\n\tjump new_beat\n\nbeat new_beat:\n\tpass\n"
+    },
+    {
+      "name": "choose_last",
+      "source": "beat start:\n\tchoose:\n\t\t\"A\":\n\t\t\tpass\n\t\t\"B\":\n\t\t\t\"b\"\n\nbeat other:\n\tpass\n",
+      "beat": "start",
+      "appended": "beat start:\n\tchoose:\n\t\t\"A\":\n\t\t\tpass\n\t\t\"B\":\n\t\t\t\"b\"\n\tjump new_beat\n\nbeat other:\n\tpass\n",
+      "added": "beat start:\n\tchoose:\n\t\t\"A\":\n\t\t\tpass\n\t\t\"B\":\n\t\t\t\"b\"\n\tjump new_beat\n\nbeat other:\n\tpass\n\nbeat new_beat:\n\tpass\n"
+    },
+    {
+      "name": "crlf",
+      "source": "beat start:\r\n\t\"Hello.\"\r\n",
+      "beat": "start",
+      "appended": "beat start:\r\n\t\"Hello.\"\r\n\tjump new_beat\r\n",
+      "added": "beat start:\r\n\t\"Hello.\"\r\n\tjump new_beat\r\n\nbeat new_beat:\n\tpass\n"
+    },
+    {
+      "name": "spaces",
+      "source": "beat start:\n    \"Hello.\"\n",
+      "beat": "start",
+      "appended": "beat start:\n    \"Hello.\"\n    jump new_beat\n",
+      "added": "beat start:\n    \"Hello.\"\n    jump new_beat\n\nbeat new_beat:\n    pass\n"
+    },
+    {
+      "name": "no_newline",
+      "source": "beat start:\n\t\"Hello.\"",
+      "beat": "start",
+      "appended": "beat start:\n\t\"Hello.\"\n\tjump new_beat",
+      "added": "beat start:\n\t\"Hello.\"\n\tjump new_beat\n\nbeat new_beat:\n\tpass\n"
+    }
+  ]
+}
