@@ -66,11 +66,31 @@ namespace VisualNovelTeller
             BuildUi();
             TaleValues.SetStagePositions(story.Director, leftPosition, centerPosition, rightPosition);
             story.Director.LineStarted += OnLineStarted;
+            story.Localization.LanguageChanged += OnLanguageChanged;
+        }
+
+        // Pictures with text have versions per language: the backdrop and the cast on stage
+        // switch to the new language's versions at once.
+        private void OnLanguageChanged()
+        {
+            if (_story == null || _story.Config == null) return;
+            if (_backdropName.Length > 0 && !_pending)
+            {
+                Sprite sprite = _story.Config.FindBackdrop(_backdropName, _story.Localization.Language);
+                if (sprite != null)
+                {
+                    _back.sprite = sprite;
+                    // The hidden front layer keeps the last picture after a transition.
+                    _front.sprite = sprite;
+                }
+            }
+            foreach (var actor in _story.Actors) Layout(actor);
         }
 
         private void OnDestroy()
         {
             if (_story != null && _story.Director != null) _story.Director.LineStarted -= OnLineStarted;
+            if (_story != null) _story.Localization.LanguageChanged -= OnLanguageChanged;
             if (_createdSettings != null) Destroy(_createdSettings);
         }
 
@@ -148,7 +168,7 @@ namespace VisualNovelTeller
             else
             {
                 string backdropName = TaleValues.ToText(source);
-                sprite = _story.Config != null ? _story.Config.FindBackdrop(backdropName) : null;
+                sprite = _story.Config != null ? _story.Config.FindBackdrop(backdropName, _story.Localization.Language) : null;
                 if (sprite == null)
                 {
                     _story.Director.ReportError("Backdrop '" + backdropName + "' was not found in the Story Config.");
@@ -503,7 +523,7 @@ namespace VisualNovelTeller
             object value;
             if (backdropName.Length > 0)
             {
-                sprite = _story.Config != null ? _story.Config.FindBackdrop(backdropName) : null;
+                sprite = _story.Config != null ? _story.Config.FindBackdrop(backdropName, _story.Localization.Language) : null;
                 if (sprite == null) _story.Director.ReportError("Backdrop '" + backdropName + "' was not found in the Story Config.");
             }
             else if (map != null && map.TryGetValue("backdrop_color", out value))

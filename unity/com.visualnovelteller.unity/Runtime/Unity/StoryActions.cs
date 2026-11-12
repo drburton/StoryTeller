@@ -6,7 +6,7 @@ namespace VisualNovelTeller
     /// <summary>
     /// The actions that come with the Unity layer, with the names and parameters of the
     /// Godot version so the same tales run in both: backdrop, exit_all, music,
-    /// stop_music, sound, and offer. The core adds emit and wait.
+    /// stop_music, sound, voice, and offer. The core adds emit and wait.
     /// </summary>
     public static class StoryActions
     {
@@ -21,7 +21,33 @@ namespace VisualNovelTeller
             director.AddAction(new MusicAction(story));
             director.AddAction(new StopMusicAction(story));
             director.AddAction(new SoundAction(story));
+            director.AddAction(new VoiceAction(story));
             director.AddAction(new OfferAction(story));
+        }
+    }
+
+    /// <summary>voice(clip): plays a voice clip in the reader's language. Lines marked @voice("clip") do this by themselves. Use await to wait until it ends.</summary>
+    public class VoiceAction : TaleAction
+    {
+        private readonly Story _story;
+
+        public VoiceAction(Story story)
+            : base("voice", new[] { "clip" }, 1)
+        {
+            _story = story;
+        }
+
+        public override async Task<object> RunAsync(TaleContext context, object[] args)
+        {
+            StoryAudio audio = _story != null ? _story.Audio : null;
+            if (audio == null)
+            {
+                context.Fail("voice() needs a StoryAudio in the scene.");
+                return null;
+            }
+            string problem = await audio.PlayVoice(TaleValues.ToText(args[0]));
+            if (problem.Length > 0) context.Fail(problem);
+            return null;
         }
     }
 

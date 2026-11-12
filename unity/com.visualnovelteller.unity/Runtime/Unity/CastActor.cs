@@ -71,9 +71,10 @@ namespace VisualNovelTeller
         /// <summary>The mood sprite to show, using the default or first mood when none is set.</summary>
         public Sprite CurrentSprite()
         {
-            Sprite sprite = string.IsNullOrEmpty(_mood) ? null : Member.FindMood(_mood);
-            if (sprite == null && !string.IsNullOrEmpty(Member.defaultMood)) sprite = Member.FindMood(Member.defaultMood);
-            if (sprite == null && Member.moods.Count > 0) sprite = Member.moods[0].sprite;
+            string language = _story != null ? _story.Localization.Language : null;
+            Sprite sprite = string.IsNullOrEmpty(_mood) ? null : Member.FindMood(_mood, language);
+            if (sprite == null && !string.IsNullOrEmpty(Member.defaultMood)) sprite = Member.FindMood(Member.defaultMood, language);
+            if (sprite == null && Member.moods.Count > 0) sprite = Member.moods[0].For(language);
             return sprite;
         }
 

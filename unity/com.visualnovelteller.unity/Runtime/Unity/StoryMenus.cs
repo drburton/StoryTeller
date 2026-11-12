@@ -328,7 +328,7 @@ namespace VisualNovelTeller
             _background.AddToClassList("vnt-menu-background");
             _background.pickingMode = PickingMode.Ignore;
             _background.scaleMode = ScaleMode.ScaleAndCrop;
-            _background.sprite = config != null ? config.TitleBackground : null;
+            _background.sprite = config != null ? config.TitleBackgroundFor(_story.Localization.Language) : null;
             _background.style.display = DisplayStyle.None;
             _root.Add(_background);
             _screen = new VisualElement();
@@ -349,6 +349,8 @@ namespace VisualNovelTeller
             _screen.Clear();
             _firstFocus = null;
             bool title = _stack[0] == Page.Title;
+            // The title picture can have a version per language.
+            if (_story.Config != null) _background.sprite = _story.Config.TitleBackgroundFor(_story.Localization.Language);
             _root.EnableInClassList("vnt-menu-root--title", title);
             _background.style.display = title && _background.sprite != null ? DisplayStyle.Flex : DisplayStyle.None;
             switch (_stack[_stack.Count - 1])
@@ -559,6 +561,7 @@ namespace VisualNovelTeller
             AddSlider(list, T("Master volume"), "vnt-menu-master-volume", 0f, 1f, s.masterVolume, Percent, delegate (float v) { s.masterVolume = v; });
             AddSlider(list, T("Music volume"), "vnt-menu-music-volume", 0f, 1f, s.musicVolume, Percent, delegate (float v) { s.musicVolume = v; });
             AddSlider(list, T("Sound volume"), "vnt-menu-sound-volume", 0f, 1f, s.soundVolume, Percent, delegate (float v) { s.soundVolume = v; });
+            AddSlider(list, T("Voice volume"), "vnt-menu-voice-volume", 0f, 1f, s.voiceVolume, Percent, delegate (float v) { s.voiceVolume = v; });
             AddToggle(list, T("Full screen"), "vnt-menu-full-screen", s.fullScreen, delegate (bool v) { s.fullScreen = v; });
             AddLanguageChoice(list);
             var row = new VisualElement();

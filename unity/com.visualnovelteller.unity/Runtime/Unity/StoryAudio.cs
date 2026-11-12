@@ -5,9 +5,11 @@ using UnityEngine;
 namespace VisualNovelTeller
 {
     /// <summary>
-    /// Plays music and sound effects for tales. Music crossfades between two AudioSources.
-    /// Tales use <c>music(track, volume, fade, loop)</c>, <c>stop_music(fade)</c>, and
-    /// <c>sound(name, volume)</c>, naming clips from the Story Config.
+    /// Plays music, sound effects, and voice for tales. Music crossfades between two AudioSources.
+    /// Tales use <c>music(track, volume, fade, loop)</c>, <c>stop_music(fade)</c>,
+    /// <c>sound(name, volume)</c>, and <c>voice(clip)</c>, naming clips from the Story Config. A
+    /// line marked <c>@voice("clip")</c> plays its clip when it shows, stopping the one before.
+    /// Clips are taken in the reader's language when they have a version for it.
     /// </summary>
     public class StoryAudio : MonoBehaviour, ITaleStateProvider
     {
@@ -15,12 +17,17 @@ namespace VisualNovelTeller
         [Range(0f, 1f)] [SerializeField] private float musicVolume = 1f;
         [Tooltip("Multiplier for all sound effects, from 0 to 1.")]
         [Range(0f, 1f)] [SerializeField] private float soundVolume = 1f;
+        [Tooltip("Multiplier for all voice, from 0 to 1.")]
+        [Range(0f, 1f)] [SerializeField] private float voiceVolume = 1f;
 
         private readonly StoryTweens _tweens = new StoryTweens();
         private readonly AudioSource[] _music = new AudioSource[2];
         private readonly int[] _fadeTokens = new int[2];
         private readonly float[] _levels = new float[2];
         private AudioSource _sound;
+        private AudioSource _voice;
+        private string _voiceClip = "";
+        private int _voiceToken;
         private Story _story;
         private int _current;
         private string _track = "";
@@ -49,10 +56,80 @@ namespace VisualNovelTeller
             set { soundVolume = Mathf.Clamp01(value); }
         }
 
+        /// <summary>Multiplier for all voice.</summary>
+        public float VoiceVolume
+        {
+            get { return voiceVolume; }
+            set
+            {
+                voiceVolume = Mathf.Clamp01(value);
+                if (_voice != null) _voice.volume = voiceVolume;
+            }
+        }
+
+        /// <summary>The name of the voice clip playing, or "".</summary>
+        public string CurrentVoice { get { return _voiceClip; } }
+
         /// <summary>Connects the audio to a story. <see cref="Story"/> calls this.</summary>
         public void Attach(Story story)
         {
+            if (_story == story) return;
             _story = story;
+            story.Director.LineStarted += OnLineStarted;
+        }
+
+        private void OnDestroy()
+        {
+            if (_story != null && _story.Director != null) _story.Director.LineStarted -= OnLineStarted;
+        }
+
+        // Each line stops the voice before it; a line marked @voice plays its clip.
+        private void OnLineStarted(OrderedMap<object> line)
+        {
+            StopVoice();
+            object value;
+            string clip = line.TryGetValue("voice", out value) && value != null ? GdValue.Str(value) : "";
+            if (clip.Length > 0) _ = PlayLineVoice(clip);
+        }
+
+        private async Task PlayLineVoice(string clip)
+        {
+            string problem = await PlayVoice(clip);
+            if (problem.Length > 0 && _story != null) _story.Director.ReportError(problem);
+        }
+
+        /// <summary>
+        /// Plays a voice clip in the reader's language, stopping the one before, and completes
+        /// when it ends or another starts. While the player skips, nothing plays. Returns an error
+        /// message or "".
+        /// </summary>
+        public async Task<string> PlayVoice(string clipName)
+        {
+            string language = _story != null ? _story.Localization.Language : null;
+            AudioClip clip = _story != null && _story.Config != null ? _story.Config.FindVoice(clipName, language) : null;
+            if (clip == null)
+            {
+                string folder = _story != null && _story.Config != null ? _story.Config.VoiceFolder : "Voice";
+                return "Voice clip '" + clipName + "' was not found in the Story Config's voice clips or in Resources/" + folder + "/" + language + ".";
+            }
+            StopVoice();
+            if (_story != null && _story.Skipping) return "";
+            int token = ++_voiceToken;
+            _voice.clip = clip;
+            _voice.volume = voiceVolume;
+            _voice.Play();
+            _voiceClip = clipName;
+            if (_story != null) await _story.Wait(clip.length);
+            if (token == _voiceToken) _voiceClip = "";
+            return "";
+        }
+
+        /// <summary>Stops the voice.</summary>
+        public void StopVoice()
+        {
+            _voiceToken++;
+            _voiceClip = "";
+            if (_voice != null) _voice.Stop();
         }
 
         private void Awake()
@@ -65,6 +142,9 @@ namespace VisualNovelTeller
             }
             _sound = gameObject.AddComponent<AudioSource>();
             _sound.playOnAwake = false;
+            _voice = gameObject.AddComponent<AudioSource>();
+            _voice.playOnAwake = false;
+            _voice.volume = voiceVolume;
         }
 
         private void Update()
@@ -140,6 +220,7 @@ namespace VisualNovelTeller
                 ApplyVolume(i);
             }
             _sound.Stop();
+            StopVoice();
         }
 
         // --- Saves --------------------------------------------------------------
@@ -174,7 +255,7 @@ namespace VisualNovelTeller
 
         private AudioClip Find(string clipName)
         {
-            return _story != null && _story.Config != null ? _story.Config.FindClip(clipName) : null;
+            return _story != null && _story.Config != null ? _story.Config.FindClip(clipName, _story.Localization.Language) : null;
         }
 
         private void ApplyVolume(int index)
