@@ -81,6 +81,8 @@ static func config_for_tale(tale_path: String) -> StoryConfig:
 func start(new_config: StoryConfig) -> void:
 	shut_down()
 	config = new_config
+	StoryAssets.source_language = config.source_language
+	StoryAssets.languages = config.languages
 	for script in config.crew:
 		var member := _instantiate_crew(script)
 		if member != null:

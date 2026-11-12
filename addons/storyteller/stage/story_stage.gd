@@ -45,6 +45,8 @@ var transitions: Dictionary = {}
 
 var _profiles: Dictionary = {}
 var _cast: Dictionary = {}
+## The locale the stage's pictures were last chosen for.
+var _shown_locale := ""
 ## Prop name to {"node": Node2D, "at": Vector2}.
 var _props: Dictionary = {}
 ## The CG on screen: {"name", "variant"}, or empty.
@@ -119,6 +121,35 @@ func clear() -> void:
 		cg_view.show_backdrop(Color.TRANSPARENT, Color.TRANSPARENT, "none", 0.0)
 	if camera:
 		camera.restore({})
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_TRANSLATION_CHANGED and backdrop_view != null:
+		_show_language_versions.call_deferred()
+
+
+## Pictures with text have versions per language (decision 0031): when the
+## language changes, the backdrop, CG, and cast on stage switch to the new
+## language's pictures at once. Godot also sends the notification when the
+## stage enters the tree, so nothing changes until the locale does.
+func _show_language_versions() -> void:
+	var locale := TranslationServer.get_locale()
+	if _shown_locale.is_empty() or locale == _shown_locale:
+		_shown_locale = locale
+		return
+	_shown_locale = locale
+	var current: Variant = backdrop_view.current
+	if current is String and not current.is_empty():
+		var texture := StoryAssets.load_asset(backdrop_folder, current, StoryAssets.IMAGE_EXTENSIONS) as Texture2D
+		if texture != null:
+			backdrop_view.show_backdrop(texture, current, "none", 0.0)
+	if not _cg.is_empty():
+		var found := _find_cg(_cg["name"], _cg["variant"])
+		if found[1] is Texture2D:
+			cg_view.show_backdrop(found[1], "%s/%s" % [_cg["name"], found[0]], "none", 0.0)
+	for member in _cast.values():
+		if not member.mood.is_empty():
+			member.set_mood(member.mood)
 
 
 ## Shows a backdrop: an image name from [member backdrop_folder], or a
@@ -429,7 +460,7 @@ static func scan_cast(folder: String) -> Dictionary:
 		if not entry.ends_with("/"):
 			continue
 		var sub := entry.trim_suffix("/")
-		if profiles.has(sub) or sub.begins_with("."):
+		if profiles.has(sub) or sub.begins_with(".") or StoryAssets.is_language_folder(sub):
 			continue
 		var profile := CastProfile.new()
 		profile.id = sub
