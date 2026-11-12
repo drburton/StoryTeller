@@ -98,6 +98,13 @@ namespace VisualNovelTeller
         [SerializeField] private List<StoryProduct> products = new List<StoryProduct>();
         [Tooltip("Auto uses the test store in the editor and the platform's store in a build when Unity In-App Purchasing is installed.")]
         [SerializeField] private StoreMode store = StoreMode.Auto;
+        [Header("Localization")]
+        [Tooltip("The strings CSV with the translations, the same file the Godot plugin writes. Assets > Visual Novel Teller > Export Strings writes and updates it.")]
+        [SerializeField] private TextAsset translationFile;
+        [Tooltip("The language the tales are written in, such as en.")]
+        [SerializeField] private string sourceLanguage = "en";
+        [Tooltip("Languages to add as columns when exporting strings, such as es and fr.")]
+        [SerializeField] private List<string> languages = new List<string>();
         [Header("Saves")]
         [Tooltip("How many lines and choices the player can step back through. 0 turns rewind off.")]
         [Min(0)] [SerializeField] private int rewindDepth = 50;
@@ -127,6 +134,12 @@ namespace VisualNovelTeller
         public IReadOnlyList<NamedSprite> Backdrops { get { return backdrops; } }
         public IReadOnlyList<NamedClip> AudioClips { get { return audioClips; } }
         public IReadOnlyList<string> ExposedNames { get { return exposedNames; } }
+        /// <summary>The strings CSV with the translations, or null.</summary>
+        public TextAsset TranslationFile { get { return translationFile; } set { translationFile = value; } }
+        /// <summary>The language the tales are written in.</summary>
+        public string SourceLanguage { get { return string.IsNullOrEmpty(sourceLanguage) ? "en" : sourceLanguage; } }
+        /// <summary>Languages Export Strings adds as columns.</summary>
+        public IReadOnlyList<string> Languages { get { return languages; } }
         /// <summary>What readers can buy inside the game.</summary>
         public IReadOnlyList<StoryProduct> Products { get { return products; } }
         /// <summary>Which store the game sells through.</summary>

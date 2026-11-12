@@ -31,6 +31,8 @@ namespace VisualNovelTeller
         public float soundVolume = 1f;
         /// <summary>Full screen on or off.</summary>
         public bool fullScreen;
+        /// <summary>The reader's language, such as "es". Empty picks the system's language when the strings file has it.</summary>
+        public string language = "";
 
         /// <summary>Where the settings are saved.</summary>
         public static string FilePath
@@ -108,6 +110,7 @@ namespace VisualNovelTeller
                     story.Audio.MusicVolume = musicVolume;
                     story.Audio.SoundVolume = soundVolume;
                 }
+                story.Localization.Language = story.Localization.PickLanguage(language);
             }
             AudioListener.volume = masterVolume;
             if (Screen.fullScreen != fullScreen) Screen.fullScreen = fullScreen;

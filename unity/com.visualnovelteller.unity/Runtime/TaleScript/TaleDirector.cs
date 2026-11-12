@@ -53,7 +53,11 @@ namespace TaleScript
         public bool WaitForActions = true;
         /// <summary>Replaces the timer behind <see cref="TaleContext.Wait"/>, for example with a game clock.</summary>
         public Func<double, Task> Waiter;
-        /// <summary>Translates text for tr(). Without it, tr() returns its argument.</summary>
+        /// <summary>
+        /// Translates text (decision 0011): lines and choice options by their key
+        /// "tale:line-id", and tr(), speaker names, and other text by the text itself. It gives
+        /// back the key when there is no translation. Without it, nothing is translated.
+        /// </summary>
         public Func<string, string> Translator;
         /// <summary>Tells collected("id"). Without it, collected() is false.</summary>
         public Func<string, bool> Collected;
@@ -91,6 +95,8 @@ namespace TaleScript
         private readonly HashSet<string> _onceChosen = new HashSet<string>();
         /// <summary>Products of the @needs beats entered in this playthrough, so a save made after them is locked for a reader who doesn't own them.</summary>
         private readonly HashSet<string> _paid = new HashSet<string>();
+        /// <summary>Translated texts already compiled into parts, by their text.</summary>
+        private readonly Dictionary<string, List<object>> _translated = new Dictionary<string, List<object>>();
         private readonly HashSet<string> _readLines = new HashSet<string>();
         private readonly List<TaleFrame> _stack = new List<TaleFrame>();
         private readonly List<ITaleStateProvider> _stateProviders = new List<ITaleStateProvider>();
@@ -592,7 +598,7 @@ namespace TaleScript
             int generation = _generation;
             if (WaitForActions && !instruction.NoWait) await FinishPending();
             var acts = new List<TaleExpr>();
-            string text = await Render(instruction.Text, frame, acts);
+            string text = await Render(Localize(instruction.Text, instruction.Id, frame.Tale, instruction.Line), frame, acts);
             text = TaleText.ExpandStyles(text, TextStyles);
             string speaker = instruction.Speaker;
             string speakerName;
@@ -662,7 +668,7 @@ namespace TaleScript
                 if (option.Cond != null) enabled = GdValue.Truthy(await _evaluator.Evaluate(option.Cond, frame));
                 if (!enabled && !option.ShowDisabled) continue;
                 var entry = new OrderedMap<object>();
-                entry["text"] = await Render(option.Text, frame, null);
+                entry["text"] = await Render(Localize(option.Text, option.Id, frame.Tale, option.Line), frame, null);
                 entry["id"] = option.Id;
                 entry["enabled"] = enabled;
                 entry["picture"] = option.Picture;
@@ -1027,6 +1033,35 @@ namespace TaleScript
                 }
             }
             name = Translate(GdMethods.Capitalize(speaker));
+        }
+
+        /// <summary>
+        /// The parts of a line or option in the reader's language: its translation, compiled
+        /// with {expr} and tags like the original, or the original parts when there is none. A
+        /// translation that doesn't compile is reported once, and the original is shown.
+        /// </summary>
+        private List<object> Localize(List<object> parts, string id, Tale tale, int line)
+        {
+            if (Translator == null || string.IsNullOrEmpty(id)) return parts;
+            string key = tale.TranslationKey(id);
+            string translated = Translator(key);
+            if (string.IsNullOrEmpty(translated) || translated == key) return parts;
+            List<object> compiled;
+            if (!_translated.TryGetValue(translated, out compiled))
+            {
+                TaleText.SplitResult result = TaleCompiler.CompileText(translated);
+                if (result.Errors.Count == 0)
+                {
+                    compiled = result.Parts;
+                }
+                else
+                {
+                    Report("The translation of this line has a problem: " + result.Errors[0], tale.TaleName, line);
+                    compiled = parts;
+                }
+                _translated[translated] = compiled;
+            }
+            return compiled;
         }
 
         private string Translate(string text)
