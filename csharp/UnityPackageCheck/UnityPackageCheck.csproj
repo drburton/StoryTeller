@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!-- Compiles the Unity layer and the editor tools of the package against
+       stand-ins for the Unity APIs (UnityStubs), so a compile error shows up
+       without opening Unity. Runtime/Unity and Editor are two assemblies in
+       Unity (VisualNovelTeller and VisualNovelTeller.Editor). They are one
+       assembly here. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <RootNamespace>VisualNovelTeller</RootNamespace>
+    <AssemblyName>UnityPackageCheck</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <!-- CS0649 (field never assigned): Unity assigns [SerializeField] fields
+         from the Inspector, and Unity does not report this warning for them.
+         Nothing else is suppressed. -->
+    <NoWarn>$(NoWarn);CS0649</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\unity\com.visualnovelteller.unity\Runtime\Unity\**\*.cs" />
+    <Compile Include="..\..\unity\com.visualnovelteller.unity\Editor\**\*.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TaleScript.Core\TaleScript.Core.csproj" />
+    <ProjectReference Include="..\UnityStubs\UnityStubs.csproj" />
+  </ItemGroup>
+
+</Project>

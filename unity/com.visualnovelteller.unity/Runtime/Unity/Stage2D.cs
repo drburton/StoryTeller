@@ -45,6 +45,8 @@ namespace VisualNovelTeller
         private VisualElement _stage;
         private Image _back;
         private Image _front;
+        private VisualElement _frontClip;
+        private readonly HashSet<string> _warnedTransitions = new HashSet<string>();
         private VisualElement _castLayer;
         private Sprite _pendingSprite;
         private Color _pendingColor;
@@ -131,11 +133,15 @@ namespace VisualNovelTeller
             StoryUI.Fill(_stage, false);
             _back = MakeBackdropLayer("vnt-backdrop");
             _front = MakeBackdropLayer("vnt-backdrop-next");
-            _front.style.display = DisplayStyle.None;
+            _frontClip = new VisualElement { name = "vnt-backdrop-clip" };
+            StoryUI.Fill(_frontClip, false);
+            _frontClip.style.overflow = Overflow.Hidden;
+            _frontClip.style.display = DisplayStyle.None;
+            _frontClip.Add(_front);
             _castLayer = new VisualElement { name = "vnt-cast" };
             StoryUI.Fill(_castLayer, false);
             _stage.Add(_back);
-            _stage.Add(_front);
+            _stage.Add(_frontClip);
             _stage.Add(_castLayer);
             root.Add(_stage);
         }
@@ -150,10 +156,23 @@ namespace VisualNovelTeller
 
         // --- Backdrop -----------------------------------------------------------
 
+        private static readonly string[] BackdropTransitions =
+        {
+            "none", "cut", "fade", "dissolve", "wipe_left", "wipe_right", "wipe_up", "wipe_down",
+            "slide_left", "slide_right", "slide_up", "slide_down",
+        };
+
         /// <summary>
         /// Shows a backdrop. The source is a backdrop name from the Story Config, or a Color
-        /// for a plain color; Color.TRANSPARENT removes the backdrop. Transitions: none, or
-        /// anything else for a fade.
+        /// for a plain color; Color.TRANSPARENT removes the backdrop. Transitions, as in the
+        /// Godot version: none or cut, fade, dissolve, wipe_left, wipe_right, wipe_up,
+        /// wipe_down, slide_left, slide_right, slide_up, and slide_down. Fade lays the new
+        /// picture over the old one. Dissolve fades the old picture out while the new one fades
+        /// in, a plain crossfade without the noise pattern of the Godot shader. A wipe reveals
+        /// the new picture from one edge: wipe_left starts at the right edge and moves left.
+        /// A slide moves both pictures in the named direction. Removing the backdrop always
+        /// fades. An unknown name logs a warning once and fades. With no time, or while the
+        /// player skips, the change is instant.
         /// </summary>
         public Task ShowBackdrop(object source, string transition, float time)
         {
@@ -175,7 +194,8 @@ namespace VisualNovelTeller
                     return Task.CompletedTask;
                 }
             }
-            bool instant = transition == "none" || _story.Skipping;
+            string mode = ResolveTransition(transition);
+            bool instant = mode == "none" || mode == "cut" || _story.Skipping;
             int generation = ++_backdropGeneration;
             RememberBackdrop(source is Color ? null : TaleValues.ToText(source), sprite == null ? color : new Color(0f, 0f, 0f, 0f));
             if (sprite == null && color.a <= 0f)
@@ -197,13 +217,102 @@ namespace VisualNovelTeller
             _pending = true;
             _front.sprite = sprite;
             _front.style.backgroundColor = _pendingColor;
-            _front.style.display = DisplayStyle.Flex;
+            ResetFrontLayout();
+            bool covers = mode.StartsWith("wipe_", System.StringComparison.Ordinal) || mode.StartsWith("slide_", System.StringComparison.Ordinal);
+            _front.style.opacity = covers ? 1f : 0f;
+            _frontClip.style.display = DisplayStyle.Flex;
+            Vector2 size = StageSize();
             return _tweens.Run(time, delegate (float t)
             {
                 if (generation != _backdropGeneration) return;
-                _front.style.opacity = t;
+                if (mode == "dissolve")
+                {
+                    // The old picture stays solid so nothing behind the stage shows through.
+                    _front.style.opacity = t * t * (3f - 2f * t);
+                }
+                else if (mode.StartsWith("wipe_", System.StringComparison.Ordinal)) SetWipe(mode, t, size);
+                else if (mode.StartsWith("slide_", System.StringComparison.Ordinal)) SetSlide(mode, t);
+                else _front.style.opacity = t;
                 if (t >= 1f) CommitBackdrop();
             }, instant);
+        }
+
+        private string ResolveTransition(string transition)
+        {
+            if (string.IsNullOrEmpty(transition)) return "fade";
+            if (System.Array.IndexOf(BackdropTransitions, transition) >= 0) return transition;
+            if (_warnedTransitions.Add(transition))
+                Debug.LogWarning("Visual Novel Teller: unknown transition '" + transition + "', using fade.", this);
+            return "fade";
+        }
+
+        private Vector2 StageSize()
+        {
+            Rect rect = _stage.contentRect;
+            float width = rect.width > 1f ? rect.width : ReferenceWidth;
+            float height = rect.height > 1f ? rect.height : ReferenceHeight;
+            return new Vector2(width, height);
+        }
+
+        // Puts the clip container and the new picture back to covering the whole stage.
+        private void ResetFrontLayout()
+        {
+            _frontClip.style.left = 0;
+            _frontClip.style.top = 0;
+            _frontClip.style.right = 0;
+            _frontClip.style.bottom = 0;
+            _frontClip.style.width = StyleKeyword.Null;
+            _frontClip.style.height = StyleKeyword.Null;
+            _front.style.left = 0;
+            _front.style.top = 0;
+            _front.style.right = 0;
+            _front.style.bottom = 0;
+            _front.style.width = StyleKeyword.Null;
+            _front.style.height = StyleKeyword.Null;
+            _front.style.translate = ZeroTranslate();
+            _back.style.translate = ZeroTranslate();
+        }
+
+        private static Translate ZeroTranslate()
+        {
+            return new Translate(new Length(0f, LengthUnit.Pixel), new Length(0f, LengthUnit.Pixel));
+        }
+
+        // The clip container grows from the edge where the wipe starts. The picture inside
+        // keeps the full stage size and is shifted back, so it does not move or squeeze.
+        private void SetWipe(string mode, float t, Vector2 size)
+        {
+            float w = size.x;
+            float h = size.y;
+            float visibleW = w * t;
+            float visibleH = h * t;
+            float left = 0f;
+            float top = 0f;
+            float clipW = w;
+            float clipH = h;
+            if (mode == "wipe_left") { left = w - visibleW; clipW = visibleW; }
+            else if (mode == "wipe_right") { clipW = visibleW; }
+            else if (mode == "wipe_up") { top = h - visibleH; clipH = visibleH; }
+            else { clipH = visibleH; }
+            _frontClip.style.left = left;
+            _frontClip.style.top = top;
+            _frontClip.style.right = StyleKeyword.Null;
+            _frontClip.style.bottom = StyleKeyword.Null;
+            _frontClip.style.width = clipW;
+            _frontClip.style.height = clipH;
+            _front.style.left = -left;
+            _front.style.top = -top;
+            _front.style.width = w;
+            _front.style.height = h;
+        }
+
+        // Both pictures move in the named direction: slide_left moves them to the left.
+        private void SetSlide(string mode, float t)
+        {
+            float dx = mode == "slide_left" ? -1f : mode == "slide_right" ? 1f : 0f;
+            float dy = mode == "slide_up" ? -1f : mode == "slide_down" ? 1f : 0f;
+            _back.style.translate = new Translate(Length.Percent(dx * t * 100f), Length.Percent(dy * t * 100f));
+            _front.style.translate = new Translate(Length.Percent(-dx * (1f - t) * 100f), Length.Percent(-dy * (1f - t) * 100f));
         }
 
         private void CommitBackdrop()
@@ -213,8 +322,19 @@ namespace VisualNovelTeller
             _back.sprite = _pendingSprite;
             _back.style.backgroundColor = _pendingColor;
             _back.style.opacity = 1f;
-            _front.style.display = DisplayStyle.None;
+            _frontClip.style.display = DisplayStyle.None;
             _front.style.opacity = 0f;
+            ResetFrontLayout();
+        }
+
+        /// <summary>
+        /// Moves the stage by a number of pixels at the 1920 by 1080 layout, for a screen
+        /// shake. <see cref="StoryEffects"/> calls this; pass zero to stop.
+        /// </summary>
+        public void SetShake(Vector2 pixels)
+        {
+            if (_stage == null) return;
+            _stage.style.translate = new Translate(new Length(pixels.x, LengthUnit.Pixel), new Length(pixels.y, LengthUnit.Pixel));
         }
 
         // --- Cast ---------------------------------------------------------------
@@ -450,7 +570,9 @@ namespace VisualNovelTeller
             _back.sprite = null;
             _back.style.backgroundColor = new Color(0f, 0f, 0f, 0f);
             _back.style.opacity = 1f;
-            _front.style.display = DisplayStyle.None;
+            _frontClip.style.display = DisplayStyle.None;
+            ResetFrontLayout();
+            SetShake(Vector2.zero);
             RememberBackdrop(null, new Color(0f, 0f, 0f, 0f));
             foreach (var actor in _story.Actors)
             {
@@ -514,9 +636,10 @@ namespace VisualNovelTeller
             _tweens.FinishAll();
             _backdropGeneration++;
             _pending = false;
-            _front.style.display = DisplayStyle.None;
+            _frontClip.style.display = DisplayStyle.None;
             _front.style.opacity = 0f;
             _back.style.opacity = 1f;
+            ResetFrontLayout();
             var sprite = default(Sprite);
             var color = new Color(0f, 0f, 0f, 0f);
             string backdropName = map != null ? TextOf(map, "backdrop") : "";

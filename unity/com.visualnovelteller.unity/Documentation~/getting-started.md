@@ -56,7 +56,7 @@ To set it up by hand:
 1. Create an empty GameObject and add the **Story** component.
 2. Assign your Story Config. Leave **Play On Start** on.
 3. Add a **DialoguePresenter** to the same object, or leave it out and the Story adds one. It builds a UI Toolkit panel on its own, with large high contrast text and Unity's default runtime theme. Give the presenter or the Story Config a theme style sheet of your own to change it.
-4. If the config has cast or backdrops, the Story also adds a **Stage2D**. If it has audio clips, it adds a **StoryAudio**. You can add these yourself to change their settings.
+4. If the config has cast or backdrops, the Story also adds a **Stage2D**. If it has audio clips, it adds a **StoryAudio**. It always adds a **StoryEffects**. You can add these yourself to change their settings.
 5. Press Play.
 
 Click, Space, or Enter finishes the typing of a line and then moves on. Choices appear as buttons, and options that are not available show greyed out. A timed choice, written `choose(timeout = 5)`, shows a shrinking bar and takes the timeout path when it runs out.
@@ -107,16 +107,35 @@ Tales raise a signal with `emit("door_opened")`. An **On Signal** event in the I
 
 | Name | Does |
 | --- | --- |
-| `backdrop(name, transition = "fade", time = 1.0)` | Shows a backdrop, or a Color such as `Color.BLACK` |
+| `backdrop(name, transition = "fade", time = 1.0)` | Shows a backdrop, or a Color such as `Color.BLACK`. See the transitions below |
 | `music(track, volume = 1.0, fade = 1.0, loop = true)` | Crossfades to a music track |
 | `stop_music(fade = 1.0)` | Fades the music out |
 | `sound(name, volume = 1.0)` | Plays a sound effect, and `await` waits for its end |
 | `exit_all(time = 0.4)` | Every cast member leaves |
+| `fade_out(color = Color.BLACK, time = 0.5)`, `fade_in(time = 0.5)` | Fades the whole screen, dialogue included, to a color and back |
+| `flash(color = Color.WHITE, time = 0.3)` | Flashes the whole screen |
+| `shake(strength = 0.5, time = 0.4)` | Shakes the stage and the weather, not the dialogue |
+| `filter(name, strength = 1.0, time = 0.5)` | `grayscale`, `sepia`, `night`, `warm`, `cold`, `vignette`, or `none` |
+| `weather(kind, strength = 1.0, fade = 1.0)` | `rain`, `snow`, or `none` |
 | `mira.enter("smile", LEFT)` | Puts a cast member on stage at LEFT, CENTER, or RIGHT |
 | `mira.exit()`, `mira.move_to(CENTER, 0.6)` | Moves a cast member off stage or across it |
 | `mira.mood = "worried"` | Changes the sprite |
 | `mira.scale_to`, `hop`, `shake`, `nod`, `to_front`, `to_back` | Small animations and drawing order |
 | `emit(name, value)`, `wait(seconds)` | From the core |
+
+### Transitions and effects
+
+The `backdrop` action knows these transitions: `none` (or `cut`), `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, and `slide_down`. A wipe reveals the new picture from one edge. `wipe_left` starts at the right edge and moves left. A slide moves both pictures in the named direction. An unknown name logs a warning once and fades. With a time of 0, or while the player skips, the change is instant.
+
+The **StoryEffects** component draws the effects. The Story adds it on its own. Weather and filters draw above the stage and below the dialogue. Flashes and screen fades cover the dialogue too, but stay under the menus. None of these panels takes clicks. `shake` moves the stage and the weather panel, and the dialogue stays still. `fade_out`, `fade_in`, `flash`, `shake`, `filter`, and `weather` end when their effect ends, so `await` waits for them. All of them finish at once while the player skips, and they stop while the story is paused. Saves and rewind keep the weather, the filter, and the faded-out screen.
+
+UI Toolkit has no screen shaders, so some effects are approximations:
+
+- `dissolve` eases the new picture in over the old one. The Godot version uses a noise pattern.
+- `grayscale` draws a gray layer over the picture. It lowers the color and contrast but does not remove all color.
+- `sepia`, `night`, `warm`, and `cold` are translucent color overlays.
+- `vignette` darkens the edges with a generated radial gradient.
+- `blur` is not available in Unity yet. It logs a warning once and changes nothing.
 
 Cast methods take their arguments by position, in the order the Godot reference lists them (enter: mood, at, time, transition). Positions are fractions of the screen: x runs from 0 to 1, and a second number lifts the character above the bottom edge, as in `Vector2(0.5, 0.1)`.
 
@@ -147,7 +166,7 @@ StoryShots keeps `Current` and `Holding` for scripts. Saves include the shot aut
 
 ## Saving and rewinding
 
-Story saves the whole play state: the place in the tale, its variables, the stage, the music, and the current shot. The stage, audio, and shots components join every save on their own.
+Story saves the whole play state: the place in the tale, its variables, the stage, the music, the effects, and the current shot. The stage, audio, effects, and shots components join every save on their own.
 
     story.SaveSlot("slot1");                 // writes saves/slot1.json
     if (story.HasSlot("slot1")) await story.LoadSlot("slot1");

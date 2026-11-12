@@ -59,6 +59,7 @@ namespace VisualNovelTeller
         [SerializeField] private Stage2D stage;
         [SerializeField] private StoryAudio storyAudio;
         [SerializeField] private StoryShots shots;
+        [SerializeField] private StoryEffects effects;
         [Header("Events")]
         [Tooltip("Raised by emit(\"name\", value) in a tale. The value arrives as text.")]
         [SerializeField] private StorySignalEvent onSignal = new StorySignalEvent();
@@ -95,6 +96,8 @@ namespace VisualNovelTeller
         public Stage2D Stage { get { return stage; } }
         public StoryAudio Audio { get { return storyAudio; } }
         public StoryShots Shots { get { return shots; } }
+        /// <summary>Weather, filters, flashes, screen fades, and shake. Added automatically.</summary>
+        public StoryEffects Effects { get { return effects; } }
         /// <summary>The cast members of the config, as tales see them.</summary>
         public IEnumerable<CastActor> Actors { get { return _actors; } }
 
@@ -192,7 +195,7 @@ namespace VisualNovelTeller
 
         /// <summary>
         /// Stops the story and puts everything back as it is before a new game: story
-        /// variables, rewind history, dialogue, backdrop and cast, music, and shots. Global
+        /// variables, rewind history, dialogue, backdrop and cast, music, effects, and shots. Global
         /// variables and the lines already read stay. Call <see cref="Play"/> afterwards.
         /// </summary>
         public void ResetToStart()
@@ -209,6 +212,7 @@ namespace VisualNovelTeller
             if (stage != null) stage.Clear();
             if (storyAudio != null) storyAudio.Clear();
             if (shots != null) shots.Clear();
+            if (effects != null) effects.Clear();
         }
 
         /// <summary>
@@ -671,6 +675,11 @@ namespace VisualNovelTeller
                 storyAudio.Attach(this);
                 _director.AddStateProvider(storyAudio);
             }
+            if (effects != null)
+            {
+                effects.Attach(this);
+                _director.AddStateProvider(effects);
+            }
             if (shots != null)
             {
                 shots.Attach(this);
@@ -695,6 +704,9 @@ namespace VisualNovelTeller
             // Voice clips can come from Resources alone, so a config always gets audio.
             if (storyAudio == null && config != null)
                 storyAudio = gameObject.AddComponent<StoryAudio>();
+            if (effects == null) effects = GetComponentInChildren<StoryEffects>();
+            if (effects == null) effects = FindAnyObjectByType<StoryEffects>();
+            if (effects == null) effects = gameObject.AddComponent<StoryEffects>();
             if (shots == null) shots = GetComponentInChildren<StoryShots>();
             if (shots == null) shots = FindAnyObjectByType<StoryShots>();
         }

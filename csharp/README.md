@@ -101,7 +101,19 @@ Each problem prints as `<file>:<line>: <message>`, with `warning:` before warnin
 
 `--expose=a,b` adds names that game code exposes, for the checker and for `--paths`. `--actions=a,b` adds actions such as `music` or `backdrop` without checking their arguments, for tales written for a runtime whose actions the context file does not list. For example, `--paths --expose=shots --actions=music` explores a tale that uses Shots and music. `--paths` also plays every file that checks clean down every path from the beat `start`, with the other files available as tales to jump to, and prints a short report for each file: the number of paths, the endings with counts, beats no path reaches, and the problems as `file:line: kind: message` with how many paths hit them and the choices on the first one. Actions from the context file become actions that do nothing, and the cast ids and exposed names get stand-ins. The exit code is 1 when a path hits a runtime error or another problem, such as a loop.
 
-CI builds the solution with warnings treated as errors, runs the conformance suite and the tests in `TaleScript.Tests`, and tries the checker on a clean tale and a broken one.
+CI builds the solution with warnings treated as errors (this includes the Unity package compile check below), runs the conformance suite and the tests in `TaleScript.Tests`, and tries the checker on a clean tale and a broken one.
+
+## The Unity package compile check
+
+`UnityPackageCheck` compiles the Unity layer of the package (`Runtime/Unity`) and the editor tools (`Editor`) without Unity. It references `TaleScript.Core` and `UnityStubs`, and it uses the same language level as Unity (netstandard2.1, C# 9). A typo, a wrong argument, or a call to a method that does not exist fails the build. `dotnet build csharp/TaleScript.sln -warnaserror`, which CI runs, includes it.
+
+`UnityStubs` holds hand-written stand-ins for the Unity APIs the package calls: `UnityEngine`, `UnityEngine.UIElements`, `UnityEngine.InputSystem`, `UnityEngine.Playables`, and `UnityEditor`. The stand-ins have no behavior and cover only what the package uses. Their signatures must match the real Unity 6 and Input System ones, because a wrong stand-in can pass a call that Unity rejects, or reject a call that Unity accepts.
+
+When the package uses a new Unity API, add a stand-in for it in `UnityStubs` and copy the signature from the Unity scripting reference. Do not change package code to fit a stand-in.
+
+Two limits apply. The check compiles `Runtime/Unity` and `Editor` as one assembly, so it does not notice runtime code that uses `UnityEditor`. It also does not run anything, and Unity-side rules such as serialization, import, and the Inspector are outside it. It does not replace opening the package in Unity. For that, run `tools/check_unity.ps1`.
+
+The project suppresses only warning CS0649 (a field is never assigned), because Unity assigns `[SerializeField]` fields from the Inspector.
 
 ## Unity constraints
 
