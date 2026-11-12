@@ -120,6 +120,8 @@ namespace TaleScript
         public OrderedMap<int> Beats = new OrderedMap<int>();
         /// <summary>Beat name to its display heading from @heading.</summary>
         public OrderedMap<string> Headings = new OrderedMap<string>();
+        /// <summary>Beat name to the product it needs from @needs.</summary>
+        public OrderedMap<string> Needs = new OrderedMap<string>();
         public List<TaleInstruction> Instructions = new List<TaleInstruction>();
         /// <summary>Source text of every line and option, by id.</summary>
         public OrderedMap<string> Texts = new OrderedMap<string>();

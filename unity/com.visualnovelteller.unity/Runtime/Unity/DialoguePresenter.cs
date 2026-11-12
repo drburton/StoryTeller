@@ -17,12 +17,15 @@ namespace VisualNovelTeller
         public Color Color;
         /// <summary>The text without any tags.</summary>
         public string Text;
+        /// <summary>The line's voice clip from @voice, or "". The history screen can play it again.</summary>
+        public string Voice;
 
-        public HistoryEntry(string speaker, Color color, string text)
+        public HistoryEntry(string speaker, Color color, string text, string voice = "")
         {
             Speaker = speaker;
             Color = color;
             Text = text;
+            Voice = voice ?? "";
         }
     }
 
@@ -199,6 +202,33 @@ namespace VisualNovelTeller
         {
             _story = story;
             EnsureUi();
+            _story.Localization.LanguageChanged += TranslateQuickMenu;
+            TranslateQuickMenu();
+        }
+
+        /// <summary>Translates interface text into the reader's language.</summary>
+        private string T(string text)
+        {
+            return _story != null ? _story.Localization.T(text) : text;
+        }
+
+        // The quick menu's labels come from the layout. The layout's text is kept as each
+        // button's source text, so a later language change translates from it again.
+        private void TranslateQuickMenu()
+        {
+            if (_root == null) return;
+            VisualElement quick = _root.Q<VisualElement>("vnt-quick");
+            if (quick == null) return;
+            quick.Query<Button>().ForEach(delegate (Button button)
+            {
+                var source = button.userData as string;
+                if (source == null)
+                {
+                    source = button.text;
+                    button.userData = source;
+                }
+                button.text = T(source);
+            });
         }
 
         /// <summary>Forgets the lines of the history screen and the current line. A new game does this.</summary>
@@ -223,6 +253,7 @@ namespace VisualNovelTeller
 
         private void OnDestroy()
         {
+            if (_story != null) _story.Localization.LanguageChanged -= TranslateQuickMenu;
             if (_createdSettings != null) Destroy(_createdSettings);
         }
 
@@ -474,9 +505,9 @@ namespace VisualNovelTeller
 
         // --- History ------------------------------------------------------------
 
-        private void AddHistory(string speaker, Color color, string text)
+        private void AddHistory(string speaker, Color color, string text, string voice = "")
         {
-            _history.Add(new HistoryEntry(speaker, color, text));
+            _history.Add(new HistoryEntry(speaker, color, text, voice));
             int limit = _story != null && _story.Config != null ? _story.Config.HistoryLength : 200;
             if (_history.Count > limit) _history.RemoveRange(0, _history.Count - limit);
         }
@@ -493,6 +524,8 @@ namespace VisualNovelTeller
             _skipOn = false;
             ApplySkip();
             FillHistory();
+            _historyOverlay.Q<Label>("vnt-history-title").text = T("History");
+            _historyOverlay.Q<Button>("vnt-history-close").text = T("Close");
             _historyOverlay.style.display = DisplayStyle.Flex;
             _historyScroll.schedule.Execute(ScrollHistoryToEnd);
             _historyScroll.schedule.Execute(ScrollHistoryToEnd).ExecuteLater(60);
@@ -550,7 +583,7 @@ namespace VisualNovelTeller
             _historyScroll.Clear();
             if (_history.Count == 0)
             {
-                _historyScroll.Add(HistoryLabel("Nothing yet.", "vnt-history-text"));
+                _historyScroll.Add(HistoryLabel(T("Nothing yet."), "vnt-history-text"));
                 return;
             }
             foreach (HistoryEntry entry in _history)
@@ -564,8 +597,27 @@ namespace VisualNovelTeller
                     row.Add(speaker);
                 }
                 row.Add(HistoryLabel(entry.Text, "vnt-history-text"));
+                if (!string.IsNullOrEmpty(entry.Voice) && _story != null && _story.Audio != null)
+                {
+                    string voice = entry.Voice;
+                    var replay = new Button();
+                    replay.name = "vnt-history-replay";
+                    replay.text = T("Replay voice");
+                    replay.tooltip = replay.text;
+                    replay.AddToClassList("vnt-history-replay");
+                    replay.focusable = false;
+                    replay.clicked += delegate { _ = ReplayVoice(voice); };
+                    row.Add(replay);
+                }
                 _historyScroll.Add(row);
             }
+        }
+
+        /// <summary>Plays a line's voice clip again, from the history screen.</summary>
+        private async Task ReplayVoice(string clip)
+        {
+            string problem = await _story.Audio.PlayVoice(clip);
+            if (problem.Length > 0) Debug.LogWarning("DialoguePresenter: " + problem, this);
         }
 
         private static Label HistoryLabel(string text, string className)
@@ -597,8 +649,9 @@ namespace VisualNovelTeller
             Color historyColor = Color.white;
             if (line.TryGetValue("speaker_color", out colorValue) && colorValue is Color && ((Color)colorValue).a > 0f)
                 historyColor = (Color)colorValue;
-            AddHistory(speakerName, historyColor, _reveal.PlainText);
-            _currentLine = new HistoryEntry(speakerName, historyColor, _reveal.PlainText);
+            string voice = Text(line, "voice");
+            AddHistory(speakerName, historyColor, _reveal.PlainText, voice);
+            _currentLine = new HistoryEntry(speakerName, historyColor, _reveal.PlainText, voice);
             object readValue;
             _lineRead = line.TryGetValue("read", out readValue) && readValue is bool && (bool)readValue;
             // Skip stops at the first line the player has not read.

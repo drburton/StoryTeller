@@ -21,6 +21,10 @@ namespace UnityEditor
         {
         }
 
+        public MenuItem(string itemName, bool isValidateFunction)
+        {
+        }
+
         public MenuItem(string itemName, bool isValidateFunction, int priority)
         {
         }
@@ -97,6 +101,11 @@ namespace UnityEditor
 
     public static class AssetDatabase
     {
+        public static void ImportAsset(string path)
+        {
+            throw null;
+        }
+
         public static string[] FindAssets(string filter)
         {
             throw null;
@@ -161,6 +170,14 @@ namespace UnityEditor
         }
 
         public bool ApplyModifiedProperties()
+        {
+            throw null;
+        }
+    }
+
+    public static class EditorUtility
+    {
+        public static void SetDirty(UnityEngine.Object target)
         {
             throw null;
         }

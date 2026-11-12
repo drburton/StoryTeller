@@ -30,6 +30,12 @@ var _beats: Dictionary = {}
 var _scopes: Array[Dictionary] = []
 ## Pinned line ids seen so far, mapped to their line number.
 var _line_ids: Dictionary = {}
+## Beat name to the product its @needs names.
+var _beat_needs: Dictionary = {}
+## Products tested by the enclosing if and while conditions, innermost last.
+var _guards: Array[PackedStringArray] = []
+## The product the beat being checked needs, or "".
+var _current_needs := ""
 
 
 ## Checks [param doc] and returns the problems found, sorted by position.
@@ -44,6 +50,9 @@ func run(doc: TaleDocument, context: TaleCheckContext = null) -> Array[TaleDiagn
 	_diagnostics = []
 	_story_vars.clear()
 	_beats.clear()
+	_beat_needs.clear()
+	_guards.clear()
+	_current_needs = ""
 	_scopes.clear()
 	_line_ids.clear()
 	call_kinds.clear()
@@ -57,7 +66,18 @@ func run(doc: TaleDocument, context: TaleCheckContext = null) -> Array[TaleDiagn
 # --- Top level --------------------------------------------------------------
 
 func _collect_declarations() -> void:
+	var pending: Array[TaleExpr] = []
 	for node in _doc.statements:
+		if node.kind == K.ANNOTATION:
+			pending.append_array(node.annotations)
+			continue
+		if node.is_trivia():
+			continue
+		if node.kind == K.BEAT:
+			for annotation in _merge(pending, node.annotations):
+				if annotation.name == "needs" and annotation.args.size() == 1 and annotation.args[0].kind == E.LITERAL and annotation.args[0].value is String:
+					_beat_needs[node.name] = annotation.args[0].value
+		pending.clear()
 		if node.kind not in [K.VAR, K.CONST, K.BEAT]:
 			continue
 		var previous: TaleNode = _story_vars.get(node.name, _beats.get(node.name))
@@ -92,7 +112,9 @@ func _check_top_level() -> void:
 				if node.expr:
 					_check_expr(node.expr)
 			K.BEAT:
+				_current_needs = _beat_needs.get(node.name, "")
 				_check_block(node.body, false)
+				_current_needs = ""
 	_report_unused_annotations(pending)
 
 
@@ -155,10 +177,14 @@ func _check_statement(node: TaleNode, in_loop: bool) -> void:
 				_check_cast_mood(target.operands[0].name, node.expr, null)
 		K.IF, K.ELIF:
 			_check_expr(node.expr)
+			_guards.append(_products_checked(node.expr))
 			_check_block(node.body, in_loop)
+			_guards.pop_back()
 		K.WHILE:
 			_check_expr(node.expr)
+			_guards.append(_products_checked(node.expr))
 			_check_block(node.body, true)
+			_guards.pop_back()
 		K.ELSE, K.TIMEOUT:
 			_check_block(node.body, in_loop)
 		K.FOR:
@@ -249,11 +275,15 @@ func _check_jump(node: TaleNode) -> void:
 	if parts.size() == 1:
 		if not _beats.has(parts[0]):
 			_error_node(node, "Unknown beat '%s'." % parts[0])
+		else:
+			_check_paid_entry(parts[0], node.line_start, node.indent.length() + 1)
 		return
 	var tale := parts[0]
 	if tale == _context.tale_name:
 		if not _beats.has(parts[1]):
 			_error_node(node, "Unknown beat '%s'." % parts[1])
+		else:
+			_check_paid_entry(parts[1], node.line_start, node.indent.length() + 1)
 	elif not _context.tales.has(tale):
 		_error_node(node, "Unknown tale '%s'." % tale)
 	elif parts[1] not in _context.tales[tale]["beats"]:
@@ -374,6 +404,11 @@ func _check_annotations(annotations: Array[TaleExpr], node: TaleNode, top_level:
 				if node.kind != K.BEAT:
 					_error_expr(annotation, "@heading only applies to beats.")
 				_expect_one_string(annotation)
+			"needs":
+				if node.kind != K.BEAT:
+					_error_expr(annotation, "@needs only applies to beats.")
+				if _expect_one_string(annotation):
+					_check_product(annotation.args[0], null)
 			"picture":
 				if node.kind != K.OPTION:
 					_error_expr(annotation, "@picture only applies to choice options.")
@@ -466,6 +501,8 @@ func _check_call(expr: TaleExpr, anchor: TaleExpr) -> void:
 		"beat":
 			call_kinds[expr] = "beat"
 			_expect_no_call_arguments(expr, anchor)
+			var at := anchor if anchor != null else expr
+			_check_paid_entry(callee.name, at.line, at.column)
 		"action":
 			call_kinds[expr] = "action"
 			_check_action_arguments(expr, callee.name, anchor)
@@ -473,6 +510,8 @@ func _check_call(expr: TaleExpr, anchor: TaleExpr) -> void:
 			call_kinds[expr] = kind
 			if not expr.named_args.is_empty():
 				_error_expr(expr, "'%s' does not take named arguments." % callee.name, anchor)
+			if callee.name == "owns" and expr.args.size() == 1:
+				_check_product(expr.args[0], anchor)
 		"exposed":
 			call_kinds[expr] = "exposed"
 		"":
@@ -510,6 +549,46 @@ func _check_action_arguments(expr: TaleExpr, action: String, anchor: TaleExpr) -
 			var problem: String = check.call(argument.value)
 			if not problem.is_empty():
 				_warn_expr(argument, problem, anchor)
+
+
+## Warns about a jump or beat call into a beat marked @needs that nothing
+## checks first: readers without the product are offered it there, and the
+## story ends if they don't buy it. Jumps inside paid content, and those
+## under an if or while that tests owns() or offer() for the product, are
+## fine.
+func _check_paid_entry(beat: String, line: int, column: int) -> void:
+	var product: String = _beat_needs.get(beat, "")
+	if product.is_empty() or product == _current_needs:
+		return
+	for guard in _guards:
+		if product in guard:
+			return
+	_add(TaleDiagnostic.Severity.WARNING, "Beat '%s' needs the product '%s', so readers without it are offered it here, and the story ends if they don't buy it. Check first with 'if owns(\"%s\"):' or 'if await offer(\"%s\"):'." % [beat, product, product, product], line, column)
+
+
+## Products that [param expr] tests with owns("...") or offer("...").
+static func _products_checked(expr: TaleExpr) -> PackedStringArray:
+	var found := PackedStringArray()
+	if expr == null:
+		return found
+	if expr.kind == E.CALL and expr.operands[0].kind == E.IDENTIFIER and expr.operands[0].name in ["owns", "offer"] \
+			and expr.args.size() == 1 and expr.args[0].kind == E.LITERAL and expr.args[0].value is String:
+		found.append(expr.args[0].value)
+	for operand in expr.operands:
+		found.append_array(_products_checked(operand))
+	for argument in expr.args:
+		found.append_array(_products_checked(argument))
+	return found
+
+
+## Warns when [param argument] names a product the project doesn't have,
+## using the check registered for offer()'s id.
+func _check_product(argument: TaleExpr, anchor: TaleExpr) -> void:
+	var check: Callable = _context.asset_checks.get("offer.id", Callable())
+	if check.is_valid() and argument.kind == E.LITERAL and argument.value is String and not "{" in argument.value:
+		var problem: String = check.call(argument.value)
+		if not problem.is_empty():
+			_warn_expr(argument, problem, anchor)
 
 
 func _check_tale_member(tale: String, member: String, is_call: bool, expr: TaleExpr, anchor: TaleExpr) -> void:

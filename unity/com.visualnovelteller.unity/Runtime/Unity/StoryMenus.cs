@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UIElements;
@@ -9,7 +10,8 @@ namespace VisualNovelTeller
 {
     /// <summary>
     /// The menus of a game: a title screen, a pause menu (Escape or the gamepad Start button),
-    /// save and load screens with slots, a settings screen, and a confirm dialog. Put it on the
+    /// save and load screens with slots, a settings screen, a confirm dialog, and the purchase
+    /// screen for demos with paid content (decision 0029). Put it on the
     /// same object as the <see cref="Story"/>. It draws its own UI Toolkit panel in front of the
     /// dialogue. Turn on Show Title Screen in the Story Config to start at the title; New Game
     /// then starts the story. The look comes from Menus.uss in the package, or from the Story
@@ -56,6 +58,20 @@ namespace VisualNovelTeller
         private int _slotPage;
         private bool _ignoreFinish;
         private bool _historyWasOpen;
+        private VisualElement _offerLayer;
+        private Image _offerPicture;
+        private Label _offerTitle;
+        private Label _offerDescription;
+        private Label _offerPrice;
+        private Label _offerMessage;
+        private Button _offerBuy;
+        private Button _offerDecline;
+        private StoryProduct _offerProduct;
+        private TaskCompletionSource<bool> _offerDone;
+        private bool _offerPausedStory;
+
+        /// <summary>True while the purchase screen is open.</summary>
+        public bool IsOffering { get { return _offerDone != null; } }
 
         /// <summary>True when the Story Config asks for a title screen. <see cref="Story"/> then waits for New Game instead of playing at once.</summary>
         public bool WantsTitle
@@ -89,6 +105,7 @@ namespace VisualNovelTeller
             _settings = StorySettings.Load(_story.Config);
             _settings.Apply(_story);
             _story.Finished += OnStoryFinished;
+            _story.Store.OfferScreen = Offer;
             EnsureUi();
             if (WantsTitle) ShowTitle();
         }
@@ -98,7 +115,8 @@ namespace VisualNovelTeller
             if (_story != null)
             {
                 _story.Finished -= OnStoryFinished;
-                if (IsOpen) _story.Paused = false;
+                if (_story.Store.OfferScreen == (Func<StoryProduct, Task<bool>>)Offer) _story.Store.OfferScreen = null;
+                if (IsOpen || IsOffering) _story.Paused = false;
             }
             SaveSettingsIfDirty();
             if (_createdSettings != null) Destroy(_createdSettings);
@@ -112,6 +130,11 @@ namespace VisualNovelTeller
             bool start = pad != null && pad.startButton.wasPressedThisFrame;
             bool back = pad != null && pad.buttonEast.wasPressedThisFrame;
             if (!escape && !start && !back) return;
+            if (IsOffering)
+            {
+                DeclineOffer();
+                return;
+            }
             if (IsOpen)
             {
                 Back();
@@ -218,14 +241,36 @@ namespace VisualNovelTeller
         private void ContinueGame()
         {
             string slot = _story.LatestSlot();
-            Close();
-            if (slot != null) _ = _story.LoadSlot(slot);
+            if (slot != null) LoadAndClose(slot);
+            else Close();
         }
 
         private void LoadAndClose(string slot)
         {
+            _ = LoadOffering(slot);
+        }
+
+        /// <summary>
+        /// Loads a slot, first offering any product the save needs that the reader doesn't own.
+        /// Gives true when it loaded.
+        /// </summary>
+        public async Task<bool> LoadOffering(string slot)
+        {
+            foreach (string id in _story.GetLockedProducts(slot))
+            {
+                StoryProduct product = _story.Store.GetProduct(id);
+                if (product == null || !await Offer(product)) return false;
+            }
             Close();
             _ = _story.LoadSlot(slot);
+            return true;
+        }
+
+        private async void RestorePurchases(Button button)
+        {
+            button.SetEnabled(false);
+            await _story.Store.Restore();
+            button.text = T("Purchases restored");
         }
 
         private void ReturnToTitle()
@@ -283,7 +328,7 @@ namespace VisualNovelTeller
             _background.AddToClassList("vnt-menu-background");
             _background.pickingMode = PickingMode.Ignore;
             _background.scaleMode = ScaleMode.ScaleAndCrop;
-            _background.sprite = config != null ? config.TitleBackground : null;
+            _background.sprite = config != null ? config.TitleBackgroundFor(_story.Localization.Language) : null;
             _background.style.display = DisplayStyle.None;
             _root.Add(_background);
             _screen = new VisualElement();
@@ -291,6 +336,7 @@ namespace VisualNovelTeller
             _screen.AddToClassList("vnt-menu-screen");
             _root.Add(_screen);
             BuildConfirm();
+            BuildOffer();
             StoryUI.Fill(_document.rootVisualElement, false);
             _document.rootVisualElement.Add(_root);
         }
@@ -303,6 +349,8 @@ namespace VisualNovelTeller
             _screen.Clear();
             _firstFocus = null;
             bool title = _stack[0] == Page.Title;
+            // The title picture can have a version per language.
+            if (_story.Config != null) _background.sprite = _story.Config.TitleBackgroundFor(_story.Localization.Language);
             _root.EnableInClassList("vnt-menu-root--title", title);
             _background.style.display = title && _background.sprite != null ? DisplayStyle.Flex : DisplayStyle.None;
             switch (_stack[_stack.Count - 1])
@@ -329,39 +377,41 @@ namespace VisualNovelTeller
             heading.enableRichText = false;
             heading.text = gameTitle;
             _screen.Add(heading);
-            Button newGame = AddButton(_screen, "vnt-menu-new", "New Game", NewGame);
-            Button resume = AddButton(_screen, "vnt-menu-continue", "Continue", ContinueGame);
+            Button newGame = AddButton(_screen, "vnt-menu-new", T("New Game"), NewGame);
+            Button resume = AddButton(_screen, "vnt-menu-continue", T("Continue"), ContinueGame);
             resume.SetEnabled(_story.LatestSlot() != null);
-            AddButton(_screen, "vnt-menu-load", "Load", delegate { Push(Page.Load); });
-            AddButton(_screen, "vnt-menu-settings", "Settings", delegate { Push(Page.Settings); });
-            AddButton(_screen, "vnt-menu-quit", "Quit", QuitGame);
+            AddButton(_screen, "vnt-menu-load", T("Load"), delegate { Push(Page.Load); });
+            AddButton(_screen, "vnt-menu-settings", T("Settings"), delegate { Push(Page.Settings); });
+            AddRestoreButton();
+            AddButton(_screen, "vnt-menu-quit", T("Quit"), QuitGame);
             _firstFocus = newGame;
         }
 
         private void BuildPause()
         {
-            AddHeading("Paused");
-            Button resume = AddButton(_screen, "vnt-menu-resume", "Resume", Close);
-            AddButton(_screen, "vnt-menu-save", "Save", delegate { Push(Page.Save); });
-            AddButton(_screen, "vnt-menu-load", "Load", delegate { Push(Page.Load); });
-            AddButton(_screen, "vnt-menu-settings", "Settings", delegate { Push(Page.Settings); });
-            Button history = AddButton(_screen, "vnt-menu-history", "History", ShowHistory);
+            AddHeading(T("Paused"));
+            Button resume = AddButton(_screen, "vnt-menu-resume", T("Resume"), Close);
+            AddButton(_screen, "vnt-menu-save", T("Save"), delegate { Push(Page.Save); });
+            AddButton(_screen, "vnt-menu-load", T("Load"), delegate { Push(Page.Load); });
+            AddButton(_screen, "vnt-menu-settings", T("Settings"), delegate { Push(Page.Settings); });
+            Button history = AddButton(_screen, "vnt-menu-history", T("History"), ShowHistory);
             history.SetEnabled(_story.Dialogue != null);
+            AddRestoreButton();
             if (WantsTitle)
-                AddButton(_screen, "vnt-menu-title", "Title", delegate
+                AddButton(_screen, "vnt-menu-title", T("Title"), delegate
                 {
-                    Confirm("Return to the title? Unsaved progress is lost.", ReturnToTitle);
+                    Confirm(T("Return to the title? Unsaved progress is lost."), ReturnToTitle);
                 });
-            AddButton(_screen, "vnt-menu-quit", "Quit", delegate
+            AddButton(_screen, "vnt-menu-quit", T("Quit"), delegate
             {
-                Confirm("Quit the game? Unsaved progress is lost.", QuitGame);
+                Confirm(T("Quit the game? Unsaved progress is lost."), QuitGame);
             });
             _firstFocus = resume;
         }
 
         private void BuildSlots(bool saving)
         {
-            AddHeading(saving ? "Save" : "Load");
+            AddHeading(saving ? T("Save") : T("Load"));
             var pages = new VisualElement();
             pages.name = "vnt-menu-pages";
             pages.AddToClassList("vnt-menu-pages");
@@ -388,10 +438,18 @@ namespace VisualNovelTeller
                 if (_story.HasSlot("auto")) AddSlot(grid, "auto", false);
             }
             _screen.Add(grid);
-            AddButton(_screen, "vnt-menu-back", "Back", Back);
+            AddButton(_screen, "vnt-menu-back", T("Back"), Back);
             // The first slot that can be pressed gets the focus.
             _firstFocus = grid.Q<Button>("vnt-menu-slot-button");
             if (_firstFocus == null) _firstFocus = _screen.Q<Button>("vnt-menu-back");
+        }
+
+        /// <summary>Restore purchases, shown when the game has products and the store can restore. Apple requires it.</summary>
+        private void AddRestoreButton()
+        {
+            if (!_story.Store.CanRestore) return;
+            Button restore = null;
+            restore = AddButton(_screen, "vnt-menu-restore", T("Restore purchases"), delegate { RestorePurchases(restore); });
         }
 
         private void AddSlot(VisualElement grid, string slot, bool saving)
@@ -407,7 +465,7 @@ namespace VisualNovelTeller
             string label = SlotLabel(slot);
             if (info == null)
             {
-                button.text = label + "\nEmpty";
+                button.text = label + "\n" + T("Empty");
                 button.AddToClassList("vnt-empty");
                 // An empty slot can take a save. When loading, it does nothing.
                 if (saving) button.clicked += delegate { SaveTo(slot); };
@@ -415,18 +473,20 @@ namespace VisualNovelTeller
             }
             else
             {
+                List<string> locked = saving ? new List<string>() : _story.Store.Missing(info.Needs);
                 button.text = label + "   " + info.SavedAt.ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture)
-                    + "\n" + Shorten(info.Speaker, info.Text);
+                    + "\n" + (locked.Count > 0 ? T("Locked: {0}", ProductTitles(locked)) : Shorten(info.Speaker, info.Text));
+                button.EnableInClassList("vnt-locked", locked.Count > 0);
                 if (saving)
-                    button.clicked += delegate { Confirm("Overwrite " + SlotWords(slot) + "?", delegate { SaveTo(slot); }); };
+                    button.clicked += delegate { Confirm(T("Overwrite {0}?", SlotWords(slot)), delegate { SaveTo(slot); }); };
                 else
                     button.clicked += delegate { LoadAndClose(slot); };
             }
             holder.Add(button);
             if (info != null)
-                AddButton(holder, "vnt-menu-delete", "Delete", delegate
+                AddButton(holder, "vnt-menu-delete", T("Delete"), delegate
                 {
-                    Confirm("Delete " + SlotWords(slot) + "?", delegate
+                    Confirm(T("Delete {0}?", SlotWords(slot)), delegate
                     {
                         _story.DeleteSlot(slot);
                         Build();
@@ -441,20 +501,37 @@ namespace VisualNovelTeller
             Build();
         }
 
-        private static string SlotLabel(string slot)
+        private string ProductTitles(List<string> ids)
         {
-            if (slot == "quick") return "Quick save";
-            if (slot == "auto") return "Autosave";
-            if (slot.StartsWith("slot", StringComparison.Ordinal)) return "Slot " + slot.Substring(4);
+            var titles = new List<string>();
+            foreach (string id in ids)
+            {
+                StoryProduct product = _story.Store.GetProduct(id);
+                titles.Add(product != null ? T(product.DisplayTitle) : id);
+            }
+            return string.Join(", ", titles);
+        }
+
+        private string SlotLabel(string slot)
+        {
+            if (slot == "quick") return T("Quick save");
+            if (slot == "auto") return T("Autosave");
+            if (slot.StartsWith("slot", StringComparison.Ordinal)) return T("Slot {0}", slot.Substring(4));
             return slot;
         }
 
-        private static string SlotWords(string slot)
+        private string SlotWords(string slot)
         {
-            if (slot == "quick") return "the quick save";
-            if (slot == "auto") return "the autosave";
-            if (slot.StartsWith("slot", StringComparison.Ordinal)) return "slot " + slot.Substring(4);
-            return "slot " + slot;
+            if (slot == "quick") return T("the quick save");
+            if (slot == "auto") return T("the autosave");
+            if (slot.StartsWith("slot", StringComparison.Ordinal)) return T("slot {0}", slot.Substring(4));
+            return T("slot {0}", slot);
+        }
+
+        /// <summary>Translates menu text into the reader's language (see <see cref="StoryLocalization.UiText"/>).</summary>
+        private string T(string text, params object[] args)
+        {
+            return _story != null ? _story.Localization.T(text, args) : (args.Length > 0 ? string.Format(CultureInfo.InvariantCulture, text, args) : text);
         }
 
         private static string Shorten(string speaker, string text)
@@ -468,27 +545,29 @@ namespace VisualNovelTeller
 
         private void BuildSettings()
         {
-            AddHeading("Settings");
+            AddHeading(T("Settings"));
             var list = new VisualElement();
             list.name = "vnt-menu-settings-list";
             list.AddToClassList("vnt-menu-settings");
             _screen.Add(list);
             StorySettings s = _settings;
-            VisualElement first = AddSlider(list, "Text speed", "vnt-menu-text-speed", 0f, StorySettings.MaxTextSpeed, s.textSpeed,
-                delegate (float v) { return v <= 0f ? "Instant" : Mathf.RoundToInt(v) + " /s"; },
+            VisualElement first = AddSlider(list, T("Text speed"), "vnt-menu-text-speed", 0f, StorySettings.MaxTextSpeed, s.textSpeed,
+                delegate (float v) { return v <= 0f ? T("Instant") : Mathf.RoundToInt(v) + " /s"; },
                 delegate (float v) { s.textSpeed = Mathf.Round(v); });
-            AddSlider(list, "Auto delay", "vnt-menu-auto-delay", 0.2f, 5f, s.autoDelay,
+            AddSlider(list, T("Auto delay"), "vnt-menu-auto-delay", 0.2f, 5f, s.autoDelay,
                 delegate (float v) { return (Mathf.Round(v * 10f) / 10f).ToString("0.0", CultureInfo.InvariantCulture) + " s"; },
                 delegate (float v) { s.autoDelay = Mathf.Round(v * 10f) / 10f; });
-            AddToggle(list, "Skip unread lines", "vnt-menu-skip-unread", s.skipUnread, delegate (bool v) { s.skipUnread = v; });
-            AddSlider(list, "Master volume", "vnt-menu-master-volume", 0f, 1f, s.masterVolume, Percent, delegate (float v) { s.masterVolume = v; });
-            AddSlider(list, "Music volume", "vnt-menu-music-volume", 0f, 1f, s.musicVolume, Percent, delegate (float v) { s.musicVolume = v; });
-            AddSlider(list, "Sound volume", "vnt-menu-sound-volume", 0f, 1f, s.soundVolume, Percent, delegate (float v) { s.soundVolume = v; });
-            AddToggle(list, "Full screen", "vnt-menu-full-screen", s.fullScreen, delegate (bool v) { s.fullScreen = v; });
+            AddToggle(list, T("Skip unread lines"), "vnt-menu-skip-unread", s.skipUnread, delegate (bool v) { s.skipUnread = v; });
+            AddSlider(list, T("Master volume"), "vnt-menu-master-volume", 0f, 1f, s.masterVolume, Percent, delegate (float v) { s.masterVolume = v; });
+            AddSlider(list, T("Music volume"), "vnt-menu-music-volume", 0f, 1f, s.musicVolume, Percent, delegate (float v) { s.musicVolume = v; });
+            AddSlider(list, T("Sound volume"), "vnt-menu-sound-volume", 0f, 1f, s.soundVolume, Percent, delegate (float v) { s.soundVolume = v; });
+            AddSlider(list, T("Voice volume"), "vnt-menu-voice-volume", 0f, 1f, s.voiceVolume, Percent, delegate (float v) { s.voiceVolume = v; });
+            AddToggle(list, T("Full screen"), "vnt-menu-full-screen", s.fullScreen, delegate (bool v) { s.fullScreen = v; });
+            AddLanguageChoice(list);
             var row = new VisualElement();
             row.AddToClassList("vnt-menu-buttons");
-            AddButton(row, "vnt-menu-defaults", "Defaults", ResetSettings);
-            AddButton(row, "vnt-menu-back", "Back", Back);
+            AddButton(row, "vnt-menu-defaults", T("Defaults"), ResetSettings);
+            AddButton(row, "vnt-menu-back", T("Back"), Back);
             _screen.Add(row);
             _firstFocus = first;
         }
@@ -496,6 +575,31 @@ namespace VisualNovelTeller
         private static string Percent(float v)
         {
             return Mathf.RoundToInt(v * 100f) + "%";
+        }
+
+        /// <summary>A Language choice, when the strings file has more than one language. Choosing one translates the menus at once.</summary>
+        private void AddLanguageChoice(VisualElement parent)
+        {
+            StoryLocalization localization = _story.Localization;
+            List<string> codes = localization.Languages;
+            if (codes.Count < 2) return;
+            var names = new List<string>();
+            foreach (string code in codes) names.Add(StoryLocalization.LanguageName(code));
+            var row = new VisualElement();
+            row.AddToClassList("vnt-menu-setting-row");
+            var choice = new DropdownField(T("Language"), names, Mathf.Max(0, codes.IndexOf(localization.Language)));
+            choice.name = "vnt-menu-language";
+            choice.AddToClassList("vnt-menu-setting");
+            choice.RegisterValueChangedCallback(delegate (ChangeEvent<string> evt)
+            {
+                int index = names.IndexOf(evt.newValue);
+                if (index < 0) return;
+                _settings.language = codes[index];
+                SettingChanged();
+                Build();
+            });
+            row.Add(choice);
+            parent.Add(row);
         }
 
         private VisualElement AddSlider(VisualElement parent, string label, string elementName, float min, float max, float value,
@@ -587,6 +691,135 @@ namespace VisualNovelTeller
             _root.schedule.Execute(() => target.Focus());
         }
 
+        // --- Purchase screen ----------------------------------------------------
+
+        private void BuildOffer()
+        {
+            _offerLayer = new VisualElement();
+            _offerLayer.name = "vnt-menu-offer";
+            _offerLayer.AddToClassList("vnt-menu-confirm");
+            _offerLayer.AddToClassList("vnt-menu-offer");
+            _offerLayer.style.display = DisplayStyle.None;
+            var box = new VisualElement();
+            box.name = "vnt-menu-offer-box";
+            box.AddToClassList("vnt-menu-confirm-box");
+            box.AddToClassList("vnt-menu-offer-box");
+            _offerPicture = new Image();
+            _offerPicture.name = "vnt-menu-offer-picture";
+            _offerPicture.AddToClassList("vnt-menu-offer-picture");
+            _offerPicture.scaleMode = ScaleMode.ScaleToFit;
+            box.Add(_offerPicture);
+            _offerTitle = AddOfferLabel(box, "vnt-menu-offer-title");
+            _offerDescription = AddOfferLabel(box, "vnt-menu-offer-description");
+            _offerPrice = AddOfferLabel(box, "vnt-menu-offer-price");
+            _offerMessage = AddOfferLabel(box, "vnt-menu-offer-message");
+            var row = new VisualElement();
+            row.AddToClassList("vnt-menu-buttons");
+            _offerBuy = AddButton(row, "vnt-menu-offer-buy", T("Buy"), delegate { _ = BuyOffered(); });
+            _offerDecline = AddButton(row, "vnt-menu-offer-decline", T("Not now"), DeclineOffer);
+            box.Add(row);
+            _offerLayer.Add(box);
+            _root.Add(_offerLayer);
+        }
+
+        private static Label AddOfferLabel(VisualElement parent, string elementName)
+        {
+            var label = new Label();
+            label.name = elementName;
+            label.AddToClassList(elementName);
+            label.AddToClassList("vnt-menu-confirm-message");
+            label.enableRichText = false;
+            parent.Add(label);
+            return label;
+        }
+
+        /// <summary>
+        /// Shows the purchase screen for a product: its picture, title, description, and the
+        /// store's price, with Buy and Not now. Gives true when the reader owns it afterwards.
+        /// <see cref="StoryStore.Offer"/> uses it for offer() and @needs in tales.
+        /// </summary>
+        public Task<bool> Offer(StoryProduct product)
+        {
+            EnsureUi();
+            if (_root == null || product == null) return Task.FromResult(false);
+            if (_offerDone != null) return Task.FromResult(_story.Store.Owns(product.id));
+            _offerProduct = product;
+            _offerDone = new TaskCompletionSource<bool>();
+            _offerPicture.sprite = product.picture;
+            _offerPicture.style.display = product.picture != null ? DisplayStyle.Flex : DisplayStyle.None;
+            _offerTitle.text = T(product.DisplayTitle);
+            _offerDescription.text = string.IsNullOrEmpty(product.description) ? "" : T(product.description);
+            _offerDescription.style.display = string.IsNullOrEmpty(product.description) ? DisplayStyle.None : DisplayStyle.Flex;
+            string price = _story.Store.GetPrice(product.id);
+            _offerPrice.text = price;
+            _offerPrice.style.display = price.Length > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+            ShowOfferMessage("");
+            _offerBuy.text = T("Buy");
+            _offerBuy.style.display = DisplayStyle.Flex;
+            _offerBuy.SetEnabled(true);
+            _offerDecline.SetEnabled(true);
+            _offerDecline.text = T("Not now");
+            _offerPausedStory = !_story.Paused;
+            _story.Paused = true;
+            _root.style.display = DisplayStyle.Flex;
+            if (_screen != null) _screen.SetEnabled(false);
+            _offerLayer.style.display = DisplayStyle.Flex;
+            Button target = _offerBuy;
+            _root.schedule.Execute(() => target.Focus());
+            return _offerDone.Task;
+        }
+
+        private async Task BuyOffered()
+        {
+            if (_offerProduct == null) return;
+            _offerBuy.SetEnabled(false);
+            _offerDecline.SetEnabled(false);
+            PurchaseResult result = await _story.Store.Purchase(_offerProduct.id);
+            if (_offerDone == null) return;
+            _offerBuy.SetEnabled(true);
+            _offerDecline.SetEnabled(true);
+            switch (result)
+            {
+                case PurchaseResult.Bought:
+                    FinishOffer(true);
+                    break;
+                case PurchaseResult.Pending:
+                    ShowOfferMessage(T("Your purchase is waiting for the store to confirm it."));
+                    _offerBuy.style.display = DisplayStyle.None;
+                    _offerDecline.text = T("OK");
+                    break;
+                case PurchaseResult.Failed:
+                    ShowOfferMessage(T("The purchase didn't go through. Please try again."));
+                    break;
+            }
+        }
+
+        /// <summary>Closes the purchase screen without buying.</summary>
+        private void DeclineOffer()
+        {
+            if (_offerProduct == null) return;
+            FinishOffer(_story.Store.Owns(_offerProduct.id));
+        }
+
+        private void FinishOffer(bool owned)
+        {
+            TaskCompletionSource<bool> done = _offerDone;
+            _offerDone = null;
+            _offerProduct = null;
+            _offerLayer.style.display = DisplayStyle.None;
+            if (_screen != null) _screen.SetEnabled(true);
+            if (_stack.Count == 0) _root.style.display = DisplayStyle.None;
+            else FocusFirst();
+            if (_offerPausedStory && _stack.Count == 0) _story.Paused = false;
+            if (done != null) done.TrySetResult(owned);
+        }
+
+        private void ShowOfferMessage(string text)
+        {
+            _offerMessage.text = text;
+            _offerMessage.style.display = text.Length > 0 ? DisplayStyle.Flex : DisplayStyle.None;
+        }
+
         // --- Confirm dialog -----------------------------------------------------
 
         private void BuildConfirm()
@@ -605,8 +838,8 @@ namespace VisualNovelTeller
             box.Add(_confirmMessage);
             var row = new VisualElement();
             row.AddToClassList("vnt-menu-buttons");
-            AddButton(row, "vnt-menu-yes", "Yes", delegate { ConfirmAnswer(true); });
-            _confirmNo = AddButton(row, "vnt-menu-no", "No", delegate { ConfirmAnswer(false); });
+            AddButton(row, "vnt-menu-yes", T("Yes"), delegate { ConfirmAnswer(true); });
+            _confirmNo = AddButton(row, "vnt-menu-no", T("No"), delegate { ConfirmAnswer(false); });
             box.Add(row);
             _confirmLayer.Add(box);
             _root.Add(_confirmLayer);
@@ -616,6 +849,8 @@ namespace VisualNovelTeller
         private void Confirm(string message, Action onYes)
         {
             _confirmMessage.text = message;
+            _confirmLayer.Q<Button>("vnt-menu-yes").text = T("Yes");
+            _confirmNo.text = T("No");
             _confirmYes = onYes;
             _confirmOpen = true;
             _confirmLayer.style.display = DisplayStyle.Flex;

@@ -38,6 +38,8 @@ namespace TaleScript
         public event Action<string, object> StorySignal;
         /// <summary>Emitted when a tale does something invalid at runtime (message, tale name, line). The tale continues.</summary>
         public event Action<string, string, int> RuntimeError;
+        /// <summary>The story ended at a beat marked @needs: tale, beat, and product.</summary>
+        public event Action<string, string, string> BeatLocked;
 
         /// <summary>Upper limit of instructions run without showing a line or choice, which stops endless loops.</summary>
         public int MaxStepsWithoutPause = 100000;
@@ -51,10 +53,22 @@ namespace TaleScript
         public bool WaitForActions = true;
         /// <summary>Replaces the timer behind <see cref="TaleContext.Wait"/>, for example with a game clock.</summary>
         public Func<double, Task> Waiter;
-        /// <summary>Translates text for tr(). Without it, tr() returns its argument.</summary>
+        /// <summary>
+        /// Translates text (decision 0011): lines and choice options by their key
+        /// "tale:line-id", and tr(), speaker names, and other text by the text itself. It gives
+        /// back the key when there is no translation. Without it, nothing is translated.
+        /// </summary>
         public Func<string, string> Translator;
         /// <summary>Tells collected("id"). Without it, collected() is false.</summary>
         public Func<string, bool> Collected;
+        /// <summary>Tells owns("id"). Without it, the reader owns nothing.</summary>
+        public Func<string, bool> Owns;
+        /// <summary>
+        /// Offers a product on the purchase screen at a beat marked @needs, and gives true
+        /// when the reader owns it afterwards. Without it, a beat the reader doesn't own ends
+        /// the story.
+        /// </summary>
+        public Func<string, Task<bool>> Offer;
         /// <summary>Loads a tale that is not registered yet, such as one from a file.</summary>
         public Func<string, Tale> TaleLoader;
         /// <summary>Resolves names such as cast members. Values may implement <see cref="ITaleSpeaker"/>, <see cref="TaleExposed"/>, or be plain tale values.</summary>
@@ -79,6 +93,10 @@ namespace TaleScript
         private readonly Dictionary<string, object> _namedConstants = new Dictionary<string, object>();
         private readonly HashSet<string> _visited = new HashSet<string>();
         private readonly HashSet<string> _onceChosen = new HashSet<string>();
+        /// <summary>Products of the @needs beats entered in this playthrough, so a save made after them is locked for a reader who doesn't own them.</summary>
+        private readonly HashSet<string> _paid = new HashSet<string>();
+        /// <summary>Translated texts already compiled into parts, by their text.</summary>
+        private readonly Dictionary<string, List<object>> _translated = new Dictionary<string, List<object>>();
         private readonly HashSet<string> _readLines = new HashSet<string>();
         private readonly List<TaleFrame> _stack = new List<TaleFrame>();
         private readonly List<ITaleStateProvider> _stateProviders = new List<ITaleStateProvider>();
@@ -115,6 +133,15 @@ namespace TaleScript
             _constants.Clear();
             _visited.Clear();
             _onceChosen.Clear();
+            _paid.Clear();
+        }
+
+        /// <summary>The products of the @needs beats this playthrough has entered, sorted. A save made now needs them all.</summary>
+        public List<string> GetPaidProducts()
+        {
+            var products = new List<string>(_paid);
+            products.Sort(string.CompareOrdinal);
+            return products;
         }
 
         /// <summary>
@@ -138,6 +165,7 @@ namespace TaleScript
             }
             await PrepareTale(tale);
             if (generation != _generation) return;
+            if (!await UnlockBeat(tale, beat) || generation != _generation) return;
             _stack.Add(EnterBeat(tale, beat));
             _playing = true;
             _finished = new TaskCompletionSource<bool>();
@@ -505,7 +533,8 @@ namespace TaleScript
                     if (target != null && CheckBeat(target, instruction.Beat))
                     {
                         await PrepareTale(target);
-                        _stack[_stack.Count - 1] = EnterBeat(target, instruction.Beat);
+                        if (await UnlockBeat(target, instruction.Beat))
+                            _stack[_stack.Count - 1] = EnterBeat(target, instruction.Beat);
                     }
                     break;
                 }
@@ -515,7 +544,8 @@ namespace TaleScript
                     if (callee != null && CheckBeat(callee, instruction.Beat))
                     {
                         await PrepareTale(callee);
-                        _stack.Add(EnterBeat(callee, instruction.Beat));
+                        if (await UnlockBeat(callee, instruction.Beat))
+                            _stack.Add(EnterBeat(callee, instruction.Beat));
                     }
                     break;
                 }
@@ -568,7 +598,7 @@ namespace TaleScript
             int generation = _generation;
             if (WaitForActions && !instruction.NoWait) await FinishPending();
             var acts = new List<TaleExpr>();
-            string text = await Render(instruction.Text, frame, acts);
+            string text = await Render(Localize(instruction.Text, instruction.Id, frame.Tale, instruction.Line), frame, acts);
             text = TaleText.ExpandStyles(text, TextStyles);
             string speaker = instruction.Speaker;
             string speakerName;
@@ -638,7 +668,7 @@ namespace TaleScript
                 if (option.Cond != null) enabled = GdValue.Truthy(await _evaluator.Evaluate(option.Cond, frame));
                 if (!enabled && !option.ShowDisabled) continue;
                 var entry = new OrderedMap<object>();
-                entry["text"] = await Render(option.Text, frame, null);
+                entry["text"] = await Render(Localize(option.Text, option.Id, frame.Tale, option.Line), frame, null);
                 entry["id"] = option.Id;
                 entry["enabled"] = enabled;
                 entry["picture"] = option.Picture;
@@ -760,8 +790,32 @@ namespace TaleScript
             string beat = expr.Operands[0].Name;
             if (tale == null || tale.GetBeatStart(beat) < 0) return false;
             await PrepareTale(tale);
-            _stack.Add(EnterBeat(tale, beat));
+            if (await UnlockBeat(tale, beat))
+                _stack.Add(EnterBeat(tale, beat));
             return true;
+        }
+
+        /// <summary>
+        /// True when the reader may enter a beat: it needs no product, or they own it or buy
+        /// it now through <see cref="Offer"/>. Otherwise the story ends there.
+        /// </summary>
+        private async Task<bool> UnlockBeat(Tale tale, string beat)
+        {
+            string product;
+            if (!tale.Needs.TryGetValue(beat, out product) || product.Length == 0) return true;
+            int generation = _generation;
+            if ((Owns != null && Owns(product)) || (Offer != null && await Offer(product)))
+            {
+                if (generation != _generation) return false;
+                _paid.Add(product);
+                return true;
+            }
+            if (generation == _generation)
+            {
+                _stack.Clear();
+                if (BeatLocked != null) BeatLocked(tale.TaleName, beat, product);
+            }
+            return false;
         }
 
         private async Task FinishPending()
@@ -880,6 +934,9 @@ namespace TaleScript
                     case "collected":
                         if (count == 1) return Collected != null && Collected(GdValue.Str(args[0]));
                         break;
+                    case "owns":
+                        if (count == 1) return Owns != null && Owns(GdValue.Str(args[0]));
+                        break;
                     case "Vector2":
                     case "Vector2i":
                     case "Vector3":
@@ -976,6 +1033,35 @@ namespace TaleScript
                 }
             }
             name = Translate(GdMethods.Capitalize(speaker));
+        }
+
+        /// <summary>
+        /// The parts of a line or option in the reader's language: its translation, compiled
+        /// with {expr} and tags like the original, or the original parts when there is none. A
+        /// translation that doesn't compile is reported once, and the original is shown.
+        /// </summary>
+        private List<object> Localize(List<object> parts, string id, Tale tale, int line)
+        {
+            if (Translator == null || string.IsNullOrEmpty(id)) return parts;
+            string key = tale.TranslationKey(id);
+            string translated = Translator(key);
+            if (string.IsNullOrEmpty(translated) || translated == key) return parts;
+            List<object> compiled;
+            if (!_translated.TryGetValue(translated, out compiled))
+            {
+                TaleText.SplitResult result = TaleCompiler.CompileText(translated);
+                if (result.Errors.Count == 0)
+                {
+                    compiled = result.Parts;
+                }
+                else
+                {
+                    Report("The translation of this line has a problem: " + result.Errors[0], tale.TaleName, line);
+                    compiled = parts;
+                }
+                _translated[translated] = compiled;
+            }
+            return compiled;
         }
 
         private string Translate(string text)

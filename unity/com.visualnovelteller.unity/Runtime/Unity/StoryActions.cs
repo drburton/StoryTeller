@@ -7,8 +7,8 @@ namespace VisualNovelTeller
     /// <summary>
     /// The actions that come with the Unity layer, with the names and parameters of the
     /// Godot version so the same tales run in both: backdrop, exit_all, music,
-    /// stop_music, sound, fade_out, fade_in, flash, shake, filter, and weather. The core
-    /// adds emit and wait.
+    /// stop_music, sound, voice, offer, fade_out, fade_in, flash, shake, filter, and
+    /// weather. The core adds emit and wait.
     /// </summary>
     public static class StoryActions
     {
@@ -29,6 +29,57 @@ namespace VisualNovelTeller
             director.AddAction(new ShakeAction(story));
             director.AddAction(new FilterAction(story));
             director.AddAction(new WeatherAction(story));
+            director.AddAction(new VoiceAction(story));
+            director.AddAction(new OfferAction(story));
+        }
+    }
+
+    /// <summary>voice(clip): plays a voice clip in the reader's language. Lines marked @voice("clip") do this by themselves. Use await to wait until it ends.</summary>
+    public class VoiceAction : TaleAction
+    {
+        private readonly Story _story;
+
+        public VoiceAction(Story story)
+            : base("voice", new[] { "clip" }, 1)
+        {
+            _story = story;
+        }
+
+        public override async Task<object> RunAsync(TaleContext context, object[] args)
+        {
+            StoryAudio audio = _story != null ? _story.Audio : null;
+            if (audio == null)
+            {
+                context.Fail("voice() needs a StoryAudio in the scene.");
+                return null;
+            }
+            string problem = await audio.PlayVoice(TaleValues.ToText(args[0]));
+            if (problem.Length > 0) context.Fail(problem);
+            return null;
+        }
+    }
+
+    /// <summary>offer(id): shows the purchase screen for a product from the Story Config. With await, gives true when the reader owns it afterwards: <c>if await offer("full_story"):</c></summary>
+    public class OfferAction : TaleAction
+    {
+        private readonly Story _story;
+
+        public OfferAction(Story story)
+            : base("offer", new[] { "id" }, 1)
+        {
+            _story = story;
+        }
+
+        public override async Task<object> RunAsync(TaleContext context, object[] args)
+        {
+            StoryStore store = _story != null ? _story.Store : null;
+            string id = TaleValues.ToText(args[0]);
+            if (store == null || !store.HasProduct(id))
+            {
+                context.Fail("There is no product '" + id + "' in the Story Config.");
+                return false;
+            }
+            return await store.Offer(id);
         }
     }
 

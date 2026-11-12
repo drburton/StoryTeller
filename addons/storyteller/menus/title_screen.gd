@@ -1,13 +1,15 @@
 class_name TitleScreen
 extends MenuScreen
 ## The title screen: New Game, Continue, Load, Extras (when there is a
-## collection or a route chart to show), Settings, and Quit, over
+## collection or a route chart to show), Settings, Restore purchases (when
+## the game sells something), and Quit, over
 ## [member StoryConfig.title_background] when the game sets one.
 ## [StoryMenus] plays [member StoryConfig.title_music].
 
 var _continue: Button
 var _load: Button
 var _extras: Button
+var _restore: Button
 var _title: Label
 var _art: TextureRect
 var _wash: ColorRect
@@ -54,19 +56,23 @@ func _ready() -> void:
 	_extras = MenuScreen.make_button("Extras", func() -> void: menus.open("extras"))
 	column.add_child(_extras)
 	column.add_child(MenuScreen.make_button("Settings", func() -> void: menus.open("settings")))
+	_restore = MenuScreen.make_button("Restore purchases", func() -> void: menus.restore_purchases())
+	column.add_child(_restore)
 	if menus.can_quit():
 		column.add_child(MenuScreen.make_button("Quit", func() -> void: menus.quit_game()))
 
 
 func open() -> void:
 	_title.text = menus.get_game_title()
-	_art.texture = menus.title_background
+	# The title picture can have a version per language, such as title.es.png.
+	_art.texture = StoryAssets.localized_resource(menus.title_background) as Texture2D
 	_art.visible = menus.title_background != null
 	_wash.visible = _art.visible
 	var has_saves := menus.saves() != null and not menus.saves().latest_slot().is_empty()
 	_continue.disabled = not has_saves
 	_load.disabled = not has_saves
 	_extras.visible = menus.has_extras()
+	_restore.visible = menus.can_restore_purchases()
 	focus_first()
 
 

@@ -41,6 +41,10 @@ static func make_actions(scripts: Array[Script]) -> Array[TaleAction]:
 			made.append(action)
 		else:
 			push_warning("StoryTeller: %s is not a TaleAction with a name." % (script.resource_path if script != null else "An empty entry in StoryConfig.actions"))
+			# A script that makes a Node, such as a crew member listed by
+			# mistake, is not freed by letting go of it.
+			if action is Object and not action is RefCounted:
+				action.free()
 	return made
 
 
@@ -85,6 +89,7 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 	preload("res://addons/storyteller/audio/story_audio.gd"),
 	preload("res://addons/storyteller/effects/story_effects.gd"),
 	preload("res://addons/storyteller/collection/story_collection.gd"),
+	preload("res://addons/storyteller/store/story_store.gd"),
 	preload("res://addons/storyteller/saves/story_saves.gd"),
 	preload("res://addons/storyteller/saves/story_settings.gd"),
 	preload("res://addons/storyteller/rewind/story_rewind.gd"),
@@ -154,6 +159,25 @@ const DEFAULT_PATH := "res://story/story_config.tres"
 ## Show the route chart in Extras: the beats the player has reached and the
 ## choices they met there, with options they have not seen left out.
 @export var show_route_chart := true
+
+@export_group("Store")
+## Folder with [StoryProduct] files: the full story, extra chapters, and
+## anything else readers can buy (decision 0029).
+@export_dir var product_folder := "res://story/products"
+## Extra products, added to those in [member product_folder].
+@export var products: Array[StoryProduct] = []
+## The store the game sells through. "auto" uses the test store when the
+## game runs from the editor, the Apple App Store when the Godot StoreKit 2
+## plugin is in the build ([AppleStoreBackend]), and no store otherwise.
+## "test" always uses the test store, "apple" the App Store, and "none"
+## sells nothing.
+@export_enum("auto", "test", "apple", "none") var store := "auto"
+## A script extending [StoreBackend] for another store, such as a game's own
+## key system. Used instead of [member store] when set.
+@export var store_backend: Script
+## Scene for the purchase screen. Its root must extend [OfferScreen].
+## Empty uses StoryTeller's own.
+@export var offer_scene: PackedScene
 
 @export_group("Localization")
 ## Language the tales are written in, such as "en".

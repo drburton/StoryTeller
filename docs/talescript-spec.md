@@ -335,7 +335,7 @@ backdrop("forest", transition = "fade", time = 1.5)
 - `camera`, with the methods and properties listed in §13.
 - Stage positions: `LEFT`, `CENTER`, `RIGHT` (`Vector2(0.25, 0)`, `Vector2(0.5, 0)`, `Vector2(0.75, 0)`), or any `Vector2`. The x value runs from 0 (left edge) to 1 (right edge); the y value lifts a character's feet above the bottom of the screen, as a fraction of the screen height.
 - Constants of value types, such as `Color.RED`, `Color.TRANSPARENT`, `Vector2.ZERO`, and `Vector2.LEFT`.
-- Built-in functions: `abs`, `ceil`, `clamp`, `float`, `floor`, `int`, `len`, `max`, `min`, `randf`, `randf_range`, `randi`, `randi_range`, `round`, `str`, `visited("tale.beat")`, `collected("id")`, `tr("key")`.
+- Built-in functions: `abs`, `ceil`, `clamp`, `float`, `floor`, `int`, `len`, `max`, `min`, `randf`, `randf_range`, `randi`, `randi_range`, `round`, `str`, `visited("tale.beat")`, `collected("id")`, `owns("id")` (true when the reader owns the product, §13.1 `offer`), `tr("key")`.
 - Built-in constants: `PI`, `TAU`, `INF`, `NAN`.
 - Objects and functions that game code exposes with `Story.expose()`. Nothing else in the engine is reachable. List their names in `StoryConfig.exposed_names` so tales that use them import without errors and the Story editor suggests them.
 
@@ -403,6 +403,7 @@ player_name = await ask_text(tr("What's your name?"), tr("Sam"))
 | `@skip_safe` | Beat | Treat the beat's lines as already read, so skip passes them even when the player only skips read lines. Useful for recaps. |
 | `@picture("...")` | Choice option | Picture shown for the option by the `"pictures"` choice style (§5.9). |
 | `@heading("...")` | Beat | Name shown for the beat in the players' route chart. Translated like tale titles, keyed by its text. Without it, the chart shows the beat's name. |
+| `@needs("...")` | Beat | The beat is paid content that needs the named product. Entering it (by `play`, `jump`, or a beat call) when the reader doesn't own the product offers it; if they still don't own it, the story ends there. Without a store, the reader owns nothing. Mark the beats where paid content begins. |
 
 ---
 
@@ -419,7 +420,8 @@ The checker runs after parsing and reports, with file and line:
 - unreachable statements after `jump` or `return`;
 - expression statements that have no effect (warning);
 - duplicate `@id` values, unknown annotations, and annotations on the wrong kind of line;
-- `choose` blocks without options, extra `timeout:` branches, and unreachable `match` branches.
+- `choose` blocks without options, extra `timeout:` branches, and unreachable `match` branches;
+- a `jump` or beat call into a beat of the same tale marked `@needs("id")` (warning), unless it is inside a beat that needs the same product, or under an `if`, `elif`, or `while` whose condition calls `owns("id")` or `offer("id")` for it.
 
 ### 9.1 Runtime errors
 
@@ -494,7 +496,7 @@ TaleScript is GDScript plus the following. Anything not listed here behaves as i
 4. `jump` for one-way transfer between beats.
 5. `choose:` blocks with string options and `timeout:`.
 6. Named arguments in calls: `f(x, time = 1.0)`.
-7. Story annotations: `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@no_wait`, `@skip_safe`, `@heading`, `@picture`.
+7. Story annotations: `@title`, `@global`, `@once`, `@show_disabled`, `@id`, `@voice`, `@no_rewind`, `@no_wait`, `@skip_safe`, `@heading`, `@picture`, `@needs`.
 
 **Restrictions**
 
@@ -562,6 +564,7 @@ Actions are called like functions. Named arguments may be given in any order aft
 | `exit_all` | `time = 0.4` | Every cast member on stage exits. |
 | `autosave` | | Save to the autosave slot. |
 | `collect` | `id`, `notify = true` | Unlock a gallery picture, music track, or codex entry (a `CollectionItem` in `res://story/collection/`). `collected("id")` reads it. Unlocks are kept across playthroughs. |
+| `offer` | `id` | Show the purchase screen for a product (a `StoryProduct` in `res://story/products/`). Use with `await` to get true when the reader owns it afterwards: `if await offer("full_story"):`. Returns true at once when they already own it. `owns("id")` reads it without asking. |
 | `play_movie` | `name`, `skippable = true` | Play an Ogg Theora (`.ogv`) movie from `res://story/movies/` over everything but the menus. A click or the continue key skips it. Use with `await`. |
 
 Transitions for `backdrop`, `cg`, and `hide_cg`: `none`, `fade`, `dissolve`, `wipe_left`, `wipe_right`, `wipe_up`, `wipe_down`, `slide_left`, `slide_right`, `slide_up`, `slide_down`. With `dissolve`, `mask` names a grayscale image in `res://story/transitions/` that sets the order in which pixels change (dark first).
@@ -619,5 +622,7 @@ Assets are found by name, without extension, in the folders set in `StoryConfig`
 | Music, sounds, ambience, voice | `res://story/audio/music/`, `sounds/`, `ambience/`, `voice/` | ogg, mp3, wav |
 | Collection items | `res://story/collection/` | `CollectionItem` resources (`.tres`). Every CG gets a gallery item automatically; save one with `cg` set to give it a title, caption, or order. |
 | Movies | `res://story/movies/` | ogv (Ogg Theora) |
+
+Any of these folders can hold a folder per language with versions of its files, for pictures with text and voice recorded in other languages (decision 0031). For example, `res://story/backdrops/es/street.png` is shown while the game is in Spanish, and `res://story/cast/ada/es/smile.png` is Ada's Spanish face. The locale is tried first, then its language (`es_MX`, then `es`), and a file the language folder lacks comes from the main folder. Voice falls back to the source language's folder (`voice/en/`) before `voice/` itself, so a line with no recording in the reader's language plays in the source language. A language folder is named with the code of a language the game has: one with a loaded translation, the source language, or one in `StoryConfig.languages`. It is never taken for a CG or a cast member. The title background can have a sibling file per language, such as `title.es.png`. When the language changes, the pictures on stage switch at once.
 
 When a beat starts, StoryTeller begins loading the assets it names in the background.

@@ -1,0 +1,24 @@
+## A jump or beat call into a beat marked @needs warns unless owns() or offer() checks the product first, or it comes from paid content.
+beat start:
+	"Free part."
+	if owns("full_story"):
+		jump chapter_2
+	elif await offer("full_story"):
+		chapter_2()
+	if owns("bonus"):
+		jump chapter_2
+	while not owns("full_story"):
+		jump chapter_2
+	jump chapter_2
+
+beat free_end:
+	chapter_2()
+
+@needs("full_story")
+beat chapter_2:
+	"Paid part."
+	jump chapter_3
+
+@needs("full_story")
+beat chapter_3:
+	"More."

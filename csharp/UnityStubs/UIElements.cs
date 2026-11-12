@@ -374,6 +374,8 @@ namespace UnityEngine.UIElements
         public IStyle style { get { throw null; } }
         public PickingMode pickingMode { get; set; }
         public bool focusable { get; set; }
+        public string tooltip { get; set; }
+        public object userData { get; set; }
         public IVisualElementScheduler schedule { get { throw null; } }
         public VisualElementStyleSheetSet styleSheets { get { throw null; } }
 
@@ -432,6 +434,19 @@ namespace UnityEngine.UIElements
         }
 
         public static T Q<T>(this VisualElement e, string name = null, params string[] classes) where T : VisualElement
+        {
+            throw null;
+        }
+
+        public static UQueryBuilder<T> Query<T>(this VisualElement e, string name = null, string className = null) where T : VisualElement
+        {
+            throw null;
+        }
+    }
+
+    public struct UQueryBuilder<T> where T : VisualElement
+    {
+        public void ForEach(Action<T> funcCall)
         {
             throw null;
         }
@@ -517,6 +532,13 @@ namespace UnityEngine.UIElements
     public class Toggle : BaseField<bool>
     {
         public Toggle(string label)
+        {
+        }
+    }
+
+    public class DropdownField : BaseField<string>
+    {
+        public DropdownField(string label, System.Collections.Generic.List<string> choices, int defaultIndex)
         {
         }
     }

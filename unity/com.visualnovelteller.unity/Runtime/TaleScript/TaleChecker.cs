@@ -23,6 +23,12 @@ namespace TaleScript
         private readonly OrderedMap<TaleNode> _beats = new OrderedMap<TaleNode>();
         private readonly List<Dictionary<string, string>> _scopes = new List<Dictionary<string, string>>();
         private readonly Dictionary<string, int> _lineIds = new Dictionary<string, int>();
+        /// <summary>Beat name to the product its @needs names.</summary>
+        private readonly Dictionary<string, string> _beatNeeds = new Dictionary<string, string>();
+        /// <summary>Products tested by the enclosing if and while conditions, innermost last.</summary>
+        private readonly List<List<string>> _guards = new List<List<string>>();
+        /// <summary>The product the beat being checked needs, or "".</summary>
+        private string _currentNeeds = "";
 
         /// <summary>Checks doc and returns the problems found, sorted by position.</summary>
         public static List<TaleDiagnostic> Check(TaleDocument doc, TaleCheckContext context = null)
@@ -39,6 +45,9 @@ namespace TaleScript
             _beats.Clear();
             _scopes.Clear();
             _lineIds.Clear();
+            _beatNeeds.Clear();
+            _guards.Clear();
+            _currentNeeds = "";
             CallKinds.Clear();
             CollectDeclarations();
             CheckTopLevel();
@@ -71,8 +80,26 @@ namespace TaleScript
 
         private void CollectDeclarations()
         {
+            var pending = new List<TaleExpr>();
             foreach (var node in _doc.Statements)
             {
+                if (node.Kind == TaleNodeKind.Annotation)
+                {
+                    pending.AddRange(node.Annotations);
+                    continue;
+                }
+                if (node.IsTrivia())
+                    continue;
+                if (node.Kind == TaleNodeKind.Beat)
+                {
+                    foreach (var annotation in Merge(pending, node.Annotations))
+                    {
+                        if (annotation.Name == "needs" && annotation.Args.Count == 1
+                            && annotation.Args[0].Kind == TaleExprKind.Literal && annotation.Args[0].Value is string)
+                            _beatNeeds[node.Name] = (string)annotation.Args[0].Value;
+                    }
+                }
+                pending.Clear();
                 if (node.Kind != TaleNodeKind.Var && node.Kind != TaleNodeKind.Const && node.Kind != TaleNodeKind.Beat)
                     continue;
                 TaleNode previous;
@@ -123,7 +150,10 @@ namespace TaleScript
                             CheckExpr(node.Expr);
                         break;
                     case TaleNodeKind.Beat:
+                        if (!_beatNeeds.TryGetValue(node.Name, out _currentNeeds))
+                            _currentNeeds = "";
                         CheckBlock(node.Body, false);
+                        _currentNeeds = "";
                         break;
                 }
             }
@@ -214,11 +244,15 @@ namespace TaleScript
                 case TaleNodeKind.If:
                 case TaleNodeKind.Elif:
                     CheckExpr(node.Expr);
+                    _guards.Add(ProductsChecked(node.Expr));
                     CheckBlock(node.Body, inLoop);
+                    _guards.RemoveAt(_guards.Count - 1);
                     break;
                 case TaleNodeKind.While:
                     CheckExpr(node.Expr);
+                    _guards.Add(ProductsChecked(node.Expr));
                     CheckBlock(node.Body, true);
+                    _guards.RemoveAt(_guards.Count - 1);
                     break;
                 case TaleNodeKind.Else:
                 case TaleNodeKind.Timeout:
@@ -344,6 +378,8 @@ namespace TaleScript
             {
                 if (!_beats.Has(parts[0]))
                     ErrorNode(node, Fmt("Unknown beat '{0}'.", parts[0]));
+                else
+                    CheckPaidEntry(parts[0], node.LineStart, node.Indent.Length + 1);
                 return;
             }
             string tale = parts[0];
@@ -352,6 +388,8 @@ namespace TaleScript
             {
                 if (!_beats.Has(parts[1]))
                     ErrorNode(node, Fmt("Unknown beat '{0}'.", parts[1]));
+                else
+                    CheckPaidEntry(parts[1], node.LineStart, node.Indent.Length + 1);
             }
             else if (!_context.Tales.TryGetValue(tale, out info))
             {
@@ -527,6 +565,12 @@ namespace TaleScript
                             ErrorExpr(annotation, "@heading only applies to beats.");
                         ExpectOneString(annotation);
                         break;
+                    case "needs":
+                        if (kind != TaleNodeKind.Beat)
+                            ErrorExpr(annotation, "@needs only applies to beats.");
+                        if (ExpectOneString(annotation))
+                            CheckProduct(annotation.Args[0], null);
+                        break;
                     case "picture":
                         if (kind != TaleNodeKind.Option)
                             ErrorExpr(annotation, "@picture only applies to choice options.");
@@ -657,9 +701,13 @@ namespace TaleScript
             switch (kind)
             {
                 case "beat":
+                {
                     CallKinds[expr] = "beat";
                     ExpectNoCallArguments(expr, anchor);
+                    var at = anchor ?? expr;
+                    CheckPaidEntry(callee.Name, at.Line, at.Column);
                     break;
+                }
                 case "action":
                     CallKinds[expr] = "action";
                     CheckActionArguments(expr, callee.Name, anchor);
@@ -669,6 +717,8 @@ namespace TaleScript
                     CallKinds[expr] = kind;
                     if (expr.NamedArgs.Count > 0)
                         ErrorExpr(expr, Fmt("'{0}' does not take named arguments.", callee.Name), anchor);
+                    if (callee.Name == "owns" && expr.Args.Count == 1)
+                        CheckProduct(expr.Args[0], anchor);
                     break;
                 case "exposed":
                     CallKinds[expr] = "exposed";
@@ -792,6 +842,55 @@ namespace TaleScript
         }
 
         // --- Reporting ---------------------------------------------------------
+
+        /// <summary>
+        /// Warns about a jump or beat call into a beat marked @needs that nothing checks first.
+        /// Jumps inside paid content, and those under an if or while that tests owns() or
+        /// offer() for the product, are fine.
+        /// </summary>
+        private void CheckPaidEntry(string beat, int line, int column)
+        {
+            string product;
+            if (!_beatNeeds.TryGetValue(beat, out product) || product.Length == 0 || product == _currentNeeds)
+                return;
+            foreach (var guard in _guards)
+            {
+                if (guard.Contains(product))
+                    return;
+            }
+            Add(TaleSeverity.Warning, Fmt("Beat '{0}' needs the product '{1}', so readers without it are offered it here, and the story ends if they don't buy it. Check first with 'if owns(\"{1}\"):' or 'if await offer(\"{1}\"):'.", beat, product), line, column);
+        }
+
+        /// <summary>Warns when an argument names a product the project doesn't have, using the check registered for offer()'s id.</summary>
+        private void CheckProduct(TaleExpr argument, TaleExpr anchor)
+        {
+            Func<string, string> check;
+            if (!_context.AssetChecks.TryGetValue("offer.id", out check) || check == null)
+                return;
+            var text = argument.Kind == TaleExprKind.Literal ? argument.Value as string : null;
+            if (text == null || text.Contains("{"))
+                return;
+            string problem = check(text);
+            if (!string.IsNullOrEmpty(problem))
+                WarnExpr(argument, problem, anchor);
+        }
+
+        /// <summary>Products that expr tests with owns("...") or offer("...").</summary>
+        private static List<string> ProductsChecked(TaleExpr expr)
+        {
+            var found = new List<string>();
+            if (expr == null)
+                return found;
+            if (expr.Kind == TaleExprKind.Call && expr.Operands[0].Kind == TaleExprKind.Identifier
+                && (expr.Operands[0].Name == "owns" || expr.Operands[0].Name == "offer")
+                && expr.Args.Count == 1 && expr.Args[0].Kind == TaleExprKind.Literal && expr.Args[0].Value is string)
+                found.Add((string)expr.Args[0].Value);
+            foreach (var operand in expr.Operands)
+                found.AddRange(ProductsChecked(operand));
+            foreach (var argument in expr.Args)
+                found.AddRange(ProductsChecked(argument));
+            return found;
+        }
 
         private static List<TaleExpr> Merge(List<TaleExpr> first, List<TaleExpr> second)
         {

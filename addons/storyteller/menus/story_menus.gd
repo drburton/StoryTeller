@@ -25,6 +25,7 @@ const SCREENS := {
 	"confirm": preload("res://addons/storyteller/menus/confirm_dialog.gd"),
 	"text_input": preload("res://addons/storyteller/menus/text_input_dialog.gd"),
 	"extras": preload("res://addons/storyteller/menus/extras_screen.gd"),
+	"offer": preload("res://addons/storyteller/menus/offer_screen.gd"),
 }
 ## Seconds a notice from show_notice() stays on screen.
 const NOTICE_TIME := 2.5
@@ -44,6 +45,10 @@ const UI_TEXT: Array[String] = [
 	"Skip unread lines", "Extras", "Gallery", "Music", "Codex", "Locked",
 	"Unlocked: %s", "Previous", "Next", "Page %d of %d", "Rename", "Delete",
 	"Delete %s?", "Name this save", "Routes", "Hide", "Text size", "Typing sounds", "High contrast", "Readable font", "Read lines aloud", "Choices",
+	"Buy", "Not now", "Restore purchases", "Purchases restored.",
+	"Your purchase is waiting for the store to confirm it.",
+	"The purchase didn't go through. Please try again.",
+	"The full game is a separate purchase.", "Locked: %s",
 ]
 
 var layer: CanvasLayer
@@ -63,6 +68,8 @@ var title_music := ""
 var return_to_title := true
 var show_quick_menu := true
 var show_route_chart := true
+## Scene for the purchase screen, or null for StoryTeller's own.
+var offer_scene: PackedScene
 
 var _notices: VBoxContainer
 var _screens: Dictionary = {}
@@ -101,6 +108,7 @@ func setup(config: StoryConfig) -> void:
 	return_to_title = config.return_to_title
 	show_quick_menu = config.show_quick_menu
 	show_route_chart = config.show_route_chart
+	offer_scene = config.offer_scene
 	layer = CanvasLayer.new()
 	layer.name = "MenuLayer"
 	layer.layer = 20
@@ -230,8 +238,19 @@ func continue_game() -> void:
 	var slot := saves().latest_slot() if saves() else ""
 	if slot.is_empty():
 		return
+	await load_slot(slot)
+
+
+## Loads [param slot], first offering any product the save needs that the
+## reader doesn't own. Awaitable; returns true when it loaded.
+func load_slot(slot: String) -> bool:
+	if saves() == null:
+		return false
+	for product in saves().get_locked_products(slot):
+		if store() == null or not store().has_product(product) or not await offer(store().get_product(product)):
+			return false
 	close_all()
-	saves().load_slot(slot)
+	return saves().load_slot(slot) == OK
 
 
 ## False where a game cannot close itself, such as in a web browser. The
@@ -259,6 +278,34 @@ func confirm(message: String) -> bool:
 	var yes: bool = await dialog.answered
 	_close(dialog)
 	return yes
+
+
+## Shows the purchase screen for [param product]. Awaitable; returns true
+## when the reader owns it afterwards.
+func offer(product: StoryProduct) -> bool:
+	if store() == null:
+		return false
+	var screen := _screen("offer") as OfferScreen
+	screen.product = product
+	screen.store = store()
+	open("offer")
+	var bought: bool = await screen.answered
+	_close(screen)
+	return bought
+
+
+## Asks the store for everything the reader bought, then says so.
+## Awaitable.
+func restore_purchases() -> void:
+	if store() == null:
+		return
+	await store().restore_purchases()
+	show_notice(tr("Purchases restored."))
+
+
+## True when the title and pause menus show Restore purchases.
+func can_restore_purchases() -> bool:
+	return store() != null and store().can_restore()
 
 
 ## Asks the player to type text. Awaitable; returns what they typed, or
@@ -308,6 +355,10 @@ func settings() -> StorySettings:
 
 func history() -> StoryHistory:
 	return _crew(&"History") as StoryHistory
+
+
+func store() -> StoryStore:
+	return _crew(&"Store") as StoryStore
 
 
 func collection() -> StoryCollection:
@@ -384,7 +435,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		elif event.is_action_pressed("story_quick_save") and saves():
 			saves().quick_save()
 		elif event.is_action_pressed("story_quick_load") and saves() and saves().has_slot(StorySaves.QUICK_SLOT):
-			saves().quick_load()
+			load_slot(StorySaves.QUICK_SLOT)
 		else:
 			return
 		get_viewport().set_input_as_handled()
@@ -393,7 +444,14 @@ func _unhandled_input(event: InputEvent) -> void:
 func _screen(screen_name: String) -> MenuScreen:
 	var key := "save_load" if screen_name in ["save", "load"] else screen_name
 	if not _screens.has(key):
-		var screen: MenuScreen = SCREENS[screen_name].new()
+		var screen: MenuScreen
+		if screen_name == "offer" and offer_scene != null:
+			screen = offer_scene.instantiate() as OfferScreen
+			if screen == null:
+				push_error("StoryTeller: the root of StoryConfig.offer_scene must extend OfferScreen.")
+				screen = SCREENS[screen_name].new()
+		else:
+			screen = SCREENS[screen_name].new()
 		screen.name = key.capitalize().replace(" ", "") + "Screen"
 		screen.menus = self
 		screen.hide()

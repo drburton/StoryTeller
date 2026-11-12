@@ -216,10 +216,12 @@ If a tale with that name already exists, nothing is written, and a message says 
 
 ## Export Strings
 
-Click **Export Strings** to write every line, choice, name, and menu text to the translation CSV set in your StoryConfig (by default `res://story/translations/story.csv`). The button also registers the file in **Project Settings > Localization**.
+Click **Export Strings** to write every line, choice, name, product, and menu text to the translation CSV set in your StoryConfig (by default `res://story/translations/story.csv`). The button also registers the file in **Project Settings > Localization**.
 
 The editor shows a message with the number of strings written, and prints it to the Output panel. A tale with errors is skipped, and the Output panel says which one. Export again whenever the tales change. Existing translations are kept, and the `_status` column flags lines whose text changed.
 
 Before the first export, list the languages you want in the StoryConfig under **Localization > Languages**. The steps for translators are in the [README](../../README.md#translating) and in [section 7.3](../talescript-spec.md#73-translation) of the specification.
+
+Voice and pictures with text get a folder per language next to the originals: `res://story/audio/voice/es/line_01.ogg`, `res://story/backdrops/es/street.png`, or `res://story/cast/ada/es/smile.png`. Use the same file names. A file a language lacks comes from the main folder, and voice falls back to the source language's recording. See [section 13.4](../talescript-spec.md#134-asset-folders) of the specification.
 
 Before translators start, click **Pin Line IDs** with each tale open. A line's id comes from its text until it is pinned, so pinning keeps its translation attached when you fix a typo later. It adds one undoable edit to the tale and reports how many ids it wrote. A tale with syntax errors must be fixed first.

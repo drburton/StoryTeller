@@ -108,6 +108,8 @@ namespace TaleScript
                         beatAnnotations.AddRange(node.Annotations);
                         string heading = AnnotationText(beatAnnotations, "heading");
                         if (heading.Length > 0) _tale.Headings[node.Name] = heading;
+                        string needs = AnnotationText(beatAnnotations, "needs");
+                        if (needs.Length > 0) _tale.Needs[node.Name] = needs;
                         _tale.Beats[node.Name] = _tale.Instructions.Count;
                         Block(node.Body);
                         Emit(new TaleInstruction { Op = TaleOp.End }, node.LineEnd);

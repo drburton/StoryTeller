@@ -26,6 +26,9 @@ signal choice_made(option: Dictionary)
 signal rewind_barrier
 ## Emitted by [code]emit("name", value)[/code] in tales.
 signal story_signal(signal_name: String, value: Variant)
+## Emitted when the story ends at a beat marked [code]@needs[/code] because
+## the reader doesn't own the product and didn't buy it.
+signal beat_locked(tale_name: String, beat: String, product: String)
 ## Emitted when a tale does something invalid at runtime. The director
 ## reports it and continues with the next instruction.
 signal runtime_error(message: String, tale_name: String, line: int)
@@ -42,6 +45,7 @@ const POSITIONS := {
 }
 const BUILTIN_ACTIONS := [
 	preload("res://addons/storyteller/actions/action_wait.gd"),
+	preload("res://addons/storyteller/actions/action_offer.gd"),
 	preload("res://addons/storyteller/actions/action_emit.gd"),
 	preload("res://addons/storyteller/actions/action_backdrop.gd"),
 	preload("res://addons/storyteller/actions/action_prop.gd"),
@@ -144,6 +148,9 @@ var _current_tale := ""
 var _current_line := 0
 ## Increases on every play or stop, so an old run loop knows to quit.
 var _generation := 0
+## Products of the @needs beats entered in this playthrough, so a save made
+## after them is locked for a reader who doesn't own them.
+var _paid: Dictionary = {}
 
 
 func _init() -> void:
@@ -167,6 +174,7 @@ func setup(config: StoryConfig) -> void:
 
 func clear() -> void:
 	stop()
+	_paid.clear()
 	_story_vars.clear()
 	_constants.clear()
 	_visited.clear()
@@ -189,6 +197,8 @@ func play(tale_name: String, beat := "start") -> void:
 		return
 	await _prepare_tale(tale)
 	if generation != _generation:
+		return
+	if not await _unlock_beat(tale, beat) or generation != _generation:
 		return
 	_stack.append(_enter_beat(tale, beat))
 	_playing = true
@@ -472,7 +482,7 @@ func capture() -> Dictionary:
 		"vars": JSON.from_native(_story_vars),
 		"visited": _visited.keys(),
 		"once": _once_chosen.keys(),
-	}
+	}.merged({"paid": _paid.keys()} if not _paid.is_empty() else {})
 
 
 ## Replaces the story state with [param data] from [method capture]. Call
@@ -488,6 +498,9 @@ func restore(data: Dictionary) -> void:
 	_once_chosen.clear()
 	for key in data.get("once", []):
 		_once_chosen[key] = true
+	_paid.clear()
+	for product in data.get("paid", []):
+		_paid[str(product)] = true
 	for saved in data.get("stack", []):
 		var tale := get_tale(saved["tale"])
 		if tale == null:
@@ -499,6 +512,12 @@ func restore(data: Dictionary) -> void:
 		frame.locals = JSON.to_native(saved["locals"])
 		frame.iterators = JSON.to_native(saved["iterators"])
 		_stack.append(frame)
+
+
+## Products of the [code]@needs[/code] beats this playthrough has
+## entered. A save made now needs them all.
+func get_paid_products() -> PackedStringArray:
+	return PackedStringArray(_paid.keys())
 
 
 ## Continues playback from a restored state. Awaitable: returns when the
@@ -683,12 +702,14 @@ func _execute(instruction: Dictionary, frame: TaleFrame) -> void:
 			var target := _find_tale(instruction["tale"], frame)
 			if target != null and _check_beat(target, instruction["beat"], instruction["line"]):
 				await _prepare_tale(target)
-				_stack[_stack.size() - 1] = _enter_beat(target, instruction["beat"])
+				if await _unlock_beat(target, instruction["beat"]):
+					_stack[_stack.size() - 1] = _enter_beat(target, instruction["beat"])
 		"call_beat":
 			var callee := _find_tale(instruction["tale"], frame)
 			if callee != null and _check_beat(callee, instruction["beat"], instruction["line"]):
 				await _prepare_tale(callee)
-				_stack.append(_enter_beat(callee, instruction["beat"]))
+				if await _unlock_beat(callee, instruction["beat"]):
+					_stack.append(_enter_beat(callee, instruction["beat"]))
 		"return", "end":
 			_stack.pop_back()
 		"goto":
@@ -830,6 +851,26 @@ func _enter_beat(tale: Tale, beat: String) -> TaleFrame:
 	beat_entered.emit(tale.tale_name, beat)
 	_preload_beat(tale, tale.get_beat_start(beat))
 	return TaleFrame.new(tale, beat)
+
+
+## True when the reader may enter [param beat]: it needs no product, or they
+## own it or buy it now from the Store crew member. Otherwise the story
+## ends there.
+func _unlock_beat(tale: Tale, beat: String) -> bool:
+	var product: String = tale.needs.get(beat, "")
+	if product.is_empty():
+		return true
+	var generation := _generation
+	var store: Node = _sibling(&"Store")
+	if store != null and await store.offer(product):
+		if generation != _generation:
+			return false
+		_paid[product] = true
+		return true
+	if generation == _generation:
+		_stack.clear()
+		beat_locked.emit(tale.tale_name, beat, product)
+	return false
 
 
 ## Asks crew members to start loading the assets a beat names, so they are
@@ -1001,7 +1042,8 @@ func _try_tale_beat_call(expr: Array, frame: TaleFrame) -> bool:
 	if tale == null or tale.get_beat_start(expr[1][2]) < 0:
 		return false
 	await _prepare_tale(tale)
-	_stack.append(_enter_beat(tale, expr[1][2]))
+	if await _unlock_beat(tale, expr[1][2]):
+		_stack.append(_enter_beat(tale, expr[1][2]))
 	return true
 
 
@@ -1076,6 +1118,10 @@ func _builtin_function(name: String, args: Array) -> Variant:
 			if count == 1:
 				var collection: Node = _sibling(&"Collection")
 				return collection != null and collection.is_collected(str(args[0]))
+		"owns":
+			if count == 1:
+				var store: Node = _sibling(&"Store")
+				return store != null and store.owns(str(args[0]))
 		"Vector2", "Vector2i", "Vector3", "Color", "Rect2":
 			return _construct(name, args)
 		_:

@@ -72,6 +72,12 @@ func teardown() -> void:
 	_ambience_state["track"] = ""
 
 
+## A story freed without [method Story.shut_down] stops its sounds too.
+## Godot reports a sound as leaked when its player is freed mid-play.
+func _exit_tree() -> void:
+	teardown()
+
+
 ## Plays a music track, crossfading from the current one over [param fade]
 ## seconds. Playing the track that is already on only changes its volume.
 ## Returns an error message or "".
@@ -218,12 +224,24 @@ func set_kind_volume(kind: String, volume: float) -> void:
 func preload_asset(kind: String, asset_name: String) -> void:
 	var folder := {"music": "music", "sound": "sounds", "ambience": "ambience", "voice": "voice"}.get(kind, "")
 	if not folder.is_empty():
-		StoryAssets.preload_path(StoryAssets.find(audio_folder.path_join(folder), asset_name, StoryAssets.AUDIO_EXTENSIONS))
+		StoryAssets.preload_path(find_stream_path(folder, asset_name))
 
 
 ## Finds "<name>.<ogg|mp3|wav>" in the folder for [param kind], or null.
+## A language folder has versions for the game's language (decision 0031).
+## Voice also tries the source language's folder, so a line a language has
+## no recording for plays in the source language.
 func find_stream(kind: String, stream_name: String) -> AudioStream:
-	return StoryAssets.load_asset(audio_folder.path_join(kind), stream_name, StoryAssets.AUDIO_EXTENSIONS) as AudioStream
+	return StoryAssets.load_path(find_stream_path(kind, stream_name)) as AudioStream
+
+
+## Path of the file [method find_stream] plays, or "".
+func find_stream_path(kind: String, stream_name: String) -> String:
+	var folder := audio_folder.path_join(kind)
+	var path := StoryAssets.find(folder, stream_name, StoryAssets.AUDIO_EXTENSIONS)
+	if path.is_empty() and kind == "voice":
+		path = StoryAssets.find(folder.path_join(StoryAssets.source_language), stream_name, StoryAssets.AUDIO_EXTENSIONS)
+	return path
 
 
 func capture() -> Dictionary:

@@ -32,6 +32,8 @@ namespace VisualNovelTeller
         public string Speaker = "";
         /// <summary>The text of the line on screen, without tags.</summary>
         public string Text = "";
+        /// <summary>Products of the paid content (@needs beats) the save was made after. Loading it needs them all.</summary>
+        public List<string> Needs = new List<string>();
     }
 
     /// <summary>
@@ -69,6 +71,8 @@ namespace VisualNovelTeller
         private readonly Dictionary<string, CastActor> _actorsById = new Dictionary<string, CastActor>();
         private readonly Dictionary<string, TaleExposed> _actorObjects = new Dictionary<string, TaleExposed>();
         private TaleDirector _director;
+        private StoryStore _store;
+        private StoryLocalization _localization;
         private TaleHistory _history;
         private bool _ready;
         private bool _loading;
@@ -77,6 +81,12 @@ namespace VisualNovelTeller
         public event Action<string, object> Signal;
         /// <summary>Raised when the story ends or is stopped. Not raised while a load replaces the play.</summary>
         public event Action Finished;
+
+        /// <summary>The reader's language and the translations of the Story Config's strings file. Tales, menus, and the dialogue box are translated with it.</summary>
+        public StoryLocalization Localization { get { EnsureDirector(); return _localization; } }
+
+        /// <summary>What the reader owns, and buying more (decision 0029). It answers owns(), offer(), and @needs in tales.</summary>
+        public StoryStore Store { get { EnsureDirector(); return _store; } }
 
         /// <summary>The settings this story plays with.</summary>
         public StoryConfig Config { get { return config; } set { config = value; } }
@@ -117,6 +127,9 @@ namespace VisualNovelTeller
         {
             EnsureReady();
             LoadGlobals();
+            _localization.Language = _localization.PickLanguage(StorySettings.Load(config).language);
+            _ = _store.SetBackend(StoryStore.MakeBackend(config != null ? config.Store : StoreMode.Auto,
+                Path.Combine(Application.persistentDataPath, "test_store.json")));
             if (playOnStart && !WantsTitleScreen()) _ = Play();
         }
 
@@ -331,10 +344,21 @@ namespace VisualNovelTeller
             }
         }
 
-        /// <summary>Loads a slot written by <see cref="SaveSlot"/> and plays on. The task completes when the story ends.</summary>
+        /// <summary>
+        /// Loads a slot written by <see cref="SaveSlot"/> and plays on. The task completes when
+        /// the story ends. A save in paid content the reader doesn't own (see
+        /// <see cref="GetLockedProducts"/>) is not loaded; <see cref="StoryMenus"/> offers the
+        /// products first.
+        /// </summary>
         public Task LoadSlot(string slot)
         {
             if (!CheckSlot(slot)) return Task.CompletedTask;
+            List<string> locked = GetLockedProducts(slot);
+            if (locked.Count > 0)
+            {
+                Debug.LogWarning("Story: slot '" + slot + "' is in paid content the reader doesn't own (" + string.Join(", ", locked) + ").", this);
+                return Task.CompletedTask;
+            }
             string path = SlotPath(slot);
             string json;
             try
@@ -352,6 +376,13 @@ namespace VisualNovelTeller
                 return Task.CompletedTask;
             }
             return LoadFromJson(json);
+        }
+
+        /// <summary>The products a save needs that the reader doesn't own, because it was made after a @needs beat. Empty when it can be loaded.</summary>
+        public List<string> GetLockedProducts(string slot)
+        {
+            SlotInfo info = GetSlotInfo(slot);
+            return info != null ? Store.Missing(info.Needs) : new List<string>();
         }
 
         /// <summary>True when the slot has a save.</summary>
@@ -411,6 +442,10 @@ namespace VisualNovelTeller
                 if (meta.TryGetValue("beat", out value) && value != null) info.Beat = GdValue.Str(value);
                 if (meta.TryGetValue("speaker", out value) && value != null) info.Speaker = GdValue.Str(value);
                 if (meta.TryGetValue("text", out value) && value != null) info.Text = GdValue.Str(value);
+                var needs = meta.TryGetValue("needs", out value) ? value as List<object> : null;
+                if (needs != null)
+                    foreach (object product in needs)
+                        if (product != null) info.Needs.Add(GdValue.Str(product));
                 return info;
             }
             catch (Exception)
@@ -565,6 +600,7 @@ namespace VisualNovelTeller
             HistoryEntry line = dialogue != null ? dialogue.CurrentLine : default(HistoryEntry);
             meta["speaker"] = line.Speaker ?? "";
             meta["text"] = line.Text ?? "";
+            meta["needs"] = state.TryGetValue("paid", out value) && value is List<object> ? value : new List<object>();
             return meta;
         }
 
@@ -605,6 +641,11 @@ namespace VisualNovelTeller
             _director.StoryFinished += OnStoryFinished;
             _director.NameResolver = ResolveName;
             _director.ContextExtender = ExtendContext;
+            _localization = new StoryLocalization(config);
+            _director.Translator = _localization.Translate;
+            _store = new StoryStore(config != null ? config.Products : null, Path.Combine(SaveFolder(), "store.json"));
+            _director.Owns = _store.Owns;
+            _director.Offer = _store.Offer;
             _director.TextStyles["whisper"] = "[i][color=#b4b9c8]";
             _director.TextStyles["shout"] = "[b][font_size=44]";
             _director.TextStyles["thought"] = "[i][color=#9fc4e8]";
@@ -660,7 +701,8 @@ namespace VisualNovelTeller
                 stage = gameObject.AddComponent<Stage2D>();
             if (storyAudio == null) storyAudio = GetComponentInChildren<StoryAudio>();
             if (storyAudio == null) storyAudio = FindAnyObjectByType<StoryAudio>();
-            if (storyAudio == null && config != null && config.AudioClips.Count > 0)
+            // Voice clips can come from Resources alone, so a config always gets audio.
+            if (storyAudio == null && config != null)
                 storyAudio = gameObject.AddComponent<StoryAudio>();
             if (effects == null) effects = GetComponentInChildren<StoryEffects>();
             if (effects == null) effects = FindAnyObjectByType<StoryEffects>();

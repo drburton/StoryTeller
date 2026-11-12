@@ -4,7 +4,7 @@ Every built-in action a tale can call, generated from the action scripts in `add
 
 Arguments can be given by position or by name: `backdrop("night", time = 2.0)`. Actions that take time can be awaited, `await wait(1.0)`, to hold the tale until they finish. Cast member and camera methods are listed in §13 of the [TaleScript specification](talescript-spec.md).
 
-Actions: [`ambience`](#ambience), [`ask_number`](#ask-number), [`ask_text`](#ask-text), [`autosave`](#autosave), [`backdrop`](#backdrop), [`cg`](#cg), [`clear_page`](#clear-page), [`clear_props`](#clear-props), [`collect`](#collect), [`dialogue_style`](#dialogue-style), [`emit`](#emit), [`exit_all`](#exit-all), [`fade_in`](#fade-in), [`fade_out`](#fade-out), [`filter`](#filter), [`flash`](#flash), [`hide_cg`](#hide-cg), [`hide_dialogue`](#hide-dialogue), [`hide_prop`](#hide-prop), [`music`](#music), [`play_movie`](#play-movie), [`prop`](#prop), [`shake`](#shake), [`sound`](#sound), [`stop_ambience`](#stop-ambience), [`stop_audio`](#stop-audio), [`stop_music`](#stop-music), [`voice`](#voice), [`wait`](#wait), [`weather`](#weather).
+Actions: [`ambience`](#ambience), [`ask_number`](#ask-number), [`ask_text`](#ask-text), [`autosave`](#autosave), [`backdrop`](#backdrop), [`cg`](#cg), [`clear_page`](#clear-page), [`clear_props`](#clear-props), [`collect`](#collect), [`dialogue_style`](#dialogue-style), [`emit`](#emit), [`exit_all`](#exit-all), [`fade_in`](#fade-in), [`fade_out`](#fade-out), [`filter`](#filter), [`flash`](#flash), [`hide_cg`](#hide-cg), [`hide_dialogue`](#hide-dialogue), [`hide_prop`](#hide-prop), [`music`](#music), [`offer`](#offer), [`play_movie`](#play-movie), [`prop`](#prop), [`shake`](#shake), [`sound`](#sound), [`stop_ambience`](#stop-ambience), [`stop_audio`](#stop-audio), [`stop_music`](#stop-music), [`voice`](#voice), [`wait`](#wait), [`weather`](#weather).
 
 ## ambience
 
@@ -261,6 +261,18 @@ Plays a music track from the music folder, crossfading from the current one.
 | `volume` | float | `1.0` |
 | `fade` | float | `1.0` |
 | `loop` | bool | `true` |
+
+## offer
+
+```gdscript
+offer(id)
+```
+
+Shows the purchase screen for a product. With await, gives true when the reader owns it afterwards: `if await offer("full_story"):`
+
+| Parameter | Type | Default |
+|---|---|---|
+| `id` | String | required |
 
 ## play_movie
 

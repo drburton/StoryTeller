@@ -1,0 +1,31 @@
+{
+    "name": "VisualNovelTeller.Steam",
+    "rootNamespace": "VisualNovelTeller",
+    "references": [
+        "VisualNovelTeller",
+        "com.rlabrecque.steamworks.net"
+    ],
+    "includePlatforms": [
+        "Editor",
+        "LinuxStandalone64",
+        "macOSStandalone",
+        "WindowsStandalone32",
+        "WindowsStandalone64"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "VNT_STEAMWORKS"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.rlabrecque.steamworks.net",
+            "expression": "2024.0.0",
+            "define": "VNT_STEAMWORKS"
+        }
+    ],
+    "noEngineReferences": false
+}

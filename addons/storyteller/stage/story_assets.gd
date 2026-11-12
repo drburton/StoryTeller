@@ -2,6 +2,14 @@ class_name StoryAssets
 extends RefCounted
 ## Finds story assets by name using folder conventions, e.g. the backdrop
 ## "classroom" is res://story/backdrops/classroom.png (or .webp, .jpg, ...).
+##
+## Any asset folder can hold a folder per language with versions of its
+## files, for pictures with text and voice recorded in other languages
+## (decision 0031): res://story/backdrops/es/classroom.png is shown while
+## the game is in Spanish. A file a language folder lacks comes from the
+## main folder. A language folder is named with the code of a language the
+## game has (see [method is_language_folder]), such as "es" or "pt_BR", and
+## is not a CG or cast member.
 
 const IMAGE_EXTENSIONS: Array[String] = ["png", "webp", "jpg", "jpeg", "svg", "tres"]
 const AUDIO_EXTENSIONS: Array[String] = ["ogg", "mp3", "wav", "tres"]
@@ -15,6 +23,18 @@ const RAW_AUDIO_EXTENSIONS: Array[String] = ["ogg", "wav", "mp3"]
 ## Raw files already read: path to [signature, resource], where the
 ## signature is the file's modified time and size.
 static var _raw_cache := {}
+## The language the tales are written in. [code]Story[/code] sets it from
+## [member StoryConfig.source_language]. Language folders are not searched
+## while the game is in this language.
+static var source_language := "en"
+## The languages a story has: its source language and
+## [member StoryConfig.languages]. [code]Story[/code] sets them.
+static var languages := PackedStringArray()
+## Paths passed to [method ResourceLoader.load_threaded_request] whose
+## result has not been collected yet. Godot keeps each request until
+## [method ResourceLoader.load_threaded_get] collects it, and reports the
+## ones still waiting as leaked objects when the game quits.
+static var _requested := {}
 
 
 ## Path of the first existing "<folder>/<name>.<extension>", or "".
@@ -22,6 +42,59 @@ static var _raw_cache := {}
 static func find(folder: String, asset_name: String, extensions: Array[String]) -> String:
 	if asset_name.begins_with("res://") or asset_name.begins_with("user://"):
 		return asset_name if exists(asset_name) else ""
+	for language in language_folders():
+		var localized := _find_in(folder.path_join(language), asset_name, extensions)
+		if not localized.is_empty():
+			return localized
+	return _find_in(folder, asset_name, extensions)
+
+
+## The language folders searched before the main folder, most specific
+## first: the locale ("es_MX") and its language ("es"). None while the game
+## is in [member source_language].
+static func language_folders() -> PackedStringArray:
+	var locale := TranslationServer.get_locale()
+	var language := locale.get_slice("_", 0)
+	if locale.is_empty() or language == source_language.get_slice("_", 0):
+		return PackedStringArray()
+	var folders := PackedStringArray()
+	if locale != language:
+		folders.append(locale)
+	folders.append(language)
+	return folders
+
+
+## True when [param name] is the code of a language the game has: one with
+## a translation loaded, the source language, or one of [member languages].
+## Such a folder holds versions of assets for that language, not a CG or a
+## cast member, so a character can still be called "leo".
+static func is_language_folder(name: String) -> bool:
+	if name.is_empty():
+		return false
+	if name == source_language or name in languages:
+		return true
+	for locale in TranslationServer.get_loaded_locales():
+		if name == locale or name == locale.get_slice("_", 0):
+			return true
+	return false
+
+
+## The version of [param resource] for the game's language: a file named
+## "<name>.<language>.<ext>" next to it, such as title.es.png for
+## title.png, or [param resource] itself. For pictures set directly in the
+## config, such as [member StoryConfig.title_background].
+static func localized_resource(resource: Resource) -> Resource:
+	if resource == null or resource.resource_path.is_empty():
+		return resource
+	var path := resource.resource_path
+	for language in language_folders():
+		var candidate := "%s.%s.%s" % [path.get_basename(), language, path.get_extension()]
+		if exists(candidate):
+			return load_path(candidate)
+	return resource
+
+
+static func _find_in(folder: String, asset_name: String, extensions: Array[String]) -> String:
 	for extension in extensions:
 		var path := folder.path_join("%s.%s" % [asset_name, extension])
 		if exists(path):
@@ -57,6 +130,9 @@ static func load_path(path: String) -> Resource:
 	if path.is_empty():
 		return null
 	if not is_raw(path):
+		if _requested.has(path):
+			_requested.erase(path)
+			return ResourceLoader.load_threaded_get(path)
 		return load(path) if ResourceLoader.exists(path) else null
 	var signature := _signature(path)
 	var cached: Array = _raw_cache.get(path, [])
@@ -136,7 +212,7 @@ static func scan_cgs(folder: String) -> Dictionary:
 		cgs[cg_name] = PackedStringArray([""])
 	for entry in list_directory(folder):
 		var cg_name := entry.trim_suffix("/")
-		if entry.ends_with("/") and not cg_name.begins_with(".") and not cgs.has(cg_name):
+		if entry.ends_with("/") and not cg_name.begins_with(".") and not cgs.has(cg_name) and not is_language_folder(cg_name):
 			var variants := list_names(folder.path_join(cg_name), IMAGE_EXTENSIONS)
 			if not variants.is_empty():
 				cgs[cg_name] = variants
@@ -161,5 +237,21 @@ static func default_cg_variant(variants: PackedStringArray) -> String:
 
 ## Starts loading [param path] in the background so it is ready when needed.
 static func preload_path(path: String) -> void:
-	if not path.is_empty() and ResourceLoader.exists(path) and not ResourceLoader.has_cached(path):
-		ResourceLoader.load_threaded_request(path)
+	if path.is_empty() or _requested.has(path) or not ResourceLoader.exists(path) or ResourceLoader.has_cached(path):
+		return
+	if ResourceLoader.load_threaded_request(path) == OK:
+		_requested[path] = true
+
+
+## Collects every background load [method preload_path] started that was
+## never used, waiting for those still loading, so Godot can let them go.
+## The [code]Story[/code] autoload calls this when it shuts down.
+static func finish_preloads() -> void:
+	for path in _requested.keys():
+		ResourceLoader.load_threaded_get(path)
+	_requested.clear()
+
+
+## Number of background loads waiting to be collected, for tests.
+static func pending_preloads() -> int:
+	return _requested.size()

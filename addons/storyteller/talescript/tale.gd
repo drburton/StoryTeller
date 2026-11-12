@@ -60,6 +60,9 @@ const FORMAT := 4
 ## Beat name to its display heading from [code]@heading[/code], shown in
 ## the route chart. Beats without one show their name there.
 @export var headings: Dictionary = {}
+## Beat name to the product it needs from [code]@needs[/code]. Entering the
+## beat without the product shows the purchase screen.
+@export var needs: Dictionary = {}
 @export var instructions: Array[Dictionary] = []
 ## Source text of every line and choice option, by id. Used to export
 ## strings for translation.

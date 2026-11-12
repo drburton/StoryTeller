@@ -29,8 +29,11 @@ namespace VisualNovelTeller
         public float musicVolume = 1f;
         /// <summary>Volume of sound effects, from 0 to 1.</summary>
         public float soundVolume = 1f;
+        public float voiceVolume = 1f;
         /// <summary>Full screen on or off.</summary>
         public bool fullScreen;
+        /// <summary>The reader's language, such as "es". Empty picks the system's language when the strings file has it.</summary>
+        public string language = "";
 
         /// <summary>Where the settings are saved.</summary>
         public static string FilePath
@@ -90,6 +93,7 @@ namespace VisualNovelTeller
             masterVolume = Mathf.Clamp01(masterVolume);
             musicVolume = Mathf.Clamp01(musicVolume);
             soundVolume = Mathf.Clamp01(soundVolume);
+            voiceVolume = Mathf.Clamp01(voiceVolume);
         }
 
         /// <summary>Puts the values to work on the story's dialogue and audio, and on the screen.</summary>
@@ -107,7 +111,9 @@ namespace VisualNovelTeller
                 {
                     story.Audio.MusicVolume = musicVolume;
                     story.Audio.SoundVolume = soundVolume;
+                    story.Audio.VoiceVolume = voiceVolume;
                 }
+                story.Localization.Language = story.Localization.PickLanguage(language);
             }
             AudioListener.volume = masterVolume;
             if (Screen.fullScreen != fullScreen) Screen.fullScreen = fullScreen;

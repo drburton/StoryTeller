@@ -3,6 +3,8 @@ class_name SpriteSetLook
 extends CastLook
 ## One texture per mood. Textures come from [member moods], or from image
 ## files named after moods in [member folder] (e.g. smile.png, sad.webp).
+## A language folder in it (e.g. es/smile.png) has versions for that
+## language, for faces with text (decision 0031).
 
 const IMAGE_EXTENSIONS: Array[String] = ["png", "webp", "jpg", "jpeg", "svg"]
 
@@ -10,6 +12,9 @@ const IMAGE_EXTENSIONS: Array[String] = ["png", "webp", "jpg", "jpeg", "svg"]
 @export var moods: Dictionary[String, Texture2D] = {}
 ## Folder scanned for "<mood>.<ext>" images not listed in [member moods].
 @export_dir var folder := ""
+
+## Textures read from [member folder], by path.
+var _loaded: Dictionary = {}
 
 
 func create_visual() -> Node2D:
@@ -33,15 +38,16 @@ func get_texture(mood: String) -> Texture2D:
 		return moods[mood]
 	if folder.is_empty():
 		return null
-	for extension in IMAGE_EXTENSIONS:
-		var path := folder.path_join("%s.%s" % [mood, extension])
-		if StoryAssets.exists(path):
-			var texture := StoryAssets.load_path(path) as Texture2D
-			# Raw pictures are read again when they change, so they are not kept.
-			if not StoryAssets.is_raw(path):
-				moods[mood] = texture
-			return texture
-	return null
+	var path := StoryAssets.find(folder, mood, IMAGE_EXTENSIONS)
+	if path.is_empty():
+		return null
+	if _loaded.has(path):
+		return _loaded[path]
+	var texture := StoryAssets.load_path(path) as Texture2D
+	# Raw pictures are read again when they change, so they are not kept.
+	if not StoryAssets.is_raw(path):
+		_loaded[path] = texture
+	return texture
 
 
 func get_preview(mood: String) -> Texture2D:

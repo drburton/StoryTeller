@@ -189,6 +189,19 @@ namespace UnityEngine
     {
     }
 
+    public class TextAsset : Object
+    {
+        public TextAsset()
+        {
+        }
+
+        public TextAsset(string text)
+        {
+        }
+
+        public string text { get { throw null; } }
+    }
+
     // --- Static helpers ---------------------------------------------------------
 
     public static class Debug
@@ -285,11 +298,28 @@ namespace UnityEngine
         public static string persistentDataPath { get { throw null; } }
         public static string productName { get { throw null; } }
         public static string unityVersion { get { throw null; } }
+        public static bool isEditor { get { throw null; } }
+        public static SystemLanguage systemLanguage { get { throw null; } }
+        public static RuntimePlatform platform { get { throw null; } }
 
         public static void Quit()
         {
             throw null;
         }
+    }
+
+    public enum SystemLanguage
+    {
+        Afrikaans, Arabic, Basque, Belarusian, Bulgarian, Catalan, Chinese, Czech, Danish, Dutch,
+        English, Estonian, Faroese, Finnish, French, German, Greek, Hebrew, Hungarian, Icelandic,
+        Indonesian, Italian, Japanese, Korean, Latvian, Lithuanian, Norwegian, Polish, Portuguese,
+        Romanian, Russian, SerboCroatian, Slovak, Slovenian, Spanish, Swedish, Thai, Turkish,
+        Ukrainian, Vietnamese, ChineseSimplified, ChineseTraditional, Hindi, Unknown,
+    }
+
+    public enum RuntimePlatform
+    {
+        OSXEditor, OSXPlayer, WindowsPlayer, WindowsEditor, IPhonePlayer, Android, LinuxPlayer, LinuxEditor, WebGLPlayer,
     }
 
     public static class Screen
