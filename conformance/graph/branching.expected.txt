@@ -1,0 +1,18 @@
+extra.start line=1 statements=2 ends=false needs= exits=[jump extra.start "" 3]
+main.start line=2 statements=7 ends=false needs= exits=[call side.helper "" 4, choice main.left "Go left" 7, choice main.right "Go right" 9]
+main.left line=11 statements=6 ends=false needs= exits=[choice main.nowhere "Wait" 15, choice side.late "timeout" 17]
+main.right line=20 statements=2 ends=false needs=full_story exits=[jump main.left "" 22]
+main.forgotten line=24 statements=1 ends=true needs= exits=[]
+side.helper line=1 statements=1 ends=true needs= exits=[]
+side.late line=4 statements=1 ends=true needs= exits=[]
+missing main.left -> main.nowhere 15
+unreachable main.forgotten
+entries main.start, extra.start
+order main, side, extra
+at main.start 0 0
+at main.left 280 0
+at main.right 280 235
+at main.forgotten 560 0
+at side.helper 0 420
+at side.late 0 595
+at extra.start 0 810

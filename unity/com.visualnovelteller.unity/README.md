@@ -16,8 +16,17 @@ In Unity, open **Window > Package Manager**, choose **+ > Install package from g
 - `Runtime/Unity`: components that play tales in a Unity scene.
 - `Runtime/Purchasing`: selling through the Apple App Store and Google Play with Unity In-App Purchasing. It only compiles when the project has `com.unity.purchasing` 5.0 or newer.
 - `Runtime/Steam`: selling DLC on Steam with Steamworks.NET. It only compiles when the project has `com.rlabrecque.steamworks.net`, and only for Windows, macOS, and Linux.
-- `Editor`: import of `.tale` files and the editor tools.
+- `Editor`: import of `.tale` files and the editor tools: the Path Explorer and the Story Map (**Window > Visual Novel Teller**), and Export Strings.
 - `Tests`: Unity tests of the package (edit mode and play mode). To run them, add `"testables": ["com.visualnovelteller.unity"]` to a project's `Packages/manifest.json` and open **Window > General > Test Runner**, or run Unity with `-runTests -testPlatform EditMode` (or `PlayMode`).
+
+## Story Map
+
+**Window > Visual Novel Teller > Story Map** shows a Story Config's tales as a map, like the Godot plugin's Map view.
+
+- **Layout:** every beat is a box with arrows for its jumps, beat calls, and choice branches, colored by tale. Tales sit in bands in the order play reaches them, and beats in columns by step.
+- **What the boxes show:** each box lists the beat's choices. It marks beats nothing leads to, jumps to beats that don't exist, beats where the story can end, and paid beats (`@needs`).
+- **Moving and opening beats:** drag a box to move it; its place is saved beside the tale in `<tale>.tale.map`, the same file the Godot plugin uses. Double-click a box to open its beat.
+- **Navigating:** drag the background to pan, and use Ctrl and the mouse wheel (or the zoom buttons) to zoom. **Automatic Layout** puts every beat back.
 
 ## Localization
 

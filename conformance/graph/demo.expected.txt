@@ -1,0 +1,37 @@
+chapter_1.start line=11 statements=22 ends=false needs= exits=[jump chapter_1.quiz "" 33]
+chapter_1.quiz line=36 statements=38 ends=false needs= exits=[jump chapter_1.results "" 38, choice chapter_1.results "Let's take a break." 73, jump chapter_1.quiz "" 74]
+chapter_1.results line=77 statements=34 ends=false needs= exits=[jump chapter_1.goodbye "" 111]
+chapter_1.goodbye line=114 statements=19 ends=false needs= exits=[jump chapter_2.start "" 133]
+chapter_2.start line=9 statements=27 ends=false needs= exits=[jump chapter_2.exam "" 36]
+chapter_2.exam line=39 statements=18 ends=false needs= exits=[jump chapter_2.river "" 57]
+chapter_2.river line=60 statements=33 ends=false needs= exits=[jump chapter_2.study_partners "" 92, jump chapter_2.see_you "" 93]
+chapter_2.study_partners line=96 statements=4 ends=false needs= exits=[jump chapter_2.the_end "" 100]
+chapter_2.see_you line=103 statements=4 ends=false needs= exits=[jump chapter_2.the_end "" 107]
+chapter_2.the_end line=110 statements=6 ends=true needs= exits=[]
+prologue.start line=11 statements=17 ends=true needs= exits=[choice prologue.honest "Admit you were nervous" 26, choice prologue.bluff "Act like everything is fine" 28]
+prologue.honest line=33 statements=4 ends=false needs= exits=[jump prologue.walk "" 37]
+prologue.bluff line=40 statements=2 ends=false needs= exits=[jump prologue.walk "" 42]
+prologue.walk line=45 statements=7 ends=false needs= exits=[jump chapter_1.start "" 53]
+welcome.start line=10 statements=14 ends=false needs= exits=[jump welcome.topics "" 24]
+welcome.topics line=27 statements=78 ends=true needs= exits=[choice welcome.topics "How do I write dialogue?" 42, choice welcome.topics "What about choices?" 49, choice welcome.topics "Can the stage change?" 69, choice welcome.topics "Can tales remember things?" 77, choice welcome.topics "What about saving and menus?" 94, choice prologue.start "Show me a sample scene." 102, choice welcome.farewell "I'm ready to start writing." 104]
+welcome.farewell line=109 statements=14 ends=true needs= exits=[]
+unreachable 
+entries welcome.start, chapter_1.start, chapter_2.start, prologue.start
+order welcome, prologue, chapter_1, chapter_2
+at welcome.start 0 0
+at welcome.topics 280 0
+at welcome.farewell 560 0
+at prologue.start 0 425
+at prologue.honest 280 425
+at prologue.bluff 280 570
+at prologue.walk 560 425
+at chapter_1.start 0 755
+at chapter_1.quiz 280 755
+at chapter_1.results 560 755
+at chapter_1.goodbye 840 755
+at chapter_2.start 0 970
+at chapter_2.exam 280 970
+at chapter_2.river 560 970
+at chapter_2.study_partners 840 970
+at chapter_2.see_you 840 1115
+at chapter_2.the_end 1120 970

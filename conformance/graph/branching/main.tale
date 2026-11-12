@@ -1,0 +1,25 @@
+## The start tale: choices, a timed choice, a beat call into another tale, a missing beat, paid content, and a beat nothing reaches.
+beat start:
+	"Morning."
+	side.helper()
+	choose:
+		"Go left":
+			jump left
+		"Go right":
+			jump right
+
+beat left:
+	"Left."
+	choose(timeout = 2.0):
+		"Wait":
+			jump nowhere
+		timeout:
+			jump side.late
+
+@needs("full_story")
+beat right:
+	"Right."
+	jump left
+
+beat forgotten:
+	"Nobody comes here."

@@ -128,8 +128,52 @@ namespace TaleScript.Conformance
                 }
             }
 
+            string graphDir = Path.Combine(root, "graph");
+            var graphCases = new List<string>();
+            if (Directory.Exists(graphDir))
+            {
+                foreach (string folder in Directory.GetDirectories(graphDir))
+                    graphCases.Add(Path.GetFileName(folder));
+            }
+            graphCases.Sort(StringComparer.Ordinal);
+            foreach (string name in graphCases)
+            {
+                string actual = GraphCase(Path.Combine(graphDir, name), Path.Combine(graphDir, name + ".graph.json"), utf8);
+                string expectedPath = Path.Combine(graphDir, name + ".expected.txt");
+                string expected = File.Exists(expectedPath) ? File.ReadAllText(expectedPath, utf8) : null;
+                if (expected == actual)
+                {
+                    Console.WriteLine("ok    graph/" + name);
+                    passed++;
+                }
+                else
+                {
+                    Console.WriteLine("FAIL  graph/" + name);
+                    Console.WriteLine(expected == null ? "      no expected file" : FirstDifference(expected, actual));
+                    failed++;
+                }
+            }
+
             Console.WriteLine(passed + " passed, " + failed + " failed");
             return failed > 0 ? 1 : 0;
+        }
+
+        /// <summary>The Story Map's graph of a folder of tales, as TaleGraph.Dump (see conformance/README.md).</summary>
+        private static string GraphCase(string folder, string settingsPath, Encoding utf8)
+        {
+            var docs = new Dictionary<string, TaleDocument>();
+            foreach (string file in Directory.GetFiles(folder, "*.tale"))
+                docs[Path.GetFileNameWithoutExtension(file)] = TaleParser.Parse(File.ReadAllText(file, utf8), file);
+            string startTale = "";
+            string startBeat = "start";
+            if (File.Exists(settingsPath))
+            {
+                var doc = JsonDocument.Parse(File.ReadAllText(settingsPath, utf8));
+                JsonElement value;
+                if (doc.RootElement.TryGetProperty("start_tale", out value)) startTale = value.GetString();
+                if (doc.RootElement.TryGetProperty("start_beat", out value)) startBeat = value.GetString();
+            }
+            return TaleGraph.Build(docs, startTale, startBeat).Dump();
         }
 
         /// <summary>Plays a run case and returns its transcript (see conformance/README.md).</summary>

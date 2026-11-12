@@ -106,6 +106,11 @@ namespace UnityEditor
             throw null;
         }
 
+        public static bool DeleteAsset(string path)
+        {
+            throw null;
+        }
+
         public static string[] FindAssets(string filter)
         {
             throw null;
@@ -181,6 +186,11 @@ namespace UnityEditor
         {
             throw null;
         }
+
+        public static bool DisplayDialog(string title, string message, string ok, string cancel)
+        {
+            throw null;
+        }
     }
 
     public class EditorGUIUtility
@@ -189,11 +199,40 @@ namespace UnityEditor
         {
             throw null;
         }
+
+        public static void AddCursorRect(Rect position, MouseCursor mouse)
+        {
+            throw null;
+        }
+    }
+
+    public enum MouseCursor
+    {
+        Arrow,
+        MoveArrow,
+    }
+
+    public sealed class Handles
+    {
+        public static Color color { get { throw null; } set { throw null; } }
+
+        public static void DrawBezier(Vector3 startPosition, Vector3 endPosition, Vector3 startTangent, Vector3 endTangent, Color color, Texture2D texture, float width)
+        {
+            throw null;
+        }
+
+        public static void DrawAAConvexPolygon(params Vector3[] points)
+        {
+            throw null;
+        }
     }
 
     public sealed class EditorStyles
     {
         public static GUIStyle boldLabel { get { throw null; } }
+        public static GUIStyle label { get { throw null; } }
+        public static GUIStyle toolbar { get { throw null; } }
+        public static GUIStyle toolbarButton { get { throw null; } }
         public static GUIStyle miniLabel { get { throw null; } }
         public static GUIStyle miniButton { get { throw null; } }
         public static GUIStyle wordWrappedLabel { get { throw null; } }
@@ -202,6 +241,11 @@ namespace UnityEditor
 
     public sealed class EditorGUI
     {
+        public static void DrawRect(Rect rect, Color color)
+        {
+            throw null;
+        }
+
         public static int indentLevel { get { throw null; } set { throw null; } }
 
         public static void BeginChangeCheck()
@@ -258,6 +302,16 @@ namespace UnityEditor
         }
 
         public static void EndScrollView()
+        {
+            throw null;
+        }
+
+        public static Rect BeginHorizontal(GUIStyle style, params GUILayoutOption[] options)
+        {
+            throw null;
+        }
+
+        public static Object ObjectField(Object obj, Type objType, bool allowSceneObjects, params GUILayoutOption[] options)
         {
             throw null;
         }
