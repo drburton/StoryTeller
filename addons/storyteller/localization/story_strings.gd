@@ -36,7 +36,8 @@ static func export_strings(config: StoryConfig) -> Dictionary:
 ## Returns [code]{"entries": Array[Dictionary], "problems": PackedStringArray}[/code].
 ## Each entry is [code]{key, text, context}[/code]: lines and options from
 ## every tale, [code]tr("...")[/code] texts, tale titles, cast names,
-## collection items, the game title, and menu text.
+## collection items, product titles and descriptions, the game title, and
+## menu text.
 static func collect(config: StoryConfig) -> Dictionary:
 	var entries: Array[Dictionary] = []
 	var seen := {}
@@ -75,6 +76,16 @@ static func collect(config: StoryConfig) -> Dictionary:
 		var item: CollectionItem = items[id]
 		_add(entries, seen, item.title, item.title, "title of collection item '%s'" % id)
 		_add(entries, seen, item.text, item.text, "text of collection item '%s'" % id)
+	var products := StoryStore.scan(config.product_folder)
+	for product in config.products:
+		if product != null and not product.id.is_empty():
+			products[product.id] = product
+	var product_ids := products.keys()
+	product_ids.sort()
+	for id in product_ids:
+		var product: StoryProduct = products[id]
+		_add(entries, seen, product.title, product.title, "title of product '%s'" % id)
+		_add(entries, seen, product.description, product.description, "description of product '%s'" % id)
 	if not config.game_title.is_empty():
 		_add(entries, seen, config.game_title, config.game_title, "game title")
 	for text in StoryMenus.UI_TEXT:

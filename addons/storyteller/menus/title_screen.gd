@@ -64,7 +64,8 @@ func _ready() -> void:
 
 func open() -> void:
 	_title.text = menus.get_game_title()
-	_art.texture = menus.title_background
+	# The title picture can have a version per language, such as title.es.png.
+	_art.texture = StoryAssets.localized_resource(menus.title_background) as Texture2D
 	_art.visible = menus.title_background != null
 	_wash.visible = _art.visible
 	var has_saves := menus.saves() != null and not menus.saves().latest_slot().is_empty()
