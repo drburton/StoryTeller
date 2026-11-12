@@ -692,7 +692,8 @@ namespace VisualNovelTeller
                 stage = gameObject.AddComponent<Stage2D>();
             if (storyAudio == null) storyAudio = GetComponentInChildren<StoryAudio>();
             if (storyAudio == null) storyAudio = FindAnyObjectByType<StoryAudio>();
-            if (storyAudio == null && config != null && config.AudioClips.Count > 0)
+            // Voice clips can come from Resources alone, so a config always gets audio.
+            if (storyAudio == null && config != null)
                 storyAudio = gameObject.AddComponent<StoryAudio>();
             if (shots == null) shots = GetComponentInChildren<StoryShots>();
             if (shots == null) shots = FindAnyObjectByType<StoryShots>();

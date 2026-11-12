@@ -6,20 +6,57 @@ using UnityEngine.UIElements;
 
 namespace VisualNovelTeller
 {
-    /// <summary>A name paired with a sprite, used for moods and backdrops.</summary>
+    /// <summary>A sprite for one language, such as a backdrop with a sign in Spanish.</summary>
+    [Serializable]
+    public class LanguageSprite
+    {
+        [Tooltip("The language code, such as es, as in the strings file.")]
+        public string language = "";
+        public Sprite sprite;
+    }
+
+    /// <summary>An audio clip for one language, such as a voice line recorded in Spanish.</summary>
+    [Serializable]
+    public class LanguageClip
+    {
+        [Tooltip("The language code, such as es, as in the strings file.")]
+        public string language = "";
+        public AudioClip clip;
+    }
+
+    /// <summary>A name paired with a sprite, used for moods and backdrops. A picture with text can have a version per language.</summary>
     [Serializable]
     public class NamedSprite
     {
         public string name = "";
         public Sprite sprite;
+        [Tooltip("Versions of the picture for other languages, for pictures with text. Languages not listed use the sprite above.")]
+        public List<LanguageSprite> languages = new List<LanguageSprite>();
+
+        /// <summary>The sprite for a language: its version when there is one, otherwise the main sprite.</summary>
+        public Sprite For(string language)
+        {
+            return StoryConfig.PickSprite(sprite, languages, language);
+        }
     }
 
-    /// <summary>A name paired with an audio clip, used for music and sounds.</summary>
+    /// <summary>A name paired with an audio clip, used for music, sounds, and voice. A clip can have a version per language.</summary>
     [Serializable]
     public class NamedClip
     {
         public string name = "";
         public AudioClip clip;
+        [Tooltip("Versions of the clip for other languages, such as voice lines. Languages not listed use the clip above.")]
+        public List<LanguageClip> languages = new List<LanguageClip>();
+
+        /// <summary>The clip for a language: its version when there is one, otherwise the main clip.</summary>
+        public AudioClip For(string language)
+        {
+            if (!string.IsNullOrEmpty(language))
+                foreach (var version in languages)
+                    if (version != null && version.language == language && version.clip != null) return version.clip;
+            return clip;
+        }
     }
 
     /// <summary>A character tales can use as a speaker and put on the 2D stage.</summary>
@@ -39,11 +76,11 @@ namespace VisualNovelTeller
         /// <summary>Size relative to the stage, where 1 is normal.</summary>
         public float scale = 1f;
 
-        /// <summary>The sprite of a mood, or null.</summary>
-        public Sprite FindMood(string moodName)
+        /// <summary>The sprite of a mood, in a language's version when it has one, or null.</summary>
+        public Sprite FindMood(string moodName, string language = null)
         {
             foreach (var mood in moods)
-                if (mood.name == moodName) return mood.sprite;
+                if (mood.name == moodName) return mood.For(language);
             return null;
         }
 
@@ -89,10 +126,17 @@ namespace VisualNovelTeller
         [SerializeField] private string title = "";
         [Tooltip("Optional. A picture that fills the title screen.")]
         [SerializeField] private Sprite titleBackground;
+        [Tooltip("Versions of the title picture for other languages, when it has text such as the game's name.")]
+        [SerializeField] private List<LanguageSprite> titleBackgroundLanguages = new List<LanguageSprite>();
         [Tooltip("Optional. The name of a clip in Audio Clips that plays on the title screen.")]
         [SerializeField] private string titleMusic = "";
         [Tooltip("Optional. Replaces the menu style sheet that comes with the package.")]
         [SerializeField] private StyleSheet menuStyle;
+        [Header("Voice")]
+        [Tooltip("A folder under Resources with the voice clips, one folder per language: Resources/Voice/en/line_01, Resources/Voice/es/line_01. A clip a language lacks plays in the source language.")]
+        [SerializeField] private string voiceFolder = "Voice";
+        [Tooltip("Voice clips listed by name, each with versions per language, for games with few voice lines. They come before the voice folder.")]
+        [SerializeField] private List<NamedClip> voiceClips = new List<NamedClip>();
         [Header("Store (demos and purchases)")]
         [Tooltip("What readers can buy inside the game, such as the full story. Tales use the ids in owns(), offer(), and @needs.")]
         [SerializeField] private List<StoryProduct> products = new List<StoryProduct>();
@@ -154,6 +198,15 @@ namespace VisualNovelTeller
         /// <summary>The game's name on the title screen, or "" to use the product name.</summary>
         public string Title { get { return title ?? ""; } }
         public Sprite TitleBackground { get { return titleBackground; } }
+        /// <summary>The title picture for a language: its version when there is one, otherwise the main picture.</summary>
+        public Sprite TitleBackgroundFor(string language)
+        {
+            return PickSprite(titleBackground, titleBackgroundLanguages, language);
+        }
+        /// <summary>The folder under Resources with the voice clips, one folder per language.</summary>
+        public string VoiceFolder { get { return voiceFolder ?? ""; } }
+        /// <summary>Voice clips listed by name.</summary>
+        public IReadOnlyList<NamedClip> VoiceClips { get { return voiceClips; } }
         /// <summary>The name of the title screen's music clip, or "".</summary>
         public string TitleMusic { get { return titleMusic ?? ""; } }
         public StyleSheet MenuStyle { get { return menuStyle; } }
@@ -169,12 +222,47 @@ namespace VisualNovelTeller
             return null;
         }
 
-        /// <summary>The backdrop sprite with this name, or null.</summary>
-        public Sprite FindBackdrop(string backdropName)
+        /// <summary>The backdrop sprite with this name, in a language's version when it has one, or null.</summary>
+        public Sprite FindBackdrop(string backdropName, string language = null)
         {
             foreach (var backdrop in backdrops)
-                if (backdrop.name == backdropName) return backdrop.sprite;
+                if (backdrop.name == backdropName) return backdrop.For(language);
             return null;
+        }
+
+        /// <summary>
+        /// The voice clip with this name for a language: from <see cref="VoiceClips"/>, then from
+        /// Resources/VoiceFolder/language/clip. A clip the language lacks comes from the source
+        /// language's folder, then from the voice folder itself. Null when there is none.
+        /// </summary>
+        public AudioClip FindVoice(string clipName, string language)
+        {
+            if (string.IsNullOrEmpty(clipName)) return null;
+            foreach (var entry in voiceClips)
+                if (entry != null && entry.name == clipName)
+                {
+                    AudioClip listed = entry.For(language);
+                    if (listed != null) return listed;
+                }
+            string folder = (voiceFolder ?? "").Trim('/');
+            var tried = new List<string>();
+            foreach (string code in new[] { language, SourceLanguage, "" })
+            {
+                if (code == null || tried.Contains(code)) continue;
+                tried.Add(code);
+                string path = string.Join("/", new[] { folder, code, clipName }).Replace("//", "/").Trim('/');
+                AudioClip found = Resources.Load<AudioClip>(path);
+                if (found != null) return found;
+            }
+            return null;
+        }
+
+        internal static Sprite PickSprite(Sprite main, List<LanguageSprite> versions, string language)
+        {
+            if (!string.IsNullOrEmpty(language) && versions != null)
+                foreach (var version in versions)
+                    if (version != null && version.language == language && version.sprite != null) return version.sprite;
+            return main;
         }
 
         /// <summary>The product with this id, or null.</summary>
@@ -185,11 +273,11 @@ namespace VisualNovelTeller
             return null;
         }
 
-        /// <summary>The audio clip with this name, or null.</summary>
-        public AudioClip FindClip(string clipName)
+        /// <summary>The audio clip with this name, in a language's version when it has one, or null.</summary>
+        public AudioClip FindClip(string clipName, string language = null)
         {
             foreach (var entry in audioClips)
-                if (entry.name == clipName) return entry.clip;
+                if (entry.name == clipName) return entry.For(language);
             return null;
         }
 

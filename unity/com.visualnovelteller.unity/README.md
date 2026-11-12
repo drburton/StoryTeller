@@ -17,6 +17,7 @@ In Unity, open **Window > Package Manager**, choose **+ > Install package from g
 - `Runtime/Purchasing`: selling through the Apple App Store and Google Play with Unity In-App Purchasing. It only compiles when the project has `com.unity.purchasing` 5.0 or newer.
 - `Runtime/Steam`: selling DLC on Steam with Steamworks.NET. It only compiles when the project has `com.rlabrecque.steamworks.net`, and only for Windows, macOS, and Linux.
 - `Editor`: import of `.tale` files and the editor tools.
+- `Tests`: Unity tests of the package (edit mode and play mode). To run them, add `"testables": ["com.visualnovelteller.unity"]` to a project's `Packages/manifest.json` and open **Window > General > Test Runner**, or run Unity with `-runTests -testPlatform EditMode` (or `PlayMode`).
 
 ## Localization
 
@@ -26,6 +27,11 @@ Translations use the same strings file as the Godot plugin (decision 0011): one 
 2. Select the Story Config and choose **Assets > Visual Novel Teller > Export Strings**. It writes `Translations/strings.csv` next to the config and sets it as the config's **Translation File**. The file includes every line and choice, tale titles and beat headings, `tr("...")` texts, cast names, product titles and descriptions, the game title, and the menu text.
 3. Translators fill in the language columns in a spreadsheet or translation tool. A translated line may use `{expr}` and text tags like the original.
 4. Export again after changing tales: translations are kept, new strings are added, and the `_status` column marks strings no longer used or whose English text changed.
+
+### Voice and pictures per language
+
+- **Voice:** a line marked `@voice("line_01")` plays that clip when it shows and stops the clip before it. `voice("line_01")` plays one from a tale, and nothing plays while skipping. Put the clips under the Story Config's **Voice Folder** in `Resources`, one folder per language: `Resources/Voice/en/line_01.wav`, `Resources/Voice/es/line_01.wav`. A line a language has no recording for plays in the source language, so a partly dubbed language still has voice. Small games can list clips under **Voice Clips** instead. Settings has a **Voice volume**.
+- **Pictures with text:** any backdrop or cast mood, and the title background, can have versions per language: add them under the entry's **Languages**. The stage shows the reader's language, and switching language switches the pictures on screen. Music and sound clips can have versions per language the same way.
 
 The game starts in the language the player chose before, or the system's language when the file has it, or the source language. With `StoryMenus`, **Settings > Language** lists the file's languages and switches at once. In code, use `Story.Localization`: its `Language`, `Languages`, `T("text")` for your own interface text, and the `LanguageChanged` event.
 
