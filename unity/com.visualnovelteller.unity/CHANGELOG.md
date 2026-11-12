@@ -14,6 +14,7 @@
   - Voice playback: `@voice("clip")` lines and the `voice()` action. Clips come from `Resources/<Voice Folder>/<language>/`, falling back to the source language, or from the Story Config's Voice Clips. Voice volume is in Settings.
   - Backdrops, cast moods, the title background, and music and sound clips can have versions per language. The stage switches them when the language changes.
   - A configured `Story` always gets a `StoryAudio`, so voice-only games play voice.
+  - The history screen has a **Replay voice** button on voiced lines, as in the Godot plugin. `HistoryEntry` keeps the line's voice clip.
   - Unity tests in `Tests/`: edit-mode checks of the store, Steam, platform stores, localization, voice, and Export Strings, and play-mode tests of a story with its menus in Spanish, voice, pictures, and the purchase screen.
 - Demos and purchases (decision 0029):
   - `StoryProduct` entries and a Store mode in the Story Config.

@@ -27,7 +27,7 @@ namespace VisualNovelTeller
             "Return to the title? Unsaved progress is lost.", "Quit the game? Unsaved progress is lost.",
             "Overwrite {0}?", "Delete {0}?", "Quick save", "Autosave", "Slot {0}", "the quick save",
             "the autosave", "slot {0}", "Text speed", "Instant", "Auto delay", "Skip unread lines",
-            "Master volume", "Music volume", "Sound volume", "Voice volume", "Full screen", "Language", "Skip", "Auto",
+            "Master volume", "Music volume", "Sound volume", "Voice volume", "Replay voice", "Full screen", "Language", "Skip", "Auto",
             "Buy", "Not now", "Restore purchases", "Purchases restored", "Locked: {0}",
             "Your purchase is waiting for the store to confirm it.",
             "The purchase didn't go through. Please try again.",

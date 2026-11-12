@@ -170,6 +170,22 @@
     -unity-text-align: upper-left;
 }
 
+.vnt-history-replay {
+    align-self: flex-start;
+    margin-top: 8px;
+    padding: 6px 20px;
+    font-size: 30px;
+    color: rgb(255, 255, 255);
+    background-color: rgb(28, 32, 60);
+    border-width: 2px;
+    border-color: rgb(180, 185, 220);
+    border-radius: 10px;
+}
+
+.vnt-history-replay:hover {
+    background-color: rgb(48, 54, 96);
+}
+
 .vnt-history-close {
     align-self: center;
     min-width: 300px;

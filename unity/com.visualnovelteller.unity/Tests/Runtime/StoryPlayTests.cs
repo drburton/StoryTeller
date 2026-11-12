@@ -20,7 +20,8 @@ public class StoryPlayTests
         "Buy,Buy,Comprar,menu,\n" +
         "Not now,Not now,Ahora no,menu,\n" +
         "Restore purchases,Restore purchases,Restaurar compras,menu,\n" +
-        "The whole story,The whole story,La historia completa,x,\n";
+        "The whole story,The whole story,La historia completa,x,\n" +
+        "Replay voice,Replay voice,Repetir voz,menu,\n";
 
     private GameObject _object;
     private Story _story;
@@ -118,6 +119,27 @@ public class StoryPlayTests
         _story.Localization.Language = "en";
         yield return null;
         Assert.AreEqual("street_en", back.sprite.name, "switching language switches the picture on stage");
+    }
+
+    [UnityTest]
+    public IEnumerator HistoryReplaysVoice()
+    {
+        yield return MakeStory("beat start:\n\t@voice(\"line_01\")\n\t\"Hello.\"\n");
+        _ = _story.Play("main");
+        for (int i = 0; i < 5; i++) yield return null;
+        Assert.AreEqual("line_01", _story.Dialogue.CurrentLine.Voice, "the line remembers its voice");
+        _story.Audio.StopVoice();
+        _story.Dialogue.ShowHistory();
+        yield return null;
+        Button replay = null;
+        foreach (var document in _object.GetComponentsInChildren<UIDocument>())
+            replay = replay ?? document.rootVisualElement.Q<Button>("vnt-history-replay");
+        Assert.IsNotNull(replay, "a voiced line has a replay button in the history");
+        Assert.AreEqual("Repetir voz", replay.text, "the button in Spanish");
+        Assert.AreEqual("", _story.Audio.CurrentVoice, "the voice was stopped");
+        Press(replay);
+        yield return null;
+        Assert.AreEqual("line_01", _story.Audio.CurrentVoice, "pressing it plays the voice again");
     }
 
     [UnityTest]
