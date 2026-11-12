@@ -172,6 +172,27 @@ func layout(order: PackedStringArray = [], column_width := 280.0, row_height := 
 	return positions
 
 
+## A text form of the graph and its layout, the same in the Godot plugin
+## and the C# TaleGraph, so tests can check that both build the same map.
+func dump() -> String:
+	var lines := PackedStringArray()
+	for id in beats:
+		var beat: Dictionary = beats[id]
+		var exits := PackedStringArray()
+		for exit in beat["exits"]:
+			exits.append('%s %s "%s" %d' % [exit["kind"], exit["to"], exit["label"], exit["line"]])
+		lines.append("%s line=%d statements=%d ends=%s needs=%s exits=[%s]" % [id, beat["line"], beat["statements"], "true" if beat["ends"] else "false", beat.get("needs", ""), ", ".join(exits)])
+	for problem in missing:
+		lines.append("missing %s -> %s %d" % [problem["from"], problem["to"], problem["line"]])
+	lines.append("unreachable " + ", ".join(unreachable))
+	lines.append("entries " + ", ".join(entries))
+	lines.append("order " + ", ".join(tale_order()))
+	var positions := layout()
+	for id in positions:
+		lines.append("at %s %d %d" % [id, roundi(positions[id].x), roundi(positions[id].y)])
+	return "\n".join(lines) + "\n"
+
+
 func _entered_from_outside(id: String, tale: String) -> bool:
 	for other in beats:
 		if beats[other]["tale"] == tale:

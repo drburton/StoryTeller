@@ -10,6 +10,7 @@
   - The menus, the dialogue box's quick menu and history, the purchase screen, and product titles are translated.
   - **Assets > Visual Novel Teller > Export Strings** writes and merges the CSV.
   - The core gets `TaleStrings`: reading, writing, and collecting the strings, tested against the Godot demo's CSV.
+- The Story Map (Window > Visual Novel Teller > Story Map): the beats of a Story Config's tales with their jumps, calls, and choices, laid out like the Godot plugin's Map view, with problems marked and moved beats saved in `<tale>.tale.map`. The C# core gets `TaleGraph`, the port of the Godot plugin's StoryGraph. A new conformance kind, `graph/`, checks that both engines build and lay out the same map.
 - Voice and pictures per language (localization part 2):
   - Voice playback: `@voice("clip")` lines and the `voice()` action. Clips come from `Resources/<Voice Folder>/<language>/`, falling back to the source language, or from the Story Config's Voice Clips. Voice volume is in Settings.
   - Backdrops, cast moods, the title background, and music and sound clips can have versions per language. The stage switches them when the language changes.

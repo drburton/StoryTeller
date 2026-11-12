@@ -173,3 +173,27 @@ class _Player extends TalePresenter:
 		events.append("pick: %s" % (str(options[pick]["text"]) if pick >= 0 and pick < options.size() else "(time runs out)"))
 		await get_tree().process_frame
 		return pick
+
+
+# --- graph -------------------------------------------------------------------
+
+## The Story Map's graph of a folder of tales (see conformance/README.md):
+## StoryGraph.dump() of the beats, exits, problems, entries, tale order, and
+## layout.
+static func graph_case(case_name: String) -> String:
+	var folder := ROOT.path_join("graph").path_join(case_name)
+	var docs := {}
+	for file_name in DirAccess.get_files_at(folder):
+		if file_name.ends_with(".tale"):
+			var path := folder.path_join(file_name)
+			docs[file_name.get_basename()] = TaleParser.parse(FileAccess.get_file_as_string(path), path)
+	var settings := _settings("graph", case_name, ".graph.json")
+	return StoryGraph.build(docs, str(settings.get("start_tale", "")), str(settings.get("start_beat", "start"))).dump()
+
+
+func test_graph_cases() -> void:
+	var names := Array(DirAccess.get_directories_at(ROOT.path_join("graph")))
+	names.sort()
+	assert_true(names.size() > 0, "graph cases found")
+	for case_name in names:
+		_compare("graph", case_name, graph_case(case_name))

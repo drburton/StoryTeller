@@ -1,0 +1,116 @@
+## chapter_2.tale
+## Exam day, a walk by the river afterwards, and an ending that follows how
+## close the player and Mira have grown. Picks up chapter 1's choices.
+@title("Chapter 2")
+
+var answered_river := ""
+
+@heading("Exam morning")
+beat start:
+	backdrop("classroom_morning", transition = "none")
+	autosave()
+	music("quiet_morning", volume = 0.6, fade = 2.0)
+	await fade_in(time = 1.0)
+	"Exam morning. The classroom is quieter than any library."
+	mira.enter("neutral", at = LEFT)
+	if chapter_1.stayed_late:
+		mira (smile): "My coat is still drying from last night, you know."
+	else:
+		mira: "You made it home dry, I hope."
+	mira (curious): "Did you sleep at all?"
+	choose:
+		"Like a stone.":
+			mira (smirk): "Liar. You have ink on your cheek."
+		"Not much. You?":
+			mira.friendship += 1
+			mira (soft): "Same. I kept reciting rivers in my head."
+		"Quiz me one last time.":
+			mira.friendship += 1
+			mira.hop()
+			mira (smile): "Fine. Which river runs through the old capital?"
+			"You answer before she finishes the question."
+			mira (smirk): "Show-off."
+	"A bell rings. Chairs scrape. Papers land face down on every desk."
+	mira: "Good luck, {prologue.player_name}."
+	mira.exit(time = 0.6)
+	jump exam
+
+@heading("The exam")
+beat exam:
+	stop_music(fade = 1.0)
+	"Question one asks about the formula. You remember Mira's drawing and write it down."
+	if chapter_1.score >= 2:
+		"Question two asks when the library was built. Easy, after yesterday."
+	else:
+		"Question two asks when the library was built. You guess, and hope."
+	"Question three is the river. The clock on the wall seems to tick louder."
+	"The proctor taps the clock. [speed=0.5]Not much time left.[/speed]"
+	choose(timeout = 8.0):
+		"The Amber.":
+			answered_river = "amber"
+		"The Silver.":
+			answered_river = "silver"
+		timeout:
+			"Your pen hovers too long. The proctor calls time."
+	sound("page_turn")
+	"Pencils down."
+	jump river
+
+@heading("After the bell")
+beat river:
+	await fade_out(Color.BLACK, time = 1.0)
+	backdrop("riverside_evening", transition = "none")
+	music("library_theme", volume = 0.5, fade = 2.0)
+	await fade_in(time = 1.5)
+	"After the exam, your feet carry you to the river. Someone is already at the railing."
+	mira.enter("soft", at = LEFT)
+	mira: "There you are. The Amber looks different when you're not memorizing it."
+	match answered_river:
+		"amber":
+			mira (smile): "You wrote the Amber, right? Tell me you wrote the Amber."
+			mira.friendship += 1
+		"silver":
+			mira (smirk): "Please tell me you didn't write the Silver."
+		_:
+			mira (curious): "You left the river blank? Of all the questions!"
+	ada.enter("neutral", at = RIGHT, time = 0.6)
+	ada (smile): "My two whisperers. The exam is over, so you may speak at a normal volume."
+	ada: "I'm taking these books to the reading room by the bridge. They swim poorly."
+	ada.exit(time = 0.6)
+	mira (curious): "So. What now?"
+	choose:
+		"Same table tomorrow?" if mira.friendship >= 3:
+			mira.friendship += 1
+			mira.hop()
+			mira (smile): "I was going to ask you that."
+		"I should head home.":
+			mira (soft): "Yeah. Me too, I guess."
+		"Tell me about the river.":
+			mira (smile): "The Amber runs right past the library. The old capital grew up around it."
+			mira (smirk): "You really don't remember chapter three, do you."
+	if mira.friendship >= 6:
+		jump study_partners
+	jump see_you
+
+@heading("Study partners")
+beat study_partners:
+	mira (smile): "Results come out next week. We'll read them together."
+	"The streetlamps come on, one after another, all the way down the river."
+	mira.exit(time = 1.0)
+	jump the_end
+
+@heading("See you around")
+beat see_you:
+	mira: "Well. See you around, {prologue.player_name}."
+	mira.exit(time = 0.8)
+	"You watch the water for a while after she leaves."
+	jump the_end
+
+@heading("The end")
+beat the_end:
+	stop_audio(fade = 1.5)
+	await fade_out(Color.BLACK, time = 1.5)
+	backdrop(Color.BLACK, transition = "none")
+	exit_all(time = 0)
+	await fade_in(time = 0.5)
+	"End of the StoryTeller demo. Thank you for playing."

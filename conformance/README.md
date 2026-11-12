@@ -13,6 +13,7 @@ Each kind has its own folder. A case is a `.tale` file plus the files that share
 | `parse/` | `<name>.tale`, `<name>.expected.txt` | The parse tree dump. Run by tests/unit/talescript/test_tale_golden.gd. |
 | `check/` | `<name>.tale`, optional `<name>.context.json`, `<name>.expected.txt` | The problems the checker finds. |
 | `run/` | `<name>.tale`, optional `<name>.run.json`, `<name>.expected.txt` | The transcript of playing the tale. |
+| `graph/` | a `<name>/` folder of `.tale` files, optional `<name>.graph.json`, `<name>.expected.txt` | The Story Map's graph and layout of the tales. |
 
 The first line of most cases is a `##` comment that says what the case shows.
 
@@ -61,6 +62,17 @@ The transcript has one event per line:
 When the story ends, one line `var: <name> = <value as JSON>` is added for each top-level var and const of the tale, sorted by name. The last line is always `end`.
 
 Text in a `line:` event is the text after interpolation, as the presenter receives it. Multi-line text keeps its line breaks.
+
+## Graph cases
+
+These cases cover the Story Map rather than the language. Each case is a folder of tales, named by file. The settings file is JSON, and both keys are optional: `start_tale`, the tale New Game plays, and `start_beat`, which defaults to `start`.
+
+The output is the graph's dump: Godot's `StoryGraph.dump()`, and `TaleGraph.Dump()` in C#. It has one line per beat, in the order the tales are named and then file order:
+
+- `<tale.beat> line=<n> statements=<n> ends=<true|false> needs=<product> exits=[<kind> <tale.beat> "<label>" <line>, ...]`, where kind is `jump`, `call`, or `choice`;
+- then `missing <from> -> <to> <line>` for each exit to a beat that doesn't exist;
+- then `unreachable`, `entries`, and `order` lines with comma-separated lists;
+- then `at <tale.beat> <x> <y>` for each beat's place in the automatic layout, rounded.
 
 ## Using the suite in an implementation
 

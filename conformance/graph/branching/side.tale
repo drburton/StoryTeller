@@ -1,0 +1,6 @@
+beat helper:
+	"Helping."
+
+beat late:
+	# Too late.
+	"The end."

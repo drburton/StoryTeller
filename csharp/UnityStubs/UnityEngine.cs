@@ -437,6 +437,13 @@ namespace UnityEngine
         {
             throw null;
         }
+
+        public static Vector2 operator +(Vector2 a, Vector2 b) { throw null; }
+        public static Vector2 operator -(Vector2 a, Vector2 b) { throw null; }
+        public static Vector2 operator -(Vector2 a) { throw null; }
+        public static Vector2 operator *(Vector2 a, float d) { throw null; }
+        public static Vector2 operator /(Vector2 a, float d) { throw null; }
+        public static implicit operator Vector3(Vector2 v) { throw null; }
     }
 
     public struct Vector2Int
@@ -463,8 +470,17 @@ namespace UnityEngine
 
     public struct Rect
     {
+        public float x { get; set; }
+        public float y { get; set; }
         public float width { get; set; }
         public float height { get; set; }
+        public float xMax { get { throw null; } }
+        public float yMax { get { throw null; } }
+
+        public bool Contains(Vector2 point)
+        {
+            throw null;
+        }
 
         public Rect(float x, float y, float width, float height)
         {
@@ -494,6 +510,8 @@ namespace UnityEngine
             this.b = b;
             a = 1F;
         }
+
+        public static Color operator *(Color a, float b) { throw null; }
 
         public static Color white { get { throw null; } }
         public static Color black { get { throw null; } }
@@ -644,6 +662,76 @@ namespace UnityEngine
 
         public TextAnchor alignment { get; set; }
         public bool wordWrap { get; set; }
+        public int fontSize { get; set; }
+        public TextClipping clipping { get; set; }
+        public GUIStyleState normal { get { throw null; } }
+    }
+
+    public sealed class GUIStyleState
+    {
+        public Color textColor { get; set; }
+    }
+
+    public enum TextClipping
+    {
+        Overflow,
+        Clip,
+    }
+
+    public enum EventType
+    {
+        MouseDown,
+        MouseUp,
+        MouseMove,
+        MouseDrag,
+        KeyDown,
+        KeyUp,
+        ScrollWheel,
+        Repaint,
+        Layout,
+    }
+
+    public sealed class Event
+    {
+        public static Event current { get { throw null; } }
+        public EventType type { get { throw null; } }
+        public int button { get { throw null; } }
+        public Vector2 mousePosition { get { throw null; } }
+        public Vector2 delta { get { throw null; } }
+        public int clickCount { get { throw null; } }
+        public bool control { get { throw null; } }
+        public bool command { get { throw null; } }
+
+        public void Use()
+        {
+            throw null;
+        }
+    }
+
+    public class GUI
+    {
+        public static void Label(Rect position, string text, GUIStyle style)
+        {
+            throw null;
+        }
+
+        public static Vector2 BeginScrollView(Rect position, Vector2 scrollPosition, Rect viewRect)
+        {
+            throw null;
+        }
+
+        public static void EndScrollView()
+        {
+            throw null;
+        }
+    }
+
+    public class GUILayoutUtility
+    {
+        public static Rect GetRect(float minWidth, float maxWidth, float minHeight, float maxHeight, params GUILayoutOption[] options)
+        {
+            throw null;
+        }
     }
 
     public sealed class GUILayoutOption
@@ -668,6 +756,21 @@ namespace UnityEngine
         }
 
         public static GUILayoutOption Height(float height)
+        {
+            throw null;
+        }
+
+        public static GUILayoutOption Width(float width)
+        {
+            throw null;
+        }
+
+        public static void FlexibleSpace()
+        {
+            throw null;
+        }
+
+        public static bool Button(string text, GUIStyle style, params GUILayoutOption[] options)
         {
             throw null;
         }
