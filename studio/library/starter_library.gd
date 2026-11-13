@@ -3,7 +3,7 @@ extends RefCounted
 ## The Studio's starter library (docs/studio-design.md §6): characters,
 ## backgrounds, music, and sounds a student can use at once: its own art in
 ## studio/library/art (made by tools/demo_assets/starter_library.py), and
-## the art and sounds of the Where's Biscuit example and the plugin's demo.
+## the art and sounds of the plugin's demo.
 ##
 ## A story gets its own copy of each item it uses, as plain pictures and
 ## sounds in its folder (decisions 0022 and 0023), so a story file carries
@@ -11,8 +11,6 @@ extends RefCounted
 
 const ART := "res://studio/library/art/"
 const BACKDROPS := {
-	"living_room": "res://examples/wheres_biscuit/backdrops/living_room.png",
-	"backyard": "res://examples/wheres_biscuit/backdrops/backyard.png",
 	"classroom": "res://demo/story/backdrops/classroom_morning.png",
 	"library": "res://demo/story/backdrops/library.png",
 	"library_at_night": "res://demo/story/backdrops/library_night.png",
@@ -25,16 +23,12 @@ const BACKDROPS := {
 }
 ## Each character is a profile, or a folder of faces with a profile.json.
 const CHARACTERS := {
-	"theo": "res://examples/wheres_biscuit/cast/theo.tres",
-	"leo": "res://examples/wheres_biscuit/cast/leo.tres",
-	"cleo": "res://examples/wheres_biscuit/cast/cleo.tres",
-	"biscuit": "res://examples/wheres_biscuit/cast/biscuit.tres",
-	"ada": "res://demo/story/cast/ada.tres",
-	"mira": "res://demo/story/cast/mira.tres",
 	"maya": ART + "cast/maya",
 	"sam": ART + "cast/sam",
 	"robo": ART + "cast/robo",
 	"whiskers": ART + "cast/whiskers",
+	"ada": "res://demo/story/cast/ada.tres",
+	"mira": "res://demo/story/cast/mira.tres",
 }
 const MUSIC := {
 	"quiet_morning": "res://demo/story/audio/music/quiet_morning.wav",

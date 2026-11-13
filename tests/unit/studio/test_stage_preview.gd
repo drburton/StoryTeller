@@ -2,8 +2,8 @@ extends "res://tests/framework/story_test.gd"
 ## Tests for the Studio's stage preview (studio/preview/stage_preview.gd):
 ## its own small story shows the stage and the line at a chosen block.
 
-const TALE := "res://examples/wheres_biscuit/tales/wheres_biscuit.tale"
-const CONFIG := "res://examples/wheres_biscuit/story_config.tres"
+const TALE := "res://examples/robos_lost_beep/tales/robos_lost_beep.tale"
+const CONFIG := "res://examples/robos_lost_beep/story_config.tres"
 
 var source := ""
 var doc: TaleDocument
@@ -14,7 +14,7 @@ func before_each() -> void:
 	super()
 	source = FileAccess.get_file_as_string(TALE)
 	doc = TaleParser.parse(source)
-	context = TaleSignatures.make_context(TALE, "wheres_biscuit", load(CONFIG))
+	context = TaleSignatures.make_context(TALE, "robos_lost_beep", load(CONFIG))
 
 
 func _open() -> StudioStagePreview:
@@ -54,32 +54,32 @@ func _frames(count: int) -> void:
 
 func test_the_preview_shows_the_stage_and_the_line_at_a_block() -> void:
 	var preview := await _open()
-	preview.show_at(source, doc, "wheres_biscuit", _statement("start", 4), context)
-	assert_eq(await _wait_for_text(preview, "Waaah!"), "Waaah!")
+	preview.show_at(source, doc, "robos_lost_beep", _statement("start", 4), context)
+	assert_eq(await _wait_for_text(preview, "..."), "...")
 	var stage: Dictionary = preview.story.get_crew(&"Stage").capture()
-	assert_eq(stage["backdrop"], "living_room")
-	assert_eq(stage["cast"].keys(), ["cleo"])
-	assert_eq(stage["cast"]["cleo"]["mood"], "sad")
+	assert_eq(stage["backdrop"], "park")
+	assert_eq(stage["cast"].keys(), ["robo"])
+	assert_eq(stage["cast"]["robo"]["mood"], "sad")
 	assert_true(preview.get_director().is_playing(), "the line waits")
 
 
 func test_a_newer_block_replaces_the_last() -> void:
 	var preview := await _open()
-	preview.show_at(source, doc, "wheres_biscuit", _statement("start", 4), context)
-	preview.show_at(source, doc, "wheres_biscuit", _statement("start", 8), context)
+	preview.show_at(source, doc, "robos_lost_beep", _statement("start", 4), context)
+	preview.show_at(source, doc, "robos_lost_beep", _statement("start", 8), context)
 	# The box fades out from the first line before it shows the second.
-	var line := "Look, her hands are empty. Where is Biscuit?"
+	var line := "Look, the little silver button on Robo's chest is gone."
 	assert_eq(await _wait_for_text(preview, line), line)
 	var cast: Dictionary = preview.story.get_crew(&"Stage").capture()["cast"]
-	assert_eq(cast.keys().filter(func(id: String) -> bool: return cast[id]["on_stage"]).size(), 3, "Cleo, Theo, and Leo")
-	preview.show_at(source, doc, "wheres_biscuit", null, context)
+	assert_eq(cast.keys().filter(func(id: String) -> bool: return cast[id]["on_stage"]).size(), 3, "Robo, Maya, and Sam")
+	preview.show_at(source, doc, "robos_lost_beep", null, context)
 	await _frames(3)
 	assert_false(preview.get_director().is_playing(), "no block, no story")
 
 
 func test_the_preview_waits_while_the_story_plays() -> void:
 	var preview := await _open()
-	preview.show_at(source, doc, "wheres_biscuit", _statement("start", 4), context)
+	preview.show_at(source, doc, "robos_lost_beep", _statement("start", 4), context)
 	await _frames(3)
 	preview.set_paused(true)
 	assert_false(preview.get_director().is_playing())

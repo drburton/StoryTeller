@@ -1577,7 +1577,7 @@ static func make_name(text: String) -> String:
 
 
 ## The full name of the scene [param beat_name], as "has been to" tests
-## use it: "wheres_biscuit.yard".
+## use it: "robos_lost_beep.forest".
 func qualified_scene(beat_name: String) -> String:
 	return "%s.%s" % [tale_name(), beat_name] if not tale_path.is_empty() and "." not in beat_name else beat_name
 

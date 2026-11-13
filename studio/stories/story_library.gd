@@ -21,12 +21,12 @@ extends RefCounted
 ## file to share, and [method unpack] adds a story from one.
 
 const ROOT := "user://stories"
-const SAMPLE_TALE := "res://examples/wheres_biscuit/tales/wheres_biscuit.tale"
+const SAMPLE_TALE := "res://examples/robos_lost_beep/tales/robos_lost_beep.tale"
 ## The sample's text in an exported app, which holds only the imported tale
 ## (tools/build_studio.sh copies it in).
-const SAMPLE_COPY := "res://studio/samples/wheres_biscuit.tale.txt"
-const SAMPLE_ID := "wheres_biscuit"
-const SAMPLE_TITLE := "Where's Biscuit?"
+const SAMPLE_COPY := "res://studio/samples/robos_lost_beep.tale.txt"
+const SAMPLE_ID := "robos_lost_beep"
+const SAMPLE_TITLE := "Robo's Lost Beep"
 const BLANK_TALE := "beat start:\n\t\"Once upon a time...\"\n"
 ## Days a changed story can go unshared before the home screen reminds the
 ## student to share a copy.
@@ -103,7 +103,7 @@ func create(title: String, text := BLANK_TALE, copied_id := "") -> String:
 	return id
 
 
-## Adds the Where's Biscuit sample the first time the Studio starts, and
+## Adds the Robo's Lost Beep sample the first time the Studio starts, and
 ## adopts a copy the first Studio build saved without its story.json.
 func add_sample() -> void:
 	var marker := root.path_join(".sample_added")
@@ -126,7 +126,7 @@ func add_sample() -> void:
 	_write(marker, "")
 
 
-## The text of the Where's Biscuit sample.
+## The text of the Robo's Lost Beep sample.
 static func sample_text() -> String:
 	var text := FileAccess.get_file_as_string(SAMPLE_TALE) if FileAccess.file_exists(SAMPLE_TALE) else ""
 	if text.is_empty() and FileAccess.file_exists(SAMPLE_COPY):

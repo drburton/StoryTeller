@@ -3,14 +3,14 @@ extends "res://tests/framework/story_test.gd"
 ## is written back exactly, and new blocks make valid tales.
 
 const TALES := [
-	"res://examples/wheres_biscuit/tales/wheres_biscuit.tale",
+	"res://examples/robos_lost_beep/tales/robos_lost_beep.tale",
 	"res://demo/tales/welcome.tale",
 	"res://demo/tales/prologue.tale",
 	"res://demo/tales/chapter_1.tale",
 	"res://demo/tales/chapter_2.tale",
 ]
 const SAMPLE_FIELDS := {
-	"character": "theo", "face": "happy", "text": "Hi!", "prompt": "Your name?", "word": "player_name",
+	"character": "maya", "face": "happy", "text": "Hi!", "prompt": "Your name?", "word": "player_name",
 	"position": "LEFT", "motion": "nod", "picture": "yard", "track": "theme", "sound": "ding", "seconds": "2.0",
 	"weather": "snow", "scene": "start", "number": "score", "value": "3", "code": "for i in 2:\n\tpass",
 }
@@ -81,7 +81,7 @@ func test_changing_a_field_rewrites_only_that_line() -> void:
 	var doc := TaleParser.parse(source)
 	for card in _all_cards(doc):
 		var block := StoryBlocks.describe(card, source)
-		if block["type"] == "show" and block["fields"]["character"] == "theo":
+		if block["type"] == "show" and block["fields"]["character"] == "maya":
 			block["fields"]["position"] = "RIGHT"
 			block["fields"]["face"] = "sad"
 			var changed := TaleEdit.set_statement(source, card.node, StoryBlocks.line_for(block))
@@ -92,9 +92,9 @@ func test_changing_a_field_rewrites_only_that_line() -> void:
 			for i in before.size():
 				if before[i] != after[i]:
 					differing.append(after[i])
-			assert_eq(differing, ["\ttheo.enter(\"sad\", at = RIGHT)"])
+			assert_eq(differing, ["\tmaya.enter(\"sad\", at = RIGHT)"])
 			return
-	fail("no Show block for Theo")
+	fail("no Show block for Maya")
 
 
 func test_extra_arguments_and_waits_are_kept() -> void:
@@ -106,7 +106,7 @@ func test_extra_arguments_and_waits_are_kept() -> void:
 
 
 func test_lines_a_block_cannot_show_become_code_blocks() -> void:
-	var source := "beat t:\n\tbackdrop(Color.BLACK)\n\tfor i in 3:\n\t\tpass\n\ttheo: \"Hi\" # greeting\n\t@id(\"x\") \"Hello\"\n\tmatch score:\n\t\t1:\n\t\t\tpass\n"
+	var source := "beat t:\n\tbackdrop(Color.BLACK)\n\tfor i in 3:\n\t\tpass\n\tmaya: \"Hi\" # greeting\n\t@id(\"x\") \"Hello\"\n\tmatch score:\n\t\t1:\n\t\t\tpass\n"
 	var cards := TaleCard.build(TaleParser.parse(source).statements[0])
 	var types := cards.map(func(card: TaleCard) -> String: return StoryBlocks.describe(card, source)["type"])
 	assert_eq(types, ["code", "code", "code", "code", "code"])
@@ -141,10 +141,10 @@ func test_every_new_block_makes_a_valid_tale_and_reads_back_as_itself() -> void:
 
 func test_words_show_the_fields() -> void:
 	var block := StoryBlocks.new_block("show")
-	block["fields"] = {"character": "theo", "face": "happy", "position": "LEFT"}
+	block["fields"] = {"character": "maya", "face": "happy", "position": "LEFT"}
 	var words := StoryBlocks.words_of(block, func(field: String, value: String) -> String:
 		return StoryBlocks.POSITIONS.get(value, value) if field == "position" else "[%s]" % value)
-	assert_eq(words, "Show [theo] [happy] at left")
+	assert_eq(words, "Show [maya] [happy] at left")
 	assert_eq(StoryBlocks.color_of("say"), StoryBlocks.GROUPS["talk"]["color"])
 	assert_eq(StoryBlocks.shape_of("go_to"), "cap")
 	assert_eq(StoryBlocks.shape_of("choice"), "wrap")

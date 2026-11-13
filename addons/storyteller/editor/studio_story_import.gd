@@ -10,7 +10,7 @@ extends RefCounted
 ## result["folder"]       # res://studio_stories/space_trip
 ## result["scene_path"]   # its main.tscn: open it and press F6 to play
 ## [/codeblock]
-## The story gets a folder of its own, like the Where's Biscuit example:
+## The story gets a folder of its own, like the Robo's Lost Beep example:
 ## its tale, pictures, and sounds as they were in the file (see
 ## [StoryFile]), a story_config.tres pointing at them, and a main.tscn
 ## that plays it with a [StoryLauncher]. Nothing already in the project is

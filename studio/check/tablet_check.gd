@@ -6,7 +6,7 @@ extends Control
 
 const RESULTS_PATH := "user://tablet_check_results.json"
 const STARTS_PATH := "user://tablet_check_starts.json"
-const STORY_SCENE := "res://examples/wheres_biscuit/main.tscn"
+const STORY_SCENE := "res://examples/robos_lost_beep/main.tscn"
 const BLOCK_COLORS: Array[Color] = [Color("4c97ff"), Color("9966ff"), Color("59c059"), Color("ff8c1a"), Color("ff6680")]
 const BLOCK_NAMES: Array[String] = ["Say", "Show", "Background", "Choice", "Add 1"]
 const LONG_PRESS_SECONDS := 0.5

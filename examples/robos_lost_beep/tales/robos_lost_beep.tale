@@ -1,0 +1,115 @@
+## robos_lost_beep.tale
+## A short story with Maya, Sam, Robo the robot and Whiskers the cat.
+## Robo's beep button is missing, and the player helps Maya and Sam find it.
+## Three choices, two endings.
+@title("Robo's Lost Beep")
+
+var teamwork := 0
+
+@heading("A quiet robot")
+beat start:
+	backdrop("park")
+	"It is a breezy afternoon in the park."
+	robo.enter("sad", at = Vector2(0.5, 0.1))
+	robo.shake()
+	robo: "..."
+	maya.enter("surprised", at = LEFT)
+	maya: "Robo, you always say beep-boop! What's wrong?"
+	sam.enter("surprised", at = RIGHT)
+	sam: "Look, the little silver button on Robo's chest is gone."
+	"That button makes Robo's happy beep. Robo beeps hello to everyone."
+	robo (sad): "...boop?"
+	maya (thinking): "Don't worry, Robo. We will find your beep button."
+	sam (happy): "Where should we look first?"
+	choose:
+		"Maya checks the slide.":
+			jump slide
+		"Sam checks the swings.":
+			jump swings
+
+@heading("The slide")
+beat slide:
+	maya (happy): "I go down this slide ten times a day. I know it best!"
+	"Maya looks at the top, the middle and the bottom of the slide."
+	maya (thinking): "No button. But look, little paw prints!"
+	sam (surprised): "The paw prints go toward the trees."
+	jump next_place
+
+@heading("The swings")
+beat swings:
+	sam (happy): "The swings are the fastest way to look around. Whee!"
+	"Sam swings high and looks all over the grass."
+	sam (thinking): "No button. Who left these little paw prints?"
+	maya (surprised): "There are more. They go toward the trees!"
+	jump next_place
+
+@heading("Where next?")
+beat next_place:
+	robo (neutral): "...boop?"
+	maya (neutral): "Where should we look now?"
+	choose:
+		"Look in the sandbox.":
+			jump sandbox
+		"Follow the paw prints into the trees.":
+			jump forest
+
+@heading("The sandbox")
+beat sandbox:
+	teamwork += 1
+	"Maya and Sam dig through the sandbox together. That is a lot of sand!"
+	sam (happy): "My lost marble! I looked for it all week."
+	maya (happy): "And my yellow hair clip!"
+	robo (sad): "...boop."
+	maya (thinking): "Robo's button isn't here. Let's follow the paw prints."
+	jump forest
+
+@heading("Under the oak tree")
+beat forest:
+	exit_all()
+	backdrop("forest")
+	maya.enter("neutral", at = LEFT)
+	sam.enter("neutral", at = RIGHT)
+	"The paw prints lead under a big oak tree."
+	whiskers.enter("happy", at = Vector2(0.5, 0.05))
+	sam (surprised): "Look! It's Whiskers!"
+	maya (happy): "And she's playing with something shiny!"
+	sam (thinking): "Whiskers loves shiny things. She must have found Robo's button."
+	maya (thinking): "She thought it was a toy."
+	sam (neutral): "How do we get it back?"
+	choose:
+		"Maya trades Whiskers a ball of yarn.":
+			maya (happy): "Here, Whiskers. Yarn is more fun!"
+		"Sam asks Whiskers nicely.":
+			sam (happy): "Please, Whiskers? Robo misses its beep."
+		"Maya and Sam play with Whiskers together.":
+			teamwork += 1
+			maya (happy): "Sam, you wiggle the leaf. I'll pick up the button."
+			sam (happy): "Got it in two seconds!"
+	whiskers.exit()
+	robo.enter("surprised", at = Vector2(0.5, 0.1))
+	"Maya clicks the button back onto Robo's chest."
+	robo: "..."
+	robo (happy): "BEEP-BOOP! BEEP-BOOP!"
+	"Robo spins around and flashes all its lights."
+	if teamwork >= 2:
+		jump super_helpers
+	jump happy_again
+
+@heading("Super helpers")
+beat super_helpers:
+	robo (happy): "MAY-A! SAM! BEEP!"
+	maya (surprised): "Robo said our names!"
+	sam (happy): "We found the button together. High five!"
+	"Maya and Sam share a high five. Robo beeps a little song."
+	jump the_end
+
+@heading("Happy again")
+beat happy_again:
+	"Robo beeps hello to a squirrel, a bird and a dog."
+	maya (happy): "Next time, let's keep shiny things away from Whiskers."
+	sam (happy): "Good luck with that!"
+	jump the_end
+
+@heading("The end")
+beat the_end:
+	"The end."

@@ -49,7 +49,7 @@ Open the StoryTeller repository's project (a clone, not the zip) and press Play.
 
 ### 4. Example story (about 5 minutes)
 
-- [ ] Open `examples/wheres_biscuit/main.tscn` and press **Run Current Scene** (F6). Play both endings: the couch and the "together" choice lead to "Super helpers"; any other path leads to "Happy again".
+- [ ] Open `examples/robos_lost_beep/main.tscn` and press **Run Current Scene** (F6). Play both endings: the sandbox and the "together" choice lead to "Super helpers"; any other path leads to "Happy again".
 
 ### 5. Export (about 10 minutes, needs export templates)
 

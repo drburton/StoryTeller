@@ -42,17 +42,17 @@ Landscape on a tablet (1024 x 768 points and up, about the size of the smallest 
 ┌──────────────────────────────────────────────────────────────────────┐
 │ ⌂  My Story ✎              ↶ Undo  ↷ Redo        ▶ Play    ⇪ Share   │
 ├──────────┬──────────────────────────────────────┬────────────────────┤
-│ Blocks   │ Scenes:  [Start] [Toy box] [Yard] [+]│  Stage preview     │
+│ Blocks   │ Scenes:  [Start] [Slide] [Forest] [+]│  Stage preview     │
 │          ├──────────────────────────────────────┤  ┌──────────────┐  │
 │ ● Talk   │                                      │  │  (the scene  │  │
-│ ● Act    │   Background [living room ▾]         │  │  at the      │  │
-│ ● Scene  │   Show [Theo ☺] at [left]            │  │  chosen      │  │
-│ ● Choose │   Theo ☺ says "Where is Biscuit?"    │  │  block)      │  │
+│ ● Act    │   Background [park ▾]                │  │  at the      │  │
+│ ● Scene  │   Show [Maya ☺] at [left]            │  │  chosen      │  │
+│ ● Choose │   Maya ☺ says "Where is Robo?"       │  │  block)      │  │
 │ ● Numbers│   Choice                             │  └──────────────┘  │
-│          │   ├ "Look in the toy box"            │  ▶ Play from here  │
-│ [blocks  │   │    Go to scene [Toy box]         ├────────────────────┤
+│          │   ├ "Look on the slide"              │  ▶ Play from here  │
+│ [blocks  │   │    Go to scene [Slide]           ├────────────────────┤
 │  of the  │   └ "Look outside"                   │  Characters        │
-│  chosen  │        Go to scene [Yard]            │  [Theo][Leo][Cleo] │
+│  chosen  │        Go to scene [Forest]          │  [Maya][Sam][Robo] │
 │  color]  │                                      │  [+ Add]           │
 │          │                                      │  Backgrounds  [+]  │
 │          │   ↓ drag blocks here                 │  Sounds       [+]  │
@@ -71,14 +71,14 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 | Group (color) | Block | TaleScript it writes |
 |---|---|---|
-| Talk (blue) | [character][face] says "…" | `theo (happy): "Hi!"` |
+| Talk (blue) | [character][face] says "…" | `maya (happy): "Hi!"` |
 | | Narrator says "…" | `"It is a sunny morning."` |
 | | Ask the player for a name, keep it in [name] | `player_name = await ask_text("What is your name?")` |
-| Act (purple) | Show [character][face] at [left / middle / right] | `theo.enter("happy", at = LEFT)` |
-| | Change face of [character] to [face] | `theo.mood = "sad"` |
-| | Move [character] to [left / middle / right] | `theo.move_to(RIGHT)` |
-| | Hide [character] / Hide everyone | `theo.exit()` / `exit_all()` |
-| | [character] hops / shakes / nods | `theo.hop()` |
+| Act (purple) | Show [character][face] at [left / middle / right] | `maya.enter("happy", at = LEFT)` |
+| | Change face of [character] to [face] | `maya.mood = "sad"` |
+| | Move [character] to [left / middle / right] | `maya.move_to(RIGHT)` |
+| | Hide [character] / Hide everyone | `maya.exit()` / `exit_all()` |
+| | [character] hops / shakes / nods | `maya.hop()` |
 | Scene (green) | Background [picture] | `backdrop("yard")` |
 | | Big picture [picture] / Hide big picture | `cg("hug")` / `hide_cg()` |
 | | Play music [track] / Stop music | `music("happy_tune")` / `stop_music()` |
@@ -103,7 +103,7 @@ Each block writes one TaleScript statement, so the file reads naturally if a stu
 
 ## 6. Characters, backgrounds, and sounds
 
-- **Starter library.** Original characters with several faces each, backgrounds (home, school, park, forest, castle, space), music, and sounds, all made for the project like the demo's art, so students can start at once. The library (`studio/library/`) holds the Studio's own art in `studio/library/art/`, made by `tools/demo_assets/starter_library.py`: park, forest, castle, beach, and space backgrounds; Maya, Sam, Robo, and Whiskers with neutral, happy, sad, surprised, and thinking faces; adventure and mystery music; and pop, whoosh, and magic sounds. It also offers the Where's Biscuit characters and backgrounds and the demo's characters, backgrounds, music, and sounds.
+- **Starter library.** Original characters with several faces each, backgrounds (home, school, park, forest, castle, space), music, and sounds, all made for the project like the demo's art, so students can start at once. The library (`studio/library/`) holds the Studio's own art in `studio/library/art/`, made by `tools/demo_assets/starter_library.py`: park, forest, castle, beach, and space backgrounds; Maya, Sam, Robo, and Whiskers with neutral, happy, sad, surprised, and thinking faces; adventure and mystery music; and pop, whoosh, and magic sounds. It also offers the demo's characters, backgrounds, music, and sounds.
 - **Each story keeps its own copies.** A story's pictures and sounds are plain files in its folder (decision 0023). When a story uses a starter item, the Studio copies it in, so a story file carries everything it needs (decision 0022). Pickers offer the story's own items first, then the rest of the starter library.
 - **Library panel.** Under the stage preview, the story's characters, backgrounds, and sounds, each with **+ Add**: an item from the starter library, or the student's own picture or sound file. Tapping a character shows its faces, with **+ Add a face**; tapping a sound plays it.
 - **Their own pictures.** **+ Add** opens the tablet's own picker: take a photo, or choose one from Photos or the gallery. A character's faces are pictures named by the student ("happy", "sad"). The Studio scales large photos down to save space (backgrounds to 1920 by 1080, faces to 1024 by 1024) and saves photos as `.jpg`.

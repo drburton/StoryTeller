@@ -47,18 +47,18 @@ func test_stories_are_made_listed_and_renamed() -> void:
 func test_the_sample_is_added_once() -> void:
 	library.add_sample()
 	assert_eq(library.list().size(), 1)
-	assert_eq(library.get_story("wheres_biscuit")["title"], "Where's Biscuit?")
-	assert_eq(library.read_tale("wheres_biscuit"), FileAccess.get_file_as_string(StudioLibrary.SAMPLE_TALE))
-	library.delete("wheres_biscuit")
+	assert_eq(library.get_story("robos_lost_beep")["title"], "Robo's Lost Beep")
+	assert_eq(library.read_tale("robos_lost_beep"), FileAccess.get_file_as_string(StudioLibrary.SAMPLE_TALE))
+	library.delete("robos_lost_beep")
 	library.add_sample()
 	assert_true(library.list().is_empty(), "a deleted sample stays deleted")
 
 
 func test_a_copy_saved_before_story_folders_is_kept() -> void:
-	StudioLibrary._write(ROOT + "/wheres_biscuit/wheres_biscuit.tale", "beat start:\n\t\"My version.\"\n")
+	StudioLibrary._write(ROOT + "/robos_lost_beep/robos_lost_beep.tale", "beat start:\n\t\"My version.\"\n")
 	library.add_sample()
-	assert_eq(library.read_tale("wheres_biscuit"), "beat start:\n\t\"My version.\"\n")
-	assert_eq(library.get_story("wheres_biscuit")["title"], "Where's Biscuit?")
+	assert_eq(library.read_tale("robos_lost_beep"), "beat start:\n\t\"My version.\"\n")
+	assert_eq(library.get_story("robos_lost_beep")["title"], "Robo's Lost Beep")
 
 
 func test_stories_go_into_a_file_and_come_back() -> void:
@@ -102,9 +102,9 @@ func test_reminders_to_share_a_copy() -> void:
 
 
 func test_an_empty_folder_left_behind_does_not_take_an_id() -> void:
-	DirAccess.make_dir_recursive_absolute(ROOT + "/wheres_biscuit")
+	DirAccess.make_dir_recursive_absolute(ROOT + "/robos_lost_beep")
 	library.add_sample()
-	assert_eq(library.list().map(func(story: Dictionary) -> String: return story["id"]), ["wheres_biscuit"])
+	assert_eq(library.list().map(func(story: Dictionary) -> String: return story["id"]), ["robos_lost_beep"])
 
 
 func test_a_copy_points_its_tests_at_itself() -> void:
@@ -113,10 +113,10 @@ func test_a_copy_points_its_tests_at_itself() -> void:
 
 
 func test_an_empty_first_copy_gives_way_to_the_sample() -> void:
-	StudioLibrary._write(ROOT + "/wheres_biscuit/wheres_biscuit.tale", "")
+	StudioLibrary._write(ROOT + "/robos_lost_beep/robos_lost_beep.tale", "")
 	library.add_sample()
-	assert_eq(library.read_tale("wheres_biscuit"), StudioLibrary.sample_text())
-	assert_false(FileAccess.file_exists(ROOT + "/wheres_biscuit/wheres_biscuit.tale"))
+	assert_eq(library.read_tale("robos_lost_beep"), StudioLibrary.sample_text())
+	assert_false(FileAccess.file_exists(ROOT + "/robos_lost_beep/robos_lost_beep.tale"))
 
 
 static func _photo(size: Vector2i, see_through := false) -> Image:
@@ -127,7 +127,7 @@ static func _photo(size: Vector2i, see_through := false) -> Image:
 
 func test_a_story_has_its_own_folders() -> void:
 	var id := library.create("Space Trip")
-	var config := library.story_config(id, load("res://examples/wheres_biscuit/story_config.tres"))
+	var config := library.story_config(id, load("res://examples/robos_lost_beep/story_config.tres"))
 	assert_eq(config.backdrop_folder, ROOT + "/space_trip/backdrops")
 	assert_eq(config.cast_folder, ROOT + "/space_trip/cast")
 	assert_eq(config.audio_folder, ROOT + "/space_trip/audio")
@@ -137,28 +137,28 @@ func test_a_story_has_its_own_folders() -> void:
 
 
 func test_the_names_a_tale_uses() -> void:
-	var used := StudioLibrary.names_used("beat start:\n\tbackdrop(\"yard\")\n\ttheo.enter(\"happy\", at = LEFT)\n\tleo: \"Hi\"\n\tmira.mood = \"smile\"\n\tif score > 1:\n\t\tmusic(\"theme\")\n\tsound(\"ding\")\n\tcg(\"hug\")\n")
+	var used := StudioLibrary.names_used("beat start:\n\tbackdrop(\"yard\")\n\tmaya.enter(\"happy\", at = LEFT)\n\tsam: \"Hi\"\n\tmira.mood = \"smile\"\n\tif score > 1:\n\t\tmusic(\"theme\")\n\tsound(\"ding\")\n\tcg(\"hug\")\n")
 	assert_eq(used["backdrops"], ["yard"])
 	assert_eq(used["cgs"], ["hug"])
 	assert_eq(used["music"], ["theme"])
 	assert_eq(used["sounds"], ["ding"])
 	used["cast"].sort()
-	assert_eq(used["cast"], ["leo", "mira", "theo"])
+	assert_eq(used["cast"], ["maya", "mira", "sam"])
 
 
 func test_starter_items_the_story_uses_are_copied_in() -> void:
 	library.add_sample()
-	var copied := library.add_starter_items("wheres_biscuit")
+	var copied := library.add_starter_items("robos_lost_beep")
 	copied.sort()
-	assert_eq(copied, PackedStringArray(["backdrops/backyard", "backdrops/living_room", "cast/biscuit", "cast/cleo", "cast/leo", "cast/theo"]))
-	assert_eq(library.asset_names("wheres_biscuit", "cast"), PackedStringArray(["biscuit", "cleo", "leo", "theo"]))
-	var theo: CastProfile = StoryStage.scan_cast(library.asset_folder("wheres_biscuit", "cast"))["theo"]
-	assert_eq(theo.get_display_name(), "Theo")
-	assert_eq(theo.default_mood, "neutral")
-	assert_true(theo.look.get_moods().size() >= 4, "every face")
-	assert_true(library.add_starter_items("wheres_biscuit").is_empty(), "copied once")
-	assert_true(library.add_starter_item("wheres_biscuit", "music", "quiet_morning"))
-	assert_true(StoryAssets.load_asset(library.asset_folder("wheres_biscuit", "music"), "quiet_morning", StoryAssets.AUDIO_EXTENSIONS) is AudioStreamWAV)
+	assert_eq(copied, PackedStringArray(["backdrops/forest", "backdrops/park", "cast/maya", "cast/robo", "cast/sam", "cast/whiskers"]))
+	assert_eq(library.asset_names("robos_lost_beep", "cast"), PackedStringArray(["maya", "robo", "sam", "whiskers"]))
+	var maya: CastProfile = StoryStage.scan_cast(library.asset_folder("robos_lost_beep", "cast"))["maya"]
+	assert_eq(maya.get_display_name(), "Maya")
+	assert_eq(maya.default_mood, "neutral")
+	assert_true(maya.look.get_moods().size() >= 4, "every face")
+	assert_true(library.add_starter_items("robos_lost_beep").is_empty(), "copied once")
+	assert_true(library.add_starter_item("robos_lost_beep", "music", "quiet_morning"))
+	assert_true(StoryAssets.load_asset(library.asset_folder("robos_lost_beep", "music"), "quiet_morning", StoryAssets.AUDIO_EXTENSIONS) is AudioStreamWAV)
 
 
 func test_the_students_own_pictures_and_sounds() -> void:
@@ -184,19 +184,19 @@ func test_the_students_own_pictures_and_sounds() -> void:
 
 func test_story_files_carry_pictures_and_sounds() -> void:
 	library.add_sample()
-	library.add_starter_items("wheres_biscuit")
-	library.add_picture("wheres_biscuit", "backdrops", "my room", _photo(Vector2i(64, 48)))
-	assert_true(library.pack("wheres_biscuit", ZIP))
+	library.add_starter_items("robos_lost_beep")
+	library.add_picture("robos_lost_beep", "backdrops", "my room", _photo(Vector2i(64, 48)))
+	assert_true(library.pack("robos_lost_beep", ZIP))
 	var reader := ZIPReader.new()
 	reader.open(ZIP)
 	var files := Array(reader.get_files())
 	reader.close()
 	assert_true(files.has("backdrops/my_room.jpg"))
-	assert_true(files.has("cast/theo/neutral.png"))
-	assert_true(files.has("cast/theo/profile.json"))
+	assert_true(files.has("cast/maya/neutral.png"))
+	assert_true(files.has("cast/maya/profile.json"))
 	var copy := library.unpack(ZIP)
-	assert_eq(library.asset_names(copy, "backdrops"), library.asset_names("wheres_biscuit", "backdrops"))
-	assert_eq(library.asset_names(copy, "cast"), PackedStringArray(["biscuit", "cleo", "leo", "theo"]))
+	assert_eq(library.asset_names(copy, "backdrops"), library.asset_names("robos_lost_beep", "backdrops"))
+	assert_eq(library.asset_names(copy, "cast"), PackedStringArray(["maya", "robo", "sam", "whiskers"]))
 
 
 func test_story_files_leave_out_anything_else() -> void:

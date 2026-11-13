@@ -41,7 +41,7 @@ Press **Play** in the Godot editor. The demo opens on its title screen; **New Ga
 
 `demo/embedded/embedded_demo.tscn` shows StoryTeller inside a small 3D scene: open it and press **Run Current Scene** (F6), walk with WASD, and press E near the gatekeeper.
 
-`examples/wheres_biscuit/` is a three-minute story for young players with three choices and two endings. Open its `main.tscn` and press F6, or see [its README](examples/wheres_biscuit/README.md). It also shows how one project can hold more than one story: each story keeps a `story_config.tres` next to its tales folder, and the Story tab checks every tale against the config that owns it.
+`examples/robos_lost_beep/` is a three-minute story for young players with three choices and two endings. Open its `main.tscn` and press F6, or see [its README](examples/robos_lost_beep/README.md). It also shows how one project can hold more than one story: each story keeps a `story_config.tres` next to its tales folder, and the Story tab checks every tale against the config that owns it.
 
 | Input | Action |
 |---|---|

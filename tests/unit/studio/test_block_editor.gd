@@ -4,13 +4,13 @@ extends "res://tests/framework/story_test.gd"
 ## arms of Choice and If blocks, and undo.
 
 const BlockEditor := preload("res://studio/blocks/block_editor.gd")
-const EXAMPLE := "res://examples/wheres_biscuit/tales/wheres_biscuit.tale"
+const EXAMPLE := "res://examples/robos_lost_beep/tales/robos_lost_beep.tale"
 const SOURCE := """var score := 0
 
 beat start:
 	backdrop("yard")
-	theo.enter("happy", at = LEFT)
-	theo: "Where is Biscuit?"
+	maya.enter("happy", at = LEFT)
+	maya: "Where is Robo?"
 	choose:
 		"Look in the box":
 			score += 1
@@ -99,7 +99,7 @@ func test_new_blocks_are_added_and_undone() -> void:
 	assert_true(editor.add_block("narrate", 0, 0, {"text": "A sunny day."}))
 	assert_eq(_beat_lines(editor, "start")[0], "\t\"A sunny day.\"")
 	assert_true(editor.add_block("hide", 0, 2))
-	assert_eq(_beat_lines(editor, "start")[2], "\ttheo.exit()", "the character is the story's first one")
+	assert_eq(_beat_lines(editor, "start")[2], "\tmaya.exit()", "the character is the story's first one")
 	assert_eq(changes.size(), 2)
 	assert_true(editor.undo())
 	assert_true(editor.undo())
@@ -127,7 +127,7 @@ func test_blocks_move_between_lists() -> void:
 	var choice := editor.get_blocks()[3]
 	var outside := editor.arm_lane(choice, 1)
 	assert_true(editor.move_block(editor.get_blocks()[0], outside, 0), "show into the second option")
-	assert_eq(_beat_lines(editor, "start").slice(5, 8), PackedStringArray(["\t\t\"Look outside\":", "\t\t\ttheo.enter(\"happy\", at = LEFT)", "\tjump yard"]))
+	assert_eq(_beat_lines(editor, "start").slice(5, 8), PackedStringArray(["\t\t\"Look outside\":", "\t\t\tmaya.enter(\"happy\", at = LEFT)", "\tjump yard"]))
 	choice = editor.get_blocks()[2]
 	assert_eq(choice.get_meta("block")["type"], "choice")
 	assert_false(editor.move_block(choice, editor.arm_lane(choice, 0), 0), "not into itself")
@@ -205,17 +205,17 @@ func test_fields_rewrite_their_line() -> void:
 	var show := editor.get_blocks()[1]
 	editor.edit_field(show, "field:position")
 	_choose(editor, "CENTER")
-	assert_eq(_beat_lines(editor, "start")[1], "\ttheo.enter(\"happy\", at = CENTER)", "picked from left, middle, and right")
+	assert_eq(_beat_lines(editor, "start")[1], "\tmaya.enter(\"happy\", at = CENTER)", "picked from left, middle, and right")
 	var say := editor.get_blocks()[2]
 	editor.edit_field(say, "field:text")
 	var dialog := editor.get_dialog()
 	assert_not_null(dialog)
 	var field: LineEdit = dialog.find_children("*", "LineEdit", true, false)[0]
-	assert_eq(field.text, "Where is Biscuit?")
-	field.text = "Biscuit? Where are you?"
+	assert_eq(field.text, "Where is Robo?")
+	field.text = "Robo? Where are you?"
 	field.text_submitted.emit(field.text)
 	assert_null(editor.get_dialog())
-	assert_eq(_beat_lines(editor, "start")[2], "\ttheo: \"Biscuit? Where are you?\"")
+	assert_eq(_beat_lines(editor, "start")[2], "\tmaya: \"Robo? Where are you?\"")
 	var choice := editor.get_blocks()[3]
 	assert_true(editor.set_field(choice, "arm:0:text", "Check the box"))
 	assert_eq(_beat_lines(editor, "start")[4], "\t\t\"Check the box\":")
@@ -260,7 +260,7 @@ func test_scenes_with_only_notes_stay_valid() -> void:
 	editor.add_scene()
 	assert_eq(editor.current_scene, "scene_3")
 	assert_eq(_types(editor), [])
-	assert_true(editor.add_block("note", 0, 0, {"text": "Biscuit hides here"}))
+	assert_true(editor.add_block("note", 0, 0, {"text": "Robo hides here"}))
 	assert_false(TaleParser.parse(editor.source).has_errors())
 	assert_eq(_types(editor), ["note"])
 	editor.select_scene("yard")
@@ -330,7 +330,7 @@ func test_taps_edit_chips_and_choose_blocks() -> void:
 	await _tap_at(chip.get_global_rect().get_center())
 	assert_not_null(editor.get_dialog(), "the chip opens a picker")
 	await _tap_at(_pick_button(editor, "CENTER").get_global_rect().get_center())
-	assert_eq(_beat_lines(editor, "start")[1], "\ttheo.enter(\"happy\", at = CENTER)")
+	assert_eq(_beat_lines(editor, "start")[1], "\tmaya.enter(\"happy\", at = CENTER)")
 	var words: Control = editor.get_blocks()[2].find_children("*", "Label", true, false).filter(func(label: Node) -> bool:
 		return label.text == "says")[0]
 	await _tap_at(words.get_global_rect().get_center())
@@ -352,24 +352,24 @@ func _open_example() -> StudioBlockEditor:
 func test_pickers_show_the_storys_characters_faces_and_pictures() -> void:
 	var editor := await _open_example()
 	var characters := editor.character_items()
-	assert_eq(characters.map(func(item: Dictionary) -> String: return item["value"]), ["biscuit", "cleo", "leo", "theo"])
+	assert_eq(characters.map(func(item: Dictionary) -> String: return item["value"]), ["maya", "robo", "sam", "whiskers"])
 	assert_true(characters.all(func(item: Dictionary) -> bool: return item["picture"] is Texture2D), "every character has a picture")
-	var faces := editor.face_items("theo")
+	var faces := editor.face_items("maya")
 	assert_eq(faces[0]["value"], "", "Any face comes first")
 	assert_true(faces.size() > 2)
 	assert_true(faces.slice(1).all(func(item: Dictionary) -> bool: return item["picture"] is Texture2D))
 	var backgrounds := editor.picture_items("backdrop")
-	assert_eq(backgrounds.map(func(item: Dictionary) -> String: return item["value"]), ["backyard", "living_room"])
-	assert_eq(backgrounds[1]["label"], "Living room")
+	assert_eq(backgrounds.map(func(item: Dictionary) -> String: return item["value"]), ["beach", "castle", "forest", "park", "space"])
+	assert_eq(backgrounds[1]["label"], "Castle")
 	assert_true(backgrounds[0]["picture"] is Texture2D)
-	assert_eq(editor.scene_items(true)[1], {"value": "wheres_biscuit.toy_box", "label": "Toy box", "picture": null})
+	assert_eq(editor.scene_items(true)[1], {"value": "robos_lost_beep.slide", "label": "Slide", "picture": null})
 	var show := editor.get_blocks()[2]
 	assert_eq(show.get_meta("block")["type"], "show")
 	editor.edit_field(show, "field:face")
 	_choose(editor, "happy")
 	assert_eq(editor.get_blocks()[2].get_meta("block")["fields"]["face"], "happy")
 	editor.edit_field(editor.get_blocks()[2], "field:position")
-	assert_eq(_pick_button(editor, "Vector2(0.5, 0.25)").text, "this spot", "a spot set in TaleScript stays a choice")
+	assert_eq(_pick_button(editor, "Vector2(0.5, 0.1)").text, "this spot", "a spot set in TaleScript stays a choice")
 	editor.close_dialog()
 
 
@@ -411,8 +411,8 @@ func test_blocks_show_hints_in_plain_words() -> void:
 	say = editor.get_blocks()[4]
 	assert_eq(editor.get_hints(say), PackedStringArray(["Nobody called “mira” is in the story yet."]))
 	assert_eq(say.find_children("*", "Button", true, false).filter(func(button: Node) -> bool: return button.has_meta("hint_badge")).size(), 1)
-	assert_true(editor.set_field(editor.get_blocks()[0], "field:picture", "beach"))
-	assert_eq(editor.get_hints(editor.get_blocks()[0]), PackedStringArray(["There is no background called “beach” yet."]))
+	assert_true(editor.set_field(editor.get_blocks()[0], "field:picture", "volcano"))
+	assert_eq(editor.get_hints(editor.get_blocks()[0]), PackedStringArray(["There is no background called “volcano” yet."]))
 	assert_eq(StudioBlockEditor.hint_text("Unknown beat 'yard'."), "There is no scene called “yard”.")
 	assert_eq(StudioBlockEditor.hint_text("Something new."), "Something new.")
 
@@ -422,17 +422,17 @@ func test_an_if_can_test_where_the_player_has_been() -> void:
 	var block := _palette_block(editor, "numbers", "if_visited")
 	assert_not_null(block)
 	assert_true(editor.add_block("if_visited", 0, 0))
-	assert_eq(_beat_lines(editor, "start")[0], "\tif visited(\"wheres_biscuit.toy_box\"):")
+	assert_eq(_beat_lines(editor, "start")[0], "\tif visited(\"robos_lost_beep.slide\"):")
 	var check := editor.get_blocks()[0]
 	assert_eq(check.get_meta("block")["arms"][0]["test"], "visited")
 	editor.edit_field(check, "arm:0:scene")
-	_choose(editor, "wheres_biscuit.couch")
-	assert_eq(_beat_lines(editor, "start")[0], "\tif visited(\"wheres_biscuit.couch\"):")
-	assert_eq(StudioBlockEditor.field_text("scene", "wheres_biscuit.couch"), "Couch")
+	_choose(editor, "robos_lost_beep.sandbox")
+	assert_eq(_beat_lines(editor, "start")[0], "\tif visited(\"robos_lost_beep.sandbox\"):")
+	assert_eq(StudioBlockEditor.field_text("scene", "robos_lost_beep.sandbox"), "Sandbox")
 
 
 func test_new_picture_blocks_start_with_the_first_picture() -> void:
 	var editor := await _open_example()
 	assert_true(editor.add_block("background", 0, 0))
-	assert_eq(_beat_lines(editor, "start")[0], "\tbackdrop(\"backyard\")")
+	assert_eq(_beat_lines(editor, "start")[0], "\tbackdrop(\"beach\")")
 	assert_true(editor.get_hints(editor.get_blocks()[0]).is_empty(), "no hint on a new block")
