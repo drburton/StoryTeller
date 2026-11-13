@@ -67,7 +67,7 @@ static func language_folders() -> PackedStringArray:
 ## True when [param name] is the code of a language the game has: one with
 ## a translation loaded, the source language, or one of [member languages].
 ## Such a folder holds versions of assets for that language, not a CG or a
-## cast member, so a character can still be called "leo".
+## cast member, so a character can still be called "kai".
 static func is_language_folder(name: String) -> bool:
 	if name.is_empty():
 		return false

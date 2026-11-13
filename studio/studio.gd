@@ -4,7 +4,7 @@ extends Control
 ## are kept in the app's own storage ([StudioLibrary]), which in a web
 ## browser is the browser's storage for the page ([StudioWeb]).
 
-const STORY_CONFIG := "res://examples/wheres_biscuit/story_config.tres"
+const STORY_CONFIG := "res://examples/robos_lost_beep/story_config.tres"
 const CHECK_SCENE := "res://studio/check/tablet_check.tscn"
 const SETTINGS_PATH := "user://studio_settings.json"
 ## Shown in a browser that may clear the Studio's storage.

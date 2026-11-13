@@ -8,7 +8,7 @@ extends RefCounted
 ## block holding the raw text, so nothing is lost.
 ## [codeblock]
 ## var block := StoryBlocks.describe(card, source)
-## # {"type": "show", "fields": {"character": "theo", "face": "happy", "position": "LEFT"}, ...}
+## # {"type": "show", "fields": {"character": "maya", "face": "happy", "position": "LEFT"}, ...}
 ## block["fields"]["position"] = "RIGHT"
 ## source = TaleEdit.set_statement(source, card.node, StoryBlocks.line_for(block))
 ## [/codeblock]

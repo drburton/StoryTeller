@@ -59,8 +59,8 @@ func test_home_shows_the_sample_with_its_picture() -> void:
 	var studio := await _open()
 	assert_true(studio.home.visible)
 	assert_false(studio.story.visible)
-	assert_eq(_titles(studio), ["Where's Biscuit?"])
-	assert_true(studio.home.story_picture("wheres_biscuit") is Texture2D, "the card shows the first background")
+	assert_eq(_titles(studio), ["Robo's Lost Beep"])
+	assert_true(studio.home.story_picture("robos_lost_beep") is Texture2D, "the card shows the first background")
 	assert_eq(StudioHome.changed_words(0.0, 86400.0 * 3.5), "Changed 3 days ago")
 	assert_eq(StudioHome.changed_words(100.0, 200.0), "Changed today")
 
@@ -81,13 +81,13 @@ func test_a_new_story_opens_in_the_blocks_and_saves_every_change() -> void:
 	assert_false(studio.story._undo_button.disabled)
 	studio.story.home_requested.emit()
 	assert_true(studio.home.visible)
-	assert_eq(_titles(studio), ["Space Trip", "Where's Biscuit?"], "the latest change comes first")
+	assert_eq(_titles(studio), ["Space Trip", "Robo's Lost Beep"], "the latest change comes first")
 
 
 func test_a_copy_of_the_sample() -> void:
 	var studio := await _open()
 	studio.home.new_story()
-	_press(studio.home, "A copy of Where's Biscuit?")
+	_press(studio.home, "A copy of Robo's Lost Beep")
 	await tree.process_frame
 	assert_eq(studio.story.story_id, "my_story")
 	assert_eq(studio.story.editor.get_scenes().size(), 9)
@@ -116,7 +116,7 @@ func test_stories_are_renamed_shared_and_deleted() -> void:
 	studio.home.confirm_delete(id)
 	_press(studio.home, "Delete")
 	assert_true(studio.library.get_story(id).is_empty())
-	assert_eq(_titles(studio), ["New name", "Where's Biscuit?"])
+	assert_eq(_titles(studio), ["New name", "Robo's Lost Beep"])
 	DirAccess.remove_absolute(StudioFiles.OUTBOX.path_join(id + ".zip"))
 
 
@@ -131,13 +131,13 @@ func test_cards_remind_to_share_old_changes() -> void:
 
 func test_renaming_from_the_story_screen() -> void:
 	var studio := await _open()
-	studio.open_story("wheres_biscuit")
+	studio.open_story("robos_lost_beep")
 	studio.story.rename()
 	var field: LineEdit = studio.story.editor.get_dialog().find_children("*", "LineEdit", true, false)[0]
-	field.text = "Biscuit Hunt"
+	field.text = "Beep Hunt"
 	field.text_submitted.emit(field.text)
-	assert_eq(studio.story._title_button.text, "Biscuit Hunt  ✎")
-	assert_eq(studio.library.get_story("wheres_biscuit")["title"], "Biscuit Hunt")
+	assert_eq(studio.story._title_button.text, "Beep Hunt  ✎")
+	assert_eq(studio.library.get_story("robos_lost_beep")["title"], "Beep Hunt")
 
 
 func test_problems_do_not_stop_a_story_from_playing() -> void:
@@ -147,8 +147,8 @@ func test_problems_do_not_stop_a_story_from_playing() -> void:
 
 func test_play_shows_the_story_and_comes_back() -> void:
 	var studio := await _open()
-	studio.open_story("wheres_biscuit")
-	studio.story.play("couch")
+	studio.open_story("robos_lost_beep")
+	studio.story.play("sandbox")
 	await tree.process_frame
 	assert_true(studio.story.is_playing())
 	assert_false(studio.visible, "the story plays full screen")
@@ -164,7 +164,7 @@ func test_play_shows_the_story_and_comes_back() -> void:
 
 func test_code_blocks_are_a_saved_setting() -> void:
 	var studio := await _open()
-	studio.open_story("wheres_biscuit")
+	studio.open_story("robos_lost_beep")
 	studio.story.editor.show_group("code")
 	assert_eq(studio.story.editor.get_palette_blocks().size(), 1, "only Note")
 	studio.set_show_code_blocks(true)
@@ -177,33 +177,33 @@ func test_code_blocks_are_a_saved_setting() -> void:
 
 func test_the_preview_follows_the_chosen_block() -> void:
 	var studio := await _open()
-	studio.open_story("wheres_biscuit")
+	studio.open_story("robos_lost_beep")
 	var editor: StudioBlockEditor = studio.story.editor
 	assert_eq(studio.story.chosen_block().line_start, 11, "the first block of the scene until one is tapped")
-	var theo := editor.get_blocks()[6]
-	editor.select_block(theo)
+	var maya := editor.get_blocks()[6]
+	editor.select_block(maya)
 	assert_eq(studio.story.chosen_block().line_start, 17)
-	# The preview plays the setup over real time; wait for Theo, up to three seconds.
+	# The preview plays the setup over real time; wait for Maya, up to three seconds.
 	var stage: Node = studio.story.preview.story.get_crew(&"Stage")
 	var waited := 0.0
-	while stage.capture()["cast"].keys() != ["cleo", "theo"] and waited < 3.0:
+	while stage.capture()["cast"].keys() != ["robo", "maya"] and waited < 3.0:
 		await tree.create_timer(0.1).timeout
 		waited += 0.1
-	assert_eq(stage.capture()["cast"].keys(), ["cleo", "theo"])
-	editor.select_scene("couch")
-	assert_eq(studio.story.chosen_block().line_start, editor.doc.find_beat("couch").body[0].line_start)
+	assert_eq(stage.capture()["cast"].keys(), ["robo", "maya"])
+	editor.select_scene("sandbox")
+	assert_eq(studio.story.chosen_block().line_start, editor.doc.find_beat("sandbox").body[0].line_start)
 
 
 func test_play_from_here_starts_at_the_chosen_block() -> void:
 	var studio := await _open()
-	studio.open_story("wheres_biscuit")
+	studio.open_story("robos_lost_beep")
 	var editor: StudioBlockEditor = studio.story.editor
 	editor.select_block(editor.get_blocks()[6])
 	studio.story.play_from_here()
 	await tree.process_frame
 	assert_true(studio.story.is_playing())
 	var director: TaleDirector = tree.root.get_node("Story").get_crew(&"TaleDirector")
-	assert_true(director.get_tale("wheres_biscuit").get_beat_start(StudioFromHere.FROM_HERE_BEAT) >= 0)
+	assert_true(director.get_tale("robos_lost_beep").get_beat_start(StudioFromHere.FROM_HERE_BEAT) >= 0)
 	assert_false(studio.story.preview.get_director().is_playing(), "the preview waits")
 	studio.story.stop_playing()
 	await tree.process_frame
@@ -217,12 +217,12 @@ func test_starter_characters_come_into_a_story_when_used() -> void:
 	var editor: StudioBlockEditor = studio.story.editor
 	assert_true(studio.library.asset_names(id, "cast").is_empty(), "a blank story has no characters of its own")
 	var offered := editor.character_items().map(func(item: Dictionary) -> String: return item["value"])
-	assert_true(offered.has("theo") and offered.has("mira"), "the pickers offer the starter library")
+	assert_true(offered.has("maya") and offered.has("mira"), "the pickers offer the starter library")
 	assert_true(editor.add_block("show", 0, 0))
 	var show := editor.get_blocks()[0]
-	assert_eq(show.get_meta("block")["fields"]["character"], "theo")
-	assert_eq(studio.library.asset_names(id, "cast"), PackedStringArray(["theo"]), "copied into the story")
-	assert_true(editor.get_hints(editor.get_blocks()[0]).is_empty(), "no hint once Theo is in the story")
+	assert_eq(show.get_meta("block")["fields"]["character"], "maya")
+	assert_eq(studio.library.asset_names(id, "cast"), PackedStringArray(["maya"]), "copied into the story")
+	assert_true(editor.get_hints(editor.get_blocks()[0]).is_empty(), "no hint once Maya is in the story")
 	assert_true(editor.add_block("background", 0, 0))
 	assert_eq(studio.library.asset_names(id, "backdrops").size(), 1)
 	assert_true(studio.home.story_picture(id) is Texture2D)

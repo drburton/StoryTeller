@@ -46,12 +46,12 @@ func _press(root: Node, meta: String, value: String) -> void:
 
 func test_the_panel_shows_the_storys_own_pictures() -> void:
 	library.add_sample()
-	library.add_starter_items("wheres_biscuit")
-	var panel := await _open("wheres_biscuit")
-	assert_eq(panel.get_tiles("cast").keys(), ["biscuit", "cleo", "leo", "theo"])
-	assert_eq(panel.get_tiles("cast")["theo"].text, "Theo")
-	assert_true(panel.get_tiles("cast")["theo"].icon is Texture2D, "a face on each character")
-	assert_eq(panel.get_tiles("backdrops").keys(), ["backyard", "living_room"])
+	library.add_starter_items("robos_lost_beep")
+	var panel := await _open("robos_lost_beep")
+	assert_eq(panel.get_tiles("cast").keys(), ["maya", "robo", "sam", "whiskers"])
+	assert_eq(panel.get_tiles("cast")["maya"].text, "Maya")
+	assert_true(panel.get_tiles("cast")["maya"].icon is Texture2D, "a face on each character")
+	assert_eq(panel.get_tiles("backdrops").keys(), ["forest", "park"])
 	assert_true(panel.get_tiles("sounds").is_empty())
 
 

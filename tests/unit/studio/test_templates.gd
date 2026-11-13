@@ -96,7 +96,7 @@ func test_new_story_offers_the_templates() -> void:
 	home.story_chosen.connect(func(id: String) -> void: opened.append(id))
 	home.new_story()
 	var offered := home.find_children("*", "Button", true, false).map(func(button: Node) -> String: return button.get_meta("dialog_button", "")).filter(func(words: String) -> bool: return not words.is_empty())
-	assert_eq(offered, ["A blank story", "A mystery", "An adventure", "Choose your path", "A copy of Where's Biscuit?", "Cancel"])
+	assert_eq(offered, ["A blank story", "A mystery", "An adventure", "Choose your path", "A copy of Robo's Lost Beep", "Cancel"])
 	for button in home.find_children("*", "Button", true, false):
 		if button.get_meta("dialog_button", "") == "An adventure":
 			button.pressed.emit()

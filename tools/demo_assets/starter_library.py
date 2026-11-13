@@ -3,8 +3,7 @@
 
 Backgrounds (park, forest, castle, space, beach), characters (Maya, Sam,
 Robo the robot, and Whiskers the cat, each with several faces), music, and
-sounds, in the same style as the "Where's Biscuit?" example. Run from the
-repository root:
+sounds. Run from the repository root:
 
     python3 tools/demo_assets/starter_library.py
 
@@ -20,7 +19,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, os.path.dirname(__file__))
-from wheres_biscuit import INK, WHITE, Pen, darker, face, tear, vertical_gradient  # noqa: E402
+from drawing import INK, WHITE, Pen, darker, face, tear, vertical_gradient  # noqa: E402
 from generate import RATE, midi, note  # noqa: E402
 
 ROOT = os.path.join("studio", "library", "art")

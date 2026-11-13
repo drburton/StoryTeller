@@ -119,7 +119,7 @@ fi
 # tale, so the sample's text ships as a plain copy (include_filter above).
 samples="$root/studio/samples"
 mkdir -p "$samples"
-cp "$root/examples/wheres_biscuit/tales/wheres_biscuit.tale" "$samples/wheres_biscuit.tale.txt"
+cp "$root/examples/robos_lost_beep/tales/robos_lost_beep.tale" "$samples/robos_lost_beep.tale.txt"
 trap 'cleanup; rm -rf "$samples"' EXIT
 
 "$godot" --headless --path "$root" --import >/dev/null 2>&1

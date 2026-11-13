@@ -1,0 +1,15 @@
+[remap]
+
+importer="storyteller.tale"
+importer_version=4
+type="Resource"
+uid="uid://dl70isml76yu2"
+path="res://.godot/imported/robos_lost_beep.tale-c277f7888d7c23563b10f7a6aec2575e.res"
+
+[deps]
+
+source_file="res://examples/robos_lost_beep/tales/robos_lost_beep.tale"
+dest_files=["res://.godot/imported/robos_lost_beep.tale-c277f7888d7c23563b10f7a6aec2575e.res"]
+
+[params]
+

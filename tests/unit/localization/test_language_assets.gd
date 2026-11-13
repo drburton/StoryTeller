@@ -14,14 +14,14 @@ func before_each() -> void:
 	super()
 	_locale = TranslationServer.get_locale()
 	_clean(ROOT)
-	for folder in ["backdrops/es", "cast/sam/es", "cast/leo", "cgs/es", "cgs/party", "audio/voice/es", "audio/voice/en"]:
+	for folder in ["backdrops/es", "cast/sam/es", "cast/kai", "cgs/es", "cgs/party", "audio/voice/es", "audio/voice/en"]:
 		DirAccess.make_dir_recursive_absolute(ROOT.path_join(folder))
 	_picture(40).save_png(ROOT.path_join("backdrops/street.png"))
 	_picture(20).save_png(ROOT.path_join("backdrops/es/street.png"))
 	_picture(40).save_png(ROOT.path_join("backdrops/plain.png"))
 	_picture(30).save_png(ROOT.path_join("cast/sam/happy.png"))
 	_picture(10).save_png(ROOT.path_join("cast/sam/es/happy.png"))
-	_picture(30).save_png(ROOT.path_join("cast/leo/happy.png"))
+	_picture(30).save_png(ROOT.path_join("cast/kai/happy.png"))
 	_picture(30).save_png(ROOT.path_join("cgs/party/default.png"))
 	_picture(30).save_png(ROOT.path_join("cgs/es/party.png"))
 	_picture(40).save_png(ROOT.path_join("title.png"))
@@ -89,12 +89,12 @@ func test_a_language_folder_wins_in_its_language() -> void:
 func test_language_folders_are_not_cgs_or_cast_members() -> void:
 	assert_true(StoryAssets.is_language_folder("es"))
 	assert_true(StoryAssets.is_language_folder("en"), "the source language")
-	assert_false(StoryAssets.is_language_folder("leo"), "a character's name")
+	assert_false(StoryAssets.is_language_folder("kai"), "a character's name")
 	assert_false(StoryAssets.is_language_folder("sam"))
 	assert_eq(StoryAssets.scan_cgs(ROOT.path_join("cgs")).keys(), ["party"], "es/ is not a CG")
 	var cast: Array = StoryStage.scan_cast(ROOT.path_join("cast")).keys()
 	cast.sort()
-	assert_eq(cast, ["leo", "sam"], "es/ inside sam/ is not a character, and leo still is")
+	assert_eq(cast, ["kai", "sam"], "es/ inside sam/ is not a character, and kai still is")
 
 
 func test_a_face_has_a_version_per_language() -> void:

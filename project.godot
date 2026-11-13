@@ -42,7 +42,7 @@ locale/translations.studio=PackedStringArray()
 [storyteller]
 
 config_path="res://demo/story_config.tres"
-config_path.studio="res://examples/wheres_biscuit/story_config.tres"
+config_path.studio="res://examples/robos_lost_beep/story_config.tres"
 
 [rendering]
 
