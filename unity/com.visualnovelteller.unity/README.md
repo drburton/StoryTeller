@@ -26,6 +26,7 @@ In Unity, open **Window > Package Manager**, choose **+ > Install package from g
 - **Layout:** every beat is a box with arrows for its jumps, beat calls, and choice branches, colored by tale. Tales sit in bands in the order play reaches them, and beats in columns by step.
 - **What the boxes show:** each box lists the beat's choices. It marks beats nothing leads to, jumps to beats that don't exist, beats where the story can end, and paid beats (`@needs`).
 - **Moving and opening beats:** drag a box to move it; its place is saved beside the tale in `<tale>.tale.map`, the same file the Godot plugin uses. Double-click a box to open its beat.
+- **Linking and new beats:** drag from a box's handle (the square on its right edge) onto another box to add a `jump` to it, or onto empty space to create a new beat there (`new_beat`, `new_beat_2`, ...), linked with a jump. The tale's text keeps its formatting. **Undo Map Edit** puts the tale back as it was before the last link or new beat.
 - **Navigating:** drag the background to pan, and use Ctrl and the mouse wheel (or the zoom buttons) to zoom. **Automatic Layout** puts every beat back.
 
 ## Localization

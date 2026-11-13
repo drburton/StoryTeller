@@ -98,6 +98,51 @@ namespace VisualNovelTeller.Tests
         }
 
         [Test]
+        public void DraggingToABoxAddsAJump()
+        {
+            StoryMapWindow window = MakeWindow();
+            Assert.IsTrue(window.Link("main.left", "side.away"));
+            string source = File.ReadAllText(Folder + "/main.tale");
+            StringAssert.Contains("beat left:\n\t\"Left.\"\n\tjump side.away\n", source, "the jump goes at the end of the beat");
+            var graph = GetField<TaleGraph>(window, "_graph");
+            Assert.AreEqual("side.away", graph.Beats["main.left"].Exits[0].To, "the map shows the new link");
+            Assert.IsTrue(window.Link("main.lost", "main.left"));
+            StringAssert.Contains("jump nowhere\n\tjump left\n", File.ReadAllText(Folder + "/main.tale"), "a jump within the tale uses the beat's name");
+            Object.DestroyImmediate(window);
+        }
+
+        [Test]
+        public void DraggingToEmptySpaceCreatesALinkedBeat()
+        {
+            StoryMapWindow window = MakeWindow();
+            string name = window.LinkToNewBeat("main.left", new Vector2(700f, 90f));
+            Assert.AreEqual("new_beat", name);
+            string source = File.ReadAllText(Folder + "/main.tale");
+            StringAssert.Contains("beat left:\n\t\"Left.\"\n\tjump new_beat\n", source, "linked from the beat");
+            StringAssert.EndsWith("\n\nbeat new_beat:\n\tpass\n", source, "the new beat at the end of the tale");
+            Assert.AreEqual(new Vector2(700f, 90f), StoryMapWindow.LoadPositions(Folder + "/main.tale")["new_beat"], "placed where the drag ended");
+            var positions = GetField<Dictionary<string, Vector2>>(window, "_positions");
+            Assert.AreEqual(new Vector2(700f, 90f), positions["main.new_beat"], "the map shows it there");
+            Assert.AreEqual("new_beat_2", window.LinkToNewBeat("main.left", new Vector2(700f, 300f)), "a second one gets another name");
+            Object.DestroyImmediate(window);
+        }
+
+        [Test]
+        public void UndoMapEditPutsTheTaleBack()
+        {
+            string before = File.ReadAllText(Folder + "/main.tale");
+            StoryMapWindow window = MakeWindow();
+            window.LinkToNewBeat("main.start", new Vector2(10f, 10f));
+            Assert.AreNotEqual(before, File.ReadAllText(Folder + "/main.tale"));
+            window.UndoMapEdit();
+            Assert.AreEqual(before, File.ReadAllText(Folder + "/main.tale"), "the tale as it was");
+            Assert.IsFalse(File.Exists(Folder + "/main.tale.map"), "the map file it created is gone");
+            var graph = GetField<TaleGraph>(window, "_graph");
+            Assert.IsFalse(graph.Beats.Has("main.new_beat"));
+            Object.DestroyImmediate(window);
+        }
+
+        [Test]
         public void AGodotMapFileIsRead()
         {
             string talePath = Folder + "/side.tale";
